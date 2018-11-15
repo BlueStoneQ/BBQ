@@ -141,7 +141,7 @@ var ZeptoMin = (function() {
      * 1- 注意这里对选择器各个情况的划分和处理
      */
     var found, // 返回值就是dom元素（的数组）  -- 父层函数取得后用zepto.Z使其可以使用其他zepto的方法
-        mqybeID = selector[0] === '#', // 判断量 -- 选择器是id
+        maybeID = selector[0] === '#', // 判断量 -- 选择器是id
         maybeClass = !maybeID && selector[0] === '.', // 选择器 是 class
         // 这里是 如果是id/class 则取出#/.后面的字符内容 否则就是纯标签处理 取出整个字符
         nameOnly = maybeID || mqybeClass ? slector.slice(1) : slector,
