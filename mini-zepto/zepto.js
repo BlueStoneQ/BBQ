@@ -7,7 +7,7 @@
  * 4- 不止是阅读--阅读是学习的一部分，学习才是主旨 - 学习什么 -- 学习怎么造轮子
  * 5- 临摹/手写/输出blog文档 -- 最后尘埃落定的大杀器
  * 6- 保留自己的批注/注释
- * 7- 要看截个对象如何连接 -- 请搜 __proto__ 或者 prototype
+ * 7- 要看这个对象如何连接 -- 请搜 __proto__ 或者 prototype
  * 8- 所有我的注释加上：me -- 方便后面查询
  * 9- 你以为学的是什么：就是设计，还有一些编程技巧
  * 10- 变量/复用性越高/越基础的函数往上放/尽量靠前定义 - - 可读性/毕竟脚本语言
@@ -19,7 +19,7 @@
  */
 
  /**
-  * me:这里的zepto其实是由整个
+  * me:这里的zepto其实是由整个匿名函数生产出来的一个函数（一个工厂函数 就是我们平时用的$）
   */
 var Zepto = (function() {
   /*------------------------------------------------（一）头部变量的定义-名称要有意义性，可读性，每个功能模块用自己的变量，不要仅仅因为值暂时一样，就混淆使用------------------------------------------------*/
@@ -363,14 +363,20 @@ var Zepto = (function() {
       // 遍历 container 的子元素（先转换为数组形式）
       // 返回的同时，将每个子元素移除。
       // $.each 返回的是一个数组，因为第一个参数就是数组 slice.call(container.childNodes)
+      // me: call()函数的返回值就是调用的函数的返回值，这里就是slice()
+      // me: 下面作用：
+      // me: 1- 利用遍历移除container中的各个节点,在each()的回调中就是这一个作用
+      // me: 2- (看$.each()定义)然后把container.childNodes各个节点组织为数组副本（slice()拷贝的）赋值给dom 即： dom =  slice.call(container.childNodes)
       dom = $.each(slice.call(container.childNodes), function(){
         container.removeChild(this)
       })
     }
 
     // 赋值属性
+    // me: 这里主要是处理properties, 把属性加在创建的元素上
+    // me: 这里nodes其实已经利用zepto操作我们创建的dom元素了
     if (isPlainObject(properties)) {
-      // 先将dom转换为 zepto 对象
+      // 先将dom转换为 zepto 对象 -- 我们可以利用$(dom)来使用zepto的一些方法
       nodes = $(dom)
 
       $.each(properties, function(key, value) {
@@ -580,7 +586,9 @@ var Zepto = (function() {
       @element: 容器
       @selector: 选择器
     */
-
+    /**
+     * me: 把一些表达式中的判断量 用变量封装起来 可以使后面的逻辑清晰优雅
+     */
     var found,
         maybeID = selector[0] == '#',
         maybeClass = !maybeID && selector[0] == '.',
@@ -770,8 +778,10 @@ var Zepto = (function() {
   // 注意3：无论哪种情况，最终返回的还是 elements
   $.each = function(elements, callback){
     var i, key
+    // 遍历执行callback
     if (likeArray(elements)) {
       for (i = 0; i < elements.length; i++)
+      // me: 这里call的第一个参数是指定的this 后面i 和 elements[i] 才是回调的参数
         if (callback.call(elements[i], i, elements[i]) === false) return elements
     } else {
       for (key in elements)
@@ -1252,7 +1262,6 @@ var Zepto = (function() {
     },
     text: function(text){
       return 
-
         // 情况1：有参数，赋值，并返回自身
         0 in arguments ?
         this.each(function(idx){
