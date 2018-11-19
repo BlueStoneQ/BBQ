@@ -1778,6 +1778,7 @@ var Zepto = (function() {
   })
 
   // me: 这里出现了原型 -- 那么，原型的链接关系来了（在zepto.Z()中dom.__proto__ = $.fn 这里是否多次一举？ -- 其实可以暂不深究，集中静力现在容易开采的矿上面）
+  // me； 这里应该是一种补充，当我们没有使用$()生成Z对象时，此时$中的Z.prototye没有指向$.fn 所以这里补充一下
   zepto.Z.prototype = $.fn
 
   // Export internal API functions in the `$.zepto` namespace

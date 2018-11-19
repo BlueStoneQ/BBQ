@@ -276,7 +276,7 @@ var ZeptoMin = (function() {
         selector = null // 清理选择器 -- 防止变量污染
       } else if (context !== undefined) {
         // contetx的情况处理 -- context是创建元素时带有的属性
-        //$().find(): 在当对象前集合内查找符合CSS选择器的每个元素的后代元素。
+        // $().find(): 在当对象前集合内查找符合CSS选择器的每个元素的后代元素。
         return $(context).find(slector)
       } else {
         // 2- string情况2：seletcor是用来查询的 -- 类似与css选择器
@@ -431,6 +431,9 @@ var ZeptoMin = (function() {
     }
   }
   /*---------------------------（五）整个匿名函数（工厂方法）返回值（还是个工厂方法）原型链的构建----------------------------- */
+
+  // me； 这里应该是一种补充，当我们没有使用$()生成Z对象时，此时$中的Z.prototye没有指向$.fn 所以这里补充一下
+  zepto.Z.prototype = $.fn
 
   // 把zepto作为$的成员 -- 一并返回
   $.zepto = zepto
