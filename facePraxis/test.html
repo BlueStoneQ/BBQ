@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>zeptoJS测试</title>
+    <title>练习本</title>
   </head>
   <body>
     <p id="p1">测试</p>
@@ -12,7 +12,77 @@
     </div>
     <script>
       /** 笔试题 */
-      /** -------------------------------------  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
+      /** -------------------------------------START  Array 笔试题 --------------------------------------------------------*/
+      /* 数组降维 -- 这里有三种方法 先阅读一遍 选择一种自己中意地方法 2018-11-16  https://www.cnblogs.com/front-end-ralph/p/4871332.html */
+      /* 数组降维：方法一：把数组二层循环依次push到一个一维数组中 */
+      /* 数组降维：方法二：利用concat + 循环 */
+      function reduceDimention2(arr) {
+        var reduced = []
+        for (var i = 0; i < arr.length; i++) {
+          reduced = reduced.concat(arr[i])
+        }
+        return reduced
+      }
+      /* 数组降维：方法三：利用apply和concat转换 */
+      function reduceDimention3(arr) {
+        // 相当于: [].concat(arr[0], arr[1]...)
+        return Array.prototype.concat.apply([], arr)
+      }
+      /** -------------------------------------END  Array 笔试题 --------------------------------------------------------*/
+      /** -------------------------------------START  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
+      /* 2018-11-13 https://www.cnblogs.com/dll-ft/p/5515692.html */
+      /* 2018-11-15 查找字符串中出现次数最多的字符和次数 sdddrtkjsfkasjdddj中出现最多的字符是d,出现了6次 */
+      function statMax(str) {
+        var max = 0, // 出现的最大次数(max是一个不断修正的阈值 只在比之前max高时修改 只升不降)
+            char, // 出现的最多的字符
+            len = str.length || 0,
+            json = {} // 核心是构造一个字符串对象，字符串的key对应的str[i]就是最大值，长度就是出现的次数
+        // 
+        for (var i = 0; i < len;i++) {
+          if (!json[str[i]]) {
+            // 当这个字符之前未出现 第一次出出现 json中设置这个属性
+            json[str[i]] = str[i]
+          } else {
+            // 当这个字符第2+n次出现 则把这个字符加在json对应的key的value中 value是这个字符加起来的字符串 长度是该字符串目前为止出现的次数
+            json[str[i]] += str[i]
+          }
+        }
+        for (var  j = 0; j < len; j++) {
+          // 当遍历到的json[str[i]]的长度大于max阈值时 修改max 记录当前最大的length -- 出现最多的次数
+          if (json[str[j]].length > max) {
+            max = json[str[j]].length
+            char = str[j]
+          }
+        }
+        console.log('出现次数最多的字符是'+char+',出现了'+max+'次')
+
+        return {
+          max: max,
+          char: char
+        }
+      }
+      /* 2018-11-13 字符串转驼峰 border-bottom-color ----> borderBottomColor */
+      function toHump(str) {
+        // 先把str变成数组
+        var arr = str.split('-'), i
+        // 利用循环对字符串数组处理
+        for(i = 0; i < arr.length; i++) {
+          arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].substring(1)
+        }
+        // 再把处理后的数组变成字符串
+        return arr.join('')
+      }
+        /* 2018-11-13 字符串转驼峰 border-bottom-color ----> borderBottomColor */
+        function toHump(str) {
+        // 先把str变成数组
+        var arr = str.split('-'), i
+        // 利用循环对字符串数组处理
+        for(i = 0; i < arr.length; i++) {
+          arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].substring(1)
+        }
+        // 再把处理后的数组变成字符串
+        return arr.join('')
+      }
       /* 2018-11-8   https://blog.csdn.net/weixin_30363263/article/details/81503656 */
       /* 2018-11-8 统计字符串字节长度（汉字unicode码范围： [\u4e00 - \u9fa5]）对应汉字是[一 - 覦] 这个字念yu 四声 还是记编码吧哈哈 */
       function getStrBytesLen(str) {
@@ -48,18 +118,8 @@
         // 返回新的数组
         return result
       }
-      /* 2018-11-13 字符串转驼峰 border-bottom-color ----> borderBottomColor */
-      function toHump(str) {
-        // 先把str变成数组
-        var arr = str.split('-'), i
-        // 利用循环对字符串数组处理
-        for(i = 0; i < arr.length; i++) {
-          arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].substring(1)
-        }
-        // 再把处理后的数组变成字符串
-        return arr.join('')
-      }
-      /** -------------------------------------  Array 笔试题 --------------------------------------------------------*/
+      
+/** -------------------------------------END  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
       /** -------------------------------------  Object 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  function 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  ES6 笔试题 --------------------------------------------------------*/
@@ -69,7 +129,10 @@
       /** -------------------------------------  test 函数执行区 --------------------------------------------------------*/
       // noRepeat([1, 2, 3, 4, 1, 3, 5, 1, 2, 7, 4, 8])
       // console.log('字符串字节数统计', getStrBytesLen('15678865我是解放军'))
-      console.log('toHump:', toHump('border-bottom-color'))
+      // console.log('toHump:', toHump('border-bottom-color'))
+      // console.log('statMax:', statMax('sdddrtkjsfkasjdddj'))
+      console.log('reduceDimention2:', reduceDimention2([[1, 2], [3, 4], [5, 6]]))
+      console.log('reduceDimention3:', reduceDimention3([[1, 2], [3, 4], [5, 6]]))
     </script>
   </body>
 </html>
