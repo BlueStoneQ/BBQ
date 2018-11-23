@@ -12,6 +12,83 @@
     </div>
     <script>
       /** 笔试题 */
+      /** ------------------------------------- START function 笔试题 --------------------------------------------------------*/
+      /* 2018-11-20 一 考察this(与blog说明不符) https://www.cnblogs.com/zichi/p/4359786.html  */
+      function testThis() {
+        var length = 10;
+        function fn() {
+          console.log(this.length)
+        }
+        var obj = {
+          length: 5,
+          method: function(fn) {
+            fn()
+            arguments[0]()
+            console.log('arguments:', arguments)
+          }
+        }
+        obj.method(fn, 1)
+      }
+      /* 2018-11-20 二 var和函数的提前声明 https://www.cnblogs.com/zichi/p/4359786.html  */
+      /* 解读：我们知道var和function是会提前声明的，而且function是优先于var声明的（如果同时存在的话），
+        所以提前声明后输出的a是个function，然后代码往下执行a进行重新赋值了，故第二次输出是2。
+      */
+      function testVar(a) {
+        console.log('1- ' + a)
+        var a = 10
+        function a () {}
+        console.log('2- ' + a)
+      }
+
+      /* 2018-11-20 三 局部变量和全局变量 https://www.cnblogs.com/zichi/p/4359786.html  */
+      /**
+        1- 以下代码在测试时 放开注释即可
+        解读：输出：10 报错 30　　
+    　　这是个我犯了很久的错误，很长一段时间我都以为{...}内的新声明的变量是局部变量，
+        后来我才发现function内的新声明的变量才是局部变量，而没有用var声明的变量在哪里都是全局变量。
+        再次提醒切记只有function(){}内新声明的才能是局部变量，while{...}、if{...}、for(..) 之内的都是全局变量（除非本身包含在function内）。
+      */
+      var a3 = 10;
+
+      function fn3() {
+        // var b3 = 20;
+        c3 = 30;
+      }
+
+      fn3()
+
+      if (true) {
+        // let则使得if / for / while中的语句都具有局域性
+        let d3 = 40
+      }
+
+      // console.log('d3:' + d3)
+
+      /* 2018-11-23 七 统计字符串中出现最多的字符和次数 https://www.cnblogs.com/zichi/p/4359786.html  */
+      /* 正则方法 */
+      function statNumOfStrByReg() {
+        var str = 'sdhiwfhiohwdiwhifh'
+        // 核心语句：匹配的就是'aabbcc'中的'aa' 'bb' 'cc'
+        // 正则表达式中的小括号"()"。是代表分组的意思。 如果再其后面出现\1则是代表与第一个小括号中要匹配的内容相同。
+        // 注意：\1必须与小括号配合使
+        var  pattern = /(\w)\1*/g
+        // 把字符串变成数组 排序 之后再变成字符串 -- 字符串排序
+        var arr = str.split('').sort().join('')
+        // match函数
+        var ans = arr.match(pattern)
+        // 对match后的数组进行降序排序
+        ans.sort(function(a, b) {
+          return b.length - a.length
+        })
+        // 下标为0的字符串就是最长的
+        console.log('出现最多的字符是' + ans[0][0] + ', 出现了'  + ans[0].length + '次')
+      }
+
+      // console.log('a3: ' + a3)
+      // // console.log('b3: ' + b3) // 局部变量打印不出来
+      // console.log('c3: ' + c3)
+
+      /** ------------------------------------- END function 笔试题 --------------------------------------------------------*/
       /** -------------------------------------START  Array 笔试题 --------------------------------------------------------*/
       /* 数组降维 -- 这里有三种方法 先阅读一遍 选择一种自己中意地方法 2018-11-16  https://www.cnblogs.com/front-end-ralph/p/4871332.html */
       /* 数组降维：方法一：把数组二层循环依次push到一个一维数组中 */
@@ -28,6 +105,7 @@
         // 相当于: [].concat(arr[0], arr[1]...)
         return Array.prototype.concat.apply([], arr)
       }
+
       /** -------------------------------------END  Array 笔试题 --------------------------------------------------------*/
       /** -------------------------------------START  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
       /* 2018-11-13 https://www.cnblogs.com/dll-ft/p/5515692.html */
@@ -121,7 +199,6 @@
       
 /** -------------------------------------END  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
       /** -------------------------------------  Object 笔试题 --------------------------------------------------------*/
-      /** -------------------------------------  function 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  ES6 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  异步 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  闭包 笔试题 --------------------------------------------------------*/
@@ -131,8 +208,11 @@
       // console.log('字符串字节数统计', getStrBytesLen('15678865我是解放军'))
       // console.log('toHump:', toHump('border-bottom-color'))
       // console.log('statMax:', statMax('sdddrtkjsfkasjdddj'))
-      console.log('reduceDimention2:', reduceDimention2([[1, 2], [3, 4], [5, 6]]))
-      console.log('reduceDimention3:', reduceDimention3([[1, 2], [3, 4], [5, 6]]))
+      // console.log('reduceDimention2:', reduceDimention2([[1, 2], [3, 4], [5, 6]]))
+      // console.log('reduceDimention3:', reduceDimention3([[1, 2], [3, 4], [5, 6]]))
+      // console.log('testThis:', testThis())
+      // console.log('testVar: ', testVar(1))
+      console.log('statNumOfStrByReg', statNumOfStrByReg())
     </script>
   </body>
 </html>
