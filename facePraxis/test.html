@@ -64,26 +64,6 @@
 
       // console.log('d3:' + d3)
 
-      /* 2018-11-23 七 统计字符串中出现最多的字符和次数 https://www.cnblogs.com/zichi/p/4359786.html  */
-      /* 正则方法 */
-      function statNumOfStrByReg() {
-        var str = 'sdhiwfhiohwdiwhifh'
-        // 核心语句：匹配的就是'aabbcc'中的'aa' 'bb' 'cc'
-        // 正则表达式中的小括号"()"。是代表分组的意思。 如果再其后面出现\1则是代表与第一个小括号中要匹配的内容相同。
-        // 注意：\1必须与小括号配合使
-        var  pattern = /(\w)\1*/g
-        // 把字符串变成数组 排序 之后再变成字符串 -- 字符串排序
-        var arr = str.split('').sort().join('')
-        // match函数
-        var ans = arr.match(pattern)
-        // 对match后的数组进行降序排序
-        ans.sort(function(a, b) {
-          return b.length - a.length
-        })
-        // 下标为0的字符串就是最长的
-        console.log('出现最多的字符是' + ans[0][0] + ', 出现了'  + ans[0].length + '次')
-      }
-
       // console.log('a3: ' + a3)
       // // console.log('b3: ' + b3) // 局部变量打印不出来
       // console.log('c3: ' + c3)
@@ -108,6 +88,81 @@
 
       /** -------------------------------------END  Array 笔试题 --------------------------------------------------------*/
       /** -------------------------------------START  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
+      /* 2018-11-23 十 把URL参数解析为一个对象 https://www.cnblogs.com/zichi/p/4359786.html  */
+      function parseQueryString() {
+        var url = 'http://witmax.cn/index.php?key0=0&key1=1&key2=2'
+        // 解析后的对象 -- 盛放的容器
+        var obj = {}
+        // 先取出参数部分 -- ?后面的部分  -- 利用split 其实 正则也能使用
+        var queryStr = (url.split('?'))[1]
+        // 将参数部分按照&分割
+        var queryArr = queryStr.split('&')
+        // 遍历&分割出来的 [key1=value1, key2=value2, ...]
+        for (var i = 0; i < queryArr.length; i++) {
+          // 对 key=value进行分割
+          var kv = queryArr[i].split('=')
+          // 将key=value分别填充到对象的key和对应的value中
+          obj[kv[0]] = kv[1]
+        }
+        for (var k in obj) {
+          console.log(k + ': ' + obj[k])
+        }
+      }
+
+      /* 2018-11-23 七 统计字符串中出现最多的字符和次数 https://www.cnblogs.com/zichi/p/4359786.html  */
+      /* 方法一：正则方法 */
+      function statNumOfStrByReg() {
+        var str = 'sdhiwfhsdhihihfihiohwdiwhifh'
+        // 核心语句：匹配的就是'aabbcc'中的'aa' 'bb' 'cc'
+        // 正则表达式中的小括号"()"。是代表分组的意思。 如果再其后面出现\1则是代表与第一个小括号中要匹配的内容相同。
+        // 注意：\1必须与小括号配合使
+        var  pattern = /(\w)\1*/g
+        // 把字符串变成数组 排序 之后再变成字符串 -- 字符串排序
+        var arr = str.split('').sort().join('')
+        // match函数
+        var ans = arr.match(pattern)
+        // 对match后的数组进行降序排序
+        ans.sort(function(a, b) {
+          return b.length - a.length
+        })
+        // 下标为0的字符串就是最长的
+        console.log('出现最多的字符是' + ans[0][0] + ', 出现了'  + ans[0].length + '次')
+      }
+
+      /* 方法二： Hash Table 统计字符串中出现最多的字符 */
+      function statNumOfStrByHashTable() {
+        var str = 'sdhiwfhiohwdiwhifh'
+        // 准备一个设计好数据结构的对象 来存储我们对应的值 -- 利用的就是对象的同一key值不能重复
+        // { letter1: length1, letter2: length2 ...}
+        var obj = {};
+        // 最大值 -- 容器
+        var max = -1;
+        // 出现最多的字符 -- 容器
+        var letter;
+
+        for (var i = 0; i < str.length; i++) {
+          if (obj[str[i]]) {
+            //当这个字段已经被统计 -- 该字段不是第一次出现
+            obj[str[i]]++;
+            // 如果这个字符是目前统计中出现次数最多的
+            if (obj[str[i]] > max) {
+              // 最大值更替为当前字符的出现次数
+              max = obj[str[i]]
+              // 出现最多的字符就是当前字符
+              letter = str[i]
+            }
+          } else {
+            // 这个字符还未被统计 -- 第一次出现
+            obj[str[i]] = 1;
+            if (obj[str[i]] > max) {
+              max = obj[str[i]]
+              letter = str[i]
+            }           
+          }
+        }
+
+        return '出现最多的是' + letter + '， 出现了' + max + '次'
+      }
       /* 2018-11-13 https://www.cnblogs.com/dll-ft/p/5515692.html */
       /* 2018-11-15 查找字符串中出现次数最多的字符和次数 sdddrtkjsfkasjdddj中出现最多的字符是d,出现了6次 */
       function statMax(str) {
@@ -212,7 +267,9 @@
       // console.log('reduceDimention3:', reduceDimention3([[1, 2], [3, 4], [5, 6]]))
       // console.log('testThis:', testThis())
       // console.log('testVar: ', testVar(1))
-      console.log('statNumOfStrByReg', statNumOfStrByReg())
+      // console.log('statNumOfStrByReg', statNumOfStrByReg())
+      // console.log('statNumOfStrByHashTable', statNumOfStrByHashTable())
+      console.log('parseQueryString', parseQueryString())
     </script>
   </body>
 </html>
