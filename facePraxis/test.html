@@ -8,7 +8,13 @@
     <div>
         <span id='123' class="pp">test id = '123'</span>
         <span class="pp">test</span>
-        <span class="pp">test</span>
+        <span class="pp">test</span> </br>
+        <!-- 实现一段脚本，使得点击对应链接alert出相应的编号 -->
+        <!-- 经典闭包 2018-11-28 -->
+        <a href='#'> 第一个链接 </a> </br>
+        <a href='#'> 第二个链接 </a> </br>
+        <a href='#'> 第三个链接 </a> </br>
+        <a href='#'> 第四个链接 </a> </br>
     </div>
     <script>
       /** 笔试题 */
@@ -67,6 +73,35 @@
       // console.log('a3: ' + a3)
       // // console.log('b3: ' + b3) // 局部变量打印不出来
       // console.log('c3: ' + c3)
+
+      /* 2018-11-20 九 this https://www.cnblogs.com/zichi/p/4359786.html  */
+      /**
+      测试this对象：
+      第一次输出很好理解，第二次的话仔细看，this其实已经指向了this.m_Element，
+      因为是this.m_Element调用的addEventListener函数，所以内部的this全指向它了。
+      可以试着加上一行代码this.m_Element.m_Text = 'hello world'，就会alert出hello world了
+      this可以看看这篇：https://www.cnblogs.com/lisha-better/p/5684844.html
+      */
+      function testThis2() {
+        function JSClass() {
+          this.m_Text = 'division element'
+          this.m_Element = document.createElement('div')
+          this.m_Element.innerHTML = this.m_Text
+          this.m_Element.addEventListener('click', this.func)
+        }
+
+        JSClass.prototype.Render = function() {
+          document.body.appendChild(this.m_Element)
+        }
+
+        JSClass.prototype.func = function() {
+          console.log('func:' + this.m_Text)
+        }
+
+        var jc = new JSClass()
+        // jc.Render()
+        jc.func()
+      }
 
       /** ------------------------------------- END function 笔试题 --------------------------------------------------------*/
       /** -------------------------------------START  Array 笔试题 --------------------------------------------------------*/
@@ -257,6 +292,28 @@
       /** -------------------------------------  ES6 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  异步 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  闭包 笔试题 --------------------------------------------------------*/
+      /* 2018-11-28 八 经典闭包 https://www.cnblogs.com/zichi/p/4359786.html */
+      /* 变量污染法 */
+      // links 集合返回当期文档所有链接的数组
+      // var lis = document.links
+      // for (var i = 0, length = lis.length; i < length; i++) {
+      //   lis[i].index = i + 1;
+      //   lis[i].onclick = function() {
+      //     alert(this.index)
+      //   }
+      // }
+      /* 闭包 */
+      function closure() {
+        var lis = document.links
+        for (var i = 0, length = lis.length; i < length; i++) {
+          lis[i].index = i + 1;
+          (function(i) {
+            lis[i].onclick = function() {
+              alert( i + 1 )
+            }
+          })(i)
+        }
+      }
       /** -------------------------------------  算法 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  test 函数执行区 --------------------------------------------------------*/
       // noRepeat([1, 2, 3, 4, 1, 3, 5, 1, 2, 7, 4, 8])
@@ -269,7 +326,9 @@
       // console.log('testVar: ', testVar(1))
       // console.log('statNumOfStrByReg', statNumOfStrByReg())
       // console.log('statNumOfStrByHashTable', statNumOfStrByHashTable())
-      console.log('parseQueryString', parseQueryString())
+      // console.log('parseQueryString', parseQueryString())
+      // console.log('testThis2: ' +  testThis2())
+      console.log('closure: ' + closure())
     </script>
   </body>
 </html>
