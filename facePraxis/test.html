@@ -105,6 +105,11 @@
 
       /** ------------------------------------- END function 笔试题 --------------------------------------------------------*/
       /** -------------------------------------START  Array 笔试题 --------------------------------------------------------*/
+      /* 2018-11-29 最快捷的数组去重写法 */
+      function disRepeat(arr) {
+        arr = arr || [2,"12",2,12,1,2,1,6,12,13,6]
+        return [...new Set(arr)]
+      }
       /* 数组降维 -- 这里有三种方法 先阅读一遍 选择一种自己中意地方法 2018-11-16  https://www.cnblogs.com/front-end-ralph/p/4871332.html */
       /* 数组降维：方法一：把数组二层循环依次push到一个一维数组中 */
       /* 数组降维：方法二：利用concat + 循环 */
@@ -328,7 +333,8 @@
       // console.log('statNumOfStrByHashTable', statNumOfStrByHashTable())
       // console.log('parseQueryString', parseQueryString())
       // console.log('testThis2: ' +  testThis2())
-      console.log('closure: ' + closure())
+      // console.log('closure: ' + closure())
+      console.log('disRepeat: ' + disRepeat())
     </script>
   </body>
 </html>
