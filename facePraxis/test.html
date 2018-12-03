@@ -291,6 +291,11 @@
         // 返回新的数组
         return result
       }
+
+      /* 2018-12-3 判断一个单词是否回文 */
+      function isPalindrom(str) {
+        return str ? (str === str.split('').reverse().join('')) : false
+      }
       
 /** -------------------------------------END  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
       /** -------------------------------------  Object 笔试题 --------------------------------------------------------*/
@@ -334,7 +339,8 @@
       // console.log('parseQueryString', parseQueryString())
       // console.log('testThis2: ' +  testThis2())
       // console.log('closure: ' + closure())
-      console.log('disRepeat: ' + disRepeat())
+      // console.log('disRepeat: ' + disRepeat())
+      console.log('isPalindrom:' + isPalindrom('abad'))
     </script>
   </body>
 </html>
