@@ -296,6 +296,18 @@
       function isPalindrom(str) {
         return str ? (str === str.split('').reverse().join('')) : false
       }
+
+      /* 随机生成指定长度的字符串 */
+      function getRandomStr(len) {
+        let str = 'abcdefghijklmnopqrstuvwxyz9876543210'
+        let resStr = '',
+            num = str.length
+        for (let i = 0; i < len; i++) {
+          // 实际就是产生随机的坐标（在候选的字符串长度/坐标范围内）
+          resStr += str.charAt(Math.floor(Math.random() * num))
+        }
+        return resStr
+      }
       
 /** -------------------------------------END  string 笔试题（所有的测试和变量定义都放在闭包环境内 函数的调用可以放在外面） --------------------------------------------------------*/
       /** -------------------------------------  Object 笔试题 --------------------------------------------------------*/
@@ -340,7 +352,8 @@
       // console.log('testThis2: ' +  testThis2())
       // console.log('closure: ' + closure())
       // console.log('disRepeat: ' + disRepeat())
-      console.log('isPalindrom:' + isPalindrom('abad'))
+      // console.log('isPalindrom:' + isPalindrom('abad'))
+      console.log('getRandomStr: ' + getRandomStr(4))
     </script>
   </body>
 </html>
