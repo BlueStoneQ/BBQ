@@ -358,6 +358,28 @@
         }
         return arr;
       }
+      /** 2018-12-5 排序算法 https://www.cnblogs.com/MythLeige/p/6047838.html */
+      /* 快速排序 递归 + 左右分组 */
+      function quickSort(arr) {
+        // 校验arr的合理性 - arr长度必须大于1
+        if (arr.length <= 1) {
+          return arr
+        }
+        let leftArr = [], // 左边数组
+            rightArr = [], // 右边数组
+            q = arr[0] // 墙 - 比较量
+        // 注意这里 i = 1，因为q作为一个单独的元素/分水岭在后面放在数组中了
+        for (let i = 1, len = arr.length; i < len; i++) {
+          // 升序排列：大的放在rightArr 小的放在leftArr; 那么 降序也可以直接 reverse()一个出来哈哈
+          if (arr[i] > q) {
+            rightArr.push(arr[i])
+          } else {
+            leftArr.push(arr[i])
+          }
+        }
+        // 利用递归层层把排列的数组收拢成一个数组 
+        return [].concat(quickSort(leftArr), [q], quickSort(rightArr))
+      }
       /** -------------------------------------END  算法 笔试题 --------------------------------------------------------*/
       /** -------------------------------------  test 函数执行区 --------------------------------------------------------*/
       // noRepeat([1, 2, 3, 4, 1, 3, 5, 1, 2, 7, 4, 8])
@@ -377,7 +399,8 @@
       // console.log('isPalindrom:' + isPalindrom('abad'))
       // console.log('getRandomStr: ' + getRandomStr(4))
       // console.log('swap: ' + swap(1,2))
-      console.log('bubbleSort([2,3,1,2,4,8,4,3,25,3]): ' + bubbleSort([2,3,1,2,4,8,4,3,25,3]))
+      // console.log('bubbleSort([2,3,1,2,4,8,4,3,25,3]): ' + bubbleSort([2,3,1,2,4,8,4,3,25,3]))
+      console.log('quickSort([3,4,2,2,4,6,2,4,7,3,9,8]): ' + quickSort([3,4,2,2,4,6,2,4,7,3,9,8]))
     </script>
   </body>
 </html>
