@@ -337,6 +337,125 @@
         }
       }
       /** -------------------------------------SATRT  算法 笔试题 --------------------------------------------------------*/
+
+      /**
+      实现类似getElementsByClassName 的功能
+        自己实现一个函数，查找某个DOM节点下面的包含某个class的所有DOM节点？
+        不允许使用原生提供的 getElementsByClassName querySelectorAll 等原生提供DOM查找函数。
+        @param {array} node 索要遍历的节点
+        @param {string} name 所要搜索的className 
+      */
+      function queryClassName (node, name) {
+        // 主要还是用正则去检测字符串 -- 因为这些代码处理 就是处理字符串
+        let starts = '(^|[\n\r\t\f])' // className开头应该匹配正则 对特殊符号的处理-特殊的换行/换页符也可以掠过 不打断字符串 
+        let ends = '([\n\nr\t\f]|$)' // className结尾应该匹配的正则
+        let array = [],
+            regexp = new RegExp(starts + name + ends),
+            elements = node.getElementsByTagName('*'),
+            length = elements.length,
+            i = 0,
+            element
+        while (i < length) {
+          element = elements[i]
+          if (regexp.test(element.className)) {
+            array.push(element)
+          }
+          i += 1
+        }
+        return array
+      }
+
+      /** 2019-1-9 js实现二叉查找树 -- 心里要出现这个树结构的可视化（3D模型）
+            https://www.cnblogs.com/MythLeige/p/6047838.html
+            任意节点的左子树不空，则左子树上所有结点的值均小于它的根结点的值；
+            任意节点的右子树不空，则右子树上所有结点的值均大于它的根结点的值；
+            任意节点的左、右子树也分别为二叉查找树；
+            没有键值相等的节点。二叉查找树相比于其他数据结构的优势在于查找、插入的时间复杂度较低。
+            为O(log n)。二叉查找树是基础性数据结构，用于构建更为抽象的数据结构，如集合、multiset、关联数组等
+      */
+      function OrderedBinaryTree () {
+        // 这里需要一个闭包的处理 -- 利用函数提供一个局域性环境
+        // es6 class -- 本质上还是原型
+        // 定义 二叉树的节点
+        class Node {
+          constructor (data, left, right) {
+            this.data = data
+            this.left = left
+            this.right = right
+          }
+        }
+        // 定义二叉搜索树
+        class BinarySearchTree {
+          // 构造函数
+          constructor () {
+            // 根节点
+            this.root = null
+          }
+        /* 实现树的增删改查 */
+        // 增
+        insert(data) {
+          // 利用数据构造节点对象（数据 + 类 => 对象）
+          let n = new Node(data, null, null)
+          // 如果是第一个节点 就作为根节点
+          if (!this.root) {
+            return this.root = n
+          }
+          // 如果不是第一个节点 则要按照定义挂在符合定义的位置
+          // 定义出两个变量 ： 当前节点和父节点 来对整个树进行遍历
+          let currentNode = this.root // 以根节点为当前节点开始遍历
+          let parent = null // 记录当前节点的父节点
+          // 利用无限循环 + break来遍历整个树
+          while (1) {
+            parent = currentNode
+            if (data < currentNode.data) {
+              // 关键点-移动节点指针 当该插入节点的数据小于当前节点的data时 则把节点指针顺着左侧向下移动
+              currentNode = currentNode.left
+              if (currentNode === null) {
+                // 当某个节点的左侧为null时 则可以把插入的节点放在这个左侧
+                parent.left = n
+                // 插入后 就退出循环
+                break 
+              }
+            } else {
+              // 关键点-移动节点指针 否则 移动节点指针向右侧去遍历
+              currentNode = currentNode.right
+              if (currentNode === null) {
+                parent.right = n
+                break
+              }
+            }
+          }
+        }
+        // 删
+        // 删除的思路其实就是先找到要删除的节点
+        // 然后移动指针指向 把要删除的节点从整个树中卸下来
+        // removeNode(node, data) {
+        //   // 当然要有判空处理
+        //   if () {}
+        //   // 利用递归进行删除
+        // }
+
+        // 查--实际就是根据data去遍历整个树 到该data所在的位置 -- 树的遍历：需要舒徐树的结构和递归算法(或者循环算法)
+        // 要注意左右枝节的跳转逻辑
+        find(data) {
+          var current = this.root
+          while (current !== null) {
+            // 这里就是循环的跳出点
+            if (current.data === data) {
+              // 循环的过程就是移动current（一个类指针量） 此时 current就停留在data相等的节点上了
+              break
+            }
+            if (data < current.data) {
+              // 向左侧去找 - 这也体现了搜索二叉树便于遍历的特点
+              current = current.left
+            } else {
+              current = current.right
+            }
+          }
+          return current.data
+        }
+        }
+      }
       /** 2018-12-5 不借助临时变量 进行两个整数的交换 */
       function swap(a, b) {
         b = b - a; // b此时为b和a的差值
