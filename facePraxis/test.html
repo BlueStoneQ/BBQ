@@ -336,8 +336,99 @@
           })(i)
         }
       }
-      /** -------------------------------------SATRT  算法 笔试题 --------------------------------------------------------*/
+      /** -------------------------------------SATRT  算法 笔试题（利用函数的闭包提供封闭测试环境） --------------------------------------------------------*/
 
+      /**
+        单链表 https://www.jianshu.com/p/b5338ccc419c
+        适用场景：对线性表的长度或者规模难以估计；频繁做插入删除操作；构建动态性比较强的线性表 不过 在js中基本数组足以满足
+        核心遍历算法： while循环一定current + 跳出循环条件的设计（实际上就是顺序查找算法）
+        重要概念：current
+      */
+      function sigleLinkedList () {
+        // 链表节点 -- 实质上是一个引用类型
+        function Node (value) {
+          // 这里的this是Node本身
+          this.value = value;
+          this.next = null;
+        }
+        // 链表对象
+        function SLList () {
+          // 头节点
+          this.head = new Node('head');
+          // 基本操作方法绑定 这里利用了闭包
+          this.find = find;
+          this.insert = insert;
+          this.remove = remove;
+          this.display = display;
+        }
+        // 查找 - 根据值来找到节点（地址/引用）并返回
+        function find (item) {
+          // 树立头节点 - 这里地this在new SLList绑定
+          let currNode = this.head;
+          // 遍历
+          while (currNode.value !== item && currNode !== null) {
+            currNode = currNode.next
+          }
+          // 返回
+          return currNode
+        }
+        // 插入 - 根据值item找到指定节点/ 然后把value给这个节点
+        function insert (value, item) {
+          // 利用value构造一个新Node
+          const newNode = new Node(value);
+          let current;
+          // 遍历 -- 把新节点的next指向item所在节点/末尾的next
+          if (item) {
+            // 传入item的情况下  添加在item所在节点的后面
+            current = this.find(item);
+            newNode.next = current.next;
+          } else {
+            // 未传入item的情况下 我们添加在链表的末尾
+            current = this.head;
+            newNode.next = current.next;
+          }
+          // 把item所在地节点地next指向新节点
+          current.next = newNode;
+        }
+        // 打印整个链表
+        function display () {
+          let current = this.head;
+          while (current !== null) {
+            console.log(current.value);
+            // 移动current指针
+            current = current.next
+          }
+        }
+        // 删除
+        function remove (item) {
+          let current = this.head
+          // 利用遍历找出item所在节点的父节点
+          if (current !== null && current.next.value !== item) {
+            // 移动current
+            current = current.next 
+          }
+          // 经过以上遍历后 此时current已经是item所在节点的父节点了
+          // 如果item所在节点不为空
+          if (current.next !== null) {
+            // 记录下要被删除的节点
+            let rmNode = current.next;
+            // 父节点的next指向要删除节点的next 跳过了要删除的节点
+            current.next = rmNode.next;
+            // 要删除节点的next失去指向
+            rmNode.next = null
+          }
+        }
+        // test
+        const cities = new SLList();
+        cities.insert('Conway', 'head');
+        cities.insert('Russellville', 'Conway');
+        cities.insert('Alma', 'Russellville');
+        cities.insert('testNode');
+        cities.display();
+        console.log('-------------');
+        cities.remove('Alma');
+        cities.display();
+      } 
       /**
       实现类似getElementsByClassName 的功能
         自己实现一个函数，查找某个DOM节点下面的包含某个class的所有DOM节点？
@@ -366,12 +457,12 @@
       }
 
       /** 2019-1-9 js实现二叉查找树 -- 心里要出现这个树结构的可视化（3D模型）
-            https://www.cnblogs.com/MythLeige/p/6047838.html
-            任意节点的左子树不空，则左子树上所有结点的值均小于它的根结点的值；
-            任意节点的右子树不空，则右子树上所有结点的值均大于它的根结点的值；
-            任意节点的左、右子树也分别为二叉查找树；
-            没有键值相等的节点。二叉查找树相比于其他数据结构的优势在于查找、插入的时间复杂度较低。
-            为O(log n)。二叉查找树是基础性数据结构，用于构建更为抽象的数据结构，如集合、multiset、关联数组等
+        https://www.cnblogs.com/MythLeige/p/6047838.html
+        任意节点的左子树不空，则左子树上所有结点的值均小于它的根结点的值；
+        任意节点的右子树不空，则右子树上所有结点的值均大于它的根结点的值；
+        任意节点的左、右子树也分别为二叉查找树；
+        没有键值相等的节点。二叉查找树相比于其他数据结构的优势在于查找、插入的时间复杂度较低。
+        为O(log n)。二叉查找树是基础性数据结构，用于构建更为抽象的数据结构，如集合、multiset、关联数组等
       */
       function OrderedBinaryTree () {
         // 这里需要一个闭包的处理 -- 利用函数提供一个局域性环境
@@ -539,7 +630,8 @@
       // console.log('swap: ' + swap(1,2))
       // console.log('bubbleSort([2,3,1,2,4,8,4,3,25,3]): ' + bubbleSort([2,3,1,2,4,8,4,3,25,3]))
       // console.log('quickSort([3,4,2,2,4,6,2,4,7,3,9,8]): ' + quickSort([3,4,2,2,4,6,2,4,7,3,9,8]))
-      console.log('getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]): ' + getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]))
+      // console.log('getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]): ' + getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]))
+      console.log('sigleLinkedList(): ', sigleLinkedList())
     </script>
   </body>
 </html>
