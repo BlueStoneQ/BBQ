@@ -339,6 +339,75 @@
       /** -------------------------------------SATRT  算法 笔试题（利用函数的闭包提供封闭测试环境） --------------------------------------------------------*/
 
       /**
+        队列 https://www.jianshu.com/p/b5338ccc419c
+        适用场景：高效的数据结构，例如消息队列，这种抽象的设计，应用十分广泛
+        核心遍历算法： 主要是利用js中可变长的数组实现/模拟（实际上js的数组就是一个包含了队列的数据结构）
+        重要概念：head tail
+      */
+      function getQueue () {
+        // 队列数据结构
+        function Queue () {
+          this.dataScore = [];
+          this.head = 0;
+          this.tail = 0;
+          this.enqueue = enqueue;
+          this.dequeue = dequeue;
+          this.front = front;
+          this.back = back;
+          this.queueToString = queueToString;
+          this.empty = empty;
+        }
+        // 队列相关操作 - 尾部插入
+        function enqueue (element) {
+          this.dataScore[this.tail++] = element; 
+        }
+        // 队列相关操作 - 头部弹出
+        function dequeue () {
+          this.tail--; // tail--后刚好移到了缩短后的数组下标处
+          return this.dataScore.shift();
+        }
+        // 队列相关操作 - 读取头部
+        function front () {
+          if (this.empty()) return ''; // 为空则返回空
+          return this.dataScore[this.head];
+        }
+        // 队列相关操作 - 读取尾部
+        function back () {
+          if (this.empty()) return ''; 
+          return this.dataScore[this.tail - 1]
+        }
+        // 将队列转成字符串输出
+        function queueToString () {
+          if (this.empty()) return '' // 所有读取都要注意空队列的情况
+          let str = '';
+          let i = this.head;
+          while (i < this.tail) {
+            str += this.dataScore[i] + ' ';
+            i++;
+          }
+          return str;
+        }
+        // 清空队列
+        function empty () {
+          if ( this.head === this.tail ) return true;
+          return false;
+        }
+        // test
+        const q = new Queue();
+        q.enqueue('a');
+        q.enqueue('b');
+        q.enqueue('c');
+        q.enqueue('d');
+        q.enqueue('e');
+        q.enqueue('f');
+        console.log(q.queueToString())
+        console.log(q.front(), q.back())
+        q.dequeue();
+        console.log(q.front(), q.back())
+        // 返回这个数据结构
+        return Queue;
+      }
+      /**
         单链表 https://www.jianshu.com/p/b5338ccc419c
         适用场景：对线性表的长度或者规模难以估计；频繁做插入删除操作；构建动态性比较强的线性表 不过 在js中基本数组足以满足
         核心遍历算法： while循环一定current + 跳出循环条件的设计（实际上就是顺序查找算法）
@@ -396,8 +465,10 @@
           while (current !== null) {
             console.log(current.value);
             // 移动current指针
-            current = current.next
+            current = current.next;
           }
+          // 返回该链表
+          return SLList;
         }
         // 删除
         function remove (item) {
@@ -631,7 +702,8 @@
       // console.log('bubbleSort([2,3,1,2,4,8,4,3,25,3]): ' + bubbleSort([2,3,1,2,4,8,4,3,25,3]))
       // console.log('quickSort([3,4,2,2,4,6,2,4,7,3,9,8]): ' + quickSort([3,4,2,2,4,6,2,4,7,3,9,8]))
       // console.log('getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]): ' + getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]))
-      console.log('sigleLinkedList(): ', sigleLinkedList())
+      // console.log('sigleLinkedList(): ', sigleLinkedList())
+      console.log('getQueue(): ', getQueue())
     </script>
   </body>
 </html>
