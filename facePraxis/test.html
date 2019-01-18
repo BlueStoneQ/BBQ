@@ -337,7 +337,69 @@
         }
       }
       /** -------------------------------------SATRT  算法 笔试题（利用函数的闭包提供封闭测试环境） --------------------------------------------------------*/
-
+      /**
+        栈 https://www.jianshu.com/p/b5338ccc419c
+        适用场景：逆序地输出（先进后出），可以利用这一特性去实现很多特性
+        核心遍历算法： 主要是利用js中可变长的数组实现/模拟（实际上js的数组就是一个包含了栈的数据结构）--线性数据结构 就能够使用数组/链表作为底层数据结构
+                      栈的底部为数组的index=0处 然后移动的只有顶部的指针 1 2 3 4 ...
+                      因为数组下标0处的数值无法用splice()删除 所以 0处栈不存储数值 数值从1处开始存储
+        重要概念：top
+      */
+      function getStack () {
+        // 栈
+        function Stack () {
+          this.dataScore = []; // 栈的底层数据结构 -- 这里采用数组
+          this.top = 0; // 栈的底部其实是数组的0处 真实的下标是top-1 top事重指向栈顶的更高一处
+          this.push = push;
+          this.pop = pop;
+          this.peek = peek;
+          this.getLength = getLength;
+          this.clear = clear;
+          this.isEmpty = isEmpty;
+        }
+        // push
+        function push (element) {
+          let item = this.dataScore[this.top++] = element;
+        }
+        // pop
+        function pop () {
+          let item = this.dataScore[--this.top]
+          // 从实际的栈中删除这个
+          this.dataScore.splice(this.top, 1)
+          // 返回弹出的值
+          return item;
+        }
+        // 读取栈顶的值
+        function peek () {
+          return this.dataScore[this.top]
+        }
+        // 栈的长度
+        function getLength () {
+          return this.top + 1
+        }
+        // 清空栈
+        function clear () {
+          this.dataScore.splice(0, this.top);
+        }
+        // 判断栈是否为空
+        function isEmpty () {
+          return this.top === 0 ? true : false;
+        }
+        // test
+        let test = new Stack();
+        test.push('1')
+        test.push('2')
+        test.push('3')
+        test.push('4')
+        test.push('5')
+        console.log('test.pop(): ', test.pop())
+        console.log('test.pop(): ', test.pop())
+        console.log('test.pop(): ', test.pop())
+        console.log('test.pop(): ', test.pop())
+        console.log('test.pop(): ', test.pop())
+        // 返回Stack对象
+        return Stack
+      }
       /**
         队列 https://www.jianshu.com/p/b5338ccc419c
         适用场景：高效的数据结构，例如消息队列，这种抽象的设计，应用十分广泛
@@ -703,7 +765,8 @@
       // console.log('quickSort([3,4,2,2,4,6,2,4,7,3,9,8]): ' + quickSort([3,4,2,2,4,6,2,4,7,3,9,8]))
       // console.log('getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]): ' + getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]))
       // console.log('sigleLinkedList(): ', sigleLinkedList())
-      console.log('getQueue(): ', getQueue())
+      // console.log('getQueue(): ', getQueue())
+      console.log('getSatck(): ', getStack())
     </script>
   </body>
 </html>
