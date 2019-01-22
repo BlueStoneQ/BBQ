@@ -16,6 +16,7 @@
         <a href='#'> 第三个链接 </a> </br>
         <a href='#'> 第四个链接 </a> </br>
     </div>
+    <canvas class='fibonacci'></canvas>
     <script>
       /** 笔试题 */
       /** ------------------------------------- START function 笔试题 --------------------------------------------------------*/
@@ -337,6 +338,61 @@
         }
       }
       /** -------------------------------------SATRT  算法 笔试题（利用函数的闭包提供封闭测试环境） --------------------------------------------------------*/
+      /**
+        使用canvas绘制一个斐波那契数列的曲线 https://www.cnblogs.com/MythLeige/p/6047838.html
+        概念： 斐波那契数列，又称黄金分割数列，指的是这样一个数列：0、1、1、2、3、5、8、13、21、34、……在数学上，斐波纳契数列主要考察递归的调用
+        核心算法： 利用数组；生成斐波那契数组的方法：fibo[i] = fibo[i-1]+fibo[i-2];
+        实施：分两部分：1- 生成斐波那契数列 2- 利用canvas画出来
+        @params {num} n 斐波拉契的最高值
+      */
+      function getFibonacciRender(n) {
+        // 获取fibonacci的数组
+        function getFibonacci (max) {
+          let fibArrs = []
+          let i = 0
+          while (i < max) {
+            if (i <= 1) {
+              // 特殊情况 数组的第一个 arr[0] arr[1] 他们不能有前两个数之和
+              fibArrs.push(i)
+            } else {
+              fibArrs.push(fibArrs[i - 1] + fibArrs[i - 2]) 
+            }
+            i++
+          }
+          return fibArrs
+        }
+        // 利用fibonacci数据 + canvas画图
+        function getFibonacciDraw (data) {
+          // 获取canvas元素
+          let canvas = document.querySelector('.fibonacci')
+          canvas.width = 600
+          canvas.height = 480
+          let coor = {
+            x: 300,
+            y: 240
+          }
+          // 获取一个绘图对象
+          let ctx = canvas.getContext('2d')
+          // 填充颜色
+          ctx.fillStyle = '#f00'
+          function draw(r, n, prevR) {
+            //开始路径
+            ctx.beginPath()
+            ctx.strokeStyle = 'blue'
+            // 添加子路径-画圆弧等
+            ctx.arc(100, 100, 50, 0, Math.PI * 2, false)
+            // 关闭路径
+            ctx.closePath()
+            // 绘制路径
+            ctx.stroke()
+          }
+          // 执行draw
+          draw()
+        }
+        // test
+        getFibonacciDraw()
+      }
+      
       /**
         栈 https://www.jianshu.com/p/b5338ccc419c
         适用场景：逆序地输出（先进后出），可以利用这一特性去实现很多特性
@@ -766,7 +822,8 @@
       // console.log('getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]): ' + getMaxProfit([3,4,2,2,4,6,2,4,7,3,9,8]))
       // console.log('sigleLinkedList(): ', sigleLinkedList())
       // console.log('getQueue(): ', getQueue())
-      console.log('getSatck(): ', getStack())
+      // console.log('getSatck(): ', getStack())
+      console.log('getFibonacciRender(): ', getFibonacciRender(20))
     </script>
   </body>
 </html>
