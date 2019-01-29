@@ -55,6 +55,26 @@
             }
           }
         }
+        // 选择排序
+        this.selectionSort = function () {
+          // 声明一个存储数组长度 + 一个存储数组当前最小值下标的变量
+          let len = array.length, indexMin;
+          // 还是双层循环 + 交换的方式
+          for (let i = 0; i < len-1; i++) {
+            indexMin = i;
+            for (let j = i; j < len; j++) {
+              // 比较值 得到当前最小的index
+              if (array[indexMin] > array[j]) {
+                indexMin = j;
+              }
+            }
+            // 在外层循环一次结束后，如果i（最开始我们确定的最小值）不等于indexMin。这说明i并不是最小值。我们就交换两个值的位置。
+            // 如果相等，说明当前的indexMin就是最小值，无需交换位置。
+            if (i !== indexMin) {
+              this.swap(array, i, indexMin);
+            }
+          }
+        };
       }
       /**
        ************************************END 算法部分*************************************************
@@ -78,7 +98,7 @@
       }
       var arraylist = creatArrayList(5);
       console.log(arraylist.toString());//5,4,3,2,1
-      arraylist.bubbleSort();
+      arraylist.selectionSort();
       console.log(arraylist.toString());//1,2,3,4,5
     </script>
   </body>
