@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>数据结构与算法练习本</title>
+  </head>
+  <body>
+    <p id="p1">测试</p>
+    <div>
+        <span id='123' class="pp">test id = '123'</span>
+        <span class="pp">test</span>
+        <span class="pp">test</span> </br>
+        <!-- 实现一段脚本，使得点击对应链接alert出相应的编号 -->
+        <!-- 经典闭包 2018-11-28 -->
+        <a href='#'> 算法优先 </a> </br>
+        <a href='#'> 第二个链接 </a> </br>
+        <a href='#'> 第三个链接 </a> </br>
+        <a href='#'> 第四个链接 </a> </br>
+    </div>
+    <script>
+      /**
+       ************************************START 算法部分*************************************************
+      */
+      /**
+        数组类 - 用来参与算法
+      */
+      function ArrayList () {
+        let array = [];
+        // 插入
+        this.insert = function (item) {
+          array.push(item);
+        }
+        // 字符串化
+        this.toString = function () {
+          return array.join();
+        }
+        // 交换函数 - 根据下标进行交换
+        this.swap = function (array, index1, index2) {
+          // 中间值交换
+          // let aux = array[index1];
+          // array[index1] = array[index2];
+          // array[index2] = aux;
+          // es6解构赋值交换
+          [array[index1], array[index2]] = [array[index2], array[index1]];
+        }
+        // 冒泡排序-最慢 最简单
+        this.bubbleSort = function () {
+          // 敢于独立动手尝试
+          for (let i = 0; i < array.length; i++) {
+            for (let j = 0; j < array.length-1-i; j++) {
+              if (array[j] > array[j+1]) {
+                // 升序排列
+                // 上面j < array.length-1就是因为这里j+1把最后一个元素覆盖到了
+                this.swap(array, j, j+1);
+              }
+            }
+          }
+        }
+      }
+      /**
+       ************************************END 算法部分*************************************************
+      */
+      /**
+       ************************************START 数据机构部分*************************************************
+      */
+      /**
+       ************************************END 数据结构部分*************************************************
+      */
+      /**
+       ************************************test*************************************************
+      */
+      /*算法-排序-测试*/
+      function creatArrayList (size) {
+        let arr = new ArrayList();
+        for (let i = size; i > 0; i--) {
+          arr.insert(i);
+        }
+        return arr;
+      }
+      var arraylist = creatArrayList(5);
+      console.log(arraylist.toString());//5,4,3,2,1
+      arraylist.bubbleSort();
+      console.log(arraylist.toString());//1,2,3,4,5
+    </script>
+  </body>
+</html>
