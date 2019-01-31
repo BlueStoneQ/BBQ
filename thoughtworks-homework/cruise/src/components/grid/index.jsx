@@ -30,7 +30,7 @@ class Col extends Component {
       <div
         className='col-wrap'
         style={{
-          width: (span / 24) + '' // 百分比 - 栅格系统 24等分
+          width: (span * 100 / 24) + '%' // 百分比 - 栅格系统 24等分
         }}
       >
         { this.props.children }
