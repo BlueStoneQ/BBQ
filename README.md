@@ -5,3 +5,4 @@
 # 入驻
 * min-zeptoJs  // 自己手写一个简易的zeptoJs 当然是五脏俱全并且可用 只是第一版不会去实现太多太全的细节方法
 * facePracxis  // 笔试/面试题练习本
+* thoughtworks-homework // thoughtWorks的一个笔试题-家庭作业-做个小项目
