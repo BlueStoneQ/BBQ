@@ -2,16 +2,24 @@
  * cruise -main Page
  */
 import React, { Component } from 'react';
+import {
+  Row,
+  Col
+} from '../../components'
 import './index.css';
 
-class App extends Component {
+class Cruise extends Component {
   render() {
     return (
       <div>
-        cruise
+        <Row>
+          <Col span={2}>
+              1234
+          </Col>
+        </Row>
       </div>
     );
   }
 }
 
-export default App;
+export default Cruise;
