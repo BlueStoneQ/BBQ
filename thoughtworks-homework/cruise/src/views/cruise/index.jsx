@@ -19,12 +19,17 @@ const MenuItem = Menu.Item;
 /**
  * Row的公共样式
  */
-const rowStyle = {};
+const rowStyle = {
+  marginBottom: '10px',
+  border: '1px solid #0f0'
+};
 
 /**
  * Col的公共样式
  */
-const colStyle = {};
+const colStyle = {
+  border: '1px solid #00f'
+};
 
 class Cruise extends Component {
   render() {
@@ -59,8 +64,35 @@ class Cruise extends Component {
             <MenuItem>HELP</MenuItem>
           </Menu>
         </Sider>
-        <Content width='120px'>Content</Content>
-        <Footer>Footer</Footer>
+        <Content width='120px'>
+          <Page
+            padding='10px 20px'
+          >
+            <Row style={{...rowStyle}}>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+            </Row>
+            <Row style={{...rowStyle}}>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+              <Col span={8} style={{...colStyle}}>
+                1
+              </Col>
+            </Row>
+          </Page>
+        </Content>
+        <Footer>@Copyright 2017 ThoughtWorks</Footer>
       </Layout>
     );
   }

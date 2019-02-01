@@ -11,11 +11,19 @@ import './index.css';
  */
 class Page extends Component {
   render() {
-    const { style } = this.props;
+    const {
+      style,
+      padding,
+      backColor
+    } = this.props;
     return (
       <div
         className='page-wrap'
-        style={{...style}}
+        style={{
+          ...style,
+          padding: padding,
+          background: backColor
+        }}
       >
         { this.props.children }
       </div>
