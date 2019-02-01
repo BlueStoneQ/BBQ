@@ -3,6 +3,7 @@
  */
 import React, { Component } from 'react';
 import {
+  Page,
   Row,
   Col
 } from '../../components'
@@ -11,13 +12,13 @@ import './index.css';
 class Cruise extends Component {
   render() {
     return (
-      <div>
+      <Page>
         <Row>
           <Col span={2}>
               1234
           </Col>
         </Row>
-      </div>
+      </Page>
     );
   }
 }
