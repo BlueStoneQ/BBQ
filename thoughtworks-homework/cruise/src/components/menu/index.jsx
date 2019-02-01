@@ -12,7 +12,9 @@ import './index.css';
 class Item extends Component {
   render() {
     return (
-      <div className='item-wrap'>
+      <div
+        className='item-wrap'
+      >
         { this.props.children }
       </div>
     );
@@ -24,15 +26,16 @@ class Item extends Component {
  */
 class Menu extends Component {
   render() {
-    const { span } = this.props
+    const { children } = this.props
     return (
       <div
         className='menu-wrap'
-        style={{
-          width: (span * 100 / 24) + '%' // 百分比 - 栅格系统 24等分
-        }}
       >
-        { this.props.children }
+        {
+          React.Children.map(children, function(child, i){
+            return child;
+          })
+        }
       </div>
     );
   }

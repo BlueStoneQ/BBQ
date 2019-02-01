@@ -14,6 +14,7 @@ import {
 import './index.css';
 
 const { Header, Content, Sider, Footer } = Layout;
+const MenuItem = Menu.Item;
 
 /**
  * Row的公共样式
@@ -50,7 +51,14 @@ class Cruise extends Component {
             </Col>
           </Row>
         </Header>
-        <Sider>Sider</Sider>
+        <Sider>
+          <Menu>
+            <MenuItem>DASHBORDER</MenuItem>
+            <MenuItem>AGENT</MenuItem>
+            <MenuItem>MY CRUISE</MenuItem>
+            <MenuItem>HELP</MenuItem>
+          </Menu>
+        </Sider>
         <Content width='120px'>Content</Content>
         <Footer>Footer</Footer>
       </Layout>
