@@ -4,6 +4,7 @@
  * 2- 响应式：xl>=1200px lg>=1024px md>=768 md<=768
  */
 import React, { Component } from 'react';
+import classNames from 'classnames';
 import './index.css';
 
 /**
@@ -11,9 +12,12 @@ import './index.css';
  */
 class Row extends Component {
   render() {
-    const { style } = this.props;
+    const { style, className } = this.props;
     return (
-      <div className='row-wrap' style={{...style}}>
+      <div
+        className={classNames('row-wrap', className)}
+        style={{...style}}
+      >
         { this.props.children }
       </div>
     );
@@ -25,11 +29,11 @@ class Row extends Component {
  */
 class Col extends Component {
   render() {
-    const { span, offset, style } = this.props
+    const { span, offset, style, className } = this.props
     console.log('this.props: ', this.props);
     return (
       <div
-        className='col-wrap'
+        className={classNames('col-wrap', className)}
         style={{
           ...style,
           width: (span * 100 / 24) + '%', // 百分比 - 栅格系统 24等分

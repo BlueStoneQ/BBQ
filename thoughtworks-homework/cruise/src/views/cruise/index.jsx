@@ -70,7 +70,7 @@ class Cruise extends Component {
             padding='10px 20px'
           >
             <Row style={{...rowStyle}}>
-              <Col span={8} style={{...colStyle, paddingRight: '20px'}}>
+              <Col span={8} style={{...colStyle}}>
                 <DisCard
                   backColor='#FF9A2A'
                   title='Building'
@@ -78,7 +78,11 @@ class Cruise extends Component {
                 />
               </Col>
               <Col span={8} style={{...colStyle}}>
-                1
+                <DisCard
+                  backColor='#FF9A2A'
+                  title='Idle'
+                  data='5'
+                />
               </Col>
               <Col span={8} style={{...colStyle}}>
                 1

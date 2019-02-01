@@ -24,18 +24,18 @@ class DisCard extends Component {
       <Card
         backColor={backColor}
         padding={padding || '10px 5px'}
+        style={{
+          height: '90px',
+          width: 'calc(100% - 20px)'
+        }}
       >
-        <Row
-          style={{
-            height: '80px'
-          }}
-        >
+        <Row>
           <Col className='title-wrap' span={8} offset={1}>
             { title }
           </Col>
         </Row>
         <Row>
-          <Col span={2} offset={22}>
+          <Col className='data-wrap' span={2} offset={22}>
             { data }
           </Col>
         </Row>

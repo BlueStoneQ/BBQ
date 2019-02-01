@@ -14,14 +14,16 @@ class Card extends Component {
   render() {
     const {
       backColor,
-      padding
+      padding,
+      style
     } = this.props; 
     return (
       <div
         className='card-wrap'
         style={{
           background: backColor,
-          padding: padding 
+          padding: padding,
+          ...style
         }}
       >
         { this.props.children }
