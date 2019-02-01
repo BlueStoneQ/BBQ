@@ -11,8 +11,9 @@ import './index.css';
  */
 class Row extends Component {
   render() {
+    const { style } = this.props;
     return (
-      <div className='row-wrap'>
+      <div className='row-wrap' style={{...style}}>
         { this.props.children }
       </div>
     );
@@ -24,13 +25,15 @@ class Row extends Component {
  */
 class Col extends Component {
   render() {
-    const { span } = this.props
+    const { span, offset, style } = this.props
     console.log('span: ', span);
     return (
       <div
         className='col-wrap'
         style={{
-          width: (span * 100 / 24) + '%' // 百分比 - 栅格系统 24等分
+          ...style,
+          width: (span * 100 / 24) + '%', // 百分比 - 栅格系统 24等分
+          marginLeft: (offset * 100 / 24) + '%' // 偏移量
         }}
       >
         { this.props.children }

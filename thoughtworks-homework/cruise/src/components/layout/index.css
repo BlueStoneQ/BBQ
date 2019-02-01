@@ -11,6 +11,7 @@
   /* display: inline-block; */
   float: left;
   width: 200px;
+  overflow: auto;
   height: calc(100vh - 90px);
   background:#2D4054;
 }
@@ -20,6 +21,7 @@
   float: right;
   width: calc(100vw - 200px);
   height: calc(100vh - 90px);
+  overflow: auto;
   background:#E1E4E6;
 }
 /* Footer */
