@@ -26,7 +26,7 @@ class Row extends Component {
 class Col extends Component {
   render() {
     const { span, offset, style } = this.props
-    console.log('span: ', span);
+    console.log('this.props: ', this.props);
     return (
       <div
         className='col-wrap'

@@ -8,7 +8,8 @@ import {
   Col,
   Menu,
   Layout,
-  Icon
+  Icon,
+  DisCard
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import './index.css';
@@ -69,8 +70,12 @@ class Cruise extends Component {
             padding='10px 20px'
           >
             <Row style={{...rowStyle}}>
-              <Col span={8} style={{...colStyle}}>
-                1
+              <Col span={8} style={{...colStyle, paddingRight: '20px'}}>
+                <DisCard
+                  backColor='#FF9A2A'
+                  title='Building'
+                  data='3'
+                />
               </Col>
               <Col span={8} style={{...colStyle}}>
                 1
