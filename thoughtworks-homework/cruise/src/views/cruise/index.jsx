@@ -5,20 +5,23 @@ import React, { Component } from 'react';
 import {
   Page,
   Row,
-  Col
+  Col,
+  Menu,
+  Layout
 } from '../../components'
 import './index.css';
+
+const { Header, Content, Sider, Footer } = Layout;
 
 class Cruise extends Component {
   render() {
     return (
-      <Page>
-        <Row>
-          <Col span={2}>
-              1234
-          </Col>
-        </Row>
-      </Page>
+      <Layout>
+        <Header>header</Header>
+        <Sider>Sider</Sider>
+        <Content width='120px'>Content</Content>
+        <Footer>Footer</Footer>
+      </Layout>
     );
   }
 }

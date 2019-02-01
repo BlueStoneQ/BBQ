@@ -7,7 +7,7 @@ import React, { Component } from 'react';
 import './index.css';
 
 /**
- * Grid - Col
+ * Page
  */
 class Page extends Component {
   render() {

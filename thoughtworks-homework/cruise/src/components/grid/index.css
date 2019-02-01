@@ -2,10 +2,10 @@
 /* Row */
 .row-wrap {
   width: 100%;
-  border: 1px solid #f00;
+  /* border: 1px solid #f00; */
 }
 /* Col */
 .col-wrap {
   display: inline-block;
-  border: 1px solid #0f0;
+  /* border: 1px solid #0f0; */
 }

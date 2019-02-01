@@ -1,18 +1,18 @@
 /**
  * components-Menu
- * 1- 栅格组件：24等分
- * 2- 响应式：xl>=1200px lg>=1024px md>=768 md<=768
+ * 1- 根据props.data + Item 遍历渲染整个菜单
+ * 2- 菜单须有折叠功能 - 在响应式的情况下 进行折叠
  */
 import React, { Component } from 'react';
 import './index.css';
 
 /**
- * Grid - Row
+ * Menu - Item
  */
 class Item extends Component {
   render() {
     return (
-      <div className='row-wrap'>
+      <div className='item-wrap'>
         { this.props.children }
       </div>
     );
@@ -20,15 +20,14 @@ class Item extends Component {
 }
 
 /**
- * Grid - Col
+ * Menu
  */
 class Menu extends Component {
   render() {
     const { span } = this.props
-    console.log('span: ', span);
     return (
       <div
-        className='col-wrap'
+        className='menu-wrap'
         style={{
           width: (span * 100 / 24) + '%' // 百分比 - 栅格系统 24等分
         }}
