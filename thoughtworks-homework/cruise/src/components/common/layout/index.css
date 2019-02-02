@@ -11,6 +11,7 @@
   /* display: inline-block; */
   float: left;
   width: 200px;
+  margin-left: 10vw;
   overflow: auto;
   height: calc(100vh - 90px);
   background:#2D4054;
@@ -20,8 +21,9 @@
 .content-wrap {
   /* display: inline-block; */
   float: right;
-  width: calc(100vw - 200px);
+  width: calc(80vw - 200px); /* 宽度的计算 注意整个width中的margin */
   height: calc(100vh - 90px);
+  margin-right: 10vw;
   overflow: auto;
   background:#E1E4E6;
 }

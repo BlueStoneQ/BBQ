@@ -79,7 +79,7 @@ class Cruise extends Component {
               </Col>
               <Col span={8} style={{...colStyle}}>
                 <DisCard
-                  backColor='#FF9A2A'
+                  backColor='#7FBA39'
                   title='Idle'
                   data='5'
                 />
