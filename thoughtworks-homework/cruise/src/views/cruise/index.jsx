@@ -23,14 +23,14 @@ const MenuItem = Menu.Item;
  */
 const rowStyle = {
   marginBottom: '10px',
-  border: '1px solid #0f0'
+  // border: '1px solid #0f0'
 };
 
 /**
  * Col的公共样式
  */
 const colStyle = {
-  border: '1px solid #00f'
+  // border: '1px solid #00f'
 };
 
 class Cruise extends Component {

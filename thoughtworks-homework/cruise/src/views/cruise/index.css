@@ -6,13 +6,14 @@
 /* num-card的wrap */
 .num-card {
   height: 120px;
-  color: #2D4054;
-  font-size: 12px;
+  background: #F3F3F3;
 }
 
 .num-card-label {
   margin-top: 20px;
   text-align: center;
+  color: #2D4054;
+  font-size: 12px;
 }
 
 .num-card-num {
