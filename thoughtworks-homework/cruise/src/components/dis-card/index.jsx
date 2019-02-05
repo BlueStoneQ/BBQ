@@ -25,8 +25,7 @@ class DisCard extends Component {
         backColor={backColor}
         padding={padding || '10px 5px'}
         style={{
-          height: '90px',
-          width: 'calc(100% - 20px)'
+          height: '120px'
         }}
       >
         <Row>
@@ -35,7 +34,7 @@ class DisCard extends Component {
           </Col>
         </Row>
         <Row>
-          <Col className='data-wrap' span={2} offset={22}>
+          <Col className='data-wrap' span={3} offset={21}>
             { data }
           </Col>
         </Row>

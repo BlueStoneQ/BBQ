@@ -9,7 +9,8 @@ import {
   Menu,
   Layout,
   Icon,
-  DisCard
+  DisCard,
+  Card
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import './index.css';
@@ -46,7 +47,7 @@ class Cruise extends Component {
                 backSize='80%'
               />
             </Col>
-            <Col span={4} offset={6} style={{...colStyle}}>
+            <Col span={3} offset={7} style={{...colStyle}}>
               <Icon
                 imgUrl='/assets/logo/avatar.jpg'
                 width='40px'
@@ -70,22 +71,26 @@ class Cruise extends Component {
             padding='10px 20px'
           >
             <Row style={{...rowStyle}}>
-              <Col span={8} style={{...colStyle}}>
+              <Col span={7.5} style={{...colStyle}}>
                 <DisCard
                   backColor='#FF9A2A'
                   title='Building'
                   data='3'
                 />
               </Col>
-              <Col span={8} style={{...colStyle}}>
+              <Col span={7.5} offset={0.5} style={{...colStyle}}>
                 <DisCard
                   backColor='#7FBA39'
                   title='Idle'
                   data='5'
                 />
               </Col>
-              <Col span={8} style={{...colStyle}}>
-                1
+              <Col span={8} offset={0.5} style={{...colStyle}}>
+                <Card>
+                  <Row>
+                    <Col>12</Col>
+                  </Row>
+                </Card>
               </Col>
             </Row>
             <Row style={{...rowStyle}}>
