@@ -22,6 +22,7 @@ class DisCard extends Component {
     } = this.props; 
     return (
       <Card
+        className='dis-card-wrap'
         backColor={backColor}
         padding={padding || '10px 5px'}
         style={{

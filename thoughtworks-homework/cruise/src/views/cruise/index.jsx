@@ -38,16 +38,29 @@ class Cruise extends Component {
     return (
       <Layout>
         <Header>
-          <Row style={{...rowStyle}}>
-            <Col span={4} offset={10} style={{...colStyle}}>
+          <Row
+            className='h-row'
+            style={{...rowStyle}}
+          >
+            <Col
+              span={4}
+              offset={10}
+              className='h-col'
+              style={{...colStyle}}
+            >
               <Icon
                 imgUrl='/assets/logo/logo.svg'
                 width='150px'
                 height='50px'
-                backSize='80%'
+                backSize='100%'
               />
             </Col>
-            <Col span={3} offset={7} style={{...colStyle}}>
+            <Col
+              span={3}
+              offset={7}
+              className='h-col'
+              style={{...colStyle}}
+            >
               <Icon
                 imgUrl='/assets/logo/avatar.jpg'
                 width='40px'
@@ -66,7 +79,7 @@ class Cruise extends Component {
             <MenuItem>HELP</MenuItem>
           </Menu>
         </Sider>
-        <Content width='120px'>
+        <Content>
           <Page
             padding='10px 20px'
           >
@@ -86,19 +99,28 @@ class Cruise extends Component {
                 />
               </Col>
               <Col span={8} offset={0.5} style={{...colStyle}}>
-                <Card>
-                  <Row>
-                    <Col>12</Col>
+                 <Card
+                  className='num-card'
+                >
+                  <Row className='num-card-label'>
+                    <Col span={8}>ALL</Col>
+                    <Col span={8}>PHYSICAL</Col>
+                    <Col span={8}>VIRTUAL</Col>
+                  </Row>
+                  <Row className='num-card-num'>
+                    <Col span={8}>8</Col>
+                    <Col span={8}>4</Col>
+                    <Col span={8}>4</Col>
                   </Row>
                 </Card>
               </Col>
             </Row>
             <Row style={{...rowStyle}}>
               <Col span={8} style={{...colStyle}}>
-                1
+                <div>1</div>
               </Col>
               <Col span={8} style={{...colStyle}}>
-                1
+                <div>1</div>
               </Col>
               <Col span={8} style={{...colStyle}}>
                 1

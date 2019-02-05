@@ -12,6 +12,8 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   display: inline-block;
-  height: 100%;
+  vertical-align: top; /* 避免baseLine的影响 */
+  width: 100%;
+  /* height: 100%; */
   /* border: 1px solid #0f0; */
 }

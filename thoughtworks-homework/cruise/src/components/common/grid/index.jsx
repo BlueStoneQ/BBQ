@@ -29,7 +29,7 @@ class Row extends Component {
  */
 class Col extends Component {
   render() {
-    const { span, offset, style, className } = this.props
+    const { span, offset, style, className } = this.props;
     console.log('this.props: ', this.props);
     return (
       <div

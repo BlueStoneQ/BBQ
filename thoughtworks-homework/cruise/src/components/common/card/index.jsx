@@ -5,6 +5,7 @@
  * 3- props暴露: background padding
  */
 import React, { Component } from 'react';
+import classNames from 'classnames';
 import './index.css';
 
 /**
@@ -15,11 +16,12 @@ class Card extends Component {
     const {
       backColor,
       padding,
-      style
+      style,
+      className
     } = this.props; 
     return (
       <div
-        className='card-wrap'
+        className={classNames('card-wrap', className)}
         style={{
           background: backColor,
           padding: padding,
