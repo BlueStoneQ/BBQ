@@ -1,0 +1,10 @@
+/* components - Input */
+/* Input的wrap */
+.input-wrap {
+  width: 100%;
+  max-width: 200px;
+  height: 24px;
+  background: #E1E4E6;
+  outline: none;
+  border: 1px solid #E1E4E6;
+}

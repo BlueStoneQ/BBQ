@@ -11,7 +11,8 @@ import {
   Icon,
   DisCard,
   Card,
-  Tabs
+  Tabs,
+  Input
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import './index.css';
@@ -36,6 +37,24 @@ const colStyle = {
 };
 
 class Cruise extends Component {
+  /**
+   * 渲染Tabs中的extra
+   */
+  getTabsExtraRender = () => {
+    return (
+      <Row>
+        <Col
+          span={20}
+          style={{
+            paddingLeft: '30px'
+          }}
+        >
+          <Input />
+        </Col>
+        <Col span={4}>2</Col>
+      </Row>
+    );
+  }
   render() {
     return (
       <Layout>
@@ -121,10 +140,7 @@ class Cruise extends Component {
               <Col span={24} style={{...colStyle}}>
                 <Tabs
                   tabsWidth={8}
-                  extra={<Row>
-                    <Col span={20}>1</Col>
-                    <Col span={4}>2</Col>
-                  </Row>}
+                  extra={this.getTabsExtraRender()}
                 >
                   <TabPane tab='All' key='All'>1</TabPane>
                   <TabPane tab='Physical' key='Physical'>2</TabPane>

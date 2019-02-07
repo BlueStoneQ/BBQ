@@ -6,3 +6,4 @@ export { default as Icon } from './common/icon';
 export { default as Card } from './common/card';
 export { default as DisCard } from './dis-card';
 export { default as Tabs } from './common/tabs';
+export { default as Input } from './common/input';
