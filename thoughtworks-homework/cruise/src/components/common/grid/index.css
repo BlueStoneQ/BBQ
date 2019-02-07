@@ -12,6 +12,7 @@
   -moz-box-sizing: border-box;
   display: inline-block;
   vertical-align: top; /* 避免baseLine的影响 */
+  vertical-align: middle;
   width: 100%;
   /* height: 100%; */
 }
