@@ -121,6 +121,10 @@ class Cruise extends Component {
               <Col span={24} style={{...colStyle}}>
                 <Tabs
                   tabsWidth={8}
+                  extra={<Row>
+                    <Col span={20}>1</Col>
+                    <Col span={4}>2</Col>
+                  </Row>}
                 >
                   <TabPane tab='All' key='All'>1</TabPane>
                   <TabPane tab='Physical' key='Physical'>2</TabPane>

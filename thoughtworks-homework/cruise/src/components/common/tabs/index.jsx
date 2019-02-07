@@ -54,7 +54,7 @@ class Tabs extends Component {
    */
   getTabsSelectorRender = (props, thiz) => {
     const { selectKey } = thiz.state;
-    const { children, tabsWidth, defaultKey } = props;
+    const { children, tabsWidth, extra } = props;
     const childrenLen = children.length;
     console.log('children: ', children);
     // 遍历计算生成tabs和extra 位置/宽度等进行计算 点击事件进行添加
@@ -80,6 +80,12 @@ class Tabs extends Component {
             );
           })
         }
+        <Col span={24 - (tabsWidth || 24)}>
+          {
+            // 渲染extra部分
+            extra && extra
+          }
+        </Col>
       </Row>
     );
   }
