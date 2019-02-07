@@ -10,13 +10,15 @@ import {
   Layout,
   Icon,
   DisCard,
-  Card
+  Card,
+  Tabs
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import './index.css';
 
 const { Header, Content, Sider, Footer } = Layout;
 const MenuItem = Menu.Item;
+const TabPane = Tabs.TabPane;
 
 /**
  * Row的公共样式
@@ -116,14 +118,12 @@ class Cruise extends Component {
               </Col>
             </Row>
             <Row style={{...rowStyle}}>
-              <Col span={8} style={{...colStyle}}>
-                <div>1</div>
-              </Col>
-              <Col span={8} style={{...colStyle}}>
-                <div>1</div>
-              </Col>
-              <Col span={8} style={{...colStyle}}>
-                1
+              <Col span={24} style={{...colStyle}}>
+                <Tabs>
+                  <TabPane tab='11' key='1'>1</TabPane>
+                  <TabPane tab='22' key='2'>2</TabPane>
+                  <TabPane tab='33' key='3'>3</TabPane>
+                </Tabs>
               </Col>
             </Row>
           </Page>

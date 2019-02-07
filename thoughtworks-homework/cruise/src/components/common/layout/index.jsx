@@ -90,7 +90,7 @@ class Layout extends Component {
     }
   }
   render() {
-    console.log('【Layout props.children】: ', this.props.children);
+    // console.log('【Layout props.children】: ', this.props.children);
     const { style } = this.props;
     return (
       <div
@@ -110,7 +110,7 @@ class Layout extends Component {
             //   child.props.width = `calc(100vm - ${this.state.siderWidth})`
             // }
             // 没有content的情况抛出异常
-            console.log('child: ', child);
+            // console.log('child: ', child);
             return child;
         }) }
       </div>

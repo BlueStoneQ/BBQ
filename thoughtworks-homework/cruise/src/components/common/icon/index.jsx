@@ -11,7 +11,7 @@ import './index.css';
  */
 class Icon extends Component {
   render() {
-    console.log('process.env.PUBLIC_URL: ', process.env.PUBLIC_URL); // 空的哈哈
+    // console.log('process.env.PUBLIC_URL: ', process.env.PUBLIC_URL); // 空的哈哈
     const {
       imgUrl,
       width,

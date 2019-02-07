@@ -1,0 +1,12 @@
+/* components - Tabs */
+/* Tabs - Wrap */
+.tabs-wrap {
+  width: 100%;
+  border: 1px solid #f00;
+}
+
+/* Tabs - header 选择器部分 */
+.tabs-header {
+  border: 1px solid #0f0;
+  height: 50px;
+}
