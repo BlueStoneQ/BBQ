@@ -15,11 +15,14 @@ import {
   Input
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
+import config from '../../config';
 import './index.css';
 
 const { Header, Content, Sider, Footer } = Layout;
 const MenuItem = Menu.Item;
 const TabPane = Tabs.TabPane;
+
+const { API_BASE_URL } = config;
 
 /**
  * Row的公共样式
@@ -55,6 +58,16 @@ class Cruise extends Component {
       </Row>
     );
   }
+
+  componentDidMount () {
+    // 请求数据
+    fetch(API_BASE_URL + 'agents')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('data: ', data);
+      });
+  }
+
   render() {
     return (
       <Layout>
