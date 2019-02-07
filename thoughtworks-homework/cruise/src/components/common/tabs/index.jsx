@@ -5,6 +5,7 @@
  */
 import React, { Component } from 'react';
 import { Row, Col } from '../grid';
+import classnames from 'classnames';
 import './index.css';
 
 /**
@@ -24,6 +25,12 @@ class TabPane extends Component {
  * Tabs
  */
 class Tabs extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      selectKey: '1'
+    };
+  }
   /**
    * 当tabs切换时调用
    * @param { obj } tab 单个选项对象
@@ -43,6 +50,7 @@ class Tabs extends Component {
    * 渲染-Tabs的选择器部分
    */
   getTabsSelectorRender = (props, thiz) => {
+    const { selectKey } = thiz.state;
     const { children } = props;
     const childrenLen = children.length;
     console.log('children: ', children);
@@ -53,8 +61,14 @@ class Tabs extends Component {
           children.map((child, i) => {
             console.log('child->', child);
             return (
-              <Col span={24/childrenLen} key={child.key}>
-                <span onClick={() => this.onChange(child, props, thiz)}>
+              <Col
+                span={24/childrenLen}
+                key={child.key}
+              >
+                <span
+                  className={classnames('tab-common', {'tab-selected': child.key === selectKey})}
+                  onClick={() => this.onChange(child, props, thiz)}
+                >
                   {
                     child.props.tab
                   }
@@ -70,6 +84,7 @@ class Tabs extends Component {
     const {
       children
     } = this.props;
+    const { selectKey } = this.state;
     return (
       <div className='tabs-wrap'>
         <Row>
@@ -78,9 +93,10 @@ class Tabs extends Component {
         <Row>
           {
             React.Children.map(children, (child, i) => {
-              // 这里从child中取出child的key 和 当前TabsSeelector中选中的保持一致 才渲染
-              // console.log(`child[${i}]: `, child);
-              return child;
+              // 这里从child中取出child的key 和 当前TabsSeelector中选中的保持一致 才渲染-Blog
+              if (child.key === selectKey) {
+                return child;
+              }
             })
           }
         </Row>

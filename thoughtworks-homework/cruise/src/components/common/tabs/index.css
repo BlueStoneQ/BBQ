@@ -5,8 +5,19 @@
   border: 1px solid #f00;
 }
 
-/* Tabs - header 选择器部分 */
-.tabs-header {
-  border: 1px solid #0f0;
+/* Tabs - header 选择器wrap部分 */
+.tabs-header {}
+
+/* Tabs - selector */
+.tab-common {
+  display: inline-block;
+  text-align: center;
   height: 50px;
+  line-height: 50px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.tab-selected {
+  border-bottom: 2px solid #00f;
 }
