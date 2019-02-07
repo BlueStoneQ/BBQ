@@ -2,6 +2,9 @@
  * components-Tabs
  * 1- 栅格组件：24等分
  * 2- 响应式：xl>=1200px lg>=1024px md>=768 md<=768
+ * 3- props: {
+ *   tabsWidth：在header中 tabs占据的24栅格数的格数（一般取双数 默认24格） 剩余部分给extra
+ * }
  */
 import React, { Component } from 'react';
 import { Row, Col } from '../grid';
@@ -51,7 +54,7 @@ class Tabs extends Component {
    */
   getTabsSelectorRender = (props, thiz) => {
     const { selectKey } = thiz.state;
-    const { children } = props;
+    const { children, tabsWidth } = props;
     const childrenLen = children.length;
     console.log('children: ', children);
     // 遍历计算生成tabs和extra 位置/宽度等进行计算 点击事件进行添加
@@ -62,7 +65,7 @@ class Tabs extends Component {
             console.log('child->', child);
             return (
               <Col
-                span={24/childrenLen}
+                span={(tabsWidth || 24)/childrenLen}
                 key={child.key}
               >
                 <span

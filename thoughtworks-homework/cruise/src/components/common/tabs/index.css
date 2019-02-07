@@ -6,18 +6,24 @@
 }
 
 /* Tabs - header 选择器wrap部分 */
-.tabs-header {}
+.tabs-header {
+  background: #F3F3F3;
+}
 
 /* Tabs - selector */
 .tab-common {
   display: inline-block;
-  text-align: center;
+  width: 100%;
   height: 50px;
   line-height: 50px;
-  width: 100%;
+  text-align: center;
   cursor: pointer;
+  user-select: none;
+  -ms-user-select: none;
+  border-right: 1px solid #E1E4E6;
 }
 
 .tab-selected {
-  border-bottom: 2px solid #00f;
+  color: #00B4CF;
+  border-bottom: 2px solid #00B4CF;
 }
