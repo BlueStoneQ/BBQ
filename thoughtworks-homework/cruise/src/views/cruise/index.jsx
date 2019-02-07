@@ -122,9 +122,9 @@ class Cruise extends Component {
                 <Tabs
                   tabsWidth={8}
                 >
-                  <TabPane tab='11' key='1'>1</TabPane>
-                  <TabPane tab='22' key='2'>2</TabPane>
-                  <TabPane tab='33' key='3'>3</TabPane>
+                  <TabPane tab='All' key='All'>1</TabPane>
+                  <TabPane tab='Physical' key='Physical'>2</TabPane>
+                  <TabPane tab='Virtual' key='Virtual'>3</TabPane>
                 </Tabs>
               </Col>
             </Row>

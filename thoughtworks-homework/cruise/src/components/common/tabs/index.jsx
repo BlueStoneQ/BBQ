@@ -54,7 +54,7 @@ class Tabs extends Component {
    */
   getTabsSelectorRender = (props, thiz) => {
     const { selectKey } = thiz.state;
-    const { children, tabsWidth } = props;
+    const { children, tabsWidth, defaultKey } = props;
     const childrenLen = children.length;
     console.log('children: ', children);
     // 遍历计算生成tabs和extra 位置/宽度等进行计算 点击事件进行添加
@@ -82,6 +82,13 @@ class Tabs extends Component {
         }
       </Row>
     );
+  }
+  componentDidMount () {
+    // 设置默认的selectKey 1- 如果传入defaultSelectKey 则设置为defaultKey 2- 否则，默认selectKey为顺序第一个TabPane的key
+    const { defaultKey, children } = this.props;
+    this.setState({
+      selectKey: defaultKey || children[0].key
+    });
   }
   render() {
     const {
