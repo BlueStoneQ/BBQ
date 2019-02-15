@@ -13,7 +13,9 @@ class List extends Component {
       <div>
         { listData.map((v, i) => {
           return (
-            <Item />
+            <Item
+              data={v}
+            />
           );
         }) }
       </div>
