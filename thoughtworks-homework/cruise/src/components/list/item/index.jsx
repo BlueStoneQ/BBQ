@@ -5,11 +5,24 @@
  * 3- 业务型/展示型组件
  */
 import React, { Component } from 'react';
-import { Row, Col } from '../../index';
+import { Row, Col, Img } from '../../index';
 import './index.css';
 
 const colStyle = {
   border: '1px solid #f00'
+};
+
+/**
+ * data中的os和对应图片名称的映射关系
+ * key: os
+ * value: img的名称
+ */
+const os2img = {
+  windows: 'windows',
+  ubuntu: 'ubuntu',
+  debian: 'debin',
+  suse: 'suse',
+  centos: 'cent_os'
 };
 
 class Button extends Component {
@@ -25,7 +38,14 @@ class Button extends Component {
     } = data;
     return (
        <Row className='ls-item-wrap'>
-        <Col span={4} style={{...colStyle}}>类型图片</Col>
+        <Col span={2} offset={0.5} style={{...colStyle}}>
+          <Img
+            imgUrl={`/assets/os-icons/${os2img[os]}.png`}
+            width='80px'
+            height='80px'
+            backSize='100%'
+            />
+        </Col>
         <Col span={20}>
           <Row>
             <Col span={8} style={{...colStyle}}>{ name }</Col>
