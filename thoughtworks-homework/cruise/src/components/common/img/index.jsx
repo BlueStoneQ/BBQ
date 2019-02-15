@@ -1,5 +1,5 @@
 /**
- * components-Icon
+ * components-Img
  * 1- 栅格组件：24等分
  * 2- 响应式：xl>=1200px lg>=1024px md>=768 md<=768
  */
@@ -7,9 +7,9 @@ import React, { Component } from 'react';
 import './index.css';
 
 /**
- * Icon
+ * Img
  */
-class Icon extends Component {
+class Img extends Component {
   render() {
     // console.log('process.env.PUBLIC_URL: ', process.env.PUBLIC_URL); // 空的哈哈
     const {
@@ -21,7 +21,7 @@ class Icon extends Component {
     } = this.props; 
     return (
       <i
-        className='icon-wrap'
+        className='Img-wrap'
         style={{
           backgroundImage: 'url(' + process.env.PUBLIC_URL + imgUrl + ')',
           width: width || '100%',
@@ -34,4 +34,4 @@ class Icon extends Component {
   }
 }
 
-export default Icon;
+export default Img;

@@ -8,7 +8,7 @@ import {
   Col,
   Menu,
   Layout,
-  Icon,
+  Img,
   DisCard,
   Card,
   Tabs,
@@ -100,7 +100,7 @@ class Cruise extends Component {
               className='h-col'
               style={{...colStyle}}
             >
-              <Icon
+              <Img
                 imgUrl='/assets/logo/logo.svg'
                 width='150px'
                 height='50px'
@@ -113,7 +113,7 @@ class Cruise extends Component {
               className='h-col'
               style={{...colStyle}}
             >
-              <Icon
+              <Img
                 imgUrl='/assets/logo/avatar.jpg'
                 width='40px'
                 height='40px'
