@@ -1,0 +1,14 @@
+/*component - Button*/
+/* Button.wrap */
+.btn-wrap {
+  display: inline-block;
+  user-select: none;
+  -ms-user-select: none;
+  cursor: pointer; 
+}
+
+/* 各种类型的Button */
+.btn-primary {
+  color: #fff;
+  background: #00B4CF;
+}

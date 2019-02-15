@@ -12,7 +12,8 @@ import {
   DisCard,
   Card,
   Tabs,
-  Input
+  Input,
+  List
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
@@ -40,6 +41,25 @@ const colStyle = {
 };
 
 class Cruise extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      listData: [] // List的数据
+    };
+  }
+  /**
+   * 获取List数据
+   */
+  getListData = (thiz) => {
+    fetch(API_BASE_URL + 'agents')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('data: ', data);
+        thiz.setState({
+          listData: data
+        });
+      });
+  }
   /**
    * 渲染Tabs中的extra
    */
@@ -60,15 +80,13 @@ class Cruise extends Component {
   }
 
   componentDidMount () {
+    const thiz = this;
     // 请求数据
-    fetch(API_BASE_URL + 'agents')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('data: ', data);
-      });
+    this.getListData(thiz);
   }
 
   render() {
+    const { listData } = this.state;
     return (
       <Layout>
         <Header>
@@ -155,7 +173,11 @@ class Cruise extends Component {
                   tabsWidth={8}
                   extra={this.getTabsExtraRender()}
                 >
-                  <TabPane tab='All' key='All'>1</TabPane>
+                  <TabPane tab='All' key='All'>
+                    <List
+                      listData={listData}
+                    />
+                  </TabPane>
                   <TabPane tab='Physical' key='Physical'>2</TabPane>
                   <TabPane tab='Virtual' key='Virtual'>3</TabPane>
                 </Tabs>
