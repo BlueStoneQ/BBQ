@@ -70,7 +70,7 @@ class Button extends Component {
           </Row>
           <Row style={{...rowStyle}}>
             <Col span={2} style={{...colStyle}}>
-              <Icon/>
+              <Icon type='plus'/>
             </Col>
             {
               resources.map((v, i) => (
