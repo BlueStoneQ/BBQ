@@ -5,8 +5,17 @@
  * 3- 业务型/展示型组件
  */
 import React, { Component } from 'react';
-import { Row, Col, Img } from '../../index';
+import {
+  Row,
+  Col,
+  Img,
+  Icon
+} from '../../index';
 import './index.css';
+
+const rowStyle = {
+  padding: '10px 0'
+}
 
 const colStyle = {
   border: '1px solid #f00'
@@ -47,14 +56,22 @@ class Button extends Component {
             />
         </Col>
         <Col span={20}>
-          <Row>
-            <Col span={8} style={{...colStyle}}>{ name }</Col>
+          <Row style={{...rowStyle}}>
+            <Col
+              span={8}
+              className='ls-item-name'
+              style={{...colStyle}}
+            >
+              { name }
+            </Col>
             <Col span={4} style={{...colStyle}}>{ status }</Col>
             <Col span={6} style={{...colStyle}}>{ ip }</Col>
             <Col span={6} style={{...colStyle}}>{ location }</Col>
           </Row>
-          <Row>
-            <Col span={2} style={{...colStyle}}>btn</Col>
+          <Row style={{...rowStyle}}>
+            <Col span={2} style={{...colStyle}}>
+              <Icon/>
+            </Col>
             {
               resources.map((v, i) => (
                 <Col key={i} span={3} style={{...colStyle}}>{ v }</Col>

@@ -23,6 +23,7 @@
   float: right;
   width: calc(80vw - 200px); /* 宽度的计算 注意整个width中的margin */
   height: calc(100vh - 90px);
+  /* min-width: 800px; */
   margin-right: 10vw;
   overflow: auto;
   background:#E1E4E6;

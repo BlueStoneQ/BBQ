@@ -1,0 +1,9 @@
+/* component - Icon */
+/* Icon wrap */
+.icon-wrap {
+  display: inline-block;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position:center;
+  vertical-align: middle;
+}
