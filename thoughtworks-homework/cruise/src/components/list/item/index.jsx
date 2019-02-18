@@ -59,10 +59,13 @@ class Button extends Component {
           <Row style={{...rowStyle}}>
             <Col
               span={8}
-              className='ls-item-name'
               style={{...colStyle}}
             >
-              { name }
+              <Icon
+                type='desktop'
+                theme='light'
+              />
+              <span className='ls-item-name'>{ name }</span>
             </Col>
             <Col span={4} style={{...colStyle}}>{ status }</Col>
             <Col span={6} style={{...colStyle}}>{ ip }</Col>

@@ -1,4 +1,10 @@
 /* List Item */
+/* wrap的样式 */
+.ls-item-wrap {
+  margin-top: 10px;
+  background: #F3F3F3;
+  border: 1px solid #F00;
+}
 /* name部分的样式 */
 .ls-item-name {
  font-weight: 600;

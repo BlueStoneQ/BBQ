@@ -15,11 +15,13 @@ class Icon extends Component {
   render() {
     // console.log('process.env.PUBLIC_URL: ', process.env.PUBLIC_URL); // 空的哈哈
     const {
-      type
+      type, // icon的类型
+      className,
+      theme
     } = this.props;
     return (
       <i
-        className={classNames({ [`icon-${type}`]: true })}
+        className={classNames('icon-wrap', className, { [`icon-${type}`]: true }, { [`icon-${theme}`]: true })}
       />
     );
   }
