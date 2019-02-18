@@ -10,3 +10,34 @@
  font-weight: 600;
  color: #00B4CF;
 }
+
+/* status的样式 */
+.status-wrap {
+  display: inline-block;
+  padding: 2px 6px;
+  color: #fff;
+}
+
+.status-idle {
+  background: #FF9A2A;
+}
+
+.status-building {
+  background: #7FBC39;
+}
+
+/* resource部分的样式 */
+.resource-wrap {
+  padding: 2px 5px;
+  background: #E1E4E6;
+}
+
+/* 图标 */
+/* Icon plus */
+.icon-plus-wrap {
+  font-size: 18px;
+  padding: 3px 6px;
+  color: #fff;
+  margin-bottom: 2px;
+  background: #00B4CF;
+}

@@ -17,11 +17,13 @@ class Icon extends Component {
     const {
       type, // icon的类型
       className,
-      theme
+      theme,
+      style
     } = this.props;
     return (
       <i
         className={classNames('icon-wrap', className, { [`icon-${type}`]: true }, { [`icon-${theme}`]: true })}
+        style={{...style}}
       />
     );
   }

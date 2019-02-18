@@ -1,7 +1,11 @@
 /* component - Icon */
 /* Icon wrap */
 .icon-wrap {
+  display: inline-block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
   font-size: 20px;
+  cursor: pointer;
 }
 
 /* Icon的theme */

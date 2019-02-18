@@ -5,6 +5,7 @@
  * 3- 业务型/展示型组件
  */
 import React, { Component } from 'react';
+import classNames from 'classnames';
 import {
   Row,
   Col,
@@ -18,7 +19,7 @@ const rowStyle = {
 }
 
 const colStyle = {
-  border: '1px solid #f00'
+  // border: '1px solid #f00'
 };
 
 /**
@@ -65,19 +66,46 @@ class Button extends Component {
                 type='desktop'
                 theme='light'
               />
-              <span className='ls-item-name'>{ name }</span>
+              <span className='ls-item-name margin-left'>{ name }</span>
             </Col>
-            <Col span={4} style={{...colStyle}}>{ status }</Col>
-            <Col span={6} style={{...colStyle}}>{ ip }</Col>
-            <Col span={6} style={{...colStyle}}>{ location }</Col>
+            <Col span={4} style={{...colStyle}}>
+              <span className={classNames('status-wrap', { [`status-${status}`]: true })}>
+                { status }
+              </span>
+            </Col>
+            <Col span={6} style={{...colStyle}}>
+              <Icon
+                type='info'
+                theme='light'
+              />
+            { ip }
+            </Col>
+            <Col span={6} style={{...colStyle}}>
+              <Icon
+                type='folder'
+                theme='light'
+              />
+              { location }
+            </Col>
           </Row>
           <Row style={{...rowStyle}}>
-            <Col span={2} style={{...colStyle}}>
-              <Icon type='plus'/>
+            <Col span={1} style={{...colStyle}}>
+              <Icon
+                type='plus'
+                className='icon-plus-wrap'
+              />
             </Col>
             {
               resources.map((v, i) => (
-                <Col key={i} span={3} style={{...colStyle}}>{ v }</Col>
+                <Col
+                  key={i}
+                  span={3}
+                  offset={0.3}
+                  className='resource-wrap'
+                  style={{...colStyle, textAlign: 'center'}}>
+                { v }
+                  <Icon type='trash' style={{ fontSize: '16px' }} />
+                </Col>
               ))
             }
             <Col span={2} style={{...colStyle}}>Deny</Col>
