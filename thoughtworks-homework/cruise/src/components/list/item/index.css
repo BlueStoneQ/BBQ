@@ -3,12 +3,15 @@
 .ls-item-wrap {
   margin-top: 10px;
   background: #F3F3F3;
-  border: 1px solid #F00;
+  /* border: 1px solid #F00; */
 }
 /* name部分的样式 */
 .ls-item-name {
- font-weight: 600;
- color: #00B4CF;
+  display: inline-block;
+  height: 30px;
+  line-height: 20px;
+  font-weight: 600;
+  color: #00B4CF;
 }
 
 /* status的样式 */
@@ -28,8 +31,11 @@
 
 /* resource部分的样式 */
 .resource-wrap {
-  padding: 2px 5px;
-  background: #E1E4E6;
+  user-select: none;
+  -ms-user-select: none;
+  cursor: pointer;
+  padding: 2px 2px;
+  background: #EFEFEF;
 }
 
 /* 图标 */
@@ -41,3 +47,8 @@
   margin-bottom: 2px;
   background: #00B4CF;
 }
+
+/*间距*/
+.margin-left {
+  margin-left: 10px;
+} 

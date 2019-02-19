@@ -10,11 +10,13 @@ import {
   Row,
   Col,
   Img,
-  Icon
+  Icon,
+  Button
 } from '../../index';
 import './index.css';
 
 const rowStyle = {
+  // border: '1px dashed #00f',
   padding: '10px 0'
 }
 
@@ -35,7 +37,7 @@ const os2img = {
   centos: 'cent_os'
 };
 
-class Button extends Component {
+class Item extends Component {
   render () {
     const { data } = this.props;
     const {
@@ -56,7 +58,7 @@ class Button extends Component {
             backSize='100%'
             />
         </Col>
-        <Col span={20}>
+        <Col span={21} offset={0.5}>
           <Row style={{...rowStyle}}>
             <Col
               span={8}
@@ -68,7 +70,7 @@ class Button extends Component {
               />
               <span className='ls-item-name margin-left'>{ name }</span>
             </Col>
-            <Col span={4} style={{...colStyle}}>
+            <Col span={4} style={{...colStyle, textAlign: 'center'}}>
               <span className={classNames('status-wrap', { [`status-${status}`]: true })}>
                 { status }
               </span>
@@ -78,14 +80,14 @@ class Button extends Component {
                 type='info'
                 theme='light'
               />
-            { ip }
+              <span className='margin-left'>{ ip }</span>
             </Col>
             <Col span={6} style={{...colStyle}}>
               <Icon
                 type='folder'
                 theme='light'
               />
-              { location }
+              <span className='margin-left'>{ location }</span>
             </Col>
           </Row>
           <Row style={{...rowStyle}}>
@@ -99,16 +101,21 @@ class Button extends Component {
               resources.map((v, i) => (
                 <Col
                   key={i}
-                  span={3}
+                  span={2.5}
                   offset={0.3}
                   className='resource-wrap'
                   style={{...colStyle, textAlign: 'center'}}>
-                { v }
-                  <Icon type='trash' style={{ fontSize: '16px' }} />
+                    { v }
+                  <Icon type='trash' style={{ fontSize: '16px', marginLeft: '8px' }} />
                 </Col>
               ))
             }
-            <Col span={2} style={{...colStyle}}>Deny</Col>
+            <Col span={3} isReverse={true} style={{...colStyle}}>
+              <Button type='primary'>
+                <Icon type='deny' style={{ marginRight: '5px', fontSize: '14px' }} />
+                Deny
+              </Button>
+            </Col>
           </Row>
         </Col>
        </Row>
@@ -116,4 +123,4 @@ class Button extends Component {
   }
 }
 
-export default Button
+export default Item

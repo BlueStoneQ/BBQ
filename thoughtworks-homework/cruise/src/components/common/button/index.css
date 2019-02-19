@@ -2,9 +2,14 @@
 /* Button.wrap */
 .btn-wrap {
   display: inline-block;
+  height: 30px;
+  line-height: 30px;
+  font-size: 14px;
+  text-align: center;
+  padding: 0 12px;
   user-select: none;
   -ms-user-select: none;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 /* 各种类型的Button */

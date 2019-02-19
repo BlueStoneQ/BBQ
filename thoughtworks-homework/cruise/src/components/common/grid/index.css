@@ -16,3 +16,8 @@
   width: 100%;
   /* height: 100%; */
 }
+
+/* Col 逆序 从右向左-- 但是这样就脱离文档流了 - 不可取*/
+.col-reverse {
+  float: right;
+}

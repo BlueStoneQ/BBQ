@@ -29,10 +29,10 @@ class Row extends Component {
  */
 class Col extends Component {
   render() {
-    const { span, offset, style, className } = this.props;
+    const { span, offset, style, className, isReverse = false } = this.props;
     return (
       <div
-        className={classNames('col-wrap', className)}
+        className={classNames('col-wrap', className, {'col-reverse': isReverse})}
         style={{
           ...style,
           width: (span * 100 / 24) + '%', // 百分比 - 栅格系统 24等分
