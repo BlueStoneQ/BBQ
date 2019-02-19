@@ -5,6 +5,7 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+  vertical-align: middle; /* 调整base-line */
   font-size: 20px;
   cursor: pointer;
 }
