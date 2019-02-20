@@ -17,6 +17,7 @@ import {
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
+import { getClientCoor } from '../../utils'
 import './index.css';
 
 const { Header, Content, Sider, Footer } = Layout;
@@ -79,10 +80,23 @@ class Cruise extends Component {
     );
   }
 
+  /**
+   * test - 获取当前鼠标的位置 
+   */
+  getMouseCoor = (e) => {
+    let coor = getClientCoor(e)
+    this.setState({
+      clintX: coor.clientX,
+      clintY: coor.clientY
+    })
+  }
+
   componentDidMount () {
     const thiz = this;
     // 请求数据
     this.getListData(thiz);
+    // 获取指针位置
+    document.onmousemove = this.getMouseCoor;
   }
 
   render() {
@@ -120,6 +134,7 @@ class Cruise extends Component {
                 backSize='100%'
                 borderRadius='50%'
               />
+              { 'X: ' + this.state.clintX + 'Y: ' + this.state.clintY }
             </Col>
           </Row>
         </Header>

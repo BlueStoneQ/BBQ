@@ -31,6 +31,8 @@
 
 /* resource部分的样式 */
 .resource-wrap {
+  display: inline-block;
+  vertical-align: middle; /* 调整base-line */
   user-select: none;
   -ms-user-select: none;
   cursor: pointer;

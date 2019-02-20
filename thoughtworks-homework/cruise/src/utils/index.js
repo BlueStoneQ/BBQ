@@ -1,0 +1,1 @@
+export { getClientCoor } from './getMouseCoor'
