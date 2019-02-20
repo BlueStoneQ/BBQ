@@ -1,8 +1,31 @@
 /* customised component - OderComponent */
+/* wrap */
+.or-select-wrap {
+  display: inline-block;
+}
 /* 下拉框的开关部分 */
 .or-select-switch {
   display: inline-block;
   vertical-align: middle;
   font-size: 20px;
   color: #E1E4E6;
+}
+
+/* 下拉框的wrap */
+.options-wrap {
+  position: fixed;
+  border: 1px solid #f00;
+}
+
+/* 下拉框item的wrap */
+.option-wrap {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  background: #F3F3F3;
+}
+
+.option-wrap:hover {
+  background: #EFEFEF;
 }

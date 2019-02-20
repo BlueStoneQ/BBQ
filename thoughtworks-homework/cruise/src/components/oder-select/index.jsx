@@ -7,6 +7,11 @@
  */
 import React, { Component } from 'react'
 import { Icon } from '../index'
+import {
+  getClientCoor,
+  addMouseListener,
+  removeMouseListener
+} from '../../utils';
 import './index.css'
 
 class Option extends Component {
@@ -15,7 +20,7 @@ class Option extends Component {
       children
     } = this.props
     return (
-      <span>
+      <span option='option-wrap'>
         { children }
       </span>
     )
@@ -33,23 +38,66 @@ class OrderSelect extends Component {
    * 点击开关
    */
   onDrop = () => {
+    // let coor = getClientCoor(document);
+    // console.log('coor.e1: ', coor.e1)
+    // console.log('coor.e2: ', coor.e2)
+    // 获取当前元素位置
+    let coor = this.switch.getBoundingClientRect();
+    console.log('coor: ', coor)
     this.setState({
-      isDropDown: !this.state.isDropDown
+      isDropDown: !this.state.isDropDown,
+      coorX: Math.floor(coor.left), // options的X位置-相对于浏览器窗口
+      coorY: Math.floor(coor.bottom) // options的X位置-相对于浏览器窗口
     });
+  }
+
+  componentDidMount () {
+    // 绑定mousemove事件到document
+    // addMouseListener(document);
+  }
+  componentWillUnMount () {
+    // 解除绑定mousemove事件从document
+    // removeMouseListener(document);
   }
   render () {
     const {
-      isDropDown
-    } = this.state
+      isDropDown,
+      coorX,
+      coorY
+    } = this.state;
+    console.log('coorX: ', coorX)
+    console.log('coorY：', coorY)
+    const { children } = this.props;
     return (
-      <span
-        className='or-select-switch'
-        onClick={ this.onDrop }
-      >
-        <Icon type={ isDropDown ? 'angle-down' : 'angle-up' } />
-      </span>
+      <div className='or-select-wrap'>
+        <span
+          ref={ref => this.switch = ref}
+          className='or-select-switch'
+          onClick={ this.onDrop }
+        >
+          <Icon type={ isDropDown ? 'angle-down' : 'angle-up' } />
+        </span>
+        {
+          isDropDown &&
+          <div
+            className='options-wrap'
+            style={{
+              left: coorX + 'px',
+              top: coorY + 'px'
+            }}
+          >
+            {
+              React.Children.map(children, (child, index) => {
+                return child;
+              })
+            }
+          </div>
+        }
+      </div>
     )
   }
 }
 
-export default OrderSelect
+OrderSelect.Option = Option;
+
+export default OrderSelect;

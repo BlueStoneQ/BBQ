@@ -1,1 +1,5 @@
-export { getClientCoor } from './getMouseCoor'
+export {
+  getClientCoor,
+  addMouseListener,
+  removeMouseListener
+} from './getMouseCoor'

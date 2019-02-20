@@ -24,6 +24,7 @@ import './index.css';
 const { Header, Content, Sider, Footer } = Layout;
 const MenuItem = Menu.Item;
 const TabPane = Tabs.TabPane;
+const Option = OrderSelect.Option;
 
 const { API_BASE_URL } = config;
 
@@ -84,20 +85,20 @@ class Cruise extends Component {
   /**
    * test - 获取当前鼠标的位置 
    */
-  getMouseCoor = (e) => {
-    let coor = getClientCoor(e);
-    this.setState({
-      clintX: coor.clientX,
-      clintY: coor.clientY
-    });
-  }
+  // getMouseCoor = (e) => {
+  //   let coor = getClientCoor(e);
+  //   this.setState({
+  //     clintX: coor.clientX,
+  //     clintY: coor.clientY
+  //   });
+  // }
 
   componentDidMount () {
     const thiz = this;
     // 请求数据
     this.getListData(thiz);
     // 获取指针位置
-    document.onmousemove = this.getMouseCoor;
+    // document.onmousemove = this.getMouseCoor;
   }
 
   render() {
@@ -136,7 +137,10 @@ class Cruise extends Component {
                 backSize='100%'
                 borderRadius='50%'
               />
-              <OrderSelect />
+              <OrderSelect>
+                <Option>Profile</Option>
+                <Option>Sign Out</Option>
+              </OrderSelect>
             </Col>
           </Row>
         </Header>
