@@ -14,7 +14,8 @@ import {
   Tabs,
   Input,
   List,
-  OrderSelect
+  OrderSelect,
+  Icon
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
@@ -130,16 +131,37 @@ class Cruise extends Component {
               className='h-col'
               style={{...colStyle}}
             >
-              <Img
-                imgUrl='/assets/logo/avatar.jpg'
-                width='40px'
-                height='40px'
-                backSize='100%'
-                borderRadius='50%'
-              />
-              <OrderSelect>
-                <Option>Profile</Option>
-                <Option>Sign Out</Option>
+              <OrderSelect
+                title={
+                  <Img
+                    imgUrl='/assets/logo/avatar.jpg'
+                    width='40px'
+                    height='40px'
+                    backSize='100%'
+                    borderRadius='50%'
+                  />
+                }
+              >
+                <Option>
+                  <Row>
+                    <Col span={8}>
+                      <Icon type='id-card'/>
+                    </Col>
+                    <Col span={15} offset={1} style={{textAlign: 'left'}}>
+                      Profile
+                    </Col>
+                  </Row>
+                </Option>
+                <Option>
+                  <Row>
+                    <Col span={8}>
+                      <Icon type='sign-in'/>
+                    </Col>
+                    <Col span={15} offset={1} style={{textAlign: 'left'}}>
+                      Sign Out
+                    </Col>
+                  </Row>
+                </Option>
               </OrderSelect>
             </Col>
           </Row>

@@ -8,9 +8,7 @@
 import React, { Component } from 'react'
 import { Icon } from '../index'
 import {
-  getClientCoor,
-  addMouseListener,
-  removeMouseListener
+  getDomCoor
 } from '../../utils';
 import './index.css'
 
@@ -20,7 +18,7 @@ class Option extends Component {
       children
     } = this.props
     return (
-      <span option='option-wrap'>
+      <span className='option-wrap'>
         { children }
       </span>
     )
@@ -42,11 +40,11 @@ class OrderSelect extends Component {
     // console.log('coor.e1: ', coor.e1)
     // console.log('coor.e2: ', coor.e2)
     // 获取当前元素位置
-    let coor = this.switch.getBoundingClientRect();
+    let coor = getDomCoor(this.switch);
     console.log('coor: ', coor)
     this.setState({
       isDropDown: !this.state.isDropDown,
-      coorX: Math.floor(coor.left), // options的X位置-相对于浏览器窗口
+      coorX: Math.floor(coor.left - (120 - Math.floor(coor.width)) / 2), // options的X位置-相对于浏览器窗口 switch和下拉框的中点需要对齐 然后利用偏移量来对齐：下拉框的left = switch.left - ( 下拉框宽度 - switch.width ) / 2
       coorY: Math.floor(coor.bottom) // options的X位置-相对于浏览器窗口
     });
   }
@@ -67,7 +65,7 @@ class OrderSelect extends Component {
     } = this.state;
     console.log('coorX: ', coorX)
     console.log('coorY：', coorY)
-    const { children } = this.props;
+    const { title, children } = this.props;
     return (
       <div className='or-select-wrap'>
         <span
@@ -75,6 +73,7 @@ class OrderSelect extends Component {
           className='or-select-switch'
           onClick={ this.onDrop }
         >
+          { title }
           <Icon type={ isDropDown ? 'angle-down' : 'angle-up' } />
         </span>
         {
@@ -82,6 +81,7 @@ class OrderSelect extends Component {
           <div
             className='options-wrap'
             style={{
+              width: '120px', // 写出来 - 固定值，可以接受父组件定制，这里要参与运算
               left: coorX + 'px',
               top: coorY + 'px'
             }}

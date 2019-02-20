@@ -13,17 +13,32 @@
 
 /* 下拉框的wrap */
 .options-wrap {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  width: 120px;
   position: fixed;
-  border: 1px solid #f00;
+  padding: 10px 0;
+  background: #F3F3F3;
 }
 
 /* 下拉框item的wrap */
 .option-wrap {
   display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   width: 100%;
-  text-align: left;
-  padding: 5px 8px;
-  background: #F3F3F3;
+  height: 30px;
+  line-height: 30px;
+  padding: 0px 10px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -ms-user-select: none;
+  cursor: pointer;
 }
 
 .option-wrap:hover {

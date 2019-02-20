@@ -2,4 +2,6 @@ export {
   getClientCoor,
   addMouseListener,
   removeMouseListener
-} from './getMouseCoor'
+} from './getMouseCoor';
+
+export { getDomCoor } from './getDomCoor';
