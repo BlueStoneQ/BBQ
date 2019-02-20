@@ -13,7 +13,8 @@ import {
   Card,
   Tabs,
   Input,
-  List
+  List,
+  OrderSelect
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
@@ -84,11 +85,11 @@ class Cruise extends Component {
    * test - 获取当前鼠标的位置 
    */
   getMouseCoor = (e) => {
-    let coor = getClientCoor(e)
+    let coor = getClientCoor(e);
     this.setState({
       clintX: coor.clientX,
       clintY: coor.clientY
-    })
+    });
   }
 
   componentDidMount () {
@@ -120,6 +121,7 @@ class Cruise extends Component {
                 height='50px'
                 backSize='100%'
               />
+              { 'X: ' + this.state.clintX + 'Y: ' + this.state.clintY }
             </Col>
             <Col
               span={3}
@@ -134,7 +136,7 @@ class Cruise extends Component {
                 backSize='100%'
                 borderRadius='50%'
               />
-              { 'X: ' + this.state.clintX + 'Y: ' + this.state.clintY }
+              <OrderSelect />
             </Col>
           </Row>
         </Header>

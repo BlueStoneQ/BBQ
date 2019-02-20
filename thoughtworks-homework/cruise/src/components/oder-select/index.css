@@ -1,0 +1,8 @@
+/* customised component - OderComponent */
+/* 下拉框的开关部分 */
+.or-select-switch {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 20px;
+  color: #E1E4E6;
+}

@@ -10,3 +10,4 @@ export { default as Input } from './common/input';
 export { default as Button } from './common/button';
 export { default as Icon } from './common/icon';
 export { default as List } from './list';
+export { default as OrderSelect } from './oder-select';
