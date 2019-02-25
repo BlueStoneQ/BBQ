@@ -123,11 +123,10 @@ class Cruise extends Component {
                 height='50px'
                 backSize='100%'
               />
-              { 'X: ' + this.state.clintX + 'Y: ' + this.state.clintY }
             </Col>
             <Col
-              span={3}
-              offset={7}
+              span={4}
+              offset={6}
               className='h-col'
               style={{...colStyle}}
             >
