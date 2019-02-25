@@ -7,25 +7,13 @@
  */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import Option from './option';
 import { toggleDrop } from '../../redux/actions/order-select';
-import { Icon } from '../index'
+import { Icon } from '../index';
 import {
   getDomCoor
 } from '../../utils';
-import './index.css'
-
-class Option extends Component {
-  render () {
-    const {
-      children
-    } = this.props
-    return (
-      <span className='option-wrap'>
-        { children }
-      </span>
-    )
-  }
-}
+import './index.css';
 
 class OrderSelect extends Component {
   constructor (props) {
@@ -102,7 +90,7 @@ OrderSelect.Option = Option;
 const mapStateToProps = state => {
   console.log('state: ', state)
   return {
-    isDropDown: state.orderSelect.isDropDown // ----------> ing
+    isDropDown: state.orderSelect.isDropDown
   };
 }
 
