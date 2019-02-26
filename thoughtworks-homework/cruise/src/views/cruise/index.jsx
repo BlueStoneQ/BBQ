@@ -15,7 +15,8 @@ import {
   Input,
   List,
   OrderSelect,
-  Icon
+  Icon,
+  ConfigBox
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
@@ -105,130 +106,133 @@ class Cruise extends Component {
   render() {
     const { listData } = this.state;
     return (
-      <Layout>
-        <Header>
-          <Row
-            className='h-row'
-            style={{...rowStyle}}
-          >
-            <Col
-              span={4}
-              offset={10}
-              className='h-col'
-              style={{...colStyle}}
+      <div>
+        <Layout>
+          <Header>
+            <Row
+              className='h-row'
+              style={{...rowStyle}}
             >
-              <Img
-                imgUrl='/assets/logo/logo.svg'
-                width='150px'
-                height='50px'
-                backSize='100%'
-              />
-            </Col>
-            <Col
-              span={4}
-              offset={6}
-              className='h-col'
-              style={{...colStyle}}
-            >
-              <OrderSelect
-                title={
-                  <Img
-                    imgUrl='/assets/logo/avatar.jpg'
-                    width='40px'
-                    height='40px'
-                    backSize='100%'
-                    borderRadius='50%'
-                  />
-                }
+              <Col
+                span={4}
+                offset={10}
+                className='h-col'
+                style={{...colStyle}}
               >
-                <Option>
-                  <Row>
-                    <Col span={8}>
-                      <Icon type='id-card'/>
-                    </Col>
-                    <Col span={15} offset={1} style={{textAlign: 'left'}}>
-                      Profile
-                    </Col>
-                  </Row>
-                </Option>
-                <Option>
-                  <Row>
-                    <Col span={8}>
-                      <Icon type='sign-in'/>
-                    </Col>
-                    <Col span={15} offset={1} style={{textAlign: 'left'}}>
-                      Sign Out
-                    </Col>
-                  </Row>
-                </Option>
-              </OrderSelect>
-            </Col>
-          </Row>
-        </Header>
-        <Sider>
-          <Menu>
-            <MenuItem>DASHBORDER</MenuItem>
-            <MenuItem>AGENT</MenuItem>
-            <MenuItem>MY CRUISE</MenuItem>
-            <MenuItem>HELP</MenuItem>
-          </Menu>
-        </Sider>
-        <Content>
-          <Page
-            padding='10px 20px'
-          >
-            <Row style={{...rowStyle}}>
-              <Col span={7.5} style={{...colStyle}}>
-                <DisCard
-                  backColor='#FF9A2A'
-                  title='Building'
-                  data='3'
+                <Img
+                  imgUrl='/assets/logo/logo.svg'
+                  width='150px'
+                  height='50px'
+                  backSize='100%'
                 />
               </Col>
-              <Col span={7.5} offset={0.5} style={{...colStyle}}>
-                <DisCard
-                  backColor='#7FBA39'
-                  title='Idle'
-                  data='5'
-                />
-              </Col>
-              <Col span={8} offset={0.5} style={{...colStyle}}>
-                 <Card
-                  className='num-card'
-                >
-                  <Row className='num-card-label'>
-                    <Col span={8}>ALL</Col>
-                    <Col span={8}>PHYSICAL</Col>
-                    <Col span={8}>VIRTUAL</Col>
-                  </Row>
-                  <Row className='num-card-num'>
-                    <Col span={8}>8</Col>
-                    <Col span={8}>4</Col>
-                    <Col span={8}>4</Col>
-                  </Row>
-                </Card>
-              </Col>
-            </Row>
-            <Row style={{...rowStyle}}>
-              <Col span={24} style={{...colStyle}}>
-                <Tabs
-                  tabsWidth={8}
-                  extra={this.getTabsExtraRender()}
-                >
-                  <TabPane tab='All' key='All'>
-                    <List
-                      listData={listData}
+              <Col
+                span={4}
+                offset={6}
+                className='h-col'
+                style={{...colStyle}}
+              >
+                <OrderSelect
+                  title={
+                    <Img
+                      imgUrl='/assets/logo/avatar.jpg'
+                      width='40px'
+                      height='40px'
+                      backSize='100%'
+                      borderRadius='50%'
                     />
-                  </TabPane>
-                  <TabPane tab='Physical' key='Physical'>2</TabPane>
-                  <TabPane tab='Virtual' key='Virtual'>3</TabPane>
-                </Tabs>
+                  }
+                >
+                  <Option>
+                    <Row>
+                      <Col span={8}>
+                        <Icon type='id-card'/>
+                      </Col>
+                      <Col span={15} offset={1} style={{textAlign: 'left'}}>
+                        Profile
+                      </Col>
+                    </Row>
+                  </Option>
+                  <Option>
+                    <Row>
+                      <Col span={8}>
+                        <Icon type='sign-in'/>
+                      </Col>
+                      <Col span={15} offset={1} style={{textAlign: 'left'}}>
+                        Sign Out
+                      </Col>
+                    </Row>
+                  </Option>
+                </OrderSelect>
               </Col>
             </Row>
-          </Page>
-        </Content>
-        <Footer>@Copyright 2017 ThoughtWorks</Footer>
-      </Layout>
+          </Header>
+          <Sider>
+            <Menu>
+              <MenuItem>DASHBORDER</MenuItem>
+              <MenuItem>AGENT</MenuItem>
+              <MenuItem>MY CRUISE</MenuItem>
+              <MenuItem>HELP</MenuItem>
+            </Menu>
+          </Sider>
+          <Content>
+            <Page
+              padding='10px 20px'
+            >
+              <Row style={{...rowStyle}}>
+                <Col span={7.5} style={{...colStyle}}>
+                  <DisCard
+                    backColor='#FF9A2A'
+                    title='Building'
+                    data='3'
+                  />
+                </Col>
+                <Col span={7.5} offset={0.5} style={{...colStyle}}>
+                  <DisCard
+                    backColor='#7FBA39'
+                    title='Idle'
+                    data='5'
+                  />
+                </Col>
+                <Col span={8} offset={0.5} style={{...colStyle}}>
+                  <Card
+                    className='num-card'
+                  >
+                    <Row className='num-card-label'>
+                      <Col span={8}>ALL</Col>
+                      <Col span={8}>PHYSICAL</Col>
+                      <Col span={8}>VIRTUAL</Col>
+                    </Row>
+                    <Row className='num-card-num'>
+                      <Col span={8}>8</Col>
+                      <Col span={8}>4</Col>
+                      <Col span={8}>4</Col>
+                    </Row>
+                  </Card>
+                </Col>
+              </Row>
+              <Row style={{...rowStyle}}>
+                <Col span={24} style={{...colStyle}}>
+                  <Tabs
+                    tabsWidth={8}
+                    extra={this.getTabsExtraRender()}
+                  >
+                    <TabPane tab='All' key='All'>
+                      <List
+                        listData={listData}
+                      />
+                    </TabPane>
+                    <TabPane tab='Physical' key='Physical'>2</TabPane>
+                    <TabPane tab='Virtual' key='Virtual'>3</TabPane>
+                  </Tabs>
+                </Col>
+              </Row>
+            </Page>
+          </Content>
+          <Footer>@Copyright 2017 ThoughtWorks</Footer>
+        </Layout>
+        <ConfigBox visible={true} />
+      </div>
     );
   }
 }

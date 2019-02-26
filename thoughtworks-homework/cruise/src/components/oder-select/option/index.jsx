@@ -1,9 +1,6 @@
 /**
- * OrderSelect - 业务型组件
- * 1- 定制化的下拉框
- * 2- 纯手工实现 没有使用input.type=select
- * 3- 使用的是点击下拉开关时的鼠标指针位置 来计算出下拉框的位置
- * 4- 也许可以抽象到公共组件库中
+ * OrderSelect.Option
+ * 1- 定制化的下拉框中的选项
  */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
