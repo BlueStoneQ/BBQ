@@ -7,10 +7,11 @@ import './index.css';
 
 class Button extends Component {
   render () {
-    const { children, type } = this.props;
+    const { children, type, onClick } = this.props;
     return (
       <span
         className={classNames('btn-wrap', {[`btn-${type}`]: true})}
+        onClick={onClick}
       >
         { children }
       </span>

@@ -8,9 +8,10 @@ const TOGGLE_VISIBLE = actionTypes.TOGGLE_VISIBLE;
 /**
  * action - 切换弹窗是否显示的状态
  */
-const toggleVisible = () => {
+const toggleVisible = (visible) => {
   return {
-    type: TOGGLE_VISIBLE
+    type: TOGGLE_VISIBLE,
+    visible
   };
 }
 

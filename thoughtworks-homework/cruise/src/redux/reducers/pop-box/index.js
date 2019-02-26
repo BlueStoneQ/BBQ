@@ -12,7 +12,7 @@ const TOGGLE_VISIBLE = actionTypes.TOGGLE_VISIBLE;
 const popBox = (state = { visible: defaultState.visible }, action) => {
   switch (action.type) {
     case TOGGLE_VISIBLE:
-      return { visible: !state.visible }; // 这里返回的其实是store.PopBox,而这里的state是指redux store树的一部分：popBox
+      return { visible: action.visible || !state.visible }; // 这里返回的其实是store.PopBox,而这里的state是指redux store树的一部分：popBox
     default:
       return state;
   }

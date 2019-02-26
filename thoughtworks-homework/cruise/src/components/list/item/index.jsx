@@ -44,11 +44,12 @@ class Item extends Component {
   /**
    * Item中 plus符号点击事件
    * 1- 弹出/收回弹窗
+   * 2- 这里plus - 始终弹出弹窗
    */
   onBtnPlusClick = () => {
     const { onToggleVisible } = this.props;
     // 弹出/收回弹窗
-    onToggleVisible();
+    onToggleVisible(true);
   }
   render () {
     const { data } = this.props;
@@ -124,7 +125,7 @@ class Item extends Component {
                   </Col>
                 ))
               }
-              <Col span={3} isReverse={true} style={{...colStyle}}>
+              <Col span={2} isReverse={true} style={{...colStyle}}>
                 <Button type='primary'>
                   <Icon type='deny' style={{ marginRight: '5px', fontSize: '14px' }} />
                   Deny
@@ -147,8 +148,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    onToggleVisible: () => {
-      dispatch(toggleVisible());
+    onToggleVisible: (visible=null) => {
+      dispatch(toggleVisible(visible));
     }
   };
 }

@@ -21,17 +21,25 @@ import './index.css';
  */
 const rowStyle = {
   marginBottom: '8px',
-  border: '1px solid #0f0'
+  // border: '1px solid #0f0'
 };
 
 /**
  * Col的公共样式
  */
 const colStyle = {
-  border: '1px solid #00f'
+  // border: '1px solid #00f'
 };
 
 class ConfigBox extends Component {
+  /**
+   * cancel - 取消动作
+   */
+  onCancel = () => {
+    // 取消弹框的显示
+    const { onToggleVisible } = this.props;
+    onToggleVisible();
+  }
   render () {
     const { popBoxVisible, onToggleVisible } = this.props;
     console.log('popBoxVisible: ', popBoxVisible)
@@ -41,8 +49,8 @@ class ConfigBox extends Component {
         className='config-box-wrap'
       >
         <Row style={{...rowStyle}}>
-          <Col span={1} offset={23}>
-            <Icon type='close' />
+          <Col span={1} offset={23} className='icon-close-wrap'>
+            <Icon type='close' onClick={this.onCancel}/>
           </Col>
         </Row>
         <Row style={{...rowStyle}}>
@@ -54,13 +62,13 @@ class ConfigBox extends Component {
           </Col>
         </Row>
         <Row style={{...rowStyle}}>
-          <Col span={5}>
+          <Col span={6}>
             <Button type='primary'>
               Add Resource
             </Button>
           </Col>
-          <Col span={5} offset={1}>
-            <Button type='dark'>
+          <Col span={6} offset={1}>
+            <Button type='dark' onClick={this.onCancel}>
               Cancel
             </Button>
           </Col>

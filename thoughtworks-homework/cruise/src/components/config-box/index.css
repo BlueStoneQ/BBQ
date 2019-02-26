@@ -6,3 +6,9 @@
   box-shadow: 0 3px 5px #555;
   background: #F3F3F3;
 } 
+
+/* 弹窗中取消图标的样式 */
+.icon-close-wrap {
+  font-size: 20px;
+  color: #00B4CF;
+}
