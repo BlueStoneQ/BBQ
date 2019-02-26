@@ -18,12 +18,14 @@ class Icon extends Component {
       type, // icon的类型
       className,
       theme,
-      style
+      style,
+      onClick
     } = this.props;
     return (
       <i
         className={classNames('icon-wrap', className, { [`icon-${type}`]: true }, { [`icon-${theme}`]: true })}
         style={{...style}}
+        onClick={onClick}
       />
     );
   }

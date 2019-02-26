@@ -15,12 +15,11 @@ import {
   Input,
   List,
   OrderSelect,
-  Icon,
-  ConfigBox
+  Icon
 } from '../../components';
 // import logo from '../../assets/logo/avatar.jpg';
 import config from '../../config';
-import { getClientCoor } from '../../utils'
+// import { getClientCoor } from '../../utils'
 import './index.css';
 
 const { Header, Content, Sider, Footer } = Layout;
@@ -59,7 +58,6 @@ class Cruise extends Component {
     fetch(API_BASE_URL + 'agents')
       .then((res) => res.json())
       .then((data) => {
-        console.log('data: ', data);
         thiz.setState({
           listData: data
         });
@@ -231,7 +229,6 @@ class Cruise extends Component {
           </Content>
           <Footer>@Copyright 2017 ThoughtWorks</Footer>
         </Layout>
-        <ConfigBox visible={true} />
       </div>
     );
   }

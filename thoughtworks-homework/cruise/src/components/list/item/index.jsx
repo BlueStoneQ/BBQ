@@ -5,13 +5,16 @@
  * 3- 业务型/展示型组件
  */
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { toggleVisible } from '../../../redux/actions/pop-box';
 import classNames from 'classnames';
 import {
   Row,
   Col,
   Img,
   Icon,
-  Button
+  Button,
+  ConfigBox
 } from '../../index';
 import './index.css';
 
@@ -38,6 +41,15 @@ const os2img = {
 };
 
 class Item extends Component {
+  /**
+   * Item中 plus符号点击事件
+   * 1- 弹出/收回弹窗
+   */
+  onBtnPlusClick = () => {
+    const { onToggleVisible } = this.props;
+    // 弹出/收回弹窗
+    onToggleVisible();
+  }
   render () {
     const { data } = this.props;
     const {
@@ -49,78 +61,96 @@ class Item extends Component {
       resources
     } = data;
     return (
-       <Row className='ls-item-wrap'>
-        <Col span={2} offset={0.5} style={{...colStyle}}>
-          <Img
-            imgUrl={`/assets/os-icons/${os2img[os]}.png`}
-            width='80px'
-            height='80px'
-            backSize='100%'
-            />
-        </Col>
-        <Col span={21} offset={0.5}>
-          <Row style={{...rowStyle}}>
-            <Col
-              span={8}
-              style={{...colStyle}}
-            >
-              <Icon
-                type='desktop'
-                theme='light'
+      <div>
+        <Row className='ls-item-wrap'>
+          <Col span={2} offset={0.5} style={{...colStyle}}>
+            <Img
+              imgUrl={`/assets/os-icons/${os2img[os]}.png`}
+              width='80px'
+              height='80px'
+              backSize='100%'
               />
-              <span className='ls-item-name margin-left'>{ name }</span>
-            </Col>
-            <Col span={4} style={{...colStyle, textAlign: 'center'}}>
-              <span className={classNames('status-wrap', { [`status-${status}`]: true })}>
-                { status }
-              </span>
-            </Col>
-            <Col span={6} style={{...colStyle}}>
-              <Icon
-                type='info'
-                theme='light'
-              />
-              <span className='margin-left'>{ ip }</span>
-            </Col>
-            <Col span={6} style={{...colStyle}}>
-              <Icon
-                type='folder'
-                theme='light'
-              />
-              <span className='margin-left'>{ location }</span>
-            </Col>
-          </Row>
-          <Row style={{...rowStyle}}>
-            <Col span={1} style={{...colStyle}}>
-              <Icon
-                type='plus'
-                className='icon-plus-wrap'
-              />
-            </Col>
-            {
-              resources.map((v, i) => (
-                <Col
-                  key={i}
-                  span={2.5}
-                  offset={0.3}
-                  className='resource-wrap'
-                  style={{...colStyle, textAlign: 'center'}}>
-                    { v }
-                  <Icon type='trash' style={{ fontSize: '16px', marginLeft: '8px' }} />
-                </Col>
-              ))
-            }
-            <Col span={3} isReverse={true} style={{...colStyle}}>
-              <Button type='primary'>
-                <Icon type='deny' style={{ marginRight: '5px', fontSize: '14px' }} />
-                Deny
-              </Button>
-            </Col>
-          </Row>
-        </Col>
-       </Row>
+          </Col>
+          <Col span={21} offset={0.5}>
+            <Row style={{...rowStyle}}>
+              <Col
+                span={8}
+                style={{...colStyle}}
+              >
+                <Icon
+                  type='desktop'
+                  theme='light'
+                />
+                <span className='ls-item-name margin-left'>{ name }</span>
+              </Col>
+              <Col span={4} style={{...colStyle, textAlign: 'center'}}>
+                <span className={classNames('status-wrap', { [`status-${status}`]: true })}>
+                  { status }
+                </span>
+              </Col>
+              <Col span={6} style={{...colStyle}}>
+                <Icon
+                  type='info'
+                  theme='light'
+                />
+                <span className='margin-left'>{ ip }</span>
+              </Col>
+              <Col span={6} style={{...colStyle}}>
+                <Icon
+                  type='folder'
+                  theme='light'
+                />
+                <span className='margin-left'>{ location }</span>
+              </Col>
+            </Row>
+            <Row style={{...rowStyle}}>
+              <Col span={1} style={{...colStyle}}>
+                <Icon
+                  type='plus'
+                  className='icon-plus-wrap'
+                  onClick={this.onBtnPlusClick}
+                />
+              </Col>
+              {
+                resources.map((v, i) => (
+                  <Col
+                    key={i}
+                    span={2.5}
+                    offset={0.3}
+                    className='resource-wrap'
+                    style={{...colStyle, textAlign: 'center'}}>
+                      { v }
+                    <Icon type='trash' style={{ fontSize: '16px', marginLeft: '8px' }} />
+                  </Col>
+                ))
+              }
+              <Col span={3} isReverse={true} style={{...colStyle}}>
+                <Button type='primary'>
+                  <Icon type='deny' style={{ marginRight: '5px', fontSize: '14px' }} />
+                  Deny
+                </Button>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+        <ConfigBox visible={true} />
+      </div>
     );
   }
 }
 
-export default Item
+const mapStateToProps = state => {
+  return {
+    popBoxVisible: state.popBox.visible
+  };
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onToggleVisible: () => {
+      dispatch(toggleVisible());
+    }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Item);

@@ -11,7 +11,7 @@ const TOGGLE_DROP = actionTypes.TOGGLE_DROP;
  * 2- 既结构就是state = { orderSelect: { state } }
  * 3- 所以 这里的返回值就是state.orderSelct这一部分
  */
-const orderSelect = (state = { isDropDown: false }, action) => {
+const orderSelect = (state = { isDropDown: defaultState.isDropDown }, action) => {
   switch (action.type) {
     case TOGGLE_DROP:
       return { isDropDown: !state.isDropDown };

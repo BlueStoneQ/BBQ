@@ -7,8 +7,8 @@
  */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Option from './option';
 import { toggleDrop } from '../../redux/actions/order-select';
+import Option from './option';
 import { Icon } from '../index';
 import {
   getDomCoor
@@ -86,6 +86,8 @@ OrderSelect.Option = Option;
  * 1- 这样我们就可以从props上取到相应的state
  * 2- 这里的state就是redux中的state
  * 3- redux.state的结构是由各个reducer共同决定的
+ * 4- 这里return除的这一部分对象就会结构并入被connect包装的组件
+ * 5- 我们可以在该组件中以这里给出的key: isDropDown拿到当前props的该state值
  */
 const mapStateToProps = state => {
   console.log('state: ', state)
@@ -102,6 +104,7 @@ const mapStateToProps = state => {
   * 4- 可以在这里定义 也可以专门做一个容器组件 在里面定义 和 映射state和dispatch到props上
   * 5- 这里的dispatch其实就来自于redux 利用dispatch(actionCreater(data))
   * 6- 由于5 我们必须要引入定义好的action（其实是actionCreater）
+  * 7- 其实这里返回的就是一组映射关系
   */
 const mapDispatchToProps = dispatch => {
   return {
