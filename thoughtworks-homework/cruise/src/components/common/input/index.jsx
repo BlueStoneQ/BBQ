@@ -3,6 +3,7 @@
  * 1- Input输入组件： 包括Input 和 继承自Input的Search
  */
 import React, { Component } from 'react';
+import classNames from 'classnames';
 import './index.css';
 
 /**
@@ -10,9 +11,11 @@ import './index.css';
  */
 class Input extends Component {
   render() { 
+    const { className, style } = this.props;
     return (
       <input
-        className='input-wrap'
+        className={classNames('input-wrap', className)}
+        style={{...style}}
       />
     );
   }

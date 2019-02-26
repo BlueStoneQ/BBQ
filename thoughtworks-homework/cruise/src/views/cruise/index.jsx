@@ -70,14 +70,14 @@ class Cruise extends Component {
     return (
       <Row>
         <Col
-          span={20}
+          span={10}
           style={{
             paddingLeft: '30px'
           }}
         >
           <Input />
         </Col>
-        <Col span={4}>2</Col>
+        <Col span={4} offset={10}>2</Col>
       </Row>
     );
   }

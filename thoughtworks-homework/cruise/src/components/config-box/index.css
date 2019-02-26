@@ -1,0 +1,8 @@
+/* 业务型组件 - ConfigBox */
+.config-box-wrap {
+  width: 570px;
+  padding: 15px 15px 5px 15px;
+  border: 1PX solid #00B4CF;
+  box-shadow: 0 3px 5px #555;
+  background: #F3F3F3;
+} 
