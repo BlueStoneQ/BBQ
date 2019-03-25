@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>事件委托-2019-3-25</title>
+    <style type='text/css'>
+      #ul1 {
+        width: 100px;
+        padding: 10px;
+        border: 1px solid #f00;
+      } 
+
+      #ul1>li {
+        border: 1px solid #00f;
+      }
+
+    </style>
+  </head>
+  <body>
+    <p id="p1">参考：<a>https://www.cnblogs.com/liugang-vip/p/5616484.html</a></p>
+    <div>
+      <ul id='ul1'>
+        <li>1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+        <li>5</li>
+        <li>6</li>
+      </ul>
+      <div id="box">
+          <input type="button" id="add" value="添加" />
+          <input type="button" id="remove" value="删除" />
+          <input type="button" id="move" value="移动" />
+          <input type="button" id="select" value="选择" />
+      </div>
+    </div>
+    <script>
+      window.onload = function() {
+        // 动态增加的元素 - 增加事件委托
+        // 事件委托 - 每一个事件都不一样 - 如何实现
+        var oBox = document.getElementById('box')
+        oBox.onclick = function(ev) {
+          var ev = ev || window.event;
+          var target = ev.target || ev.srcElement;
+          if (target.nodeName.toLocaleLowerCase() === 'input') {
+            switch (target.id) {
+              case 'add':
+                alert('添加');
+                break;
+              case 'remove':
+                alert('删除');
+                break;              
+              case 'move':
+                alert('移动');
+                break;              
+              case 'select':
+                alert('选择');
+                break;
+            }
+          }
+        } 
+        // ul下只有点击li触发事件
+        var ul1 = document.getElementById('ul1');
+        ul1.onclick = function(ev) {
+          var ev = ev || window.event;
+          // target可以提供冒泡到当前节点的节点信息
+          console.log('ev: ', ev)
+          // target属性有兼容问题 这里需要处理下
+          var target = ev.target || ev.srcElement;
+          if (target.nodeName.toLowerCase() === 'li') {
+            // 只有当冒泡到li时 我们才执行以下代码块
+            alert('li');
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
