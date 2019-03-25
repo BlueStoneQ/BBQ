@@ -18,13 +18,12 @@
   <body>
     <p id="p1">参考：<a>https://www.cnblogs.com/liugang-vip/p/5616484.html</a></p>
     <div>
+      <input type="button" id="btn" value="添加" />
       <ul id='ul1'>
         <li>1</li>
         <li>2</li>
         <li>3</li>
         <li>4</li>
-        <li>5</li>
-        <li>6</li>
       </ul>
       <div id="box">
           <input type="button" id="add" value="添加" />
@@ -35,7 +34,38 @@
     </div>
     <script>
       window.onload = function() {
-        // 动态增加的元素 - 增加事件委托
+        // 动态增加的元素 - 增加事件委托 - 实现li 1- ‘添加’按钮 动态添加 2- 鼠标‘移入’变红，‘移出’变白
+        (function() {
+          // 获取各个元素
+          var oBox = document.getElementById('box')
+          var ul1 = document.getElementById('ul1');
+          var oBtn = document.getElementById('btn');
+          var num = 4;
+          // 事件委托
+          // 移入li
+          ul1.onmouseover =  function(ev) {
+            var ev = ev || window.event;
+            var target = ev.target || ev.srcElement;
+            if (target.nodeName.toLocaleLowerCase() === 'li') {
+              target.style.background = 'red'
+            }
+          }
+          // 移出li
+          ul1.onmouseout = function(ev) {
+            var ev = ev || window.event;
+            var target = ev.target || ev.srcElement;
+            if (target.nodeName.toLocaleLowerCase() === 'li') {
+              target.style.background = '#fff'
+            }
+          }
+          // 增加点击添加事件
+          oBtn.onclick = function(ev) {
+            num++;
+            var oLi = document.createElement('li');
+            oLi.innerHTML = num;
+            ul1.appendChild(oLi);
+          }
+        })(window)
         // 事件委托 - 每一个事件都不一样 - 如何实现
         var oBox = document.getElementById('box')
         oBox.onclick = function(ev) {
