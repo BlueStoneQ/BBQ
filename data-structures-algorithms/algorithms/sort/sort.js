@@ -51,7 +51,15 @@ s   */
   this.bubbleSort = function() {
     const len = array.length;
     for (let i = 0; i < len; i++) {
-      for (let j = 0; j < len; j++) {
+      /**
+       *  改进版冒泡：
+       *    -i的原因：
+       *      每次内循环时，前面的i个数字已经是冒泡上来的，也就是有序的
+       * 内层循len - 1的原因是
+       *  因为最大坐标为len-1, 而在len - 2时就已经发生了和array[len-2]和array[len-1]的比较了
+       * 排序其实大都基于比较：优化的理念就是减少不必要的无用的比较（循环次数）
+       * */ 
+      for (let j = 0; j < len - 1 - i ; j++) {
         this.count++;
         if (array[j] > array[j+1]) {
           swap.call(this, j, j+1);
@@ -87,6 +95,11 @@ const testSort = {
     console.log(`[${sortFunc}]比较次数：${array.count}`);
   }
 };
+
+/**
+ * 写一个计算时间复杂度的工具函数
+ */
+
 
 /**
  * 测试脚本
