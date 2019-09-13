@@ -10,9 +10,9 @@ function ArrayList() {
   
   var array = [];
   /**
-   * 记录一个排序总共的遍历次数
+   * 记录时间复杂度
    */
-  this.count = 0;
+  this.cost = 0;
 
   this.insert = function(item) {
     array.push(item);
@@ -47,28 +47,29 @@ s   */
 
   /**
    * 冒泡排序
+   *
+   *  改进版冒泡：
+   *    -i的原因：
+   *      每次内循环时，前面的i个数字已经是冒泡上来的，也就是有序的
+   * 内层循len - 1的原因是
+   *  因为最大坐标为len-1, 而在len - 2时就已经发生了和array[len-2]和array[len-1]的比较了
+   * 排序其实大都基于比较：优化的理念就是减少不必要的无用的比较（循环次数）
+   *
    */
   this.bubbleSort = function() {
     const len = array.length;
     for (let i = 0; i < len; i++) {
-      /**
-       *  改进版冒泡：
-       *    -i的原因：
-       *      每次内循环时，前面的i个数字已经是冒泡上来的，也就是有序的
-       * 内层循len - 1的原因是
-       *  因为最大坐标为len-1, 而在len - 2时就已经发生了和array[len-2]和array[len-1]的比较了
-       * 排序其实大都基于比较：优化的理念就是减少不必要的无用的比较（循环次数）
-       * */ 
+      this.cost++;
       for (let j = 0; j < len - 1 - i ; j++) {
-        this.count++;
+        this.cost++;
         if (array[j] > array[j+1]) {
           swap.call(this, j, j+1);
         }
       }
     }
   }
-}
-
+}  
+  
 /**
  * 测试工具-命名空间
  */
@@ -92,13 +93,16 @@ const testSort = {
     console.log(`[${sortFunc}]排序前：${array.toString()}`);
     sortFunc && array[sortFunc]();
     console.log(`[${sortFunc}]排序后：${array.toString()}`);
-    console.log(`[${sortFunc}]比较次数：${array.count}`);
+    console.log(`[${sortFunc}]时间复杂度：${array.cost}`);
   }
 };
 
 /**
  * 写一个计算时间复杂度的工具函数
- */
+ * 1- 我们应该提供某个函数每一次循环的开销 
+ *  然后 该函数通过计算和逻辑 评估出该算法的复杂度 并用一个对象返回：其实有大O表示法
+ * 2- 怎么计算呢 输入算法的输入值 然后统计其算法次数 然后计算之间关系
+ * */
 
 
 /**
