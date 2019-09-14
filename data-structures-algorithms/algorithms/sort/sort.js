@@ -1,9 +1,14 @@
 /**
- * 排序
- * 1- 利用一个数组列表对象承载我们的排序算法
- * 2- 审题 - 思维模型 - 代码落地
- * 3- 自己先思考给出实现 然后再对照下书中的实现
- * 4- 默认实现-从小到大
+ * @author sTone
+ * @refrence http://biaochenxuying.cn:2019/articleDetail?article_id=5d4059b896cf541789792485##toc38
+ * 
+ * 1. 所有的排序 默认为升排序：123这样子 小到大
+ * 2. 在算法中 我们要有指针性操作的认识
+ * 1. 利用一个数组列表对象承载我们的排序算法
+ * 2. 审题 - 思维模型 - 代码落地
+ * 3. 自己先思考给出实现 然后再对照下书中的实现
+ * 4. 默认实现-从小到大
+ * 5. 所有自己独立思考实现的方案：my前缀
  */
 
 function ArrayList() {
@@ -68,6 +73,33 @@ s   */
       }
     }
   }
+
+  /**
+   * 插入排序 Insertion Sort(自己按照插入排序的思想写的实现)
+   * 1. i 和 j 其实就是双指针
+   */
+  this.myInsertionSort = function(myArray) {
+    var arr = myArray ? myArray.slice() : array.slice();
+    for (let i = 1, len = array.length; i < len; i++) {
+      var tmp = arr[i];
+      for (let j = i - 1; j >= 0; j--) {
+        if (tmp < arr[j]) {
+          arr[j + 1] = arr[j];
+        } else {
+          arr[j + 1] = tmp;
+          break;
+        }
+        // 要考虑边界：j - 0 不存在的情况
+        if (j === 0) {
+          arr[j] = tmp;
+        }
+        console.log('arr: ', arr);
+      }
+    }
+    // 修改当前命名空间中的数组
+    array = arr;
+    return arr;
+  }
 }  
   
 /**
@@ -109,5 +141,6 @@ const testSort = {
  * 测试脚本
  */
 testSort.execTest(6, 'bubbleSort');
+testSort.execTest(7, 'myInsertionSort');
 
 
