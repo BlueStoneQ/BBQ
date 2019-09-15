@@ -100,6 +100,28 @@ s   */
     array = arr;
     return arr;
   }
+
+  /**
+   * 插入排序 Insertion Sort[主流实现]
+   * 1. 记忆的是什么 就是那个动态图
+   */
+  this.insertionSort = function(myArray) {
+    var arr = myArray ? myArray.slice() : array.slice(); 
+    for (let i = 0, len = arr.length; i < len; i++) {
+      var preIndex = i - 1;
+      var current = arr[i];
+      // 通过遍历把preIndex指针移动到current大于arr[preIndex]处: 即：大于current的向后移动
+      while ( preIndex >= 0 && current < arr[preIndex] ) {
+        arr[preIndex + 1] = arr[preIndex]; // 将大于current的值向后移动一位
+        preIndex--; // 移动遍历指针
+      }
+      if (preIndex + 1 !== i) {
+        // 避免同一个值赋值给自身所在位置
+        arr[preIndex + 1] = current; // 插入操作
+        console.log(`[${i}: `, arr);  
+      }
+    }
+  }
 }  
   
 /**
@@ -140,7 +162,7 @@ const testSort = {
 /**
  * 测试脚本
  */
-testSort.execTest(6, 'bubbleSort');
-testSort.execTest(7, 'myInsertionSort');
-
+// testSort.execTest(6, 'bubbleSort');
+// testSort.execTest(7, 'myInsertionSort');
+testSort.execTest(7, 'insertionSort');
 
