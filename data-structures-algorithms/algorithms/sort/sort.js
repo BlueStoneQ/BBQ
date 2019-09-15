@@ -107,7 +107,8 @@ s   */
    */
   this.insertionSort = function(myArray) {
     var arr = myArray ? myArray.slice() : array.slice(); 
-    for (let i = 0, len = arr.length; i < len; i++) {
+    for (let i = 1, len = arr.length; i < len; i++) {
+      // i = 1, 因为默认第一个元素已排序 我们选择第二个元素开始作为插入参数
       var preIndex = i - 1;
       var current = arr[i];
       // 通过遍历把preIndex指针移动到current大于arr[preIndex]处: 即：大于current的向后移动
@@ -122,6 +123,16 @@ s   */
       }
     }
   }
+
+  /**
+   * 拆半插入 - 插入排序升级版
+   */
+  // this.binaryInsertionSort = function(myArray) {
+  //   var arr = myArray ? myArray.slice() : array.slice();
+  //   for (let i = 1, len = arr.length; i < len; i++) {
+  //     var 
+  //   }
+  // }
 }  
   
 /**
