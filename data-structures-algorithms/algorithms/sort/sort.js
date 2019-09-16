@@ -79,9 +79,10 @@ s   */
   /**
    * 插入排序 Insertion Sort(自己按照插入排序的思想写的实现)
    * 1. i 和 j 其实就是双指针
+   * 2. 缺陷：把索引找寻和插入应该分开 避免频繁插入操作
    */
   this.myInsertionSort = function(myArray) {
-    var arr = myArray ? myArray.slice() : array.slice();
+    var arr = myArray ? myArray.slice() : array;
     const len = arr.length;
     if (len <= 1) return;
 
@@ -111,7 +112,7 @@ s   */
    * 1. 记忆的是什么 就是那个动态图
    */
   this.insertionSort = function(myArray) {
-    var arr = myArray ? myArray.slice() : array.slice(); 
+    var arr = myArray ? myArray.slice() : array; 
     const len = arr.length;
     if (len <= 1) return;
     for (let i = 1; i < len; i++) {
@@ -136,7 +137,7 @@ s   */
    * 1. 优化主要体现在preIndex的确定
    */
   this.myBinaryInsertionSort = function(myArray) {
-    var arr = myArray ? myArray.slice() : array.slice();
+    var arr = myArray ? myArray.slice() : array;
     const len = arr.length;
     if (len <= 1) return;
     // 当前插入值, 折半辅助量：低半区下限/边界，高半区上限/边界，中间下标
@@ -162,6 +163,27 @@ s   */
       // 将要插入元素插入算出的插入位置
       arr[low] = current;
       console.log(i, ':arr: ', arr);
+    }
+    return arr;
+  }
+
+  /**
+   * 选择排序 - Select Sort
+   * 1. 类似于插入排序 分为：已排序区间 和  未排序区间
+   * 2. 区间的分隔 实际上就是搜索范围的缩小 - 也就是边界index的移动
+   */
+  this.mySelectSort = function(myArray) {
+    var arr = myArray ? myArray.slice() : array;
+    for (let i = 0, len = arr.length; i < len; i++) {
+      for (let j = i; j < len; j++) {
+        if (arr[i] > arr[j]) {
+          // 交换两个数
+          let tmp = arr[j];
+          arr[j] = arr[i];
+          arr[i] = tmp;
+        }
+        console.log('mySelect sort arr: ', arr);
+      }
     }
     return arr;
   }
@@ -211,4 +233,5 @@ const testSort = {
 // testSort.execTest(6, 'bubbleSort');
 // testSort.execTest(7, 'myInsertionSort');
 // testSort.execTest(7, 'insertionSort');
-testSort.execTest(7, 'myBinaryInsertionSort');
+// testSort.execTest(7, 'myBinaryInsertionSort');
+testSort.execTest(7, 'mySelectSort');
