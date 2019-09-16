@@ -187,6 +187,29 @@ s   */
     }
     return arr;
   }
+
+  /**
+   * 选择排序 - Select Sort 
+   */
+  this.selectSort = function(myArray) {
+    var arr = myArray ? myArray.slice() : array;
+    let minIndex, temp;
+    for (let i = 0, len = arr.length; i < len; i++) {
+      minIndex = i;
+      for (let j = i; j < len; j++) {
+        // 找出未排序区间的最小值的index
+        if (arr[minIndex] > arr[j]) {
+          minIndex = j;
+        }
+      }
+      // 把找到的未排序区间的值插入已排序区间的末尾 - 其实是与末尾（也就是当前未排序区间的第一位）进行交换
+      temp = arr[i];
+      arr[i] = arr[minIndex];
+      arr[minIndex] = temp;
+      console.log('selectSort arr: ', arr)
+    }
+    return arr;
+  }
 }  
   
 /**
@@ -234,4 +257,5 @@ const testSort = {
 // testSort.execTest(7, 'myInsertionSort');
 // testSort.execTest(7, 'insertionSort');
 // testSort.execTest(7, 'myBinaryInsertionSort');
-testSort.execTest(7, 'mySelectSort');
+// testSort.execTest(7, 'mySelectSort');
+testSort.execTest(7, 'selectSort');
