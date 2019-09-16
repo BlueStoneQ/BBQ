@@ -63,6 +63,8 @@ s   */
    */
   this.bubbleSort = function() {
     const len = array.length;
+    if (len <= 1) return;
+
     for (let i = 0; i < len; i++) {
       this.cost++;
       for (let j = 0; j < len - 1 - i ; j++) {
@@ -80,7 +82,10 @@ s   */
    */
   this.myInsertionSort = function(myArray) {
     var arr = myArray ? myArray.slice() : array.slice();
-    for (let i = 1, len = array.length; i < len; i++) {
+    const len = arr.length;
+    if (len <= 1) return;
+
+    for (let i = 1; i < len; i++) {
       var tmp = arr[i];
       for (let j = i - 1; j >= 0; j--) {
         if (tmp < arr[j]) {
@@ -107,7 +112,9 @@ s   */
    */
   this.insertionSort = function(myArray) {
     var arr = myArray ? myArray.slice() : array.slice(); 
-    for (let i = 1, len = arr.length; i < len; i++) {
+    const len = arr.length;
+    if (len <= 1) return;
+    for (let i = 1; i < len; i++) {
       // i = 1, 因为默认第一个元素已排序 我们选择第二个元素开始作为插入参数
       var preIndex = i - 1;
       var current = arr[i];
@@ -126,13 +133,38 @@ s   */
 
   /**
    * 拆半插入 - 插入排序升级版
+   * 1. 优化主要体现在preIndex的确定
    */
-  // this.binaryInsertionSort = function(myArray) {
-  //   var arr = myArray ? myArray.slice() : array.slice();
-  //   for (let i = 1, len = arr.length; i < len; i++) {
-  //     var 
-  //   }
-  // }
+  this.myBinaryInsertionSort = function(myArray) {
+    var arr = myArray ? myArray.slice() : array.slice();
+    const len = arr.length;
+    if (len <= 1) return;
+    // 当前插入值, 折半辅助量：低半区下限/边界，高半区上限/边界，中间下标
+    let current, low, high, m;
+    for (let i = 1; i < len; i++) {
+      high = i - 1;
+      low = 0;
+      current = arr[i];
+      // 找出要插入的位置（下标）
+      while (low <= high) {
+        m = (low + high) >> 1;
+        if (current >= arr[m]) {
+          // 不断让两个范围下标靠近：low high，缩小范围 
+          low = m + 1;
+        } else {
+          high = m - 1;
+        }  
+      }
+      // 对要插入位置直到要插入元素之间的元素 均向后移动一位 - 记住 从后向前遍历 不然 容易前面的覆盖后面的
+      for (let j = i; j > low;j--) {
+        arr[j] = arr[j - 1];
+      }
+      // 将要插入元素插入算出的插入位置
+      arr[low] = current;
+      console.log(i, ':arr: ', arr);
+    }
+    return arr;
+  }
 }  
   
 /**
@@ -152,11 +184,14 @@ const testSort = {
 
   /**
    * 测试代码执行器
+   * @param { num } size 自动生成的排序数组长度
+   * @param { func } sortFunc 排序函数（名称/句柄）
+   * @param { Array } arr 自定义的需要排序的数组
    */
-  execTest: function(size = 7, sortFunc) {
+  execTest: function(size = 7, sortFunc, arr) {
     let array = this.createNonSortedArray(size);
     console.log(`[${sortFunc}]排序前：${array.toString()}`);
-    sortFunc && array[sortFunc]();
+    sortFunc && array[sortFunc](arr);
     console.log(`[${sortFunc}]排序后：${array.toString()}`);
     console.log(`[${sortFunc}]时间复杂度：${array.cost}`);
   }
@@ -175,5 +210,5 @@ const testSort = {
  */
 // testSort.execTest(6, 'bubbleSort');
 // testSort.execTest(7, 'myInsertionSort');
-testSort.execTest(7, 'insertionSort');
-
+// testSort.execTest(7, 'insertionSort');
+testSort.execTest(7, 'myBinaryInsertionSort');
