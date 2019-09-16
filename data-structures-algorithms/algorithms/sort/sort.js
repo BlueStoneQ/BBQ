@@ -210,6 +210,64 @@ s   */
     }
     return arr;
   }
+
+  /**
+   * 归并排序 - Merge sort
+   * 1. 自己根据算法思维模型实现的一版
+   * 2. 第一个可以实用的排序算法
+   * 3. 分为：分割（直至子数组长度为1）+ 合并（比较）
+   * 4. 低谷就像一个回旋洞，走到那里就掉进去了，从洞里回旋出来 - 也可以用洋葱模型理解下：koa2: await实现的那种中间件机制
+   * 5. 分治思想：那我们可以分为分割和合并两个部分，分别开发，保证分割函数：分割为长度为1为止；合并：多个合并为一个；
+   */
+  this.myMergeSort = function(myArray) {
+    let arr = myArray ? myArray.slice() : array;
+    // 定义需要的工具函数
+    if (!this.myMerge) {
+      // 节流，myMerge避免重复定义
+      this.myMerge = function(arrL, arrR) {
+        console.log('arrL: ', arrL);
+        console.log('arrR: ', arrR);
+        // 操作数组需要什么？？’指针‘（下标变量）
+        let iL = 0,
+            iR = 0;
+        // 额外空间-数组来存储合并后的数组 - 但是在每一轮合并后该数组就会销毁
+        let mergeArr = [];
+        // 需要两个区间元素作比较的情况 - 直到一方全部进入合并后的数组
+        while(arrL[iL] && arrR[iR]) {
+          if (arrL[iL] <= arrR[iR]) {
+            // 这里的<=也保证了该排序稳定性：相等的 位于左边的排序后依然在左边
+            mergeArr.push(arrL[iL++]);
+          } else {
+            mergeArr.push(arrR[iR++]);
+          }
+        }
+        // 只剩一边的情况
+        while(arrL[iL]) {
+          mergeArr.push(arrL[iL++]);
+        }
+        while(arrR[iR]) {
+          mergeArr.push(arrR[iR++]);
+        }
+        console.log('mergeArr: ', mergeArr);
+        return mergeArr;
+      }
+    }
+    if (!this.mergeSort) {
+      this.mergeSort = function(arr) {
+        let len = arr.length;
+        // 递归：一定要重视终止条件
+        if (len === 1) {
+          return arr;
+        }
+        let m = len >> 1; // 等于Math.floor(len/2)
+        let arrL = arr.slice(0, m);
+        let arrR = arr.slice(m, len);
+        return this.myMerge(this.mergeSort(arrL), this.mergeSort(arrR));
+      }
+    }
+    // 启动排序
+    return this.mergeSort(arr);
+  }
 }  
   
 /**
@@ -258,4 +316,5 @@ const testSort = {
 // testSort.execTest(7, 'insertionSort');
 // testSort.execTest(7, 'myBinaryInsertionSort');
 // testSort.execTest(7, 'mySelectSort');
-testSort.execTest(7, 'selectSort');
+// testSort.execTest(7, 'selectSort');
+testSort.execTest(7, 'myMergeSort');
