@@ -252,8 +252,8 @@ s   */
         return mergeArr;
       }
     }
-    if (!this.mergeSort) {
-      this.mergeSort = function(arr) {
+    if (!this.myMergeSortRec) {
+      this.myMergeSortRec = function(arr) {
         let len = arr.length;
         // 递归：一定要重视终止条件
         if (len === 1) {
@@ -262,11 +262,62 @@ s   */
         let m = len >> 1; // 等于Math.floor(len/2)
         let arrL = arr.slice(0, m);
         let arrR = arr.slice(m, len);
-        return this.myMerge(this.mergeSort(arrL), this.mergeSort(arrR));
+        return this.myMerge(this.myMergeSortRec(arrL), this.myMergeSortRec(arrR));
       }
     }
     // 启动排序
-    return this.mergeSort(arr);
+    return this.myMergeSortRec(arr);
+  }
+
+  /**
+   * 归并排序 merge sort - 主流实现版
+   * 1. 再到后面效率越高的排序，要有“辅助函数”的意识
+   * 2. 数组有一些非坐标操作：例如栈操作/队列操作,可以让我们免于用额外的空间来存储遍历下标
+   * 3. 分割点：一般就是中点：mid = Math.floor(len / 2)
+   */
+  this.mergeSort = function(myArray) {
+    let arr = myArray ? myArray.slice() : array;
+    // 定义辅助函数
+    // 辅助函数-合并
+    if (!this.merge) {
+      this.merge = function(arrL, arrR) {
+        let mergeArr = [];
+        // 两个子区间进行合并
+        while(arrL.length > 0 && arrR.length > 0) {
+          if (arrL[0] <= arrR[0]) {
+            // 排序的稳定性 很多程度上取决于这里作比较时的方向和=的使用
+            mergeArr.push(arrL.shift());
+          } else {
+            mergeArr.push(arrR.shift());
+          }
+        }
+        // 剩下的另一边位合并的进行合并
+        while(arrL.length) {
+          mergeArr.push(arrL.shift());
+        } 
+        while(arrR.length) {
+          mergeArr.push(arrR.shift());
+        }
+        console.log('mergeArr: ', mergeArr);
+        return mergeArr;
+      }
+    }
+    // 辅助函数 - 分割(真正的递归其实在这里，辅助函数只是作为工具，参与mergeSortRec每一层的递归)
+    if (!this.mergeSortRec) {
+      this.mergeSortRec = function(arr) {
+        let len = arr.length;
+        // 递归终止条件 - 就是在满足某一条件的情况下 不再调用自身 而是返回一个‘正常值’
+        if (len === 1) {
+          // 利用递归分割 - 分割到子数组长度为1时 停止递归调用 开始从内向外返回可用于计算的‘正常值’
+          return arr;
+        }
+        let mid = Math.floor(len/2);
+        let arrL = arr.slice(0, mid);
+        let arrR = arr.slice(mid);
+        return this.merge(this.mergeSortRec(arrL), this.mergeSortRec(arrR));
+      }
+    }
+    return this.mergeSortRec(arr);
   }
 }  
   
@@ -317,4 +368,5 @@ const testSort = {
 // testSort.execTest(7, 'myBinaryInsertionSort');
 // testSort.execTest(7, 'mySelectSort');
 // testSort.execTest(7, 'selectSort');
-testSort.execTest(7, 'myMergeSort');
+// testSort.execTest(7, 'myMergeSort');
+testSort.execTest(7, 'mergeSort');
