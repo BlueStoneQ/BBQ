@@ -322,7 +322,7 @@ s   */
 
   /**
    * 快速排序 quick sort
-   * 1. 实现方式1
+   * 1. 实现方式1：辅助方法少的一种
    * 2. 请分析该实现的复杂度
    */
   this.myQuickSort = function(myArray) {
@@ -344,7 +344,7 @@ s   */
         let leftArr = [], // 存放比基点大的数组
             rightArr = []; // 存放比基点小的数组
         // 递归出口 - 划分操作时，划分len = 1时，为递归出口
-        // 划分操作 - 因为splice使arr的长度减一 所以 
+        // 划分操作 - 因为splice使arr的长度减一 所以 遍历时 我们要用len-1作为遍历的下标上限
         for (let i = 0; i < len - 1; i++) {
           if (arr[i] < baseVar) {
             leftArr.push(arr[i]);
