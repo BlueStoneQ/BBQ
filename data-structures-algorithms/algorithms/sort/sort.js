@@ -319,8 +319,52 @@ s   */
     }
     return this.mergeSortRec(arr);
   }
+
+  /**
+   * 快速排序 quick sort
+   * 1. 实现方式1
+   * 2. 请分析该实现的复杂度
+   */
+  this.myQuickSort = function(myArray) {
+    console.log('开始排序');
+    // 特殊变量处理
+    let arr = myArray ? myArray.slice() : array;
+    // 辅助函数
+    if (!this.mqs) {
+      console.log('gshsg');
+      this.mqs = function(arr) {
+        console.log('开始排序1');
+        if (arr.length <= 1) {
+          console.log('递归出口');
+          return arr;
+        }
+        const len = arr.length;
+        // 选择基点
+        let baseVar = arr.splice(Math.floor(len/2), 1)[0];
+        let leftArr = [], // 存放比基点大的数组
+            rightArr = []; // 存放比基点小的数组
+        // 递归出口 - 划分操作时，划分len = 1时，为递归出口
+        // 划分操作 - 因为splice使arr的长度减一 所以 
+        for (let i = 0; i < len - 1; i++) {
+          if (arr[i] < baseVar) {
+            leftArr.push(arr[i]);
+          } else {
+            rightArr.push(arr[i]);
+          }
+        }
+        // console.log('leftArr: ', leftArr);
+        // console.log('rightArr: ', rightArr);
+        // 递归拼接
+        return this.mqs(leftArr).concat(baseVar, this.mqs(rightArr));
+      }
+    }
+    // console.log(this.mqs);
+    return this.mqs(arr);
+  }
 }  
-  
+
+
+
 /**
  * 测试工具-命名空间
  */
@@ -345,9 +389,9 @@ const testSort = {
   execTest: function(size = 7, sortFunc, arr) {
     let array = this.createNonSortedArray(size);
     console.log(`[${sortFunc}]排序前：${array.toString()}`);
-    sortFunc && array[sortFunc](arr);
-    console.log(`[${sortFunc}]排序后：${array.toString()}`);
-    console.log(`[${sortFunc}]时间复杂度：${array.cost}`);
+    sortFunc && (array = array[sortFunc](arr));
+    console.log(`[${sortFunc}]排序后：${array}`);
+    // console.log(`[${sortFunc}]时间复杂度：${array.cost}`);
   }
 };
 
@@ -369,4 +413,5 @@ const testSort = {
 // testSort.execTest(7, 'mySelectSort');
 // testSort.execTest(7, 'selectSort');
 // testSort.execTest(7, 'myMergeSort');
-testSort.execTest(7, 'mergeSort');
+// testSort.execTest(7, 'mergeSort');
+testSort.execTest(7, 'myQuickSort');
