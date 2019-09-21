@@ -361,6 +361,48 @@ s   */
     // console.log(this.mqs);
     return this.mqs(arr);
   }
+
+  /**
+   * 快速排序 - quick sort 经典实现
+   */
+  this.quickSort = function(myArray) {
+    let arr = myArray ? myArray.slice() : array;
+    // 辅助函数
+    if (this.partition) {
+      /**
+       * 划分操作函数
+       * @param arr 需要排序的数组
+       * @param { num } indexL 数组左边界
+       * @param { num } indexR 数组右边界
+       * @returns { num } 基点的下标值 
+       */
+      this.partition = function(arr, indexL, indexR) {
+        
+      }
+    }
+    if (this.swap) {
+      // 交换函数
+      this.swap = function() {
+
+      }
+    }
+    if (this.qs) {
+      /**
+       * 快排调度函数-主函数（入口函数）
+       * @param arr 需要排序的数组
+       * @param { num } indexL 数组左边界
+       * @param { num } indexR 数组右边界
+       * @returns { Array } 排序后的数组
+       */
+      this.qs = function(arr, indexL, indexR) {
+        const len = arr.length;
+        indexL = typeof indexL !== 'number' ? 0 : indexL; 
+        indexR = typeof indexR !== 'number' ? len - 1 : indexR;
+
+      }
+    }
+    return this.qs(arr);
+  }
 }  
 
 
