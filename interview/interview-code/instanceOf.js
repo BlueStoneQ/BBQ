@@ -1,5 +1,5 @@
  /**
-  * 模拟实现instanceOf - 源知识：对象的继承实质
+  * 模拟实现instanceOf - 源知识：对象的继承实质，要义就是遍历原型链
   * @param {*} L 
   * @param {*} R 
   */
