@@ -14,7 +14,7 @@
 function objectFactory() {
   // new一个新对象
   var obj = new Object();
-  // 拿到Constructor - （通过[].prototype.shift可以避免arguments无shift属性带来的崩溃）
+  // 拿到Constructor - （因为arguments不是数组，而是类数组，所以自身不能直接调用shift
   var Constructor = [].prototype.shift.call(arguments);
   // 实现新对象和构造函数之间的原型链继承
   obj.__proto__ = Constructor.prototype;
