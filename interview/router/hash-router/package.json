@@ -1,0 +1,15 @@
+{
+  "name": "hash-router",
+  "version": "1.0.0",
+  "description": "A hash-router based on hash.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "router",
+    "hash"
+  ],
+  "author": "sTone",
+  "license": "ISC"
+}
