@@ -16,6 +16,8 @@ class Router {
     // 开关：标识是否为后退行为: 默认操作不是后退行为
     this.isBack = false;
     // 初始化 
+    this.refresh = this.refresh.bind(this);
+    this.backOff = this.backOff.bind(this);
     // 监听浏览器部分事件：增加与浏览器行为的联动
     window.addEventListener('load', this.refresh, false);
     window.addEventListener('hashchange', this.refresh, false);
