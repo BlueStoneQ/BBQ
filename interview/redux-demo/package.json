@@ -4,8 +4,7 @@
   "description": "A demo for how to create a Redux.",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node index.js",
-    "test": "test"
+    "test": "babel-node index.js"
   },
   "keywords": [
     "Redux"
