@@ -24,7 +24,7 @@
    },
    h: {
      i: {
-       j: 5
+       j: [1, 2, 3, 4]
      },
      k: 6
    }
@@ -38,13 +38,19 @@
  function traversalJson(data, fn) {
    // TODO: 防御 1. 判空 2. 是否为对象
    // 类型判断
-   // 对象
-   const keys = Object.keys(data);
-   if (isType(data, TYPE.object)) {
+   if (isType(data, 'object')) {
+     // TODO: 对象类型的防御
+    // 对象
+    const keys = Object.keys(data);
     for (const key of keys) {
         const val = data[key];
         traversalJson(val, fn);
     }
+   } else if (isType(data, 'array')) {
+     for (const v of data) {
+       // TODO: 数组范畴的防御
+       traversalJson(v, fn);
+     }
    } else {
     // 如果是基础类型（非引用类型） 则执行fn
     fn && fn(data);
@@ -56,7 +62,7 @@
   */
  function isType(val, type) {
    // TODO: 防御
-   return Object.prototype.toString.call(val) === type;
+   return Object.prototype.toString.call(val) === TYPE[type];
  }
 
  // 测试
