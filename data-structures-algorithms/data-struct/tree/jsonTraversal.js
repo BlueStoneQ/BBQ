@@ -4,6 +4,7 @@
  * 2. 加入数组
  * 3. 加入函数
  * 4. 注意互相引用的问题：利用标记 或者 缓存方法处理
+ * 5. TODO: 给出一套遍历json型数据的方案和工具： 例如自定义校验规则 和 该规则下的处理 
  */
 
  const TYPE = {
@@ -36,17 +37,17 @@
   */
  function traversalJson(data, fn) {
    // TODO: 防御 1. 判空 2. 是否为对象
+   // 类型判断
+   // 对象
    const keys = Object.keys(data);
-   for (const key of keys) {
-     const val = data[key];
-     // 类型判断
-     // 对象
-     if (isType(val, TYPE.object)) {
-       traversalJson(val, fn);
-     } else {
-      // 如果是基础类型（非引用类型） 则执行fn
-      fn && fn(key, val);
-     }
+   if (isType(data, TYPE.object)) {
+    for (const key of keys) {
+        const val = data[key];
+        traversalJson(val, fn);
+    }
+   } else {
+    // 如果是基础类型（非引用类型） 则执行fn
+    fn && fn(data);
    }
  }
 
@@ -59,6 +60,6 @@
  }
 
  // 测试
- traversalJson(json, (key, val) => {
-   console.log(`${key}: ${val}`);
+ traversalJson(json, val => {
+   console.log(val);
  })
