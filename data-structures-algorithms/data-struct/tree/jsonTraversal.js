@@ -7,11 +7,8 @@
  * 5. TODO: 给出一套遍历json型数据的方案和工具： 例如自定义校验规则 和 该规则下的处理 
  */
 
- const TYPE = {
-   array: "[object Array]",
-   object: "[object Object]",
-   func: "[object Function]"
- }
+ const { TYPE, isType } = require('./utils/isType.js');
+
 
  const json = {
    a: 1, 
@@ -57,13 +54,6 @@
    }
  }
 
- /**
-  * 类型判断
-  */
- function isType(val, type) {
-   // TODO: 防御
-   return Object.prototype.toString.call(val) === TYPE[type];
- }
 
  // 测试
  traversalJson(json, val => {
