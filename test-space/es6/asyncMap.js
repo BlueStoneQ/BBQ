@@ -13,6 +13,10 @@
    return new Promise(resolve => setTimeout(resolve, 300));
  }
 
+ /**
+  * async函数返回的都是proimse 它的return就是then()中回调的参数 或者 await得到的值
+  * @param {*} item 
+  */
  async function delayLog(item) {
    await delay();
    console.log(item);
