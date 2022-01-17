@@ -11,6 +11,7 @@
  */
 
 Function.prototype.myBind = function (context) {
+  // 1. 收集参数
   var bindArgs = Array.prototype.slice.call(arguments, 1);
   // this代表当前函数
   var self = this;
@@ -18,7 +19,7 @@ Function.prototype.myBind = function (context) {
   var fBond = function() {
     var args = Array.prototype.concat.call(bindArgs, arguments);
     // 借助apply实现context的绑定
-    // 这里使用self不用this: 是因为这里的this不是上面的this了哈哈，一个函数中有一个this
+    // 这里使用self不用this: 是因为这里的this不是上面的this了哈哈，上面的self = this为调用bind的函数，，一个函数中有一个this
     return self.apply(this instanceof fBond ? this : context, args);
   }
 

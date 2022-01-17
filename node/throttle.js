@@ -22,13 +22,15 @@ const throttle = (fn, delay = 300) => {
  * 节流函数 - 时间戳版
  */
 const throttle_time = (fn, delay = 300) => {
-  let preTime = null;
+  // 这里应该初始值为 0, 这样节流的第一次 总会立刻先执行一次，接下来节流执行
+  let preTime = 0;
+  // let preTime = null;
   return (...args) => {
     const context = this;
     let nowTime = new Date().now();
     if (nowTime - preTime > delay) {
       fn && fn.apply(context, args);
-      preTime = new Date.now();
+      preTime = new Date().now();
     }
   }
 }
