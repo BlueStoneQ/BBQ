@@ -8,7 +8,7 @@
  * @param {number} delay 
  * @return {function}
  */
-function debounce(fn, delay) {
+function debounce(fn, delay = 300) {
   let timer = null;
 
   return function() {
@@ -24,6 +24,6 @@ function debounce(fn, delay) {
     // 设置计时器
     timer = setTimeout(function() {
       fn && fn.apply(context, args);
-    }, delay || 300);
+    }, delay);
   }
 }

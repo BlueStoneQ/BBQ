@@ -44,13 +44,13 @@ const debounce = (fn, delay = 300) => {
   let timer = null;
   return (...args) => {
     const context = this;
-    if (timer) {
+    if (timer) { 
       // 清除之前的定时器 重新开始定时
       clearTimeout(timer);
+      timer = null;
     }
     timer = setTimeout(() => {
       fn && fn.apply(context, args);
-      timer = null;
     }, delay);
   }
 }
