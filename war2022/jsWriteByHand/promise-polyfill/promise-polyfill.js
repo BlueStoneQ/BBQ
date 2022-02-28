@@ -197,7 +197,7 @@ MyPromise.all = (promiseList) => {
       // 确保处理的类型统一
       MyPromise.resolve(promise).then(value => {
         count++;
-        resolve[index] = value;
+        result[index] = value;
         if (count === promiseLen) {
           return resolve(result);
         }
