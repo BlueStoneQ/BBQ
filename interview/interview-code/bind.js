@@ -28,7 +28,7 @@ Function.prototype.myBind = function (context) {
   fNOP.prototype = this.prototype;
   fBond.prototype = new fNOP();
 
-  return fBond; 
+  return fBond;
 }
 
 /**
