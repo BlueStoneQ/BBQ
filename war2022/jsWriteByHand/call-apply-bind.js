@@ -47,6 +47,7 @@ const apply = (...args) => {
  * bind是高阶函数 需要返回一个函数
  * 一般借助于apply实现
  * @param  {...any} args 
+ * 参考：https://github.com/mqyqingfeng/Blog/issues/12
  */
 Function.prototype.bind = function() {
   // defend
@@ -69,6 +70,9 @@ Function.prototype.bind = function() {
   };
 
   // 维护原型关系
+  // 解释：https://github.com/mqyqingfeng/Blog/issues/12
+  // 如果我们直接将 F.prototype = this.prototype，我们直接修改 F.prototype 的时候，也会直接修改绑定函数的 prototype。这个时候，我们可以通过一个空函数来进行中转
+  // me: 我们要理解 F 是bind返回的一个新函数 而this是我们被bind处理的函数 它们2个是独立的，this被bind处理后 本身什么也没有变 所以 这里要斩断新函数F 和 原来函数this的关系
   const fNOP = function() {};
   fNOP = this.prototype;
   F.prototype = new fNOP();
