@@ -12,7 +12,7 @@ function _new () {
     return;
   }
   // algo
-  // 1. 执行constructor 将context作为this注入到constrctor中 这样 内部的一些属性就挂载到了context上了 
+  // 1. 执行constructor 将context作为this注入到constrctor中 这样 内部的一些属性就挂载到了newObj上了 
   const res = constructor.apply(newObj, arguments);
 
   // 2. 计算flag： constructor是否有返回值，且该返回值类型为对象或者函数
