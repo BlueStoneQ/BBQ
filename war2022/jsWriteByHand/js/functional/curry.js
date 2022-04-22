@@ -1,6 +1,7 @@
 
 /**
  * 2022-3-1
+ * 本质上还是一个高阶函数 
  * https://github.com/mqyqingfeng/Blog/issues/42
  */
 
