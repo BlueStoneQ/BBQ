@@ -3,8 +3,12 @@
  * 2022-4-22
  * 它的作用是在某个函数上进行切割，可以在函数执行前/中/后添加其他逻辑代码。
  * AOP编程的好处是遵循单一原则，不会修改原函数内部的代码就可以改变原函数的逻辑。
+ * 
+ * 本质上是一个高阶函数
+ * 之前我们在SDK中对很多生命周期的拦截 采用的就是AOP的思想
+ * 
  * 1. 借助prototype实现 
- * 2. 不借助prototype,使用入参实现
+ * 2. 不借助prototype,使用入参实现 - 不想污染原型的情况下 可以使用这个方法
  * https://segmentfault.com/a/1190000039752166
  */
 
@@ -49,3 +53,31 @@ Function.prototype.after = function(fn) {
 /**
  * 2. 不借助prototype,使用入参实现
  */
+
+
+/**
+ * 
+ * @param {Function} selfFn 原本的函数
+ * @param {Function} insertFn 插入的函数
+ */
+const before = function(selfFn, insertFn) {
+  return function() {
+    insertFn && insertFn.call(this, arguments);
+    return selfFn.call(this, arguments);
+  }
+}
+
+/**
+ * 
+ * @param {Function} selfFn 原本的函数
+ * @param {Function} insertFn 插入的函数
+ */
+ const after = function(selfFn, insertFn) {
+  return function() {
+    const result = selfFn.call(this, arguments);
+
+    insertFn && insertFn.call(this, arguments);
+    
+    return result;
+  }
+}
