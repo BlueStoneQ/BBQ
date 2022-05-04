@@ -1,5 +1,6 @@
 /**
  * object.create polyfill
+ * 创建一个新对象，使用现有的对象来提供新创建的对象的__proto__
  * 2022-2-28
  * https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/create
  */
@@ -19,6 +20,6 @@ if (typeof Object.create !== 'function') {
 
     F.prototype = proto;
 
-    return F;
+    return new F();
   }
 }
