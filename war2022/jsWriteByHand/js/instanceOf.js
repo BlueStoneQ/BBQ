@@ -9,7 +9,7 @@
 function _instanceof(obj, constructor) {
   // defend
   // init data
-  const proto = Object.getPrototypeOf(obj);
+  let proto = Object.getPrototypeOf(obj);
   const constructorProto = constructor.prototype;
   // algo
   while (proto) {
