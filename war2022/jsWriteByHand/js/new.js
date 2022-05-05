@@ -4,13 +4,13 @@
 
 function _new () {
   // init data
-  const newObj = Object.create(null);
   const constructor = Array.prototype.shift.call(arguments);
   // defend
   if (typeof constructor !== 'function') {
     console.error('type error');
     return;
   }
+  const newObj = Object.create(constructor.prototype);
   // algo
   // 1. 执行constructor 将context作为this注入到constrctor中 这样 内部的一些属性就挂载到了newObj上了 
   const res = constructor.apply(newObj, arguments);

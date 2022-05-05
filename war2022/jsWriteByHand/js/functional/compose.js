@@ -15,6 +15,7 @@ const compose = (...fnList) => {
   const startIndex = fnList.length - 1;
   return function(...args) {
     let i = startIndex;
+    // 动态记录每个函数的结果
     let result = fnList[i](...args); // 这里的args是启动函数的参数 也就是右边第一个函数的参数
 
     while(i--) {

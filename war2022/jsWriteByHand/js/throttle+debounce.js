@@ -101,11 +101,10 @@ function throttleDebounce(fn, delay) {
       // 如果时间间隔小于我们设定的时间间隔阈值，则为本次触发操作设立一个新的定时器
       clearTimeout(timer);
       timer = setTimeout(() => {
-        const startTime = new Date().getTime();
         fn && fn.apply(context, args);  
       }, delay);
     } else {
-      const startTime = new Date().getTime();
+      startTime = new Date().getTime();
       // 到达或者超过delay 必须执行一次
       fn && fn.apply(context, args);
     }
