@@ -1,3 +1,4 @@
+// ; 避免出现类似函数调用的情况 fn (functioin(gragp){})
 ;(function(graph) {
   function require(moduleId) {
     function localRequire(relativePath) {
