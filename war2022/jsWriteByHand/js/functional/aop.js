@@ -34,7 +34,7 @@ Function.prototype.before = function(fn) {
  * @param {*} fn 
  */
 Function.prototype.after = function(fn) {
-  const eslfFn = this;
+  const selfFn = this;
 
   return function() {
     // 执行原来函数的逻辑 先把结果记录下来 一会儿返回

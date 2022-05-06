@@ -62,6 +62,7 @@ Function.prototype.bind = function() {
   
   // 定义返回的函数 这里要用ES5函数 因为bind后的函数 依然可以用作构造函数 且构造函数的this为其实例
   function F () {
+    // 这里的this 不是上面的this哦 上面的this是函数本身 这里的this可能是实例（new的话） 或者 当前的调用环境
     // 合并参数
     const params = [...originalParams, ...arguments];
     // 这里需要判断调用方式 常规调用 还是 new调用 并采用不同的context
