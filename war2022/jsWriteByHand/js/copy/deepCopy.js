@@ -66,11 +66,13 @@ const deepClone = (obj) => {
 /**
  * 加强版deepClone
  * 主要支持了更丰富的类型：function RegExp
+ * 参考：https://blog.csdn.net/cc18868876837/article/details/114918262
+ * me: 改进 可以将各个判断类型的代码统一抽出来 封装出来 这样的话 就不会影响到主逻辑的清晰度
  * @param {*} obj 
  * @returns 
  */
 const deepClonePro = (obj) => {
-  // 利用闭包: 提供memo 解决循环引用问题
+  // 利用闭包: 提供memo 解决循环引用问题，[key, data] = [data, data], key也是值本身
   const memo = new Map();
 
   // 判断是否为引用类型
