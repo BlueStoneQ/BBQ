@@ -1,8 +1,11 @@
 {
   "name": "min-ark1-cli",
   "version": "1.0.0",
-  "description": "- 物料搭建cli min版草稿",
+  "description": "物料搭建cli min版草稿",
   "main": "index.js",
+  "bin": {
+    "cli": "bin/index.js"
+  },
   "scripts": {
     "test": "test"
   },
