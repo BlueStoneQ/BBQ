@@ -1,0 +1,18 @@
+{
+  "name": "min-ark1-cli",
+  "version": "1.0.0",
+  "description": "- 物料搭建cli min版草稿",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "node",
+    "cli"
+  ],
+  "author": "stoneQ",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^9.2.0"
+  }
+}
