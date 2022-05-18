@@ -6,6 +6,7 @@
 const { program } = require('commander');
 const pkg = require('../package.json');
 const { checkSelfIsNeedUpdate } = require('./utils/index');
+const initAction = require('./sub-commander/init/index');
 
 // 设置版本号(和package.json保持同步)
 program.version(pkg.version);
@@ -22,7 +23,8 @@ program
       console.log('init start');
       // 检测版本更新
       await checkSelfIsNeedUpdate();
-      console.log(args[0]);
+      // init 动作
+      await initAction(...args);
     } catch(err) {
       console.log(err);
     }

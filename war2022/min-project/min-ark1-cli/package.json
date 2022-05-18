@@ -17,6 +17,8 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^9.2.0",
+    "download-package-tarball": "^1.0.7",
+    "fs-extra": "^10.1.0",
     "semver": "^7.3.7"
   }
 }
