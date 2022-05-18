@@ -1,4 +1,4 @@
-const startServer = require('./server');
+const startServer = require('../../libs/server/server');
 
 module.exports = async (opt) => {
   // 鉴权：需要向云端k:v库请求物料信息 + 代码

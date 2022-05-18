@@ -9,6 +9,7 @@ const startServer = async () => {
     ctx.body = "server运行中";
   });
 
+  // 按一定顺序注册koa中间件
   app.use(router.routes());
   app.use(router.allowedMethods());
   /*
