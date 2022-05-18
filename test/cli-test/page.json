@@ -1,0 +1,19 @@
+{
+  "id": "comp-1",
+  "name": "comp-1",
+  "label": "测试物料组件1",
+  "props": {
+    "count": 2
+  },
+  "slots": [{
+    "name": "default",
+    "label": "默认槽位",
+    "children": [{
+      "id": "comp-2",
+      "name": "comp-2",
+      "label": "测试物料组件2",
+      "props": [],
+      "slots": [{}]
+    }]
+  }]
+}
