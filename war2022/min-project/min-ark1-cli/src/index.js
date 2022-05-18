@@ -7,6 +7,7 @@ const { program } = require('commander');
 const pkg = require('../package.json');
 const { checkSelfIsNeedUpdate } = require('./utils/index');
 const initAction = require('./sub-commander/init/index');
+const devAction = require('./sub-commander/dev/index');
 
 // 设置版本号(和package.json保持同步)
 program.version(pkg.version);
@@ -30,5 +31,20 @@ program
     }
   });
 
-  // 注意在一个大项目中，如果涉及到一些指令的注册，请注意在所有指令注册结束后再执行 program.parse()，因为这一操作会终止参数处理，导致指令不能正确注册
-  program.parse(process.argv)
+program
+  .command('dev')
+  .description('启动本地开发模式：本地服务器+监听文件变动并构建')
+  .action(async (...args) => {
+    try {
+      console.log('dev start');
+      // 检测版本更新
+      await checkSelfIsNeedUpdate();
+      // dev动作
+      await devAction(...args);
+    } catch(err) {
+      console.log(err);
+    }
+  });
+
+// 注意在一个大项目中，如果涉及到一些指令的注册，请注意在所有指令注册结束后再执行 program.parse()，因为这一操作会终止参数处理，导致指令不能正确注册
+program.parse(process.argv)
