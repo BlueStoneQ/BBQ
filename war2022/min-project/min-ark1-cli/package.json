@@ -2,7 +2,7 @@
   "name": "min-ark1-cli",
   "version": "1.0.0",
   "description": "物料搭建cli min版草稿",
-  "main": "index.js",
+  "main": "src/index.js",
   "bin": {
     "cli": "bin/index.js"
   },
@@ -16,6 +16,7 @@
   "author": "stoneQ",
   "license": "ISC",
   "dependencies": {
-    "commander": "^9.2.0"
+    "commander": "^9.2.0",
+    "semver": "^7.3.7"
   }
 }
