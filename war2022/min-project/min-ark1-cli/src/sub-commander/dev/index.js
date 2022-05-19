@@ -14,8 +14,8 @@ module.exports = async (opt) => {
   const targetPaths = [path.join(cwd, 'src'), path.join(cwd, 'page-data')];
   watch(targetPaths, async (changedFilePath) => {
     // 第一次执行 build整个src下的文件
-    // changedFilePath = changedFilePath || 'src';
-    changedFilePath = 'src';
+    // changedFilePath = changedFilePath || 'src'; // 正式语句
+    changedFilePath = 'src'; // 临时用src下全体进行build
     console.log('dev changedFilePath: ', changedFilePath)
     // build file to cwd/.dist-data
     await build(path.join(cwd, changedFilePath));

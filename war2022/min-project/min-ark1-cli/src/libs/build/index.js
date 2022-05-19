@@ -10,6 +10,7 @@ const cwd = process.cwd();
 const TARGET_DIR = path.join(cwd, '.dist-data');
 
 module.exports = async (sourceDir, targetDir = TARGET_DIR) => {
+  // 这里是一个src->.dist-data的目录级复制 后续再build逻辑完善后 应该是build后更新到具体文件
   await fs.copy(sourceDir, targetDir, {
     overwrite: true
   });
