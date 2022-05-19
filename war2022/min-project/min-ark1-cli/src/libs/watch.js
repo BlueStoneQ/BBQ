@@ -14,4 +14,4 @@ module.exports = (targetDir, callback, options = {}) => {
   watcher.on('change', lodash.debounce(callback, 200));
   watcher.on('add', callback);
   callback();
-}
+} 

@@ -1,0 +1,14 @@
+{
+  "visivle": true,
+  "props": [{
+    "count": {
+      "label": "数量",
+      "type": "input",
+      "default": 1
+    }
+  }],
+  "slots": [{
+    "name": "default",
+    "label": "默认槽位"
+  }]
+}
