@@ -1,13 +1,8 @@
 const Koa = require('koa');
-const KoaRouter = require('koa-router');
+const router = require('./routes/index');
 
 const startServer = async () => {
   const app = new Koa();
-  const router = new KoaRouter();
-
-  router.get('/', async (ctx) => {
-    ctx.body = "server运行中";
-  });
 
   // 按一定顺序注册koa中间件
   app.use(router.routes());
