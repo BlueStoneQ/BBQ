@@ -9,5 +9,5 @@
 const addRoutesPlugin = require('./plugins/addRoutesPlugin');
 
 module.exports = {
-  plugin: [ addRoutesPlugin() ]
+  plugins: [ addRoutesPlugin() ]
 }

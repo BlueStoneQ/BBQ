@@ -63,8 +63,16 @@ const downloadNpm = async ({ packgeName, targetPath = process.cwd() }) => {
   await fs.remove(path.join(tempDir, packgeName));
 }
 
+/**
+ * 获得项目中的cli.config.js
+ */
+const getCliConfig = () => {
+  return require(path.join(process.cwd(), 'cli.config.js'));
+}
+
 module.exports = {
   execPromise,
   checkSelfIsNeedUpdate,
-  downloadNpm
+  downloadNpm,
+  getCliConfig
 }
