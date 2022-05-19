@@ -1,8 +1,13 @@
 const Koa = require('koa');
+const cors = require('@koa/cors');
+const bodyParser = require('koa-body');
 const router = require('./routes/index');
 
 const startServer = async () => {
   const app = new Koa();
+
+  app.use(cors());
+  app.use(bodyParser());
 
   // 按一定顺序注册koa中间件
   app.use(router.routes());
