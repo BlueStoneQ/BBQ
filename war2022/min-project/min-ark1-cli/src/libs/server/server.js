@@ -3,12 +3,14 @@ const cors = require('@koa/cors');
 const bodyParser = require('koa-body');
 const router = require('./routes/index');
 
-const startServer = async () => {
+const startServer = async (cliContext) => {
   const app = new Koa();
+
+  // 这里插一个插件的hooks: beforeRouteRegister
+  await cliContext.pluginDriver.runHooks('beforeRouteRegister', { router });
 
   app.use(cors());
   app.use(bodyParser());
-
   // 按一定顺序注册koa中间件
   app.use(router.routes());
   app.use(router.allowedMethods());

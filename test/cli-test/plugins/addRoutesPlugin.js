@@ -6,7 +6,9 @@ const apiList = require('../server/api');
 module.exports = () => ({
   name: 'addRoutesPlugin',
   async beforeRouteRegister(context) {
-    const router = context;
+    const { router } = context;
+
+    console.log('插件addRoutesPlugin context: ', context);
     // 遍历 注册
     apiList.forEach(item => {
       const { method, path, handlerCreate } = item;

@@ -3,8 +3,8 @@
  */
 module.exports = [{
   method: 'get',
-  path: 'local/dev/getCompList',
-  handlerCreate: pluginCtx => async (ctx, koa) => {
+  path: '/local/dev/getCompList',
+  handlerCreate: pluginCtx => async (ctx, next) => {
     try {
       ctx.body = {
         code: 1,
@@ -17,21 +17,18 @@ module.exports = [{
         message: 'local/dev/getCompList 接口报错'
       }
     }
-    next();
   }
 }, {
   method: 'get',
-  path: 'local/dev/getPageInfo',
-  handlerCreate: pluginCtx => async (ctx, koa) => {
+  path: '/local/dev/getPageInfo',
+  handlerCreate: pluginCtx => async (ctx, next) => {
     ctx.body = 'local/dev/getPageInfo';
-    next();
   }
 }, {
   method: 'post',
-  path: 'local/dev/savePageInfo',
-  handlerCreate: pluginCtx => async (ctx, koa) => {
+  path: '/local/dev/savePageInfo',
+  handlerCreate: pluginCtx => async (ctx, next) => {
     // 保存线上搭建好的页面到本地
     ctx.body = 'local/dev/savePageInfo';
-    next();
   }
 }]
