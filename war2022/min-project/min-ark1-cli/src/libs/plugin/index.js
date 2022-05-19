@@ -19,6 +19,7 @@ class PluginDriver {
       console.log('element: ', element[hookName]);
       // 如果当前插件定义了该hookName的回调 那么 则执行该回调
       if (element[hookName]) {
+        // 保证async的顺序执行
         element[hookName]({ ...params });
       }
     });
