@@ -1,3 +1,4 @@
-<view >
+<view capture-bind:touchstart="__fstBindCaptureTouchStart">
+  <!--捕获阶段位于冒泡阶段之前: https://developers.weixin.qq.com/miniprogram/dev/framework/view/wxml/event.html-->
   <view class="__fst_judge_target" style="display: hidden"></view>
 </view>
