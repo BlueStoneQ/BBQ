@@ -22,6 +22,7 @@ const init = function () {
      */
     pageBase = function (pageObj) {
         // this上的属性
+        // 属性1：采样实例
         this.samplingInstance = null;
         // 在pageObj上挂在属性
         pageObj.__fstEnable = false; // 当前页面是否开启了fst测速上报，在onLoad中开启

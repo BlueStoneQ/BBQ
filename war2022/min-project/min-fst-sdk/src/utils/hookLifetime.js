@@ -20,4 +20,4 @@ const hookLifetime = function (instance, lifetiumeName, injectFn) {
     }
 }
 
-export default hookLifetimes;
+export default hookLifetime;

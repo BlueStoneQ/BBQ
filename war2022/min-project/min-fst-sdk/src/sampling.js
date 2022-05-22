@@ -24,10 +24,11 @@ class Sampling {
         this.pageStartTime = 0;
         this.isContinueFstJudge = true; // 开关：是否继续秒开判定
         this.pageInstance = pageInstance; // 页面实例
+        // https://developers.weixin.qq.com/community/develop/doc/000624edc40930322f2a0ed3b5ec00?highLine=getPageId
         this.firstInteractiveTime = 0; // 用户第一次交互时间
     }
 
-    reportFST() {
+    reportFST () {
         return report();
     }
 
@@ -223,19 +224,23 @@ class Sampling {
     }
 }
 
-Sampling.getSigngleInstance= () => {
-    if (this.instance) return this.instance;
-    this.instance = new Sampling();
-    return this.instance;
-}
+/**
+ * 静态方法
+ * 注意：静态方法中 不能访问到实例哦
+ */
+
+/**
+ * 主要提供给component中 获取当前所在的页面 一般使用组件的内在属性 this.__wxWebviewId__
+ * @param {} pageId 
+ */
+Sampling.getCurrentPageById (pageId) {
+    if (!pageId) return null;
+
+    return pageId && this.pageInstance.getPageId() === pageId ? this.pageInstance : null;
+} 
 
 
 /**
  * 模块导出
  */
-const { getSigngleInstance } = Sampling;
-
 export default Sampling
-export {
-    getSigngleInstance
-}
