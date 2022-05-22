@@ -233,7 +233,7 @@ class Sampling {
  * 主要提供给component中 获取当前所在的页面 一般使用组件的内在属性 this.__wxWebviewId__
  * @param {} pageId 
  */
-Sampling.getCurrentPageById (pageId) {
+Sampling.getCurrentPageById = function (pageId) {
     if (!pageId) return null;
 
     return pageId && this.pageInstance.getPageId() === pageId ? this.pageInstance : null;
