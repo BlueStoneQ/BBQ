@@ -10,6 +10,8 @@
  * 1. 记录点距离最后一个记录点 距离在 STABLE_CRITICAL_POSITION_VALUE = 10px以内的 可以认为该记录点是一个稳定的记录点 - 算法中会找最早的稳定记录点
  * 2. 触发兜底计算的时候 当前时间距离最早的稳定点的时间段 必须超过 MIN_STABLE_DURATION = 100ms 这个稳定记录点才能看做有效的 可以参与fst计算
  */
+import report from './report.js';
+
 const STABLE_CRITICAL_POSITION_VALUE = 10; // 稳定临界值 - top上下波动小于10px均可以认定为稳定的
 const MIN_STABLE_DURATION = 100; // 视图稳定的最短持续时间 100ms，如果走兜底判定（tryComputeFST）时，视图稳定时间超过了这个值，就可以任务视图稳定了
 
@@ -23,6 +25,10 @@ class Sampling {
         this.isContinueFstJudge = true; // 开关：是否继续秒开判定
         this.pageInstance = pageInstance; // 页面实例
         this.firstInteractiveTime = 0; // 用户第一次交互时间
+    }
+
+    reportFST() {
+        return report();
     }
 
     async startRecord () {
