@@ -1,4 +1,3 @@
-
 const register = (config) => {
   // 参数 防御 合并 等处理
   const { key, uuid, samplingRate } = config;
