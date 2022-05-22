@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint --fix src dist",
     "test": "test"
   },
   "author": "stoneQ",
