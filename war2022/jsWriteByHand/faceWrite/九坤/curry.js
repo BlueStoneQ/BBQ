@@ -1,17 +1,9 @@
-
 /**
- * 2022-3-1
- * 本质上还是一个高阶函数 
- * https://github.com/mqyqingfeng/Blog/issues/42
+ * 2022-5-25
+ * 2. fn(1)(2)(3) = fn(1, 2, 3)
  */
 
-
-/**
- * ES5实现
- * @param {*} fn 
- * @returns 
- */
-function curry (fn) {
+const curry = function (fn) {
   // defend fn必须是函数
   if (typeof fn !== 'function') {
       throw new TypeError(`curry need function to be params`);
@@ -35,38 +27,12 @@ function curry (fn) {
   }
 }
 
+
 /**
- * ES6 实现
- * 这里其实主要利用了解构参数 形参会合并之前+现在的参数
- * @param {*} fn 
- * @returns 
+ * test
  */
-const curryES = (fn, ...args) => {
-  console.log('args: ', args);
-  // 这里的args 是前面所有调用的传递的参数的集合
-  if (args.length >= fn.length) {
-    return fn(...args);
-  }
-
-  return curryES.bind(null, fn, ...args);
-}
-
-// test
-const testF = (a, b, c) => {
-  return [a, b, c];
-}
-
-var fn = curry(testF);
-
-
-console.log('fn("a", "b", "c"): ', fn("a", "b", "c")) // ["a", "b", "c"]
-console.log('fn("a", "b")("c"): ', fn("a", "b")("c")) // ["a", "b", "c"]
-console.log('fn("a")("b")("c"): ', fn("a")("b")("c")) // ["a", "b", "c"]
-console.log('fn("a")("b", "c"): ', fn("a")("b", "c")) // ["a", "b", "c"]
-
-
 const testFn1 = (a, b, c) => {
-  return a + b + c;
+    return a + b + c;
 }
 
 const curryFn1 = curry(testFn1);
