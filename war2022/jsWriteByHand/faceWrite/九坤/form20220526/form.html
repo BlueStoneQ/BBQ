@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>form1-配置化表单</title>
+    <style type="text/css">
+      body {
+        margin: 0;
+      }
+
+      /* 初始化表单元素样式 */
+      label {
+        display: inline-block;
+        width: 90px;
+        text-align: right;
+        font-size: 14px;
+        color: #555;
+      }
+
+      input {
+        width: 300px;
+        box-sizing: border-box;
+        font-size: 16px;
+        height: 40px;
+        line-height: 40px;
+        border: 1px solid #EEE;
+        border-radius: 5px;
+      }
+
+      input:focus {
+        outline: none;
+        border: 2px solid #07F;
+      }
+
+      .error-input {
+        border: 2px solid #F00;
+      }
+
+      .error-input:focus {
+        outline: none;
+        border: 2px solid #F00;
+      }
+
+      input::placeholder {
+        color: #DDD;
+      }
+
+      .tip {
+        position: absolute;
+        left: 95px;
+        top: 40px;
+        color: #F00;
+        font-size: 12px;
+      }
+
+      .wrap {
+        box-sizing: border-box;
+        width:500px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .title {
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      .form {
+        padding-top: 20px;
+      }
+
+      .row {
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .btn {
+        width: 300px;
+        margin-left: 95px;
+        text-align: center;
+        box-sizing: border-box;
+        font-size: 16px;
+        height: 40px;
+        line-height: 40px;
+        border-radius: 5px;
+        background-color: #AAA;
+        color: #333;
+      }
+
+      .btn-primary {
+        background-color: #09F;
+        color: #FFF;
+      }
+
+      .btn:hover {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .required-sign {
+        color: #F00;
+        vertical-align: middle;
+        margin-right: 3px;
+      }
+
+      .message-wrap {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+      }
+
+      .message {
+        box-sizing: border-box;
+        width: 200px;
+        min-height: 100px;
+        position: absolute;
+        left: 50%;
+        top: 35%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.6);
+        text-align: center;
+        padding: 20px 20px;
+        border-radius: 5px;
+        color: #FFF;
+        user-select: none;
+      }
+
+      .message-hide {
+        display: none;
+      }
+
+      .message-show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="title">修改用户信息</div>
+      <form id="myForm" name="myForm" class="form" autocomplete="off">
+        <div class="row">
+          <label for="userName"><span class="required-sign">*</span>用户名：</label>
+          <input id="userName" name="userName" placeholder="请输入用户名"></input>
+          <span id="userNameTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="password"><span class="required-sign">*</span>密码：</label>
+          <input id="password" name="password" type="password" placeholder="请输入密码"></input>
+          <span id="passwordTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="aginPassword"><span class="required-sign">*</span>确认密码：</label>
+          <input id="aginPassword" type="password" placeholder="请再次确认密码"></input>
+          <span id="aginPasswordTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="name">姓名：</label>
+          <input id="name" name="name" placeholder="请输入姓名"></input>
+          <span id="nameTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="qq">QQ：</label>
+          <input id="qq" name="qq" placeholder="请输入QQ"></input>
+          <span id="qqTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="wechat">微信：</label>
+          <input id="wechat" name="wechat" placeholder="请输入微信"></input>
+          <span id="wechatTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <label for="phoneNumber">手机：</label>
+          <input id="phoneNumber" name="phoneNumber" placeholder="请输入手机号"></input>
+          <span id="phoneNumberTip" class="tip"></span>
+        </div>
+        <div class="row">
+          <div id="submitBtn" class="btn btn-primary">修改</div>
+        </div>
+        <div id="resetBtn" class="btn">重置</div>
+      </form>
+      <div id="message-wrap" class="message-wrap message-hide">
+        <div id="message" class="message"></div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      ;(function () {
+        // 定义表单配置信息 - 避免逻辑过于零散 表单逻辑走配置化的方式
+        const formConfigs = [{
+          elId: "userName",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            isRequired: true, // 提交时是否需要必须校验通过，默认值为false
+            handler (val) {
+              if (!val) {
+                return new Error('用户名不能为空');
+              } else if (!/^[a-zA-Z0-9_]{4,16}$/.test(val)) {
+                return new Error('用户名必须由4-16个大小写字母或者下划线组成');
+              }
+            },
+          }]
+        }, {
+          elId: "password",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            isRequired: true, // 提交时是否需要校验，默认值为false
+            handler (val) {
+              if (!val) {
+                return new Error('密码不能为空');
+              } else if (!/^[a-zA-Z0-9]{6,18}$/.test(val)) {
+                return new Error('密码必须由6-18个大小写字母或者数字组成');
+              }
+            },
+          }]
+        }, {
+          elId: "aginPassword",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            isRequired: true, // 提交时是否需要校验，默认值为false
+            handler (val) {
+              const passwordEl = document.getElementById('password');
+              if (!val) {
+                return new Error('请确认密码');
+              } else if (val !== passwordEl.value) {
+                return new Error('前后两次输入密码不一致');
+              } else if (!/^[a-zA-Z0-9]{6,18}$/.test(val)) {
+                return new Error('密码必须由6-18个大小写字母或者数字组成');
+              }
+            },
+          }]
+        }, {
+          elId: "name",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            handler (val) {
+              if (!/^([\u4E00-\u9FA5]{1,20}|[a-zA-Z\.\s]{1,20})$/.test(val)) {
+                return new Error('姓名请以20个以内的中文或者英文组成，中英文不能同时出现');
+              }
+            },
+          }]
+        }, {
+          elId: "qq",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            handler (val) {
+              if (!/^[1-9][0-9]{4,10}$/.test(val)) {
+                return new Error('请出入5-11位由数字组成的合法QQ号');
+              }
+            },
+          }]
+        }, {
+          elId: "wechat",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            handler (val) {
+              if (!/^[a-zA-Z][-_a-zA-Z0-9]{5,19}$/.test(val)) {
+                return new Error('微信号由字母开头，6-20位由字母、数字、减号下划线组成');
+              }
+            },
+          }]
+        }, {
+          elId: "phoneNumber",
+          type: 'form', // 表单元素
+          handlers: [{
+            event: 'oninput',
+            handler (e) {
+              console.log(e.target.value);
+            }
+          }],
+          validateFns: [{
+            event: 'onblur', // 默认值为'onblur'
+            handler (val) {
+              if (!/^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}$/.test(val)) {
+                return new Error('请输入11位合法手机号');
+              }
+            },
+          }]
+        }, {
+          elId: "submitBtn",
+          type: 'normal', // 普通元素， 默认值为： 'form' 表单元素
+          handlers: [{
+            event: 'onclick',
+            handler (e) {
+              const message = new Message();
+              validateForm(formConfigs).then(({ unLegalResults = [] }) => {
+                console.log('表单校验通过');
+                const validateFailedKeys = unLegalResults.map(({ formKey }) => formKey);
+                const formData = getFormData('myForm', validateFailedKeys);
+
+                request({
+                  method: 'POST',
+                  url: 'http://127.0.0.1:3000/login',
+                  params: formData
+                }).then(res => {
+                  console.log('res-1: ', res);
+                  // 提示弹窗
+                  message.success(res);
+                }).catch(err => {
+                  // todo: 处理错误
+                  console.log(err)
+                });
+              }).catch(err => {
+                console.log('表单校验未通过');
+                console.log(err)
+              });
+            }
+          }]
+        }, {
+          elId: "resetBtn",
+          type: 'normal',
+          handlers: [{
+            event: 'onclick',
+            handler (e) {
+              resetForm();
+            }
+          }]
+        }];
+
+        // 主流程
+        window.onload = function () {
+          init();
+        }
+
+        function init () {
+          initFormByConfigs(formConfigs);
+        }
+
+        /*
+         * 根据配置化信息初始化表单
+        */
+        function initFormByConfigs (formConfigs) {
+          // todo:defend
+          // 便利配置初信息始化表单
+          for (const config of formConfigs) {
+            const { elId, handlers, validateFns = [] } = config;
+            const el  = document.getElementById(elId);
+            // 将表单元素挂载到config中 这样避免多次DOM操作
+            config._el = el;
+            // 注册各个表单元素的相关事件的handler
+            handlers && handlers.forEach(item => {
+              const { event, handler } = item;
+              el[event] = handler;
+            });
+
+            initValidateFns(el, validateFns);
+          }
+        }
+
+        function initValidateFns (el, validateFns) {
+          // todo: defend
+          validateFns && validateFns.forEach(item => {
+            const { event = 'onblur', handler } = item;
+            el[event] = function (e) {
+              validateHandler(el, e.target.value, handler);
+            };
+          });
+        }
+
+        /**
+        * 校验响应
+        * @params {Function} handler 自定义的校验函数
+        * @returns {Boolean} true，校验成功 
+        */
+        function validateHandler (el, val, handler) {
+          const validateRes = handler(val);
+          if (Object.prototype.toString.call(validateRes) === '[object Error]') {
+            // 如果handler返回的是false 则校验不通过
+            const tip = validateRes.message || '校验不通过，请检查后重新填写';
+            // 设置当前元素的样式为校验不通过样式
+            setErrorStyleForEl(el, {
+              tip
+            });
+            
+            return false;
+          } else {
+            // 校验通过 则当前元素的样式恢复正常
+            setErrorStyleForEl(el, {
+              isError: false
+            });
+
+            return true;
+          }
+        }
+
+        /**
+         * 手动调用校验
+         * @returns {Promise} 校验通过则为fulfilled状态,不通过是rejected 专题
+        */
+        function validateForm (formConfigs) {
+          const results = [];
+          return new Promise((resolve, reject) => {
+            for (const config of formConfigs) {
+              const { _el: el, validateFns} = config;
+              // 触发各个表单元素的相关校验的handler, 只有显式设置 isRequired = true的才会进行总体校验
+              validateFns && validateFns
+                .forEach(item => {
+                  const validateRes = validateHandler(el, el.value, item.handler);
+                  results.push({
+                    formKey: el.getAttribute('name'),
+                    validateRes
+                  });
+              });
+            }
+            const _isNotPassed = () => {
+              // 只有必填项校验不通过 会阻止发送请求 其他校验结果只是会记录到results中 由调用方处理
+              return results.filter(item => item.isRequired === true).find(item => item.validateRes === false) !== undefined;
+            }
+            if (_isNotPassed()) {
+              // 只要有一项没校验通过 则整体表单不通过
+              reject(new Error('表单校验不通过'));
+            } else {
+              // 表单校验通过
+              resolve({
+                results, // 合法结果集, 包含formKey 和 validate: res
+                legalResults: results.filter(item => item.validateRes === true), // 校验通过结果集
+                unLegalResults: results.filter(item => item.validateRes === false) // 校验未通过结果集
+              });
+            }
+          });
+        }
+
+        /**
+        * 封装一个promise版的ajax
+        * @params {Object} ajaxOptions  ajax配置项 
+        * @params {Object} ajaxOptions.url  
+        * @params {Object} ajaxOptions.method  
+        * @params {Object} ajaxOptions.param  
+        */
+        function request (ajaxOptions = {}) {
+          // todo: defend 处理参数
+          const { method = 'GET', url, params = {}, head = {} } = ajaxOptions;
+
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            // 设置回调件监听
+            xhr.onreadystatechange = function () {
+              // readyState = 4 请求已完成，且响应已就绪
+              if (xhr.readyState === 4) {
+                // status在2xx范围中 则代表请求成功
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  resolve(xhr.response);
+                } else {
+                  reject(new Error(`request of "${url}" failed with status code ${xhr.status}.`));
+                }
+              }
+            }
+            // 针对GET 和 POST 进行不同设置 这里我们只用到了post 就先设置post
+            if (method.toUpperCase() === 'POST') {
+              xhr.open('POST', url, true);
+              // 因为不用上传文件等 这里我们不选用multiple/form-data这种复合类型，采用有encode的纯文本urlencode
+              // xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded;charset=utf-8');
+              xhr.setRequestHeader('Content-type', 'multipart/form-data');
+              // xhr.setRequestHeader('Content-type', 'application/json');
+              // xhr.send(JSON.stringify(params));
+              xhr.send(params);
+            }
+          });
+        }
+
+        /**
+         * 获得formData
+         * @param { String } formId form元素的id
+         * @param { Array } validateFailedKeys 校验未通过的form中的name(key)
+         * @return { Object } formData对象
+         */
+        function getFormData (formId, validateFailedKeys) {
+          const formEl  = document.getElementById('myForm');
+          const formData = new FormData(formEl);
+          for (const delKey of validateFailedKeys) {
+            // 剔除掉校验不通过的key
+            formData.delete(delKey);
+          }
+
+          return formData;
+        }
+
+        /**
+         * 设置输入元素的样式为错误样式
+         * @param {object} obj 配置项
+         * @param {object} obj.tip 显示的提示信息
+         * @param {object} obj.isError 是否错误 错误设置错误样式，没有错误则去掉错误样式
+        */
+        function setErrorStyleForEl (el, { tip = '', isError = true }) {
+          const _className = isError ? 'error-input' : '';
+          const _tip = isError ? tip : '';
+          el.setAttribute('class', _className);
+          // 内部约定提示框的id为elId + 'Tip' 这里不用查兄弟DOM元素 避免无畏的性能消耗 和 其他元素不能添加
+          const tipElId = el.getAttribute('id') + 'Tip';
+          const tipEl = document.getElementById(tipElId);
+          tipEl.innerText = tip;
+        }
+
+        function resetForm () {
+          // 只重置表单元素
+          const _configs = formConfigs.filter(item => item.type === 'form');
+          for (config of _configs) {
+            const { _el: el } = config;
+            // 清除表单数据
+            el.value = null;
+            // 清除校验结果 + 校验样式 // 这里很多之间的联动 应该设计一个响应式的框架 
+            setErrorStyleForEl(el, { isError: false });
+          }
+        }
+
+        /**
+         * 弹窗方法
+        */
+        class Message {
+          constructor () {
+            this.wrapEl = document.getElementById('message-wrap');
+            this.el = document.getElementById('message');
+          }
+
+          showMessage (deley = 800) {
+            this.wrapEl.setAttribute('class', 'message-wrap message-show');
+            setTimeout(() => {
+              this.hideMessage();
+            }, deley);
+          }
+
+          hideMessage () {
+            this.wrapEl.setAttribute('class', 'message-wrap message-hide');
+          }
+
+          success (text) {
+            this.el.innerText = text || '成功';
+            this.showMessage();
+          }
+        }
+      }())
+    </script>
+  </body>
+</html>
