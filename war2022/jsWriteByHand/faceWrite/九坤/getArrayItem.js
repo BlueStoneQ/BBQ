@@ -45,3 +45,47 @@ const getArrayItem = (arr, path, defaultVal = undefined) => {
 
 const arr = [0, [1, 2, [3, 4, 5, 6]]];
 console.log(getArrayItem(arr, '1.2.3'));
+
+
+/********************   答题版 5-26 ****************** */
+
+Array.prototype._get1 = function (layer) {
+  layer = +layer;
+  let result = this;
+
+  while (layer >= 0) {
+    const curVal = result ? result[0] : null;
+    if (curVal || curVal === 0) {
+      result = curVal;
+    } else {
+      return;
+    }
+
+    layer--;
+  }
+
+  return result;
+}
+
+
+// test1
+const arr1 = [[[1]]];
+console.log('arr._get1(2): ', arr1._get1(2)); // expect 1
+
+
+Array.prototype._get2 = function (layers) {
+  let result = this;
+
+  for (let layer of layers) {
+    const curVal = result ? result[layer] : null;
+    if (curVal || curVal === 0 || curVal === '') {
+      result = curVal;
+    } else {
+      return;
+    }
+  }
+
+  return result;
+}
+
+console.log('arr._get2(2): ', arr._get2([0, 0, 0])); // expect 1
