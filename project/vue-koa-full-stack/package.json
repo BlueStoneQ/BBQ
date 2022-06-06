@@ -4,6 +4,7 @@
   "description": "a web full stack project with vue and nodejs",
   "main": "index.js",
   "scripts": {
+    "dev": "webpack --config build/webpack.base.config.js",
     "test": "test"
   },
   "keywords": [
@@ -12,5 +13,18 @@
     "koa"
   ],
   "author": "qiaoyang",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "babel-loader": "^8.2.5",
+    "css-loader": "^0.28.0",
+    "vue-loader": "^13.3.0",
+    "vue-template-compiler": "^2.5.2",
+    "webpack": "^3.6.0",
+    "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "vue": "^2.5.2"
+  }
 }

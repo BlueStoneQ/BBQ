@@ -1,0 +1,11 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "node koa server",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "qiaoyang",
+  "license": "ISC"
+}
