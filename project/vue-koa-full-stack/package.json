@@ -4,7 +4,8 @@
   "description": "a web full stack project with vue and nodejs",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack --config build/webpack.dev.config.js",
+    "build:test": "webpack --config build/webpack.dev.config.js",
+    "build:prod": "webpack --config build/webpack.prod.config.js",
     "test": "test"
   },
   "keywords": [

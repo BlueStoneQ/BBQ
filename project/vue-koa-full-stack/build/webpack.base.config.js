@@ -12,9 +12,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.vue', '.json'],
-    alias: {
-      'vue$': 'vue/dist/vue.esm.js', // https://segmentfault.com/a/1190000016417861
-    }
+    // alias: {
+    //   'vue$': 'vue/dist/vue.esm.js', // https://segmentfault.com/a/1190000016417861，也可以在给定对象的键后的末尾添加 $，以表示精准匹配
+    // }
   },
   module: {
     rules: [{
