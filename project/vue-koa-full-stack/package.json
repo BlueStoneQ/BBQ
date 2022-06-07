@@ -4,6 +4,7 @@
   "description": "a web full stack project with vue and nodejs",
   "main": "index.js",
   "scripts": {
+    "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.config.js",
     "build:test": "webpack --config build/webpack.dev.config.js",
     "build:prod": "webpack --config build/webpack.prod.config.js",
     "test": "test"
@@ -19,11 +20,11 @@
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
     "babel-loader": "^8.2.5",
-    "css-loader": "^0.28.0",
     "html-webpack-plugin": "^2.30.1",
     "vue-loader": "^13.3.0",
     "vue-template-compiler": "^2.5.2",
     "webpack": "^3.6.0",
+    "webpack-dev-server": "^2.9.1",
     "webpack-merge": "^4.1.0"
   },
   "dependencies": {

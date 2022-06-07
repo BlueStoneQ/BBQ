@@ -1,5 +1,5 @@
 <template>
-  <div>123</div>
+  <div>125</div>
 </template>
 
 <script>
@@ -8,4 +8,8 @@
   }
 </script>
 
-<style></style>
+<style scoped>
+div {
+  color: red;
+}
+</style>

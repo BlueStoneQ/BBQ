@@ -3,6 +3,12 @@ const webpackMerge = require('webpack-merge');
 const baseWebpackConfig = require('./webpack.base.config');
 
 module.exports = webpackMerge(baseWebpackConfig, {
+  devServer: {
+    hot: true,
+    quiet: true, // 不输出打包过程
+    open: true, // 自动打开浏览器
+    compress: true, // 开启gzip压缩
+  },
   plugins: [
     new webpack.DefinePlugin({
       // https://cn.vuejs.org/v2/guide/deployment.html
