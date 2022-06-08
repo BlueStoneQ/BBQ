@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>125</div>
+    <div>125-icon</div>
     <router-view></router-view>
   </div>
 </template>
@@ -12,7 +12,4 @@
 </script>
 
 <style scoped>
-div {
-  color: red;
-}
 </style>
