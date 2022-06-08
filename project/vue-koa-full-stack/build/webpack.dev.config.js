@@ -4,7 +4,7 @@ const baseWebpackConfig = require('./webpack.base.config');
 
 module.exports = webpackMerge(baseWebpackConfig, {
   devServer: {
-    hot: true,
+    // hot: true,
     quiet: true, // 不输出打包过程
     open: true, // 自动打开浏览器
     compress: true, // 开启gzip压缩
