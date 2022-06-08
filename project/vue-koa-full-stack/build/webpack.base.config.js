@@ -25,7 +25,16 @@ module.exports = {
       loader: 'babel-loader'
     }, {
       test: /\.css$/,
-      loader: 'css-loader'
+      loader: [
+        'vue-style-loader', // 在style的基础上，为vue的SSR做了些工作，在vue项目中 可直接代替style-loader使用 https://blog.csdn.net/vv_bug/article/details/109260358
+        'css-loader'
+      ]
+    }, {
+      test: /\.(woff|ttf)$/,
+      loader: 'url-loader',
+      options: {
+        limit: 8192
+      }
     }]
   },
   plugins: [

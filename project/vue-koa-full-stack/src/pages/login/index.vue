@@ -2,6 +2,13 @@
 <div>login</div>
 </template>
 
-<script></script>
+<script>
+export default {
+  data() {
+    return {}
+  },
+  methods: {}
+}
+</script>
 
-<style></style>
+<style scoped></style>
