@@ -22,3 +22,20 @@ function _instanceof(obj, constructor) {
   // return 
   return false;
 }
+
+
+/**
+ * 寻找一下原型链的尽头
+ * 看了下 原型链的终点的确是null
+ * 是这样的：Object.getPrototypeOf(Object.prototype) === null
+ */
+
+const findLastProto = () => {
+  let proto = Object.getPrototypeOf({});
+  console.log(proto);
+
+  while (proto) {
+    proto = Object.getPrototypeOf(proto);
+    console.log(proto);
+  }
+}
