@@ -32,7 +32,7 @@ function _new () {
  */
 function _new2 () {
   // new一个新对象
-  var obj = {};
+  var obj = {}; // new Object
   // 拿到Constructor - （因为arguments不是数组，而是类数组，所以自身不能直接调用shift
   var Constructor = [].prototype.shift.call(arguments);
   // 实现新对象和构造函数之间的原型链继承
