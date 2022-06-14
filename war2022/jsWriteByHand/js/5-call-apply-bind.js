@@ -63,7 +63,8 @@ Function.prototype.bind = function() {
     // 这里的this 不是上面的this哦 上面的this是函数本身 这里的this可能是实例（new的话） 或者 当前的调用环境
     // 合并参数
     const params = [...originalParams, ...arguments];
-    // 这里需要判断调用方式 常规调用 还是 new调用 并采用不同的context
+    // 这里需要判断调用方式 常规调用 还是 new调用 并采用不同的context 
+    // 当使用new操作函数时候,保证this的指向
     const _this = this instanceof F ? this : originalContext;
     return fn.apply(_this, params);
   };
@@ -72,6 +73,8 @@ Function.prototype.bind = function() {
   // 解释：https://github.com/mqyqingfeng/Blog/issues/12
   // 如果我们直接将 F.prototype = this.prototype，我们直接修改 F.prototype 的时候，也会直接修改绑定函数的 prototype。这个时候，我们可以通过一个空函数来进行中转
   // me: 我们要理解 F 是bind返回的一个新函数 而this是我们被bind处理的函数 它们2个是独立的，this被bind处理后 本身什么也没有变 所以 这里要斩断新函数F 和 原来函数this的关系
+  // 这里实质上 是 F.prototype = Object.create(this.prototype); 或者 F.prototype = Object.create(Object.getPrototypeOf(this));
+  // 在普通面试中 如果面试官不做要求 可以不写这一步
   const fNOP = function() {};
   fNOP = this.prototype;
   F.prototype = new fNOP();

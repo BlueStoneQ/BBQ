@@ -46,7 +46,7 @@ const throttle2 = (fn, delay = 300) => {
       fn && fn.apply(context, args);
       // 本次执行结束 重置timer
       timer = null;
-    }, 300);
+    }, delay);
   }
 }
 
