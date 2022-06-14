@@ -22,4 +22,7 @@ function addEvent (type, el, fn) {
       el.attachEvent('on' + type, fn);
     }
   }
+
+  // me: 我觉得应该有调用这一句，此时调用的已经是重新定义过的addEvent 不会无限递归
+  addEvent(type, el, fn);
 }

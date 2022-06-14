@@ -2,6 +2,8 @@
  * 继承
  * 2022-5-6
  * 继承的目的：代码复用，复用属性和方法
+ * 属性继承：一般通过在自身构造函数中调用父类的构造函数实现
+ * 方法继承：一般通过原型链进行继承，例如new实例 或者 生成一个父类的原型副本，和子类的构建函数互相指定：constructor 和 prototype
  * ES5:
  *  - 组合继承
  *  - 寄生组合式继承
@@ -77,8 +79,11 @@
 
   // 继承方法 - 这里是和组合继承不同的地方,这里有个工具方法
   const inheritPrototype = (subConstructor, superConstructor) => {
-    // 从父类原型生成一个副本原型,避免
-    const proto = object(superConstructor);
+    // object将给定的值包装为一个新对象-如果给定值是一个已经存在的对象，则会返回这个已经存在的值（相同地址）
+    // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/Object
+    //js高程上 这里写的这个 const proto = object(superConstructor.prototype);
+    // 应该用Object.create创建父类原型的一个副本
+    const proto = Object.create(superConstructor.prototype);
     // 这个原型和当前子类构造函数互相连接
     subConstructor.prototype = proto;
     proto.constructor = subConstructor;
