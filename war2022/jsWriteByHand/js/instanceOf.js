@@ -3,6 +3,7 @@
  */
 
 /**
+ * 作用：实例 是不是 构建函数 的实例
  * instanceof 运算符用来检测 constructor.prototype 是否存在于参数 object 的原型链上。
  * 即：判断左值是否是右值的实例
  */
