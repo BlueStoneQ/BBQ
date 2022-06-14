@@ -35,7 +35,7 @@ const throttle1 = (fn, delay = 300) => {
 const throttle2 = (fn, delay = 300) => {
   let timer = null;
 
-  return (...args) => {
+  return function (...args) {
     // defend
     if (timer) return;
 
@@ -57,7 +57,7 @@ const throttle2 = (fn, delay = 300) => {
  * @param {number} delay 
  * @return {function}
  */
- function debounce(fn, delay = 300) {
+function debounce(fn, delay = 300) {
   let timer = null;
 
   return function() {
@@ -79,6 +79,7 @@ const throttle2 = (fn, delay = 300) => {
 
 
 /**
+ * 高阶函数 - 我们真正使用的是 它生成的新函数
  * debounce 的问题在于它“太有耐心了”。试想，如果用户的操作十分频繁——他每次都不等 debounce 设置的 delay 时间结束就进行下一次操作，
  *  于是每次 debounce 都为该用户重新生成定时器，回调函数被延迟了不计其数次。频繁的延迟会导致用户迟迟得不到响应，用户同样会产生“这个页面卡死了”的观感。
  * 为了避免弄巧成拙，我们需要借力 throttle 的思想，打造一个“有底线”的 debounce
