@@ -6,8 +6,7 @@
 const call = (...args) => {
   // 防御
   if (typeof this !== 'function') {
-    console.error('type error');
-    return;
+    throw new TypeError('call should be called by function');
   }
 
   // 获取context
@@ -26,8 +25,7 @@ const call = (...args) => {
 const apply = (...args) => {
   // defend
   if (typeof this !== 'function') {
-    error('type error');
-    return;
+    throw new TypeError('call should be called by function');
   }
 
   // 获取context

@@ -4,6 +4,11 @@
  * - 不是实现一个typeof哦
  */
 
+/**
+ * 类型的静态常量，可以挂载到_typeof 例如：_typeof.TYPE.array, 统一比较
+ * 另外 可以设计：例如：_typeof([]).isArray() 这样判断具体类型的函数
+ * 当然整个写成class 也可以
+ */
 const TYPE = {
   array: 'array', // 等等...
 };
@@ -19,9 +24,9 @@ const _typeof = (value) => {
   if (value === null) return `${value}`;
   // case2 引用类型
   if (typeof value === 'object') {
-    const protoTypeStr =  Object.prototype.toString.call(value)
+    const protoTypeStr = Object.prototype.toString.call(value);
     return protoTypeStr.split(' ')[1].split(']')[0].toLowerCase(); // 抠出array 等等真正的类型字符串
-    // 也可以用正则抠出具体类型 match(/([\w]+)]/)[1]
+    // 也可以用正则抠出具体类型 match(/(\w+)\]/)[1]
   }
   // case3 基础类型
   return typeof value;
