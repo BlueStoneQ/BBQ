@@ -6,6 +6,8 @@
  *  - slice()
  *  - concat()
  * 4. 手写实现
+ * 
+ * 浅拷贝其实对于对象而言 就是只拷贝第一层属性，第二层就保持原来的引用了，所以 一般一个单层循环即可
  */
 
 /**
@@ -18,6 +20,7 @@ const shallowCopy = (obj) => {
   const newObj = Array.isArray(obj) ? [] : {};
 
   for (const key in obj) {
+    // 只拷贝自身属性 不拷贝原型链上的属性
     if (obj.hasOwnProperty(key)) {
       newObj[key] = obj[key];
     }

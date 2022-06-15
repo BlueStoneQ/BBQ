@@ -250,6 +250,10 @@ MyPromise.allSettled = (promiseList) => {
     const result = [];
     const promiseLen = promiseList.length;
 
+    if (!promiseLen) {
+      return resolve(result);
+    }
+
     promiseList.forEach((promise, index) => {
       return MyPromise.resolve(promise).then(value => {
         count++;

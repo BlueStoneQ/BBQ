@@ -12,6 +12,7 @@
  */
 
 const compose = (...fnList) => {
+  // 因为我们设计的执行顺序是从右向左执行 所以这里的startIndex是末尾的index
   const startIndex = fnList.length - 1;
   return function(...args) {
     let i = startIndex;

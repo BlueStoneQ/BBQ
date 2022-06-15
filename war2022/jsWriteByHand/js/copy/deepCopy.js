@@ -9,15 +9,15 @@
  *  2. 值是不可遍历的：各种基本类型 function 
  * 
  * 5. 实现参考：[lodash._baseclone](https://github.com/lodash/lodash/blob/master/.internal/baseClone.js)
+ *              参考1：https://blog.csdn.net/cc18868876837/article/details/114918262
+ *             [参考2](https://github.com/yygmind/blog/issues/29)
+ * 
+ * 6. 我更倾向于实现一个通用的类型检测函数 + 将五花八门的类型检测剥离，
+ *  - 然后只留下主体逻辑框架：基础类型-直接赋值, 引用类型-递归调用返回值赋值
+ *    + 各个类型的处理：初始化 + 赋值
+ * 
  */
 
-
-/**
- * 手写的完全版deepCopy
- * 核心思路：其实深拷贝可以拆分成 2 步，浅拷贝 + 递归，浅拷贝时判断属性值是否是对象，如果是对象就进行递归操作，两个一结合就实现了深拷贝。
- * @param {*} obj 
- * @returns 
- */
 /**
  * 手写的完全版deepCopy
  * 核心思路：其实深拷贝可以拆分成 2 步，浅拷贝 + 递归，浅拷贝时判断属性值是否是对象，如果是对象就进行递归操作，两个一结合就实现了深拷贝。
@@ -61,7 +61,7 @@ const deepClone = (obj) => {
 }
 
 
-/************************************************ */
+/************************************************ */ 
 
 /**
  * 加强版deepClone
@@ -73,7 +73,7 @@ const deepClone = (obj) => {
  */
 const deepClonePro = (obj) => {
   // 利用闭包: 提供memo 解决循环引用问题，[key, data] = [data, data], key也是值本身
-  const memo = new Map();
+  const memo = new Map(); // 这里一般建议使用weakMap 
 
   // 判断是否为引用类型
   const isObject = (_obj) => {
