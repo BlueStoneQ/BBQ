@@ -46,6 +46,7 @@ const apply = (...args) => {
  * 一般借助于apply实现
  * @param  {...any} args 
  * 参考：https://github.com/mqyqingfeng/Blog/issues/12
+ * 参考-这一篇bind解释写的更细一些：https://github.com/sisterAn/JavaScript-Algorithms/issues/81
  */
 Function.prototype.bind = function() {
   // defend

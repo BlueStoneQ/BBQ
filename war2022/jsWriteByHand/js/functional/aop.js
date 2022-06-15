@@ -11,6 +11,17 @@
  * 2. 不借助prototype,使用入参实现 - 不想污染原型的情况下 可以使用这个方法
  * https://segmentfault.com/a/1190000039752166
  * 3. 还有一个around方法：在before 和 after 2个节点 都可以执行
+ * 
+ * 关于AOP实际的一些作用呢：
+ *  日志记录：假设您已经编写了业务逻辑，但现在您意识到您没有日志记录代码。对此的正常方法是通过添加日志信息的函数将日志逻辑集中在一个新模块和函数中。
+    性能统计
+    安全控制
+    事务处理
+    异常处理等等
+
+    - [AOP 装饰器 职责链](https://youfindme.cn/2021/06/27/%E6%B5%85%E8%B0%88JavaScript%E4%B8%AD%E7%9A%84AOP%E5%92%8C%E8%A3%85%E9%A5%B0%E5%99%A8/)
+    aop 和 另一个语法：装饰器语法 或者 设计模式，在功能上有很大重叠，基本可以互相代替
+    - 装饰器模式：本质上就是动态地为⼀个对象增加功能，但是不改变其结构 - 装饰器有个很大的问题，对于每一个方法，我们都要手动写一遍日志，实在是太麻烦了，而且很啰嗦
  */
 
 /**
@@ -82,3 +93,18 @@ const before = function(selfFn, insertFn) {
     return result;
   }
 }
+
+/**
+ * test
+ */
+
+function f (...args) {
+  console.log('f: ', args);
+  return 'f';
+}
+
+f.before(function (...args) {
+  console.log('before: ', args);
+}).after(function (...args) {
+  console.log('after: ', args);
+})(123);

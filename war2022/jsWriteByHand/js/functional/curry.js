@@ -1,5 +1,6 @@
 
 /**
+ * 函数柯里化
  * 2022-3-1
  * 本质上还是一个高阶函数 
  * https://github.com/mqyqingfeng/Blog/issues/42
@@ -27,7 +28,7 @@ function curry (fn) {
 
       // 判断参数是否满足length个
       if (combineArgs.length >= needArgslength) {
-      return fn.apply(this, combineArgs);
+        return fn.apply(this, combineArgs);
       }
 
       // 参数不足length个时 返回柯里化函数: 这里的this 来自于当前新函数调用时的this(包括这个函数的this可以被其他bind之类的改变) 箭头函数不用考虑该问题  其this始终指向其定义时向上捕获的this
@@ -73,3 +74,7 @@ const curryFn1 = curry(testFn1);
 
 console.log(curryFn1(1, 2, 3));
 console.log(curryFn1(1)(2)(3));
+
+
+
+
