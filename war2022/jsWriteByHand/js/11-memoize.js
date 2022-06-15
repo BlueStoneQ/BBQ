@@ -1,5 +1,6 @@
 /**
  * 函数备忘录（缓存）
+ * 高阶函数 - 给函数结果加缓存
  * 2022-3-2
  * https://github.com/mqyqingfeng/Blog/issues/46
  * 1. 采用闭包实现
@@ -30,9 +31,11 @@ const memoize = (fn) => {
 // test 对斐波那契作备忘录处理
 let count = 0; // 调用次数计数
 
-const fabonaci = (n) => {
+let fabonaci = (n) => {
   count++;
   if (n < 2) return n;
+
+  // 已经不推荐使用arguments.callee 因为arguments是个很大的参数 比较耗能，我们可以在内部给一个函数名 - 用一个高阶函数处理
   return fabonaci(n - 1) + fabonaci(n - 2);
 }
 
@@ -41,14 +44,14 @@ for (var i = 0; i <= 10; i++) {
   fabonaci(i)
 }
 
-console.log('memo before: ', count);
+console.log('memo before: ', count); // 453 
 
 count = 0; // reset 
 
-const memoFab = memoize(fabonaci);
+fabonaci = memoize(fabonaci); // 这里必须赋值给 fabonaci ， 因为内部递归的时候 是用的 fabonaci
 
 for (var i = 0; i <= 10; i++) {
-  memoFab(i)
+  fabonaci(i)
 }
 
-console.log('memo after: ', count);
+console.log('memo after: ', count); // 11

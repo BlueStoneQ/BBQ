@@ -6,24 +6,29 @@
  * - 闭包 + 高阶函数（对fn进行包裹后返回一个新函数）
  * - 也就是对要执行的函数，例如onscroll的回调进行包裹后 处理
  * window.addEventListener('scroll', throttle(imgLazyLoad));
+ * - [这里还有一个更全面的的节流实现-综合了时间戳 + 定时器 2种方案](https://github.com/mqyqingfeng/Blog/issues/26)
+ * 
+ * 也要理解：时间戳差 和 防抖的实现方案 各自的特点
  */
 
 
 /**
  * throttle
- * 时间差实现
+ * 时间戳差实现
  */
 const throttle1 = (fn, delay = 300) => {
   let start = 0; // 这里应该初始值为 0, 这样节流的第一次 总会立刻先执行一次，接下来节流执行
   // 这里为0的话 now - start = now - 0 = 自1970年的计算机时间起点到现在的时间 是计算机系统中的最大时间 绝对>deley 自然不会return
 
-  return (...args) => {
+  return function (...args) {
     // init data
     const now = Date.now();
     // defend
     if (now - start < delay) return;
+    
+    const context = this;
     // 放行 执行
-    fn && fn(args);
+    fn && fn.apply(context, args);
     start = now;
   }
 }

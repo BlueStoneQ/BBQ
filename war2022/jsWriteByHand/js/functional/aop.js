@@ -10,6 +10,7 @@
  * 1. 借助prototype实现 
  * 2. 不借助prototype,使用入参实现 - 不想污染原型的情况下 可以使用这个方法
  * https://segmentfault.com/a/1190000039752166
+ * 3. 还有一个around方法：在before 和 after 2个节点 都可以执行
  */
 
 /**
@@ -23,9 +24,9 @@ Function.prototype.before = function(fn) {
   // 返回新函数 
   return function() {
     // 调用插入的逻辑，注意this是需要当前这个新函数进行传递的（这个新函数所在的环境 才是原来的函数本来调用的地方）
-    fn && fn.call(this, arguments);
+    fn && fn.call(this, ...arguments);
     // 调用被拦截的函数
-    return selfFn.call(this, arguments);
+    return selfFn.call(this, ...arguments);
   }
 }
 
@@ -38,9 +39,9 @@ Function.prototype.after = function(fn) {
 
   return function() {
     // 执行原来函数的逻辑 先把结果记录下来 一会儿返回
-    const result = selfFn.call(this, arguments);
-    // 执行插入的逻辑
-    fn && fn.call(this, arguments);
+    const result = selfFn.call(this, ...arguments);
+    // 执行插入的逻辑 - 在after中 可以对result进行处理
+    fn && fn.call(this, result, ...arguments);
     // 返回之前记录的结果
     return result;
   }
@@ -62,8 +63,8 @@ Function.prototype.after = function(fn) {
  */
 const before = function(selfFn, insertFn) {
   return function() {
-    insertFn && insertFn.call(this, arguments);
-    return selfFn.call(this, arguments);
+    insertFn && insertFn.call(this, ...arguments);
+    return selfFn.call(this, ...arguments);
   }
 }
 
@@ -74,9 +75,9 @@ const before = function(selfFn, insertFn) {
  */
  const after = function(selfFn, insertFn) {
   return function() {
-    const result = selfFn.call(this, arguments);
+    const result = selfFn.call(this, ...arguments);
 
-    insertFn && insertFn.call(this, arguments);
+    insertFn && insertFn.call(this, ...arguments);
     
     return result;
   }

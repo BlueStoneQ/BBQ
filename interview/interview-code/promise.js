@@ -3,6 +3,7 @@
  * 1. 完成链式调用
  * 2. 完成异步处理
  * 3. 完成值的多个then穿透
+ * 这个可以作为一个面试版的 去掉resolvePromise的版本
  */
 
 const STATUS = {
