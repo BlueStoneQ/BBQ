@@ -11,12 +11,162 @@
  * 5. 实现参考：[lodash._baseclone](https://github.com/lodash/lodash/blob/master/.internal/baseClone.js)
  *              参考1：https://blog.csdn.net/cc18868876837/article/details/114918262
  *             [参考2](https://github.com/yygmind/blog/issues/29)
+ *             [深拷贝的终极探索](https://segmentfault.com/a/1190000016672263)
+ *                - 这里提出了一个问题：叫递归爆栈 - 主要是递归对内存的消耗造成的
+ *                  - 解决方案有：1. 尾递归优化 2. 递归变遍历 
  * 
- * 6. 我更倾向于实现一个通用的类型检测函数 + 将五花八门的类型检测剥离，
+ */
+
+/**
+ * 我更倾向于实现一个通用的类型检测函数 + 将五花八门的类型检测剥离，
  *  - 然后只留下主体逻辑框架：基础类型-直接赋值, 引用类型-递归调用返回值赋值
  *    + 各个类型的处理：初始化 + 赋值
  * 
+ * 然后 一定要遵循单一职能,遵循一个清晰的架构：
+ *  - 一个渐进增强的框架，每个类型的处理 都像插件一些 插进来，也符合对扩展开放，框架内部对修改封闭的 开闭原则
+ *  - 主体框架一定要清晰
+ *  - 框架只负责 类型判断 + 不同类型下的函数调用（甚至可以试试访问者模式）
+ * 
+ * TODO:这个写好 可以写一篇blog - 掘金，讲下这个实现 清晰 健壮：
+ * TODO: 使用class + 访问者模式实现一下 - 掘金上分享下这2种实现
  */
+(() => {
+  const { typeofInstance, TYPE } = require('../4-typeof'); // 这里类型判断使用自己封装的一个类型检测程序
+
+  const {
+    object,
+    array,
+    _function,
+    map,
+    set,
+    date,
+    regexp
+  } = TYPE;
+
+  /**
+   * 按照这个架构 我越发觉得class更适合组织这个代码
+   * @param {*} arg 
+   * @returns 
+   */
+  const myDeepClone = (arg) => {
+    // defend
+
+    // 备忘录memo 解决循环引用：- 这里采用闭包来确保递归过程中 始终可以访问这一个memo
+    // ES6可以使用Map WeakMap, ES5可以使用数组，每个item = { kay, val }, memo.find(key) 需要自己实现下
+    // 循环引用中的key一般推荐使用_myDeepClone中的入参_arg
+    const memo = new WeakMap();
+
+    /**
+     * 主体逻辑:类型判断 + 调用各种类型的处理方案
+     * @param {*} _arg 
+     * @returns 
+     */
+    const _myDeepClone = (_arg) => {
+      // defend
+      // case1 arg是基础类型
+      if (typeofInstance.isNoRefType(_arg)) {
+        return _arg;
+      }
+      // case2 arg是引用类型
+      // case2-1 不可以迭代的引用类型：RegExp Date function
+      if (typeofInstance.typeOf(_arg) === _function) {
+        return _copyFunction(_arg);
+      }
+
+      if (typeofInstance.typeInlcudes([date, regexp], _arg)) {
+        return _copyDateOrRegExp(_arg);
+      }
+      // case2-2 可以迭代（遍历）的引用类型：Object Array Map Set
+      // 可以迭代的类型（具有属性的类型） - 一般循环引用都是在可迭代类型的属性中
+      if (memo.has(_arg)) {
+        return memo.get(_arg);
+      }
+
+      if (typeofInstance.typeInlcudes([object, array], _arg)) {
+        return _copyObjectOrArray(_arg);
+      }
+
+      if (typeofInstance.typeOf(_arg) === Map) {
+        return _copyMap(_arg);
+      }
+
+      if (typeofInstance.typeOf(_arg) === Set) {
+        return _copySet(_arg);
+      }
+    }
+
+    /**
+     * 为了使用闭包，这里定义各个类型的copy函数
+     */
+    function _copyDateOrRegExp (_arg) {
+      return new _arg.constructor(_arg); // 重新生成一个实例，引用会生成一个新的
+    }
+
+    function _copyFunction (_arg) {
+      return new Function('return' + _obj.toString())();
+    }
+
+    function _copyObjectOrArray (_arg) {
+      const _newArg = Array.isArray(_arg) ? [] : {};
+      //在这里位置调用 memo需要在下一次可能调用_deepClone之前set 避免循环引用
+      memo.set(_arg, _newArg);
+
+      for (const key in _arg) {
+        const val = _arg[key];
+
+        if (_arg.hasOwnProperty(key)) {
+          if (typeofInstance.isRefType(val)) {
+            _newArg[key] = _myDeepClone(val);
+          } else {
+            _newArg[key] = val;
+          }
+        }
+      }
+
+      return _newArg;
+    }
+
+    function _copyMap (_arg) {
+      const _newArg = new Map();
+
+      memo.set(_arg, _newArg);
+
+      _arg.forEach((val, key) => {
+        if (typeofInstance.isRefType(val)) {
+          _newArg.set(key, _myDeepClone(val));
+        } else {
+          _newArg.set(key, val);
+        }
+      });
+
+      return _newArg;
+    }
+
+    function _copySet (_arg) {
+      const _newArg = new Set();
+
+      memo.set(_arg, _newArg);
+
+      _arg.forEach(val => {
+        if (typeofInstance.isRefType(val)) {
+          _newArg.add(_myDeepClone(val));
+        } else {
+          _newArg.add(val);
+        }
+      });
+
+      return _newArg;
+    }
+
+
+    return _myDeepClone(arg);
+  }
+})()
+
+
+
+
+/************************************************************************************************************************************ */
 
 /**
  * 手写的完全版deepCopy
@@ -111,7 +261,7 @@ const deepClonePro = (obj) => {
       _obj.forEach((val, key) => {
         // 注意：属性值为Object的时候 需要走深拷贝
         if (isObject(val)) {
-          _newObj.set(key, _deepClone(val));
+          _newObj.set(key, _deepClone(val)); // FIXME: 这里的set的key应该是val本身 ?
         } else {
           // 基础类型 直接拷贝
           _newObj.set(key, val);
@@ -165,6 +315,9 @@ const deepClonePro = (obj) => {
   // 调用递归拷贝函数
   return _deepClone(obj);
 }
+
+
+
 
 /**
  * 用json实现 有局限性
