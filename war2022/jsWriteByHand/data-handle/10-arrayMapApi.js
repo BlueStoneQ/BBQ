@@ -12,7 +12,9 @@ Array.prototype._map = function() {
 
   const result = []; 
 
-  for (let i = 0; i < this.length; i++) {
+  const curArray = this;
+
+  for (let i = 0; i < curArray.length; i++) {
     result.push(fn(this[i]));
   }
 

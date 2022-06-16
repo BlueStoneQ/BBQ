@@ -11,7 +11,9 @@ Array.prototype._filter = function() {
 
   const result = [];
 
-  for (let i = 0; i < this.length; i++) {
+  const curArray = this;
+
+  for (let i = 0; i < curArray.length; i++) {
     const item = this[i];
     if (fn(item)) {
       result.push(item);
