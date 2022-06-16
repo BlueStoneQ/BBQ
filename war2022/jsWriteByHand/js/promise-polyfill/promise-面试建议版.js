@@ -118,3 +118,8 @@ class MyPromise {
     }
   }
 }
+
+function resolvePromise (promise2, res, resolve, reject) {
+  // 面试中只写一种：res是普通值的情况 直接return即可
+  resolve(res);
+}

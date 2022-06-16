@@ -11,7 +11,8 @@
  * 5. 实现参考：[lodash._baseclone](https://github.com/lodash/lodash/blob/master/.internal/baseClone.js)
  *              参考1：https://blog.csdn.net/cc18868876837/article/details/114918262
  *             [参考2](https://github.com/yygmind/blog/issues/29)
- *             [深拷贝的终极探索](https://segmentfault.com/a/1190000016672263)
+ *             [颜海镜-深拷贝的终极探索](https://segmentfault.com/a/1190000016672263)
+ *                - https://yanhaijing.com/javascript/2018/10/10/clone-deep/
  *                - 这里提出了一个问题：叫递归爆栈 - 主要是递归对内存的消耗造成的
  *                  - 解决方案有：1. 尾递归优化 2. 递归变遍历 
  * 
@@ -29,6 +30,9 @@
  * 
  * TODO:这个写好 可以写一篇blog - 掘金，讲下这个实现 清晰 健壮：
  * TODO: 使用class + 访问者模式实现一下 - 掘金上分享下这2种实现
+ * 
+ * TODO: 如何解决递归爆栈问题：
+ *  - https://juejin.cn/post/6960494038193537055#heading-10
  */
 (() => {
   const { typeofInstance, TYPE } = require('../4-typeof'); // 这里类型判断使用自己封装的一个类型检测程序
@@ -54,6 +58,7 @@
     // 备忘录memo 解决循环引用：- 这里采用闭包来确保递归过程中 始终可以访问这一个memo
     // ES6可以使用Map WeakMap, ES5可以使用数组，每个item = { kay, val }, memo.find(key) 需要自己实现下
     // 循环引用中的key一般推荐使用_myDeepClone中的入参_arg
+    // 其实弱引用的好处就是可以在任何时刻被回收，提高性能，map 虽然可以进行手动释放提高性能，但是在某些情况下，是无法进行手动清除的。
     const memo = new WeakMap();
 
     /**
