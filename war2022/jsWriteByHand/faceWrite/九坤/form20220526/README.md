@@ -11,3 +11,34 @@
 node server.js
 ```
 - 浏览器访问：http://127.0.0.1:?3000/form.html
+
+
+## me
+1. 表单数据的获取：
+  - 除了使用
+  ```js
+  const formEl  = document.getElementById('myForm');
+  const formData = new FormData(formEl);
+  ```
+  - 还可以使用在每个元素的change事件中 将值set到一个from对象，然后最后用json去提交
+  ```js
+  this.form = {};
+
+  inputEl.oninput(e => {
+    this.form.name = e.target.name;
+  });
+
+  // 提交的时候 设置header为 application/json
+  ```
+2. 几个关键的样式：
+  ```css
+  input:focus {
+    outline: none;
+    border: 2px solid #07F;
+  }
+  /** 用div实现button */
+  .btn:hover {
+    cursor: pointer;
+    user-select: none;
+  }
+  ```

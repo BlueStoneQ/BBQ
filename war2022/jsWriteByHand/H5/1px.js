@@ -16,6 +16,7 @@ const dynamicSetViewport = () => {
 
 dynamicSetViewport();
 
+// 设计稿适配方案：动态设置rem
 // 设置font-size rem单位值
 const docEl = document.documentElement;
 // 其实 如果你的设计稿宽度是320px，你的一个元素的宽度是10px，则你写的时候 写成1rem即可
