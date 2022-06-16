@@ -13,12 +13,12 @@ const dateFormat = (date, format = 'yyyy/MM/dd') => {
   if (!date) return '';
   if (Object.prototype.toString.call(date) !== '[object Date]') return '';
 
-  // inti data
+  // init data
   const day = date.getDate();
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
 
-  // algo
+  // algo: 其实就是在模版中用实际的数字替换相关占位符
   format = format.replace(/dd/, day);
   format = format.replace(/MM/, month);
   format = format.replace(/yyyy/, year);
