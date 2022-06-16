@@ -63,9 +63,10 @@ class MyPromise {
       // this.onRejectedCallbacks.push(onrejected);
       let promise2 = new MyPromise((resolve, reject) => {
         this.onFullfilledCallbacks.push(() => {
+          // 这里其实是用setTimeout将then中的函数 执行放到了下一次eventLoop之中，用宏任务代替promise的微任务
           setTimeout(() => {
             try {
-              const x = onFulfilled(this.reason);
+              const x = onFulfilled(this.value);
               resolvePromise(promise2, x, resolve, reject);
             } catch(error) {
               reject(error);
