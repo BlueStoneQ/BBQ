@@ -1,6 +1,6 @@
 const STATUS = {
   PENDING: 'pending',
-  FULFILLED: 'fullfilled',
+  FULFILLED: 'fulfilled',
   REJECT: 'reject'
 };
 
