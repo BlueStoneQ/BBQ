@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>三栏布局</title>
+    <style type="text/css">
+      .wrap {
+        /* display: flex; */
+        background-color: antiquewhite;
+        display: flex;
+
+      }
+      .left {
+        width: 200px;
+        height: 400px;
+        background-color: aqua;
+      }
+
+      .mid {
+        /* width: 默认是填充满自己所在的row的可用空间 */
+        height: 400px;
+        background-color: red;
+        flex: 1;
+      }
+
+      .right {
+        width: 100px;
+        height: 400px;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="left"></div>
+      <div class="mid"></div>
+      <div class="right"></div>
+    </div>
+  </body>
+</html>
