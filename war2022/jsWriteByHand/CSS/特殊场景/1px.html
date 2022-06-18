@@ -24,6 +24,8 @@
         box-sizing: border-box;
         border: 1px solid #F00;
       }
+      /* 在元素上，content 的初始值为 ‘normal’。在:before和:after上，如果指定了content 的初始值为 ‘normal’，则计算为 ‘none’ 。content 的值设置为 ‘none’ 不会生成伪元素。
+所以:before和:after才需要指定一个看似无意义的 content: ""; 来初始化content的值 */
     </style>
   </head>
   <body>
