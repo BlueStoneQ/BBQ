@@ -11,16 +11,19 @@
  * [以此为准]洗牌算法
  */
 const randomArray = (arr) => {
-  let m = arr.length; // m的范围从 len -> 1
+  let m = arr.length - 1; // m的范围从 len -> 1
 
   while (m) {
     // 倒序 在m的左侧产生一个randomIndex
-    const randomIndex = Math.floor(Math.random() * m--);
+    const randomIndex = Math.floor(Math.random() * m);
 
     // 交换
-    const temp = arr[m]; // 此时m已经-- 了，是有效的
+    const temp = arr[m];
     arr[m] = arr[randomIndex];
     arr[randomIndex] = temp;
+
+    // 步进
+    m--;
   }
 }
 
