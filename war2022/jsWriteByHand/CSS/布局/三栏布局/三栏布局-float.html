@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>三栏布局</title>
+    <!-- 左右都是浮动 脱离了文档流 中间的部分 本来就在第一行 通过margin缩小留出空位 不发生重叠-->
+    <style type="text/css">
+      .wrap {
+        /* display: flex; */
+        background-color: antiquewhite;
+      }
+      .left {
+        width: 200px;
+        height: 400px;
+        background-color: aqua;
+        float: left;
+      }
+
+      .mid {
+        /* width: 默认是填充满自己所在的row的可用空间 */
+        height: 400px;
+        background-color: red;
+        margin-left: 200px;
+        margin-right: 100px;
+      }
+
+      .right {
+        width: 100px;
+        height: 400px;
+        background-color: blue;
+        float: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="left"></div>
+      <div class="right"></div>
+      <div class="mid"></div>
+    </div>
+  </body>
+</html>
