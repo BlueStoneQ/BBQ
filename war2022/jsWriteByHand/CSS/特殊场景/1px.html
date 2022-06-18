@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>1px</title>
+    <style type="text/css">
+      /* 伪元素法 */
+      .whole {
+        height: 100px;
+        width: 100px;
+        background-color: aqua;
+        position: relative;
+      }
+
+      .whole::after {
+        position: absolute;
+        left: 0;
+        top: 0;
+        content: '';
+        width: 200%;
+        height: 200%;
+        transform: scale(0.5);
+        transform-origin: left top;
+        box-sizing: border-box;
+        border: 1px solid #F00;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="whole"></div>
+  </body>
+</html>
