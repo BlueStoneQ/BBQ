@@ -19,6 +19,7 @@
  */
 
 /**
+ * [递归版]-以这个为准: 已经通过测试了：
  * 我更倾向于实现一个通用的类型检测函数 + 将五花八门的类型检测剥离，
  *  - 然后只留下主体逻辑框架：基础类型-直接赋值, 引用类型-递归调用返回值赋值
  *    + 各个类型的处理：初始化 + 赋值
@@ -104,7 +105,7 @@
      * 为了使用闭包，这里定义各个类型的copy函数
      */
     function _copyDateOrRegExp (_arg) {
-      return new _arg.constructor(_arg); // 重新生成一个实例，引用会生成一个新的
+      return new _arg.constructor(_arg); // 重新生成一个实例，引用会生成一个新的-引用类型复制的意义 重要的是生成新的引用和对应堆内存中的实例
     }
 
     function _copyFunction (_arg) {
@@ -113,7 +114,7 @@
       // eval能够影响当前作用域及所有的父作用域的变量， 而new Function 它是运行在一个独立的function内， 并且他的父作用域是window而不是当前作用域, 另外，new function还可以传参 
       // 1. [new function 更安全, ](https://juejin.cn/post/6960499386384121892)
       // 2. [](https://juejin.cn/post/6844903624091369485)
-      return new Function('return' + _obj.toString())();
+      return new Function('return' + _arg.toString())();
     }
 
     function _copyObjectOrArray (_arg) {
@@ -171,6 +172,41 @@
 
     return _myDeepClone(arg);
   }
+
+  /**
+   * 用json实现 有局限性
+   * @returns
+   */
+  
+
+  const e = {}
+
+  var a = [
+    {
+      a: () => {},
+      b: undefined,
+      c: Symbol('c'),
+      d: e,
+      e: /\d/,
+      f: new Date()
+    }
+  ];
+
+  e.a = a;
+
+  // json-stringify:TypeError: Converting circular structure to JSON
+  // json-stringify也无法处理循环引用
+  // const deepCloneByJson = (obj) => JSON.parse(JSON.stringify(obj));
+
+  // console.log('deepCloneByJson: ', deepCloneByJson(a));
+
+
+  const a1 = myDeepClone(a);
+
+
+  console.log('a1 myDeepClone: ', a1);
+  console.log('a1[0].d myDeepClone: ', a1[0].d);
+
 })()
 
 

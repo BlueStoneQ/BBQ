@@ -32,7 +32,7 @@ const TYPE = {
  */
 const _typeof = (value) => {
   // defend
-  // case1 null
+  // case1 null: 其实 null 也可以用下面的方法获取
   if (value === null) return `${value}`;
   // case2 引用类型
   if (typeof value === 'object') {
