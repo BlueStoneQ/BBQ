@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meat charset="UTF-8"/>
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <style type="text/css">
+      img {
+        width: 100px;
+        height: 80px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div>{{ title }}</div>
+      <div
+        id="imgs-wrap"
+        class="imgs-wrap"
+        v-for="(item, index) in imgList"
+      >
+        <span>{{ index }}</span>
+        <img v-lazyload="item">
+      </div>
+    </div>
+    <script type="text/javascript">
+      /**
+       * 【高频】实现一个 Vue 自定义指令懒加载
+       *  - 以这个版本为准，可以真正在工程中使用的版本
+       * 2022-6-22
+       * 考察点：
+       *  - 自定义指令实现
+       *  - 懒加载-图片
+      * 这是一个html实现的vue
+        所以 需要在前面引入vue的js包，这个单文件可以独立运行
+    
+        关于懒加载：
+          1. [这是一个实验中的功能-不稳定，也许未来会变]可以使用[Intersection_Observer_API](https://developer.mozilla.org/zh-CN/docs/Web/API/Intersection_Observer_API)实现
+            - 但是必须要相交，我更想在快进入视口的时候进行加载
+            - [使用IntersectionObserver-API](https://segmentfault.com/a/1190000022831488)
+          2. 也可以使用较为传统的[监听onscroll来实现](https://juejin.cn/post/6941278592215515143#heading-9)
+            - 公式：imgs[i].offsetTop - window.innerHeight + scrollTop < 20
+            - 但是 这个不适合在vue-directive中 程序很难写：必须频繁的注册 和 （在设置img.src后）注销scroll事件
+              - 在每个bind中都需要绑定一次scroll，注册过多事件，对内存也是一种消耗
+            - 会有以下问题：
+              可能会存在下面几个问题：
+                每次滑动都要执行一次循环，如果有1000多个图片，性能会很差
+                每次读取 scrollTop 都会引起回流
+                scrollTop跟DOM的嵌套关系有关，应该根据getboundingclientrect获取
+                滑到最后的时候刷新，会看到所有的图片都加载
+      
+        
+        这里采用vue的html方式：[指令注册](https://juejin.cn/post/7083819229840932894)
+      */
+    
+      /**
+       * 判断当前元素是否快要进入可视范围
+       * @param {obj} el 判断是否和viewPort相交的元素
+       * @param {number} threshold 距离和视口底部的距离小于threshold的时候 就可以判断为相交，这里设置默认值为-300只是为了演示，真正情况中建议设置为100左右，可以在图片快进入视口时提前加载
+       */
+      const isIntersectingWithViewPort = (el, threshold = -300) => {
+        const innerHeight = window.innerHeight;
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+        // 公式：imgs[i].offsetTop - window.innerHeight + scrollTop < 20
+        if (el.offsetTop - (innerHeight + scrollTop) < threshold) return true;
+        return false;
+      }
+
+      /**
+       * 节流 
+       */
+      const throttle = (callBack, delay) => {
+        let start = 0;
+
+        return function(...args) {
+          const now = new Date();
+
+          if (now - start < delay) return;
+
+          callBack && callBack.apply(this, args);
+
+          start = now;
+        }
+      }
+
+
+      /**
+       * 监听scroll事件 
+       */
+      const onScroll = (callBack) => {
+        window.addEventListener('scroll', callBack, false);
+      }
+
+      /**
+       * 移除scroll的监听回调
+      */
+     const removeScroll = (callBack) => {
+      window.removeEventListener('scroll', callBack, false); // false, 采用在冒泡阶段触发callBack, 也就是从target向父出发该事件回调
+     }
+    
+      /*
+      在DOM加载好后，在vue的defer加载之后，就可以执行vue的配置（实例化）了
+      */
+      window.addEventListener('DOMContentLoaded', (event) => {
+        // 这里采用全局注册-从工程设计角度看 也更适合全局注册
+        // 这里指令需要用全小写-不支持驼峰，或者使用-分割
+        
+        Vue.directive('lazyload', {
+          // 为了在初始化时获得元素的offset值 我们的directive需要注册为inserted （在bind中获得的元素初始化的offsetTop都是0）
+          inserted (el, binding) {
+            const { value: imgSrc } = binding;
+            // 1. 本身就在视口中的图片直接加载 不用注册scroll函数
+            if (isIntersectingWithViewPort(el)) {
+              el.src = imgSrc;
+              return;
+            }
+            
+            // 2. 开始不在视口中的图片 需要注册到scroll中进行懒加载
+            const scrollcallback = () => {
+              const _scrollcallback = throttle(() => {
+                console.log('el.offsetTop: ', el.offsetTop);
+                if (isIntersectingWithViewPort(el)) {
+                  // 加载图片 - 其实为避免在bind时注册太多回调，我们可以配合懒加载 - 分批加载
+                  el.src = imgSrc;
+                  // 到下一个loop再卸载该事件，确保当前el.src=imgSrc执行完-避免注册过多回调（这里每个回调都不一样）
+                  // removeScroll(_scrollcallback); // ?未生效？
+                  // setTimeout(() => {
+                  //   console.log('setTimeout');
+                  //   removeScroll(scrollcallback);
+                  // }, 0);
+                }
+              }, 0);
+
+              return _scrollcallback;
+            }
+
+            onScroll(scrollcallback());
+
+          }
+        });
+        
+        // 定义vue实例 这里自定义指令采用局部注册
+        const vm = new Vue({
+          el: "#app",
+          // 局部注册
+          // directives: {},
+          data: {
+            imgList: [],
+            title: '懒加载'
+          },
+          created() {
+            this.getImglist().then(imgList => {
+              this.imgList = imgList;
+            });
+          },
+          methods: {
+            getImglist () {
+              return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                  resolve(new Array(100).fill('1.jpg'));
+                }, 300);
+              });
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
+
+
+
