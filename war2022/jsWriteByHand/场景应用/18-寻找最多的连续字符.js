@@ -4,6 +4,7 @@
  * 方法：双指针 + 前后指针
  * https://blog.csdn.net/shi851051279/article/details/113839617
  */
+const test = require('../test-tools/test-tools.js');
 
 const findMaxCountChar = (s) => {
   // defend
@@ -38,7 +39,7 @@ const findMaxCountChar = (s) => {
 // test
 const testArray = [
   {
-    s: 'aaaabbbbbcccccccccccccdddddd',
+    input: 'aaaabbbbbcccccccccccccdddddd',
     expect: {
       maxCountChar: 'c',
       maxCount: 13
@@ -51,25 +52,27 @@ const testArray = [
  * @param {*} testArr 
  * @param {*} func 
  */
-const test = (testArr, func) => {
-  for (const testItem of testArr) {
-    const { expect } = testItem;
-    const result = func(testItem.s);
+// const test = (testArr, func) => {
+//   for (const testItem of testArr) {
+//     const { expect } = testItem;
+//     const result = func(testItem.s);
 
-    if (result.maxCountChar === expect.maxCountChar && result.maxCount === expect.maxCount) {
-      console.log(`
-        [success!!!]
-        case: ${JSON.stringify(testItem, 2)}
-        result: ${JSON.stringify(result, 2)}
-      `);
-    } else {
-      console.log(`
-      [failed!!!]
-      case: ${JSON.stringify(testItem, 2)}
-      result: ${JSON.stringify(result, 2)}
-    `);
-    }
-  }
-}
+//     if (result.maxCountChar === expect.maxCountChar && result.maxCount === expect.maxCount) {
+//       console.log(`
+//         [success!!!]
+//         case: ${JSON.stringify(testItem, 2)}
+//         result: ${JSON.stringify(result, 2)}
+//       `);
+//     } else {
+//       console.log(`
+//       [failed!!!]
+//       case: ${JSON.stringify(testItem, 2)}
+//       result: ${JSON.stringify(result, 2)}
+//     `);
+//     }
+//   }
+// }
 
-test(testArray, findMaxCountChar);
+test(testArray, findMaxCountChar, (expect, result) => {
+  return result.maxCountChar === expect.maxCountChar && result.maxCount === expect.maxCount;
+});
