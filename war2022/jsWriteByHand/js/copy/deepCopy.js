@@ -92,11 +92,11 @@
         return _copyObjectOrArray(_arg);
       }
 
-      if (typeofInstance.typeOf(_arg) === Map) {
+      if (typeofInstance.typeOf(_arg) === map) {
         return _copyMap(_arg);
       }
 
-      if (typeofInstance.typeOf(_arg) === Set) {
+      if (typeofInstance.typeOf(_arg) === set) {
         return _copySet(_arg);
       }
     }
