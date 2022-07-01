@@ -38,7 +38,8 @@ const _typeof = (value) => {
   if (typeof value === 'object') {
     const protoTypeStr = Object.prototype.toString.call(value);
     return protoTypeStr.split(' ')[1].split(']')[0].toLowerCase(); // 抠出array 等等真正的类型字符串
-    // 也可以用正则抠出具体类型 match(/(\w+)\]/)[1]
+    // 也可以用正则抠出具体类型 match(/(\w+)\]/)[1]， 如下：
+    // return Object.prototype.toString.call(value).match(/(\w+)\]/)[1].toLowerCase();
   }
   // case3 基础类型
   return typeof value;
