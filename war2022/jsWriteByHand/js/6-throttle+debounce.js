@@ -50,6 +50,7 @@ const throttle2 = (fn, delay = 300) => {
     timer = setTimeout(() => {
       fn && fn.apply(context, args);
       // 本次执行结束 重置timer
+      clearTimeout(timer);
       timer = null;
     }, delay);
   }
@@ -83,6 +84,9 @@ function debounce(fn, delay = 300, immediate = true) {
     // 设置计时器
     timer = setTimeout(function() {
       fn && fn.apply(context, args);
+      // 清除定时器
+      clearTimeout(timer)
+      timer = null; // 需要手动将timer值赋值为null, 要不然下一次timer还是有值的，就永远进不来了
     }, delay);
   }
 }
@@ -115,6 +119,7 @@ function throttleDebounce(fn, delay) {
         fn && fn.apply(context, args);  
       }, delay);
     } else {
+      //  超过delay 必须给个响应
       startTime = new Date().getTime();
       // 到达或者超过delay 必须执行一次
       fn && fn.apply(context, args);

@@ -21,7 +21,7 @@ const request = (url, method = 'GET') => {
         resolve(this.response);
         return;
       }
-      reject(new Error(this.statusText));
+      // reject(new Error(this.statusText));
     }
     // 设置错误监听函数
     xhr.onerror = function() {
@@ -30,6 +30,8 @@ const request = (url, method = 'GET') => {
     // 设置响应的数据类型 这里我们先设置为json型的
     xhr.responseType = 'json';
     // 设置头信息
+    // 是否携带cookie
+    // xhr.withCredentials = true;
     // 一般而言，HTTP报头的名称是不区分大小写，method是区分大小写的
     xhr.setRequestHeader('Accept', 'application/json'); // accept 告诉服务端，客户端期望得到什么格式的数据， Content-Type: 告诉服务端，请求中携带的数据是什么格式的
     // 发送请求 sendd的入参 为 string 仅适用于post请求

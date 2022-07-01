@@ -13,7 +13,7 @@ function _new () {
     // 一般使用throw TypeError('xxx');
     throw TypeError('type error');
   }
-  const newObj = Object.create(constructor.prototype);
+  const newObj = Object.create(constructor.prototype); // 如果不使用create，可以使用不标准的__proto__实现继承
   // algo
   // 1. 执行constructor 将context作为this注入到constrctor中 这样 内部的一些属性就挂载到了newObj上了 
   const res = constructor.apply(newObj, arguments);

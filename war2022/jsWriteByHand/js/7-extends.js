@@ -82,7 +82,8 @@
     // object将给定的值包装为一个新对象-如果给定值是一个已经存在的对象，则会返回这个已经存在的值（相同地址）
     // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/Object
     //js高程上 这里写的这个 const proto = object(superConstructor.prototype);
-    // 应该用Object.create创建父类原型的一个副本
+    // [!!!-这里绕过new和superConstructor，在new中，superConstructor会执行一次]
+    // 这里直接使用Object.create + 父类原型 创建了一个父类原型的实例（proto会有一个饮食原型指向父类原型）
     const proto = Object.create(superConstructor.prototype);
     // 这个原型和当前子类构造函数互相连接
     subConstructor.prototype = proto;

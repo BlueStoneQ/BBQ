@@ -16,8 +16,9 @@
   const originalArgs = args || [];
 
   return function (...args) {
-    // case1: 有参数传入 调用高阶函数 返回值还是一个函数
-    if (args.length !== 0) {
+    // case1: 有参数传入 调用高阶函数 返回值还是一个函数 
+    // - 整个结构和curry基本一样 都是高阶函数，在返回的高阶函数内判断参数情况，curry是和fn.length比较, 这里是和0比较
+    if (args.length !== 0) { 
       // 利用闭包 将参数记录下来 供后面真正调用的时候使用
       originalArgs.push(...args);
 

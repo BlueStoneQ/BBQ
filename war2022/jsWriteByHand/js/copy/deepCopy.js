@@ -60,6 +60,7 @@
     // ES6可以使用Map WeakMap, ES5可以使用数组，每个item = { kay, val }, memo.find(key) 需要自己实现下
     // 循环引用中的key一般推荐使用_myDeepClone中的入参_arg
     // 其实弱引用的好处就是可以在任何时刻被回收，提高性能，map 虽然可以进行手动释放提高性能，但是在某些情况下，是无法进行手动清除的。
+    // 另外，关于是否可以使用object作为memo,个人觉得是可以的，但是在生成key的时候，需要注意将原来引用类型的key变成字符串，toString作为key,但可能仍有key重复发生碰撞的风险
     const memo = new WeakMap();
 
     /**
@@ -109,7 +110,7 @@
     }
 
     function _copyFunction (_arg) {
-      // 这里其实 是一个高阶函数 执行 返回了一个新的函数（被拷贝好的新函数- _obj.toString()从字符串被return 后成为一个新函数）
+      // 这里其实 是一个高阶函数 执行 返回（return）了一个新的函数（被拷贝好的新函数- _obj.toString()从字符串被return 后成为一个新函数(注入内存的活的函数)）
       // 关于这里为什么不用 eval, 而是使用 new Function:
       // eval能够影响当前作用域及所有的父作用域的变量， 而new Function 它是运行在一个独立的function内， 并且他的父作用域是window而不是当前作用域, 另外，new function还可以传参 
       // 1. [new function 更安全, ](https://juejin.cn/post/6960499386384121892)

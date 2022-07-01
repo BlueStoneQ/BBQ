@@ -1,9 +1,10 @@
 /**
  * 2022-3-1
+ * !!! 不要用箭头函授
  */
 
 
-const call = (...args) => {
+Function.prototype._call = function (...args) {
   // 防御
   if (typeof this !== 'function') {
     throw new TypeError('call should be called by function');
@@ -14,7 +15,7 @@ const call = (...args) => {
   // 获取当前函数 并挂载到context上 这样就完成了this的绑定
   context.fn = this;
   // 执行当前函数 
-  const result = context.fn(...args);
+  const result = context.fn(...args); // 这里...args 其实就是把args数组变成了参数列表
   // 卸载该属性
   delete context.fn;
   // 返回函数返回值
@@ -22,7 +23,7 @@ const call = (...args) => {
 }
 
 
-const apply = (...args) => {
+Function.prototype._apply = function (...args) {
   // defend
   if (typeof this !== 'function') {
     throw new TypeError('call should be called by function');
@@ -33,8 +34,8 @@ const apply = (...args) => {
   // 获取当前函数 挂载到context上
   context.fn = this;
   // 获取当前参数
-  const params = args[1] || [];
-  const result = context.fn(...params);
+  const params = args[1] || []; // 与call的不同 这里第二个参数是数组形式的参数
+  const result = context.fn(...params); // 这里...args 其实就是把args数组变成了参数列表
   // 卸载该函数从context上
   delete context.fn;
   // return 该函数返回值
@@ -48,7 +49,7 @@ const apply = (...args) => {
  * 参考：https://github.com/mqyqingfeng/Blog/issues/12
  * 参考-这一篇bind解释写的更细一些：https://github.com/sisterAn/JavaScript-Algorithms/issues/81
  */
-Function.prototype.bind = function() {
+Function.prototype._bind = function() {
   // defend
   if (typeof this !== 'function') {
     throw new TypeError('bind should be called by function');
@@ -80,7 +81,7 @@ Function.prototype.bind = function() {
   // 在普通面试中 如果面试官不做要求 可以不写这一步
   const fNOP = function() {};
   fNOP = this.prototype;
-  F.prototype = new fNOP();
+  F.prototype = new fNOP(); // 等于新的F的原型是原来函数的原型的实例 - 本质上就是用原型链链了起来
 
   // return
   return F;
