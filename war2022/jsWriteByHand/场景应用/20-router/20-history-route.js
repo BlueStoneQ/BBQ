@@ -46,13 +46,13 @@ class HistoryRouter {
     // 参数3: path 在浏览器的地址栏中显示的url
     history.pushState({ path }, null, path);
     // 因为pushState不会引起popstate事件 所以 这里需要手动调用handle
-    this._handle({ path });
+    this._handle({ state: { path } });
   }
 
   replace (path) {
     history.replaceState({ path }, null, path);
     // 因为replaceState不会引起popstate事件 所以 这里需要手动调用handle
-    this._handle({ path });
+    this._handle({ state: { path } });
   }
 
   _handle (event) {
