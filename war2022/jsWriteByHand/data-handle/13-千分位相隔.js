@@ -1,6 +1,7 @@
 /**
  * 数字每3位加一个,分割符
  * 2022-6-16
+ * 参考：https://juejin.cn/post/7021672733213720613?utm_source=gold_browser_extension#heading-15
  * 参考：https://cloud.tencent.com/developer/article/1483920?from=article.detail.1483443
  */
 
@@ -11,12 +12,12 @@
 const splitWithDot = (num) => {
   const numStr = num.toString();
 
-  // 有小数点, 整数部分需要按3位一分
+  // 有小数点, 整数部分需要按3位一分: 非首位,
   if (/\./.test(numStr)) {
-    return numStr.replace(/(?=(\d{3})+\.)/g, ',');
+    return numStr.replace(/(?!^)(?=(\d{3})+\.)/g, ',');
   }
   // 无小数点
-  return numStr.replace(/(?=(\d{3})+$)/g, ',');
+  return numStr.replace(/(?!^)(?=(\d{3})+$)/g, ',');
 }
 
 // test
