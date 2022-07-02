@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>等比伸缩的矩形</title>
+    <style type="text/css">
+      /* 这里10% === 10vm, 因为此刻父元素都是视口 */
+      .square1 {
+        width: 10%;
+        height: 10vw;
+        background: tomato;
+      }
+
+      /* 利用元素的margin/padding百分比是相对父元素width的性质来实现 */
+      .square2 {
+        width: 10%;
+        height: 0;
+        padding-bottom: 10%; /* 这里的20% 和 width：20%的 基准都是一样的 都是父元素的width */
+        background-color: aqua;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="square1"></div>
+    <div style="height: 100px"></div>
+    <div class="square2"></div>
+    <div style="height: 100px"></div>
+  </body>
+</html>
