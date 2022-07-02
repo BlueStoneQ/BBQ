@@ -11,7 +11,7 @@ const bigNumSum = (numStr1, numStr2) => {
     throw new TypeError('入参的加数必须是字符串');
   }
 
-  // num 格式化为数组 并逆序 从个位开始加
+  // num 格式化为数组 并逆序 从个位开始加[!!!逆序]
   const num1Arr = numStr1.split('').reverse();
   const num2Arr = numStr2.split('').reverse();
 

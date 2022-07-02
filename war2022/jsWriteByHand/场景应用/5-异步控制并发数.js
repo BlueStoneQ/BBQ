@@ -3,6 +3,7 @@
  * 值得一看 且 实用
  * 20226-17
  * [异步控制并发数](https://juejin.cn/post/7031322059414175774#heading-6)
+ * 这里其实相当于把promise调度器中的startRun和run写在了一起
  */
 const limitRequest = (urlList, maxTaskCount = 3) => {
   return new Promise((resolve, reject) => {
@@ -16,18 +17,21 @@ const limitRequest = (urlList, maxTaskCount = 3) => {
     }
   
     function runTask () {
+      if (urlList.length === 0) {
+        // me: 其实 也可以在这里resolve 代表着整个promise状态的凝结 逻辑结束
+        return;
+      }
       // 获得队列头部的任务
       const nowUrl = urlList.shift();
-      if (nowUrl) {
-        // 执行任务
-        axios.post(nowUrl).then(res => {
-          // 成功的操作
+      // 执行任务
+      axios.post(nowUrl).then(res => {
+        // 成功的操作
         }).catch(err => {
           // 失败的操作
         }).finally(() => {
           taskDoneCount++; // 又一个任务执行完了 执行结束的任务数量+1
-          if (taskDoneCount >= taskDoneCount) {
-            // 已经执行的任务数量等于大于总体的任务数量时 整个promise的任务可以结束了 - 任务已经执行完了 
+          if (taskDoneCount >= taskTotalCount) {
+            // 已经执行的任务数量等于大于总体的任务数量时 整个promise的任务可以结束了（或者任务队列为空时都可） - 任务已经执行完了 
             resolve();
           } else {
             // 还未执行完任务 则调用任务启动器 执行队列中下一个任务
@@ -35,7 +39,6 @@ const limitRequest = (urlList, maxTaskCount = 3) => {
             runTask();
           }
         });
-      }
     }
   });
 }

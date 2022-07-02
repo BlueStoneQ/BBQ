@@ -8,6 +8,31 @@
  * 
  * 类似的题：
  * [异步控制并发数](https://juejin.cn/post/7031322059414175774#heading-6)
+ * 
+ * 
+ * 题目：
+ * JS实现一个带并发限制的异步调度器Scheduler，保证同时运行的任务最多有两个。完善下面代码的Scheduler类，使以下程序能够正常输出：
+      class Scheduler {
+        add(promiseCreator) { ... }
+        // ...
+      }
+        
+      const timeout = time => new Promise(resolve => {
+        setTimeout(resolve, time);
+      })
+        
+      const scheduler = new Scheduler();
+        
+      const addTask = (time,order) => {
+        scheduler.add(() => timeout(time).then(()=>console.log(order)))
+      }
+
+      addTask(1000, '1');
+      addTask(500, '2');
+      addTask(300, '3');
+      addTask(400, '4');
+
+      // output: 2 3 1 4
  */
 
 
@@ -54,6 +79,7 @@
       // 一次并发的任务数量 需要取任务数量 和 最多并发上限maxRunningCount 的最小值，保证在任务队列数量小于maxRunningCount时 不做过度的无谓调用(虽然this._run中同样有防御)
       let workableTaskCount = Math.min(this.taskQueue.length, this.maxRunningCount);
 
+      // !!!! 关键实现
       while (workableTaskCount > 0) {
         this._run();
         workableTaskCount--;

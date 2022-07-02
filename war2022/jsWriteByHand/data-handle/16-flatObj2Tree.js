@@ -24,6 +24,9 @@ const flatObj2Tree = (data) => {
   for (const item of data) {
     const { pid } = item;
 
+    // 删除掉pid属性
+    delete item.pid;
+
     if (id2Objmap.has(pid)) {
       const parentItem = id2Objmap.get(pid);
 
@@ -55,20 +58,17 @@ const source = [{
   name: 'div'
 }]
 
-console.dir(JSON.stringify(flatObj2Tree(source)));
+console.dir(JSON.stringify(flatObj2Tree(source), 2));
 
 // expect 转换为: 
 // const tree = [{
 // id: 1,
-// pid: 0,
 // name: 'body',
 // children: [{
 //   id: 2,
-//   pid: 1,
 //   name: 'title',
 //   children: [{
 //     id: 3,
-//     pid: 1,
 //     name: 'div'
 //   }]
 // }
