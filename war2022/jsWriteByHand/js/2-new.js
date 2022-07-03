@@ -2,6 +2,14 @@
  * 2022-2-28
  * new 作用：根据constructor生产一个对象实例
  * 
+ * 创建实例有2种方式：
+ * 1- 用new Constructor() 创建
+ * 2. 用Object.create(constructor.prototype) 创建
+ *    -- 当然 也可以使用隐式原型创建 {}.__proto__ = constructor.prototype;
+ * 
+ * 实例 constructor protoType 
+ * 这是整个js对象和继承 - 原型链的 3个主角
+ * 
  * 至于: new 和 Object.create的区别：其实new的入参是 constructor, 而Object.create()的入参是 constructor.prototype
  */
 
