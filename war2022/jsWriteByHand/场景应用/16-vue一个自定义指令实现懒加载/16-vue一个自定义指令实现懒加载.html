@@ -52,6 +52,22 @@
         
         这里采用vue的html方式：[指令注册](https://juejin.cn/post/7083819229840932894)
       */
+
+     /**
+      * 这里直接用el.offsetTop是不妥的 因为el.offsetTop是相对于el.offsetParent - 最近的一个有定位position的父级元素
+      * 可以用这个方法来求元素距离文档顶部的top值 -- 出自《js高级程序设计-第四版》p474
+      */
+     const getOffsetTop = (el) => {
+      let offsetTop = el.offsetTop;
+      let curEl = el.offsetParent;
+
+      while (curEl !== null) {
+        offsetTop += curEl.offsetTop;
+        curEl = curEl.offsetParent;
+      }
+
+      return offsetTop;
+     }
     
       /**
        * 判断当前元素是否快要进入可视范围
@@ -61,9 +77,10 @@
       const isIntersectingWithViewPort = (el, threshold = -300) => {
         const innerHeight = window.innerHeight;
         const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        const elOffsetTop = getOffsetTop(el);
 
         // 公式：imgs[i].offsetTop - window.innerHeight + scrollTop < 20
-        if (el.offsetTop - (innerHeight + scrollTop) < threshold) return true;
+        if (elOffsetTop - (innerHeight + scrollTop) < threshold) return true;
         return false;
       }
 
