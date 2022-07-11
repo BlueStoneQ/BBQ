@@ -15,7 +15,6 @@
 - [nodejs系列系统教程-掘金](https://juejin.cn/post/7095713577209692168)
 - [gitbook:koa-server实践](https://chenshenhai.github.io/koa2-note/note/route/koa-router.html)
 
-
 ### nodejs基本架构理解
 1. IO调用流程：js -> node核心模块（js） -> c++内建模块 -> libuv进行系统调用（跨平台是libuv实现的）
 2. 笔记本画个架构图

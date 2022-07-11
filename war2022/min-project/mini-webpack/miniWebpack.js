@@ -1,3 +1,7 @@
+/**
+ * 2022-7-8
+ * 参考：https://www.zoo.team/article/webpack-reason
+ */
 const fs = require('fs')
 const path = require('path')
 const options = require('./webpack.config')

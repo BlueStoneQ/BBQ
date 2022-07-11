@@ -2,6 +2,12 @@
 - [webpack教程](https://juejin.cn/post/7023242274876162084#heading-14)
 - [webpack考点](https://juejin.cn/post/7023242274876162084)
 - [webpack打包原理](https://segmentfault.com/a/1190000021494964)
+  - [本地:min-webpack](min-project/mini-webpack)
+- [loader-写的很好的blog-清晰准确](https://ufresh2013.github.io/2021/08/05/Webpack-loader/)
+- [webpack-面试题](https://juejin.cn/post/6844904094281236487)
+- [webpack高阶使用](https://segmentfault.com/a/1190000020320871)
+- [gitbook-深入浅出webpack](https://webpack.wuhaolin.cn/)
+  - [深入浅出webpack-优化](https://webpack.wuhaolin.cn/4%E4%BC%98%E5%8C%96/)
 
 # 核心概念
 ## module，chunk 和 bundle 的区别是什么？
@@ -100,3 +106,265 @@ loader执行顺序：右 -> 左
 - 使用url-loader, 必须安装file-loader，url-loader会使用file-loader
   - 虽然代码没有配置 file-loader，但还是需要使用 npm i file-loader -D 安装
 
+# 常见场景
+## dev-server
+- proxy: 在dev-server启动时，所有请求都可以通过proxy中的配置进行代理转发，例如可以配置target,等于是给加上baseUrl:
+```js
+devserver: {
+  proxy: {
+    'xxxapi': {
+      target: 'http:xxx.com',
+      changeOrigin: true
+    }
+  }
+}
+```
+## 多入口 MPA
+- 配置2个地方：entry + html-pugin：
+```js
+// webpack.config.js
+module.exports = {
+  entry: {
+    index1: './index-1.js',
+    index2: './index-2.js',
+  },
+  output: {
+    filename: '[name].js',
+    path: path.resolve(__dirname, '../dist')
+  },
+  plugins: [
+    // 因为2个entry 这里一般也对应配置2个html
+    new HtmlWebpackPlugin({
+      template: './src/template/index1.html',
+      filename: 'index1.html',
+      chunks: ['index1'], // 这个html要引入的js的chunk名称（更准确是bundle名称）,这里引入index1.js
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/template/index2.html',
+      filename: 'index2.html',
+      chunks: ['index2'], // 这个html要引入的js的chunk名称（更准确是bundle名称）,这里引入index2.js
+    })
+  ]
+}
+```
+## css处理
+```js
+
+// webpack.config.js
+module.exports = {
+  module: {
+    rules: [{
+      test: /\.(css|sass)$/,
+      loader: [
+        'style-loader', // 将css的内容以<style>的形式添加到html中
+        'css-loader', // css文件处理为webpack可以处理的module，就是模块化处理
+        'postcss-loader', // 2. 对css中使用到的新属性进行兼容性处理 - 例如加上-webkit之类的前缀，另外，post-css需要单独配置下postcss.config.js, 其中使用到了autoprofixer
+        'sass-loader', // 1. 将scss语法转为css语法
+      ]
+    }]
+  }
+}
+// postcss.config.js
+module.exports = {
+  plugins: [
+    require('auto-prefixer') // 支持postcss-loader去给样式添加兼容性前缀
+  ]
+}
+```
+## 静态文件处理
+- 原理：一般都是loader在处理，file-loader和url-loader,一般会把静态资源拷贝到dist中，然后把这个资源的路径作为模块的导出，这样webpack就能以js.module的形式引用这个静态文件了
+### 处理图片
+- 开发环境配置
+  - 直接使用file-loader即可
+- 生产环境配置
+  - 使用url-loader (但是必须安装file-loader，因为url-loader底层使用了file-loader)
+  - 同时配置下limt属性： 8 * 1024 // 8kb以下的图片都转为base64, 减少http请求
+
+## 请求dist
+- clean-webpack-plugin
+```js
+new cleanWebpackPlugin()
+```
+
+# plugin
+# 高频考点
+## source-map
+- 线上问题的定位到代码行的方案：
+  - 在生产环境，除了这些选择外，我们还可以使用服务器白名单策略。我们仍然打包出完整的source map文件上传，但只有白名单的用户才可以看到source map文件。
+- 类型选择：一般是打包速度 vs 打包质量（包含的信息多寡：定位到行+列）的平衡：
+  - dev环境：eval-cheap-module-source-map
+  - prod环境：成熟做法是生成一份mao上传 + 白名单的人员可以拉取到map在error中定位到行+列
+## HMR
+- [政采云-HMR](https://www.zoo.team/article/webpack)
+- dev-server是如何实现无刷新更新的呢？
+  - me: 就是通过hash确认文件发生改变后，请求到新的文件（文件名有新的hash）,将这个新文件替换到<script>.src上
+  1. 通过 Json 请求结果获取热更新文件，以及下次热更新的 Hash 标识，并进入热更新准备阶段
+  2. HotCheck 确认需要热更新之后进入 hotAddUpdateChunk 方法，该方法先检查 Hash 标识的模块是否已更新，如果没更新，则通过在 DOM 中添加 Script 标签的方式，动态请求js： /fileChunk.hash.hot-update.js，获取最新打包的 js 内容；
+  3. 
+## public-path
+## source-map
+## define-plugin
+
+# webpack优化
+- [webpack配置-优化篇](https://xieyufei.com/2020/07/30/Webpack-Optimize.html)
+- [深入浅出webpack-优化](https://webpack.wuhaolin.cn/4%E4%BC%98%E5%8C%96/)
+- [webpack4打包优化](https://juejin.cn/post/6911519627772329991)
+## 总纲
+1. 优化输出质量
+  1. 压缩：uglyfile
+  2. scope-hosting（内置）
+  3. tree-shaking（内置）
+  4. post-css:auto-prefixer
+  5. splitChunks
+  6. 按需加载（懒加载）
+  8. 图片压缩
+    - url-loader
+2. 优化开发体验
+  1. 缩小文件搜索范围
+  2. happyPack/thread-loader
+    - 对指定的loader分配多线程
+  3. cache-loader/bable-loder的cacheDirectory
+  4. dll-plugin
+  5. dev-server & HMR
+## 衡量
+### 速度分析
+- speed-measure-webpack-plugin
+  - 分析整个打包总耗时
+  - 每个插件和loader的耗时情况
+### 体积分析
+- webpack-bundle-analyzer
+## 打包结果优化
+### splitChunks
+  - [bili:webpack-split-chunk](https://www.bilibili.com/video/BV1By4y177gX?p=7&vd_source=9365026f6347e9c46f07d250d20b5787)
+  - 利好：首屏 或者 页面启动性能：
+  ```js
+  // webpack.prod.config.js
+  module.exports = {
+    optimization: {
+      splitChunks: {
+        // “all”, "initial" - 同步加载的包 import lodash from 'lodash';, "async" - 异步加载的包 import('lodash');
+        chunks: 'all',
+        cacheGroups: {
+          /**
+           * 1. 这里的vender common不影响什么，自定义即可，一般和name属性保持一致
+           * 2. vender 一般约定 打包第三方库（一般是node_modules下的）, common一般约定打共工代码
+           */
+          vender: {
+            // 设置打包规则，一个module需要同事满足这里的所有条件，才会被splitChunk
+            name: 'vender', // 这里的name值决定了打包后bundle.js的名称
+            priority: 2, // 优先级，当一个module同时满足2个以上的splitChunk规则时，优先级值越高的规则优先使用
+            test: /node_modules/, // 限定该规则生效的目录范围
+            minSize: 5 * 1024, // 至少5kb的包才会被splitChunk, 太小的话，需要多一次http请求，不划算
+            minChunks: 2, // 这个module被引用了几次，第三方代码被引用一次就可以splitchunks
+          },
+          common: {}
+        }
+      }
+    }
+  }
+  ```
+### 按需加载 - 其实是spitchunk的一种：
+- [深入浅出webpack-按需加载](https://webpack.wuhaolin.cn/4%E4%BC%98%E5%8C%96/4-12%E6%8C%89%E9%9C%80%E5%8A%A0%E8%BD%BD.html)
+- babel支持import() ？？
+  - 如果您使用的是 Babel，你将需要添加 babel-plugin-syntax-dynamic-import (opens new window)插件，才能使 Babel 可以正确地解析语法。
+  - .babelrc
+  ```json
+  {
+    "presets": [
+      "env",
+      "react"
+    ],
+    "plugins": [
+      "syntax-dynamic-import"
+    ]
+  }
+  ```
+- eg：
+```js
+// 这里有个魔法注释 可是在打包时指定该chunk的名称,方便我们追踪和调试代码，不指定的话，默认名称将会是 [id].js
+import(/* webpackChunkName: "show" */ './show').then((show) => {
+  show('Webpack');
+})
+// webpack.config.js
+module.exports = {
+  // JS 执行入口文件
+  entry: {
+    main: './main.js',
+  },
+  output: {
+    // 为从 entry 中配置生成的 Chunk 配置输出文件的名称
+    filename: '[name].js',
+    // 为动态加载的 Chunk 配置输出文件的名称, 如果没有这行，分割出的代码的文件名称将会是 [id].js
+    chunkFilename: '[name].js',
+  }
+};
+```
+#### vue-懒加载
+- [vue-路由懒加载](https://v3.router.vuejs.org/zh/guide/advanced/lazy-loading.html)
+- 一般来说，对所有的路由都使用动态导入是个好主意。
+```js
+const UserDetails = () => import(/* webpackChunkName: "group-user" */ './UserDetails.vue');
+const router = createRouter({
+  routes: [{ path: '/users/:id', component: UserDetails }],
+})
+```
+### 抽离css
+- 默认情况下，style-loader会将css文件全部使用<style>标签注入到html中
+- prod下，我们更希望把css抽离到单独的文件中：
+  - mini-css-extract-plugin:
+    - 这个插件暂时不支持HMR,所以我们只能配置在prod中
+  ```js
+  // webpack.prod.config.js
+  // 抽离css到单独的文件中
+  const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+  // 压缩css代码
+  const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin');
+
+  module.exports = {
+    mode: 'production',
+    module: {
+      rules: [{
+        test: /\.css$/,
+        loader: [
+          MiniCssExtractPlugin.loader, // 在dev环境下可以使用style将css通过<style>标签插入到html中，在prod环境中使用MiniCssExtractPlugin提供的loader将css文件通过<link>插入到html中
+          'css-loader',
+          'postcss-loader'
+        ]
+      }]
+    },
+    optimization: {
+      minimizer: [
+        // 压缩css
+        new OptimizeCssAssetsWebpackPlugin()
+      ]
+    },
+    plugins: [
+      new MiniCssExtractPlugin({
+        filename: 'css/main.[contentHash:8].css' // 输出的单独的css文件名称
+      })
+    ]
+  }
+  ```
+### 缩小文件搜索范围
+- loader配置
+- resolve.modules // 配置去哪里寻找第三方模块
+  - 当安装的第三方模块都放在项目根目录下的 ./node_modules 目录下时，没有必要按照默认的方式去一层层的寻找，可以指明存放第三方模块的绝对路径，以减少寻找
+```js
+resolve: {
+    // 使用绝对路径指明第三方模块存放的位置，以减少搜索步骤
+    // 其中 __dirname 表示当前工作目录，也就是项目根目录
+    modules: [path.resolve(__dirname, 'node_modules')]
+  },
+```
+## 构建过程优化(开发体验优化)
+### DLL优化
+- [你真的需要dll吗](https://blog.csdn.net/xiaoyaGrace/article/details/106328441)
+  - 结论：webpack4以上,dll已经性价比不高了，开发成本+维护成本可能会比较高
+### cache-loader
+- 一般配在loder的栈底（最左边）
+- 缓存在磁盘
+- 注意：保存和读取缓存也会产生额外的性能开销，因此cache-loader适合用于对性能消耗较大的loader，否则反而会增加性能消耗
+### hapy-pack
+- [深入浅出:happy-pack](https://webpack.wuhaolin.cn/4%E4%BC%98%E5%8C%96/4-3%E4%BD%BF%E7%94%A8HappyPack.html)
+  - [使用thread-loader代替happy-pack](https://juejin.cn/post/7052240512593428494#heading-5)
+    - 由于HappyPack作者对js的兴趣逐步丢失，所以之后维护将变少，webpack4及之后推荐使用thread-loader
