@@ -1,3 +1,4 @@
+
 ## 参考
 - [webpack教程](https://juejin.cn/post/7023242274876162084#heading-14)
 - [webpack考点](https://juejin.cn/post/7023242274876162084)
@@ -187,6 +188,46 @@ new cleanWebpackPlugin()
 ```
 
 # plugin
+## 常用的plugin
+1. 功能补全型的：
+  - html-Plugin
+  - [define-plugin](https://webpack.docschina.org/plugins/define-plugin/)
+    - 一般主要用来给运行时代码传递构建时的信息，最常用的是告诉运行时代码NODE_ENV是prod还是test环境
+    ```js
+    // webpack.config.js 运行在node下 构建时
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    });
+    // 运行在browser中 运行时 
+    console.log(process.env.NODE_ENV); // 'production'
+    ```
+    - 关于这里为什么要用JSON.stringify()包裹，是因为define-plugin是直接进行的字符串替换（处理的是code-str），所以，是这样的：
+    ```js
+      // webpack.config.js 运行在node下 构建时
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': process.env.NODE_ENV, // 
+      });
+      // 运行在browser中 运行时 
+      console.log(process.env.NODE_ENV); // production 注意，这里不是一个字符串，而是一个标识符（变量），识别不了这个变量production，这里实际输出是undefined
+    ```
+  - [MiniCssExtractPlugin](https://webpack.docschina.org/plugins/mini-css-extract-plugin/)
+    - 需要webpack5
+      - webpack4中可以使用text-extract-pugin
+    - 将css抽取出来作为单独文件
+    - 一般只用在prod环境下
+    - 在test、dev环境下 一般使用style-loader
+  - clean-webpack-plugin
+2. 性能优化方面的
+  - [CssMinimizerWebpackPlugin](https://webpack.docschina.org/plugins/css-minimizer-webpack-plugin/)
+    - 可以代替optimize-css-assets-webpack-plugin
+  - uglifyjs-webpack-plugin
+  - happyPack
+    - 多线程打包
+    - 建议：thread-loader可以代替
+    - 补充： 由于对mini-css-extract-plugin,url-loader,file-loader的支持度的问题，所以，不建议使用HappyPack。
+    - 原理:
+  - cache-loader
+  - purifycss-webpack
 # 高频考点
 ## source-map
 - 线上问题的定位到代码行的方案：

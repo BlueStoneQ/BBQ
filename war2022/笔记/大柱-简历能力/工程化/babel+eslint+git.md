@@ -1,37 +1,16 @@
-<!-- vscode-markdown-toc -->
-* 1. [原理](#)
-	* 1.1. [工作流程](#-1)
-	* 1.2. [核心模块](#-1)
-* 2. [主要场景](#-1)
-	* 2.1. [支持ES6](#ES6)
-	* 2.2. [支持ES7](#ES7)
-	* 2.3. [polyfill](#polyfill)
-	* 2.4. [支持JSX](#JSX)
-	* 2.5. [[❌]支持TS](#TS)
-	* 2.6. [babel插件开发](#babel)
-		* 2.6.1. [几个辅助库：](#-1)
-		* 2.6.2. [编写的最小格式-本质上是一个函数：](#-)
-		* 2.6.3. [如何注册进babel中：](#babel-1)
-* 3. [原理](#-1)
-* 4. [eslint配置](#eslint)
-* 5. [自定义eslint规则](#eslint-1)
-* 6. [自定义规则引入-自定义插件](#--1)
-* 7. [原理](#-1)
-* 8. [merge & rebase](#mergerebase)
-
-<!-- vscode-markdown-toc-config
-	numbering=true
-	autoSave=true
-	/vscode-markdown-toc-config -->
-<!-- /vscode-markdown-toc -->
 # babel
-##  1. <a name=''></a>原理
-###  1.1. <a name='-1'></a>工作流程
+
+## 原理
+
+### 工作流程
 - codeStr -parser-> AST -transform-> new-AST -generater-> new codeStr
-###  1.2. <a name='-1'></a>核心模块
+
+### 核心模块
 @babel/core，@babel/parser，@babel/traverse 和 @babel/generator
-##  2. <a name='-1'></a>主要场景
-###  2.1. <a name='ES6'></a>支持ES6
+
+## 主要场景
+
+### 支持ES6
 - 使用 Babel 必须先安装 @babel/core 和 @babel/preset-env 两个模块，
   1. @babel/core 是 Babel 的核心存在，Babel 的核心 api 都在这个模块里面，比如：transform。
   2.  @babel/preset-env 是一个智能预设，允许您使用最新的 JavaScript，而无需微观管理您的目标环境需要哪些语法转换（以及可选的浏览器polyfill）
@@ -52,9 +31,12 @@
         如果我们将参数项改成false，那么就不会对ES6模块化进行更改，还是使用import引入模块。
         使用ES6模块化语法有什么好处呢。在使用Webpack一类的打包工具，可以进行静态分析，从而可以做tree shaking 等优化措施。
   3. babel-loader: 这里使用的打包工具是 Webpack，所以还需要安装 babel-loader 插件。
-###  2.2. <a name='ES7'></a>支持ES7
-###  2.3. <a name='polyfill'></a>polyfill
-###  2.4. <a name='JSX'></a>支持JSX
+
+### 支持ES7
+
+### polyfill
+
+### 支持JSX
 ```js
 // webpack.config.js
  test: /\.jsx?$/,
@@ -69,13 +51,17 @@
   "@babel/react",
   "@babel/env"]
 }
-```
-###  2.5. <a name='TS'></a>[❌]支持TS
+
+### [❌]支持TS
+
+### [❌]支持TS
 - npm i typescript + tsc xxx.ts 就可以输出编译后的js文件
-###  2.6. <a name='babel'></a>babel插件开发
+
+### babel插件开发
 - 访问者模式
 - [babel插件开发](https://segmentfault.com/a/1190000021246622)
-####  2.6.1. <a name='-1'></a>几个辅助库：
+
+#### 几个辅助库：
 - babylon
   - 解析步骤接收代码并输出 AST
 - babel-traverse
@@ -86,7 +72,8 @@
   - 构造、验证AST节点的方法
 - bable-template
   - 以模版化的方式生成ast节点
-####  2.6.2. <a name='-'></a>编写的最小格式-本质上是一个函数：
+
+#### 编写的最小格式-本质上是一个函数：
 ```js
 module.exports = function ({ types: t }) {
   return {
@@ -98,8 +85,10 @@ module.exports = function ({ types: t }) {
     }
   };
 }
-```
-####  2.6.3. <a name='babel-1'></a>如何注册进babel中：
+
+#### 如何注册进babel中：
+
+#### 如何注册进babel中：
 1. 代码中：
 ```js
 // 导入自己写的插件
@@ -118,9 +107,11 @@ const { code } = babel.transform(content, {
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
 # eslint
-##  3. <a name='-1'></a>原理
+
+## 原理
 通过静态的分析，寻找有问题的模式或者代码。默认使用 Espree 解析器将代码解析为 AST 抽象语法树，然后再对代码进行检查。
-##  4. <a name='eslint'></a>eslint配置
+
+## eslint配置
 ```json
 {
     "rules": {
@@ -133,8 +124,10 @@ const { code } = babel.transform(content, {
 "warn" or 1 - 将规则视为一个警告（不会影响退出码）
 "error" or 2 - 将规则视为一个错误 (退出码为1)
  */
-```
-##  5. <a name='eslint-1'></a>自定义eslint规则
+
+## 自定义eslint规则
+
+## 自定义eslint规则
 - [政采云-eslint自定义规则编写](https://www.zoo.team/article/eslint-rules)
 ```js
 module.exports = {
@@ -156,8 +149,10 @@ module.exports = {
     };
   },
 };
-```
-##  6. <a name='--1'></a>自定义规则引入-自定义插件
+
+## 自定义规则引入-自定义插件
+
+## 自定义规则引入-自定义插件
 - 使用自定义的 ESLint 规则，你需要自定义一个 ESLint 的插件，然后将规则写到自定义的 ESLint 插件中，然后在业务代码中添加 ESLint 配置，引入 ESLint 插件。
 ```json
 // .eslintrc
@@ -213,8 +208,30 @@ module.exports = {
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
 
 # git
-##  7. <a name='-1'></a>原理
+
+## 原理
 - [git原理-图文](https://www.jiqizhixin.com/articles/2019-12-20)
 - [bilibili-git原理](https://www.bilibili.com/video/BV1RJ411X7kh?spm_id_from=333.337.search-card.all.click&vd_source=9365026f6347e9c46f07d250d20b5787)
-##  8. <a name='mergerebase'></a>merge & rebase
+
+## merge & rebase
 - [bilibili-merge&rebase-很清晰了](https://www.bilibili.com/video/BV1cv411u7wd/?vd_source=9365026f6347e9c46f07d250d20b5787)
+
+## git 三区之间的操作
+- [labuladong-四个操作概括git的使用](https://labuladong.gitee.io/algo/5/41/)
+- [git-checkout图解](https://juejin.cn/post/6978436693485420575)
+  - 检出内容 -> working directory
+    - 命令未指定提交，默认检出当前暂存区的文件覆盖工作目录的文件。
+      - git checkout -- [file]
+      - -- 可以省略（git checkout <file>）， 主要用于防止文件路径和分支名称混淆（git checkout <file>和git checkout <branch> 命令结构相同）
+    - 使用 git checkout [commit] [file] 命令从指定的历史提交检出文件覆盖暂存区域和工作目录中对应的文件。
+  - 切换分支
+    - 运行 git checkout <branch>命令，移动HEAD标识指向指定分支，也就是“切换”至该分支了。
+    - 暂存区域和工作目录中的内容和 HEAD 对应的提交节点一致。如果是切换到一个较旧的分支，工作目录会恢复到该分支最后一次提交时的样子。 如果 Git 不能干净利落地完成这个任务，它将禁止切换分支。
+
+## 关于HEAD
+```
+HEAD 当前提交节点
+HEAD~ 当前提交节点的父节点
+HEAD~2 当前提交节点的父节点的父节点
+HEAD~N 当前提交节点的父节点......的父节点
+```

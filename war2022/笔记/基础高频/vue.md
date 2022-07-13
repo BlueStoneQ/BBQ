@@ -1,13 +1,18 @@
+
+
 ## 参考
 - 《深入浅出vue》
 - [掘金小测-vue运行机制](https://juejin.cn/book/6844733705089449991)
 
 ## 原理
+
 ### 依赖收集
 - 依赖收集时机：一个Vue实例创建时 - 变成响应式对象 - 在getter被触发的时候 就会触发收集依赖的逻辑
+
 ### 双向绑定原理
 - Vue本质是单向数据流
 - 双向数据流：只是v-model语法糖
+
 ### 核心原理：运作流程
 1. Vue 会遍历 data 所有的 property，并使用 Object.defineProperty 把这些 property 全部转为 getter/setter，每个组件实例都对应一个 watcher 实例，它会在组件渲染的过程中把“接触”过的数据 property 记录为依赖。之后当依赖项的 setter 触发时，会通知 watcher，从而使它关联的组件重新渲染。
   - 渲染是以组件为单位的，一个组件对应一个watcher
@@ -22,7 +27,102 @@
   - 发生的时机：在初始化 Vue 的每个组件时，会对组件的 data 进行初始化，就会将由普通对象变成响应式对象，在这个过程中便会进行依赖收集的相关逻辑
 3. 依赖收集在Dep中, 依赖就是Watcher，一般一个data对应一个Dep, 一个组件对应一个Watcher
 
+### vue2 简易响应式处理方案
+- [bilibili-vue2响应式处理](https://www.bilibili.com/video/BV1VA411x76D?p=3&vd_source=9365026f6347e9c46f07d250d20b5787)
+```js
+const data = {
+  name: '小米',
+  color: {
+    red: '1'
+  }
+}
+
+// 将data处理为响应式的数据
+observer(data);
+
+/**
+ * 构造数组的响应式原型
+ * 用AOP切入响应式逻辑的一个数组原型,这个原型上的push之类的方法都切入了响应式的逻辑
+ */
+const _ArrayProto = ObserverArrayProto();
+
+function ObserverArrayProto () {
+  const ArrayMethods = ['push', 'pop'];
+
+  const oldArrayProto = Array.prototype;
+  // 利用实例简历原型链 - newArrayProto可以找到其他所有的原来数组的方法属性,这里我们会对需要进行相应式的方法在新原型上进行重新定义
+  const newArrayProto = Object.create(oldArrayProto); 
+
+  ArrayMethods.forEach((method) => {
+    // 缓存旧数组操作方法
+    const oldMethod = oldArrayProto[method];
+    // 重新定义新的数组操作方法
+    newArrayProto[method] = function (...args) {
+      // 缓存本应的返回值
+      const result = oldMethod.apply(this, args); 
+      // 切入的逻辑：响应式的逻辑
+      console.log('这里触发响应式逻辑：需要重新diff-patch');
+      // 返回数组本来的返回值
+      return result;
+    }
+  });
+
+  return newArrayProto;
+}
+
+
+// 将一个对象处理为响应式对象
+function observer (target) {
+  // 处理基础类型
+  if (typeof target !== 'object' || target === null) {
+    return target;
+  }
+  // 处理数组:数组这里是对需要响应式的数组 替换其隐式原型 - 原型走我们用AOP切入响应式逻辑的一个数组原型,这个原型上的push之类的方法都切入了响应式的逻辑
+  if (Array.isArray(target)) {
+    // 响应式数组的原型需要替换为响应式原型 这样找方法优先找到的是响应式原型AOP改写后的方法
+    target.__proto__ = newArrayProto;
+  }
+  // 处理object 递归处理每一个属性 （基础类型在Observer函数入口处处理了）
+  for (let key in target) {
+    if (target.hasOwnProperty(key)) {
+      defineReactive(target, key, target[key]);
+    }
+  }
+}
+
+// 这里为数据增加响应式 - 通过defineProperty增加响应式
+function defineReactive (target, key, val) {
+  // 深度观察 - 基础类型在Observer函数入口处处理了，主要处理target是一个对象的情况(这里是color) 需要递归观察
+  observer(target);
+
+  Object.defineProperty(target, key, {
+    get (val) {
+      // 这里一般是依赖收集的动作
+      return val;
+    },
+    set (newVal) {
+      // 这里也需要一次深度观察 凡是对象都需要深度观察：这里有可能设置的值是一个对象 这个对象就需要被observer起来
+      observer(target);
+
+      if (newVal !== val) {
+        console.log('这里触发响应式逻辑：需要重新diff-patch');
+        this[key] = newVal;
+      }
+    }
+  });
+}
+
+// data 新增/删除 属性 需要开发者需要手动调用 Vue.set() 和 Vue.delete() 来手动监听
+```
+
+### [code]vue3的响应式处理方案
+
+
 ### diff算法
+- [bilibili-哈默-diff](https://www.bilibili.com/video/BV1dV411a7mT/?p=3&vd_source=9365026f6347e9c46f07d250d20b5787)
+  - 同层比较
+  - tagName不一样，则直接删除，不会进行深度比较
+  - tagName + key都一致，则认为是相同节点，不进行深度比较
 1. 关于vNode的操作：增 删 改
   - 更新节点：这个过程会发生diff
   - 通过对比找出新旧2个节点不一样的地方 针对不一样的地方 进行更新：通层比较
@@ -130,21 +230,33 @@ arrayKeys.forEach(method => {
   })
 })
 ```
+
 ### 虚拟DOM
+- [bilibili-vue:v-dom和diff](https://www.bilibili.com/video/BV1dV411a7mT/?vd_source=9365026f6347e9c46f07d250d20b5787)
+
 ### vNode的优点
 - 减少频繁的DOM操作，符合MVVM模型
 - 利于跨平台，跟平台耦合度较低
 - 相比于DOM直接操作，保证了性能下限
+
 ### patch过程
 - tempalte -> renderFn -> DOM
 - 更新：
   - new VNode Tree -> old VNode Tree ,比对后记录下两棵树的差异
   - 将记录的2棵树的差异应用到真正的DOM中去
+
 ### key的作用
-1. 用来标记唯一元素，当diff中key一致时，会人为是同一元素，采用复用的策略，跟踪元素身份，实现高效复用
+1. 用来标记唯一元素，当diff中，tagName一致，并且key一致时，会人为是同一元素，采用复用的策略，跟踪元素身份，实现高效复用
 2. index作key的话，不能保证key唯一标记对应的元素，排序后，key和元素会对不上
 
+### 依赖收集
+- [bilibili-依赖收集原理](https://www.bilibili.com/video/BV1W34y197UB?spm_id_from=333.337.search-card.all.click&vd_source=9365026f6347e9c46f07d250d20b5787)
+- data每个属性对应一个dep，dep里会存放依赖于这个属性的watcher
+- 依赖收集的过程：在页面渲染的时候，会访问属性，会触发属性相关的get钩子,在get中会dep.depend(),会收集依赖（就是把watcher加入到dep中）。
+- watcher应该是以组件为粒度，也就是一个组件对应一个watcher,当属性被set时，会dep.notify(),会让通知订阅的watcher都发生渲染（diff-patch）;
+
 ## 生命周期
+
 ### 生命周期hook
 - create: 创建vue实例
   - beforeCreade:
@@ -165,6 +277,7 @@ arrayKeys.forEach(method => {
 keep-alive：
   - deactivated:当组件被换掉时，会被缓存到内存中、触发
   - activated: 当组件被切回来时，再去缓存里找这个组件、触发
+
 ### 父子组件生命周期函数执行顺序
 - 加载
   - 父：created -> beforeMounted
@@ -180,11 +293,30 @@ keep-alive：
   - 父：destroyed
 
 ## 高频考点
+
 ### keep-alive
 - 当组件在keep-alive内被切换时组件的activated、deactivated这两个生命周期钩子函数会被执行 被包裹在keep-alive中的组件的状态将会被保留
+- 原理：
+  - 内部cache的淘汰算法用的是：LRU
+
 ### v-if&&v-show
-- v-if是动态的向DOM树内添加或者删除DOM元素；v-show是通过设置DOM元素的display样式属性控制显隐；
+- v-if是动态的向DOM树内添加或者删除DOM元素；
+  - v-if值为false时，在该位置创建一个注释节点，用来标识元素在页面中的位置。在值发生改变的时候，通过diff，新旧组件进行patch，从而动态显示隐藏。
+- v-show是通过设置DOM元素的display样式属性控制显隐；
+  - v-show值为false时，通过设置元素的css，display:none来控制元素是否展示。
 - v-if有更高的切换消耗；v-show有更高的初始渲染消耗；
+#### 为什么v-show底层使用display:none?
+- [为什么v-show底层使用display:none](https://juejin.cn/post/7005850379011227678)
+```
+简单的来说就是
+display:none; 元素将会从DOM树中移除，而且其所有的子元素都不会显示，我们不能在这里进行事件或者DOM操作。
+visibility:hidden; 元素会被隐藏，并且会占据原来的位置，整体布局不会改变，我们可以操作DOM，子元素设置为visible还是可以显示。
+看到这里实际上我还是有点疑惑的，因为v-show适合频繁切换的场景，但是这里操作display:none会带来回流的问题呀。
+实际上，如果v-show用visibility:hidden;的话，相当于此元素变成透明，还是会占据原来的位置。这里v-show的应用场景是不能占用原来的位置的，所以这里用了display:none;
+```
+
+#### 基础类型的响应式方案
+
 ### v-model
 - value + input的语法糖
 ```html
@@ -192,9 +324,12 @@ keep-alive：
   v-bind:value="searchText"
   v-on:input="searchText = $event.target.value"
 >
-```
+
+### $nexttick
+
 ### $nexttick
 - nextTick 不仅是 Vue 内部的异步队列的调用方法，同时也允许开发者在实际项目中使用这个方法来满足实际应用中对 DOM 更新数据时机的后续逻辑处理
+
 ### vue复用方案
 - [官网-复用专题](https://cn.vuejs.org/v2/guide/mixins.html)
 - 复用的方案：
@@ -258,6 +393,7 @@ keep-alive：
 - 借助vuex 统一管理状态
 
 ## vue-router
+
 ### 前端路由原理
   - 目的：为了SPA能够无刷新地更改url-history
   - 借助hash 或者 H5 history-api，
@@ -303,6 +439,7 @@ keep-alive：
       if(state && state.content) $('body').html(state.content);
     };
     ```
+
 ### 懒加载？
 - 需要webpack配合？
   - 是的 webpack会根据分割点进行分割打包，分割点：
@@ -334,8 +471,8 @@ new Router({
    component: r => require.ensure([],() =>  r(require('@/components/HelloWorld')), 'home')
  }] 
 })
-
 ```
+
 ### hash & history
 - hash
 ```js
@@ -350,6 +487,7 @@ hash & window.onhashchange(event) {
   - api:
     - 修改历史状态：pushState() replaceState()
     - 切换历史状态: forward() back() go()console.log('', )
+
 ### 路由参数传递？动态路由
 参数传递：
 - 动态路由
@@ -397,6 +535,7 @@ this.$route.params.id
 - 直接手动拼接到url中
 获取参数：
 - this.$router.query
+
 ### js跳转
 - <router-link>底层也是调用这2个api
 - this.$router.push()
@@ -405,6 +544,7 @@ this.$route.params.id
   - <router-link to="xxx" replace>
   - this.push()
 - this.$router.go()
+
 ### 导航守卫
 - 其实就是拦截器
 - 全局钩子：（一般全局before优先， after垫后）
@@ -417,12 +557,15 @@ this.$route.params.id
   - beforeRouteEnter:进入组件之前会被调用
   - beforeRouteUpdate：例如：在 /foo/1 和 /foo/2 之间跳转的时候，由于会渲染同样的foa组件，这个钩子在这种情况下就会被调用
   - beforeRouteLeave：离开组件被调用
+
 ### 动态路由
 - router.addRoute()
 - router.removeRoute()
+
 ### 嵌套路由
 - route配置中增加children配置
 - 组件中可以用<vvue-router>对渲染位置进行占位
+
 ### vue-router前端路由原理
 ```
 前端路由其实就是感知路由现在走到了哪儿
@@ -474,11 +617,14 @@ window.location.hash = route.fullpath (浏览器地址栏显示新的路由的pa
 - pushState设置的新URL可以与当前URL一模一样，这样也会把记录添加到栈中；而hash设置的新值必须与原来不一样才会触发记录添加到栈中。
 - pushState通过stateObject可以添加任意类型的数据到记录中；而hash只可添加短字符串。
 - pushState可额外设置title属性供后续使用。
+
 ### hitory模式的配置
 - 需要在后端进行额外配置
 - 原因：如果没有适当的服务器配置，用户在浏览器中直接访问 https://example.com/user/id，就会得到一个 404 错误（其实就是在地址栏直接输入url会导致404）
 - 解决方案：要解决这个问题，你需要做的就是在你的服务器上添加一个简单的回退路由。如果 URL 不匹配任何静态资源，它应提供与你的应用程序中的 index.html 相同的页面（后端将url定位到index.html，返回整个SPA的index.html,然后你在popstate#callback中进行前端路由加载）
+
 ## vuex
+
 ### 使用
 ```js
 // 定义store 可以分模块
@@ -509,7 +655,9 @@ new Vue({
 this.$store.commit('increment') // 直接触发mutation
 // 通过action触发
 this.$store.dispatch('increment');
+
 ```
+
 ### vuex的模块化
 ```js
 const moduleA = {
@@ -535,9 +683,11 @@ const store = new Vuex.Store({
 store.state.a // -> moduleA 的状态
 store.state.b // -> moduleB 的状态
 ```
+
 ### matation为甚不能做异步操作
 - Vuex中所有的状态更新的唯一途径都是mutation
 - 每个mutation执行完成后都会对应到一个新的状态变更，这样devtools就可以打个快照存下来，然后就可以实现 time-travel 了。如果mutation支持异步操作，就没有办法知道状态是何时更新的，无法很好的进行状态的追踪，给调试带来困难。
+
 ### vuex严格模式
 - 状态更改必须由matation引起，否则将抛出错误
 ```js
@@ -545,6 +695,7 @@ new Vuex.Store({
   strict: true
 })
 ```
+
 ### getter + mapGetters
 ```js
 import {mapGetters} from 'vuex'
@@ -554,6 +705,7 @@ export default{
     }
 }
 ```
+
 ### 将mutation映射到method上
 ```js
 import { mapMutations } from 'vuex'
@@ -567,17 +719,60 @@ export default {
   }
 }
 ```
+
 ## vue3.0
-### Vs 2.0
+
+### vue3.0 Vs 2.0
 - 监测机制：proxy -> defineProperty
 - 使用TS实现 对TS支持较好
+
 ### defineProperty和proxy的区别
+- [defineProperty和proxy的区别](https://segmentfault.com/a/1190000041084082)
 - defineProperty的缺陷：
   - 增加 删除对象属性 监测不到
-  - 数组下标 和 长度变化 监测不到
+    - 需要手动使用：vue.set vue.delete去处理（会触发响应式）
+  - 数组下标、长度变化 + 数组的api 监测不到
+    - 使用AOP对数组的方法进行重写，将响应式的逻辑切入进去
   - 会改变原始数据
+  - 需要对每个属性进行遍历监听，如果嵌套对象，需要深层监听，造成性能问题
 - proxy优点：
+  - roxy的监听是针对一个对象的，那么对这个对象的所有操作会进入监听操作，这就完全可以代理所有属性了
+    - 其实就是不用遍历属性，利好性能 
   - 全方位监测 对象 数组的变化
   - 不会改变原始数据 会提供一个代理对象
   - 支持Map Set WeakMap WeakSet
+- Proxy和defineProperty的一个共同特性，不支持对象嵌套。需要递归去实现。
+  - 关于proxy的实现：
+  - [Vue3.0里为什么要用 Proxy API 替代 defineProperty API ？](https://github.com/febobo/web-interview/issues/47)
+  ```js
+  function reactive(obj) {
+      if (typeof obj !== 'object' && obj != null) {
+          return obj
+      }
+      // Proxy相当于在对象外层加拦截
+      const observed = new Proxy(obj, {
+          get(target, key, receiver) {
+              const res = Reflect.get(target, key, receiver)
+              console.log(`获取${key}:${res}`)
+              // 关键语句：如果属性是个对象 需要递归设置代理
+              return isObject(res) ? reactive(res) : res;
+          }
+        }
+      )
+      return observed
+  }
+  ```
+
 ## vue vs React
+
+# vuex
+## vuex中为什么把把异步操作封装在action，把同步操作放在mutations？
+- [vuex中为什么把把异步操作封装在action，把同步操作放在mutations？](https://www.zhihu.com/question/48759748/answer/112823337)
+  - 尤雨溪：
+    - 区分 actions 和 mutations 并不是为了解决竞态问题，而是为了能用 devtools 追踪状态变化。
+    - 同步的意义在于这样每一个 mutation 执行完成后都可以对应到一个新的状态（和 reducer 一样），这样 devtools 就可以打个 snapshot 存下来，然后就可以随便 time-travel 了。
+    - 事实上在 vuex 里面 actions 只是一个架构性的概念，并不是必须的，说到底只是一个函数，你在里面想干嘛都可以，只要最后触发 mutation 就行。异步竞态怎么处理那是用户自己的事情。vuex 真正限制你的只有 mutation 必须是同步的这一点
+  - 其实就是做了代码隔离
+    不非受控的代码集中到 action
+    mutation只做纯函数的状态改变
+    mvvm一般强调的就是直接面对view的那层不要做复杂的逻辑
