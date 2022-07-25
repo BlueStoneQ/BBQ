@@ -1,4 +1,6 @@
+
 # NODE
+
 ## 核心原理
 ```
 《深入浅出node》
@@ -11,6 +13,7 @@
 打通 激活 知识活起来
 按计划 坚持去做
 ```
+
 ## 参考资料
 - [nodejs系列系统教程-掘金](https://juejin.cn/post/7095713577209692168)
 - [gitbook:koa-server实践](https://chenshenhai.github.io/koa2-note/note/route/koa-router.html)
@@ -22,6 +25,12 @@
 3. node高性能原因：
   - 事件驱动，适合IO密集型：
     - 每线程/每请求的方式目前还被Apache所采用。Node通过事件驱动的方式处理请求，无须为 每一个请求创建额外的对应线程，可以省掉创建线程和销毁线程的开销，同时操作系统在调度任 务时因为线程较少，上下文切换的代价很低。这使得服务器能够有条不紊地处理请求，即使在大量连接的情况下，也不受线程上下文切换开销的影响，这是Node高性能的一个原因。
+
+### libuv
+- 本质上就是对于各种操作系统的IO操作处理为了异步（事件驱动）的api
+  - 讲阻塞 和 非阻塞的api 都通过event-loop处理为异步api 
+  - nodejs本身的架构：事件驱动架构
+
 ### event-loop
 1. [event-loop](https://zhuanlan.zhihu.com/p/87684858)
 1. 概念：
@@ -30,7 +39,7 @@
   宏任务主要包含：script( 整体代码)、setTimeout、setInterval、I/O、UI 交互事件、setImmediate(Node.js 环境)
   微任务主要包含：Promise、MutaionObserver、process.nextTick(Node.js 环境)
 3. 执行规律是：
-  - 在一个宏任务队列全部执行完毕后，去清空一次微任务队列，然后到下一个等级的宏任务队列，以此往复。一个宏任务队列搭配一个微任务队列。
+  - 在一个**宏任务队列全部**执行完毕后，去清空一次微任务队列，然后到下一个等级的宏任务队列，以此往复。一个宏任务队列搭配一个微任务队列。
 4. node端微任务也有优先级先后：
   process.nextTick;
   promise.then 等;
@@ -41,15 +50,15 @@
 2. 事件循环是指Node.js执行非阻塞I/O操作，尽管==JavaScript是单线程的==,但由于大多数==内核都是多线程==的，Node.js会尽可能将操作装载到系统内核。因此它们可以处理在后台执行的多个操作。当其中一个操作完成时，内核会告诉Node.js，以便Node.js可以将相应的回调添加到轮询队列中以最终执行。
   - 那么这里 我们知道：加入到轮询队列的是回调，像microTask每次都是要清空的。如果一个任务没有完成，是不会把相关的事件观察者（里面有事件的回调）放在任务队列（microTask quque）中的。
   - 事件循环、观察者、请求对象、I/O线程池这四者共同构成了Node异步I/O模型的基本要素。
-3. node的event-loop:
+3. node的event-loop有6个宏任务事件队列 + 1个微任务事件队列 - 每个队列都存放的是回调: 
   - timers
-  - IO callback
-  - idle/prepare
-    - process.next
-  - poll：获取新的IO事件 例如读取文件等
+  - pending callbacks: 执行操作系统的回调
+  - idle/prepare ：只在系统内部调用
+  - poll：IO相关操作的回调 例如读取文件等
   - check
-    - setImmediate
-  - chlose callback
+    - setImmediate中的回调
+    - [!!]process.nextTick 是 微任务，而且执行时机**早于**promise.then
+  - chlose callbacks: 执行close事件的回调
 4. IO调用流程：js -> node核心模块（js） -> c++内建模块 -> libuv进行系统调用（跨平台是libuv实现的）
 5. 非IO异步API
   - 定时器
@@ -94,6 +103,7 @@
     - 执行时机：setImmediate() 将在当前事件轮询的末尾处执行
     - 用途：
     - 而setImmediate同时注册的多个事件，在一个tick中按照顺序只会执行一个，下一个到下一个tick的check阶段继续执行
+
 #### node中js如何调用c++模块
 - Node.js 调用C++方法，其实是调用 C++ 代码生成的动态库，可以使用require() 函数加载到Node.js中，就像使用普通的Node.js模块一样。
 
@@ -125,21 +135,184 @@
     - 沿路径向上逐级递归，直到根目录下的node_modules目录。
 
 ## 常用模块
+
+### 全局对象和变量
+- 常见全局变量
+  - __filename
+  - __dirname
+  - timer类函数
+  - process
+  - require module exports
+
 ### fs
+#### 概述
 - 如果想要操作文件系统中的二进制数据需要使用fs模块提供的API，这个过程中Buffer和Stream又是密不可分的。
 - open + close存在的意义：
   - 前面我们使用了fs实现了文件的读写操作，既然已经读写了就证明已经实现了文件的打开，为什么Node还要单独的提供打开关闭的api呢？
     因为readFile和writeFile的工作机制是将文件里的内容一次性的全部读取或者写入到内存里，而这种方式对于大体积的文件来讲显然是不合理的，因此需要一种可以实现边读编写或者边写边读的操作方式，这时就需要文件的打开、读取、写入、关闭看做是各自独立的环节，所以也就有了open和close。
+- fd: 文件标识符
+#### 基本操作类
+- stat
+- write
+- read
+- watcher
+  - watchFile
+  - unwatchFile
+#### 常用方法
+- 权限
+- 增删改查
+  - 打开/关闭
+  - 读取 
+  - 写入
+    - writeFile
+      - [flag](http://nodejs.cn/api-v12/fs.html#fs_file_system_flags)
+    - appendFile
+    - copyFile
+  - 删除
+- 工具类
+#### 大文件读写
+#### 操作目录
+- access
+- stat
+  - size: 文件字节数
+  - isFile
+  - isDirectory
+- mkdir
+  - 一般默认创建的是最后一级目录，例如'a/b/c', 就是在a/b/ 下创建c/
+  - 一般创建多级目录：使用options.recursive: true
+- rmdir
+  - 一般默认情况下 只能删除空目录
+  - 一般默认删除的是最后一级目录，例如'a/b/c', 就是在a/b/ 下删除c/
+  - 一般删除多级、非空目录：使用options.recursive: true
+- readdir
+- unlink
+
+### path
+- path.sep 系统的路径分隔符 / \
+
+### stream
+#### 概述
+- 所有的流都继承自EventEmiter
+#### 分类-抽象类
+- readable
+- writeable
+- duplex
+- transform
+#### Readable
+- 流动模式
+- 暂停模式
+
 ### process 
+- 全局模块
 - 可以获得很多执行环境（进程）信息
+1. 用法
+  - cpu 内存使用情况
+    - process.memoryUsage()
+    - process.cpuUsage()
+  - 运行环境：
+    - cwd()
+    - version versions
+    - env 
+      - env.NODE_ENV
+      - env.PATH
+      - USERPROFILE 本机管理员目录
+    - platform
+      - 系统平台 例如输出：win32
+  - 运行状态：
+    - argv argv0 execArgvs
+    - pid ppid
+    - uptime() // 当前脚本的执行时间
+  - process相关事件
+    - 继承了event模块
+    - exit 事件
+      - code === 0 process正常退出
+    - beforeExit
+    - process.exit() // 主动退出进程
+  - 标准输入 输出 错误 流
+    - 根据os.cpus().length 来衍生出多个子线程
+    - stdin
+      - process.stdin.setEncoding('utf-8')
+    - stdout
+    ```js
+    fs.createReadStream('text.txt').pipe(process.stdout); // 读取文件输出到标准输出
+    ```
+
 ### emiter
+
 ### child_process
 - [blog-系统学习](https://www.cnblogs.com/chyingp/p/node-learning-guide-child_process.html)
 - nodejs执行命令行
-### buffer
+
+### Buffer
+#### 概述
 - Buffer是NodeJS中的一个全局变量，无需require就可以直接使用。一般配合stream流使用，充当数据的缓冲区。
+- 让js可以操作二进制
+- IO操作就是操作二进制
+- 流 + 管道技术
+- 本质上是一个独立于V8的内存空间
+  - 申请 不是由V8申请的，但是分配是由js通过buffer模块去控制的
+  - 空间回收：还是由v8的GC进行回收
+- buffer创建的时候 大小就固定了
+#### 创建buffer
+- alloc // 创建以字节为单位指定大小的buffer
+- allocUnsafe
+- from
+#### 在http的网络IO中使用buffer
+- 场景就是：当data还未到end事件的时候 我们需要一块内存来暂存我们的数据，等待end后拼接：
+```js
+http.createServer((req, res) => {
+  const bufferList = []; // 这个数组用来存放每个buffer的引用（类似于地址）
+  let result = null;
+  req.on('data', data => {
+    const buffer = Buffer.from(data); // 每个数据块都申请buffer内存来暂存 将引用地址放到数组中
+    bufferList.push(buffer);
+  });
+
+  req.on('end', () => {
+    result = Buffer.concat(bufferList);
+  });
+});
+```
+### 实例方法
+- fill
+  - 填充数据不足，则反复填满buffer
+  - 填充数据超出buffer，
+- write
+- toString
+- slice
+- indexOf
+- copy
+### 静态方法
+- concat
+- isBuffer
+### 自定义buffer split
+- 非原生的api，返回一个数组，数组的每个元素是一段buffer，利用SEP分割符分割出来的
+```js
+/**
+ * @param seq 分隔符
+ */
+Buffer.prototype.split = function (sep) {
+  // defend
+  // init data
+  const ret = [];
+  const sepLen = Buffer.from(sep).length;
+  let start = 0, offset = this.indexOf(sep);
+  // algo
+  while (offset !== -1) {
+    // 处理
+    ret.push(this.slice(start, offset));
+    // 步进
+    start = offset + sepLen;
+    offset = this.indexOf(sep);
+  }
+  // return
+  return ret;
+}
+```
+
 ### stream 
-1. 大文件的处理 读取 上传？
+
+#### 大文件的处理 读取 上传？
  ```JS
  var reader = fs.createReadStream('in.txt'); 
  var writer = fs.createWriteStream('out.txt');
@@ -154,23 +327,39 @@
  var writer = fs.createWriteStream('out.txt'); 
  reader.pipe(writer);
  ```
-2. 分类：
+#### 分类：
   - readable
   - writable
   - duplex
   - transform
-3. 事件：
+#### 事件
   - data
   - end
   - error
   - finish: 写入完成
-### process
-1. 用法
-  -  根据os.cpus().length 来衍生出多个子线程
-  - standOut
+#### 流的读写
+1. 方法1： 通过可读流的‘data’和‘end’事件读取
+2. 方法2： 通过管道方法：pipe读取并写入
+
+### http
+#### 获取请求参数
+- 获取body中的参数：
+  - post请求的数据在body中，通过流+事件的方式获取：body中的数据是以二进制+流的形式传递过来的：
   ```js
-  fs.createReadStream('text.txt').pipi(process.stdout); // 读取文件输出。
+  let arr = Buffer.alloc();
+  req.on('data', (data) => {
+    // 存入到buffer
+  })
+  req.on('end', () => {
+    // 数据拼接收集齐了
+  });
   ```
+- 获取url.query
+  - 通过url.parse(req.url) 来获取到query 获取到其中的参数
+
+#### req res
+- req: 可读流
+- res: 可写流
 
 ## 常用的api： 保证一个熟练
 
@@ -179,6 +368,7 @@
 
 
 ## 常见场景-经典问题
+
 ### nodejs执行命令行
 - [参考](https://juejin.cn/post/6844903612842246157)
 - child_process
@@ -227,6 +417,7 @@
   - shell.exec()
   - 使用promise
 - simple-git： 专门执行git
+
 ### 串并行
 - 串行异步
   - next()
@@ -309,9 +500,13 @@ for (const task of tasks) {
   task();
 }
 ```
+
 ### 实时请求：长连接 ws等 降级方案
+
 ### 流的使用
+
 ### promiseify + async + TS的引入方案
+
 ### webApp + koa原理 + koa常用中间件核心原理
 - [koa-server](https://hejialianghe.github.io/node/koa.html#_2-1-2-koa%E6%A6%82%E8%A7%88)
 - koa的server写法
@@ -464,17 +659,21 @@ md1().then(() => {
   // 逆流时 第三个执行 - next()之后的逻辑
 })
 ```
+
 ### 日志系统+log4js
   - log4js
     - 配置：日志生成规则 存储目录 命名规则
     - 包装为koa中间件：使用koa-log4
+
 ### 解码方案
 - 获取编码方式：header.Content-Encoding
 - URL编码方式适合处理简单的键值对数据，并且很多框架的Ajax中的Content-Type默认值都是它，但是对于复杂的嵌套对象就不太好处理了，这时就需要JSON编码方式大显身手了。
   客户端发送请求主体时，只需要采用JSON.stringify进行编码。服务器端只需要采用JSON.parse进行解码即可
 
 ### node下载一个文件
+
 ### node作为客户端发出请求等
+
 ### node作为BFF
 
 

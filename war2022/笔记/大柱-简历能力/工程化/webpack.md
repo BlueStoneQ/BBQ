@@ -109,6 +109,7 @@ loader执行顺序：右 -> 左
 
 # 常见场景
 ## dev-server
+### proxy
 - proxy: 在dev-server启动时，所有请求都可以通过proxy中的配置进行代理转发，例如可以配置target,等于是给加上baseUrl:
 ```js
 devserver: {
@@ -117,6 +118,26 @@ devserver: {
       target: 'http:xxx.com',
       changeOrigin: true
     }
+  }
+}
+```
+
+### dev-server解决前端history路由的访问404问题
+- history路由下，当刷新访问一个非index.html路径时，不配置的话，服务器找不到对应的静态文件，
+  - 需要配置将所有的路径请求达到index.html spa单文件的访问上
+- prod环境下：需要配置服务器环境，配置redirect,所有请求都重定向到index.html
+- dev环境下：[dev-server解决前端history路由的访问404问题](https://blog.csdn.net/Riona_cheng/article/details/100660065)
+```js
+// webpack.dev.config.js
+{
+  devserver: {
+    historyApiFallback: true, // 等同于下面的配置：就是所有的请求都重写成index.html
+    // historyApiFallback: {
+    //   rewrites: [{
+    //     from: //,
+    //     to: 'index.html'
+    //   }]
+    // }
   }
 }
 ```
