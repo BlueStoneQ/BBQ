@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>三栏-双飞翼布局</title>
+    <!-- 参考：https://cloud.tencent.com/developer/article/1351068?from=article.detail.1782173 -->
+    <!-- 
+      圣杯+双飞翼相较于其他几种三栏布局的优点：
+      中间栏要放在文档流前面以优先渲染。其实双飞翼布局就是在圣杯布局的原理上进行完善，实现相同效果的完美布局！ 
+    -->
+    <style type="text/css">
+      .wrap {
+        background-color: antiquewhite;
+      }
+
+      .wrap {
+        float: left;
+        width: 100%;
+      }
+
+      .mid {
+        /* width: 默认是填充满自己所在的row的可用空间 */
+        height: 400px;
+        background-color: red;
+        margin-left: 200px;
+        margin-right: 100px;
+      }
+
+      .left {
+        float: left;
+        width: 200px;
+        height: 400px;
+        background-color: aqua;
+        margin-left: -100%;
+      }
+
+      .right {
+        float: left;
+        width: 100px;
+        height: 400px;
+        background-color: blue;
+        margin-left: -100px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="wrap">
+        <div class="mid"></div>
+      </div>
+      <div class="left"></div>
+      <div class="right"></div>
+    </div>
+  </body>
+</html>
