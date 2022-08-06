@@ -98,6 +98,35 @@ func.caller：返回调用当前函数的那个函数。
 ### 原型与继承
 ### 异步编程
 ### 执行上下文+作用域链+闭包
+- [video:执行上下文+作用域链+闭包](https://www.bilibili.com/video/BV1nb411P7tQ?p=18&vd_source=9365026f6347e9c46f07d250d20b5787)
+- 变量提升：
+  - 在执行之前有一个预编译，会发生变量提升（而变量提升只是创建执行上下文的一部分动作）：
+  - 变量提升：var定义的变量 会被提升到程序最开头 并赋值为undefined
+  - 函数提升：function声明的函数 会被提升到开头 所以可以在定义前调用：
+  ```js
+  fn()
+  function fn() {}
+  ```
+- 执行上下文 
+  - 在预编译阶段会创建执行上下文：这部分会包括3部分工作：
+    1. 创建变量对象
+      - 收集：变量 函数+函数形参
+      - window
+      - 局部：无明确指向 但存在
+    2. 确认this指向
+      - 全局环境下 - window
+      - 局部环境下 - 局部调用这段代码的对象
+    3. 创建作用域链
+      - 父级的作用域链 + 当前变量对象
+- 执行上下文：
+  - 可以理解为一个对象 该对象记录了以下信息：
+  ```js
+  {
+    变量对象：{变量 函数+函数形参}, 
+    scopeChain: 父级的作用域链 + 当前的变量对象
+    this: 全局window || 局部调用这段代码的对象
+  }
+  ```
 ### 面向对象
 ## DOM
 ### 常见的DOM操作
@@ -296,6 +325,20 @@ func.caller：返回调用当前函数的那个函数。
   - 
 2. esm import的read-only属性
 3. esm存在export/import提升
+
+### UMD实践
+- [UMD实践-理念](https://segmentfault.com/a/1190000020226119)
+- [webpack设置导出为umd-libraryTarget: 'umd'](https://gapgao.github.io/2020/02/23/%E6%90%9E%E6%87%82CJS&UMD&ESM/#webpack-%E9%85%8D%E7%BD%AE)
+  - [Prefer to use output.library.type: 'umd'](https://webpack.docschina.org/configuration/output/#type-umd)
+  - 不过我们实际开发并不会打包成umd格式的文件，因为umd格式的包文件很大。
+    - 一般会分开打包一个cjs包和一个es包。然后把cjs包写进package.json的main属性，
+    - 把es包写进package.json的module属性
+      - [关于pkg.module](https://loveky.github.io/2018/02/26/tree-shaking-and-pkg.module/) 
+        - 主要就是为了：假如我们是一个 npm 包的开发者，我们该如何发布我们的包以便于使用者在使用我们包的时候也可以利用 Tree Shaking 机制呢？
+        - TreeShaking基于ES6 发布在pkg.module时 对方项目shaking的时候 就可以shake我们这个包
+        - 那么 我们这个包就打一个ESM的版本 入口挂在pkg.module上
+        - 一般给库打包用的rollUp-config.output.format = 'es'之类的设置 打出包的module方案
+        - 我们的源码一般就用ESM写
 ## 垃圾回收与内存泄露
 ### 垃圾回收的方式
 1. 引用计数

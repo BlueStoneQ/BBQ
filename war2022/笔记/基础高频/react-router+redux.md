@@ -1,0 +1,11 @@
+### js跳转
+- props.match
+  - params.xxx
+  - url
+- props.history
+  - push()
+  - replace()
+  - goBack()
+  - goForward()
+  - go(n)
+- props.location

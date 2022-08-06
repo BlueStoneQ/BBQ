@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>三栏布局</title>
+    <!-- 参考：https://www.bilibili.com/video/BV1dA411u7g8/?spm_id_from=333.788.recommend_more_video.0&vd_source=9365026f6347e9c46f07d250d20b5787-->
+    <!-- 圣杯布局，利用浮动和负边距来实现。父级元素设置左右的 padding，三列均设置向左浮动，中间一列放在最前面，宽度设置为父级元素的宽度，因此后面两列都被挤到了下一行，通过设置 margin 负值将其移动到上一行，再利用相对定位，定位到两边。 -->
+    <style type="text/css">
+      .wrap {
+        background-color: antiquewhite;
+        padding-left: 200px;
+        padding-right: 100px;
+      }
+
+      .mid {
+        /* width: 默认是填充满自己所在的row的可用空间 */
+        float: left;
+        width: 100%;
+        height: 400px;
+        background-color: red;
+      }
+
+      .left {
+        float: left;
+        width: 200px;
+        height: 400px;
+        background-color: aqua;
+        margin-left: -100%;
+        position: relative;
+        right: 200px; /* 移动到距离当前位置的右侧200px处 */
+      }
+
+      .right {
+        float: left;
+        width: 100px;
+        height: 400px;
+        background-color: blue;
+        margin-left: -100px;
+        position: relative;
+        left: 100px; /* 移动到距离当前位置的左侧100px处 */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="mid"></div>
+      <div class="left"></div>
+      <div class="right"></div>
+    </div>
+  </body>
+</html>

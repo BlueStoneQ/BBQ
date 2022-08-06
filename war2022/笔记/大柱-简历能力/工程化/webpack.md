@@ -202,6 +202,17 @@ module.exports = {
   - 使用url-loader (但是必须安装file-loader，因为url-loader底层使用了file-loader)
   - 同时配置下limt属性： 8 * 1024 // 8kb以下的图片都转为base64, 减少http请求
 
+### 兼容性：打包的IIFE函数 不使用箭头函数
+- 目的：以适配更低阶的不支持箭头函数的浏览器
+- 配置:
+```js
+output: {
+  environment: {
+    arrowFunction: false  // 告诉webpack 打包的IIFE函数(模块化函数) 不使用箭头函数
+  }
+}
+```
+
 ## 请求dist
 - clean-webpack-plugin
 ```js
@@ -430,3 +441,4 @@ resolve: {
 - [深入浅出:happy-pack](https://webpack.wuhaolin.cn/4%E4%BC%98%E5%8C%96/4-3%E4%BD%BF%E7%94%A8HappyPack.html)
   - [使用thread-loader代替happy-pack](https://juejin.cn/post/7052240512593428494#heading-5)
     - 由于HappyPack作者对js的兴趣逐步丢失，所以之后维护将变少，webpack4及之后推荐使用thread-loader
+
