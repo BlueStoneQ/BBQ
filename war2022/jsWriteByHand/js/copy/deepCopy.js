@@ -116,7 +116,7 @@
       // eval能够影响当前作用域及所有的父作用域的变量， 而new Function 它是运行在一个独立的function内， 并且他的父作用域是window而不是当前作用域, 另外，new function还可以传参 
       // 1. [new function 更安全, ](https://juejin.cn/post/6960499386384121892)
       // 2. [](https://juejin.cn/post/6844903624091369485)
-      return new Function('return' + _arg.toString())();
+      return new Function('return ' + _arg.toString())(); // 注意 return 后面有空格哦
     }
 
     function _copyObjectOrArray (_arg) {

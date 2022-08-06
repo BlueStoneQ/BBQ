@@ -55,18 +55,17 @@ ctx.request.body.xxx
   ```js
   const http = require('http');
   http.createServer((req, res) => {
-    const bodyData = [];
+    const bufferList = []; // 这个数组用来存放每个buffer的引用（类似于地址）
 
     res.on('data', chunk => {
-      bodyData.push(chunk);
+      const buffer = Buffer.from(chunk);
+      bufferList.push(buffer);
     });
 
     res.on('end', () => {
-      const chunks = Buffer.concat(bodyData);
-
-      res.end(chunks.toString());
+      const bodyData = Buffer.concat(bufferList);
+      res.end(bodyData.toString());
     });
-
   }).listen(3000);
   ```
   - koa-body基本就是以上的封装 获取到数据后 挂载ctx.request.body
@@ -84,6 +83,7 @@ const koaBody = koaBodyCreate({
 // 在controller中获取文件信息，其中有path 指向上传后存储的本地，可以通过这个路径用fs读取文件
 ctx.request.files // Array
 ```
+- 使用nodejs实现文件上传
 ### 统一响应体 & 错误处理
 - 为了方便处理错误，最好使用try...catch将其捕获。但是，为每个中间件都写try...catch太麻烦，我们可以让最外层的中间件，负责所有中间件的错误处理
 ```js

@@ -193,6 +193,7 @@ function defineReactive (target, key, val) {
 - 以下情况无法触发：
   - 数组下标修改数据，数组的长度改变
   - 对象新增和删除属性
+  - 数组的一些方法执行：push pop等
 
 ### 如何拦截数组的操作？？
 - 为什么vue不使用Object.defineProperty来完成对数组的监听呢？通过网上查阅，发现使用Object.defineProperty监听数组性能很差，方便性得到的好处小于性能带来的损失，得不偿失。

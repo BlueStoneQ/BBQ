@@ -179,7 +179,7 @@ module.exports = {
       test: /\.(css|sass)$/,
       loader: [
         'style-loader', // 将css的内容以<style>的形式添加到html中
-        'css-loader', // css文件处理为webpack可以处理的module，就是模块化处理
+        'css-loader', // css文件处理为webpack可以处理的module，就是模块化处理 - 默认在css-loader中是不开启css modules功能的，要开启可以设置modules: true即可
         'postcss-loader', // 2. 对css中使用到的新属性进行兼容性处理 - 例如加上-webkit之类的前缀，另外，post-css需要单独配置下postcss.config.js, 其中使用到了autoprofixer
         'sass-loader', // 1. 将scss语法转为css语法
       ]

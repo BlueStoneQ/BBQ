@@ -217,7 +217,7 @@ module.exports = {
 - [bilibili-merge&rebase-很清晰了](https://www.bilibili.com/video/BV1cv411u7wd/?vd_source=9365026f6347e9c46f07d250d20b5787)
 
 ## git 三区之间的操作
-- [labuladong-四个操作概括git的使用](https://labuladong.gitee.io/algo/5/41/)
+- [labuladong-四个操作概括git的使用](https://labuladong.gitee.io/algo/5/42/)
 - [git-checkout图解](https://juejin.cn/post/6978436693485420575)
   - 检出内容 -> working directory
     - 命令未指定提交，默认检出当前暂存区的文件覆盖工作目录的文件。
