@@ -12,7 +12,7 @@
  function _lazyCall (fn, ...args) {
   // defend: throw TypeError 
 
-  // ！！！注意这里的赋值
+  // ！！！注意这里的赋值: 记录所有的参数
   const originalArgs = args || [];
 
   return function (...args) {

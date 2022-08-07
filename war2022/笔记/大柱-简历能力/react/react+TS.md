@@ -4,6 +4,7 @@
 - [参考：applovin笔试题](https://github.com/maoxiaoke/weather-app)
 - [🟢习题: 红杉笔试](https://github.com/scdt-china/interview-assignments)
 - [webpack-react-ts 构建前端项目](https://juejin.cn/post/6905320663335043086)
+- [github上好的React+TS项目推荐](https://www.zhihu.com/question/344110264)
 
 
 

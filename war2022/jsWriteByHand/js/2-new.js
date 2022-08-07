@@ -35,6 +35,7 @@ function _new () {
 
 
 /**
+ *  这里是用隐式原型 __proto__ 代替 Object.create
  *  如果考虑到 Object.create中也使用了new 那么 我们可以使用这个工厂方法实现一个new 代替原来的new
  *  这也是原始时期 没有new的时候 人们可以用工厂模式来创建一个实例
  */
