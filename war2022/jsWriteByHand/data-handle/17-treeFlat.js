@@ -8,27 +8,23 @@
  */
 
 const tree2FlatObj = (tree) => {
-
-  const result = [];
-
-  const _tree2FlatObj = (curTree) => {
-    for (const item of curTree) {
-      if (item.children) {
-        for (const item1 of item.children) {
-          if (Array.isArray(item1)) {
-            _tree2FlatObj(item1);
-          }
-        }
-        continue;
-      }
-
-      result.push(item);
-    }
+  // base case
+  if (tree.length === 0) {
+    return tree;
   }
 
-  _tree2FlatObj(tree);
 
-  return result;
+  let result = [];
+
+  for (const item of tree) {
+    if (item.children) {
+      result = result.concat(tree2FlatObj(item.children));
+    }
+
+    result.push(item);
+  }
+
+  return tree2FlatObj(tree);
 }
 
 
