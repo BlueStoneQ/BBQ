@@ -43,7 +43,7 @@ function _new2 () {
   // new一个新对象
   var obj = {}; // new Object
   // 拿到Constructor - （因为arguments不是数组，而是类数组，所以自身不能直接调用shift
-  var Constructor = [].prototype.shift.call(arguments);
+  var Constructor = Array.prototype.shift.call(arguments);
   // 实现新对象和构造函数之间的原型链继承，这里有个隐患：__proto__ 不是js标准，是大部分浏览器的默认实现，所以，这个写法其实很不可靠
   obj.__proto__ = Constructor.prototype;
   // 通过apply将Constructor中的this绑定为obj, 运行constructor(工厂生产), 拿到构造函数的返回值

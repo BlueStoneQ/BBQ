@@ -67,10 +67,10 @@
    - 一般携带在 http.request-head.Athorization字段中
    - 一般存储在localStorage中
    - 组成：head.payload.signature
-   - head中一般是一些元信息：例如加密算法等,一般是直接勇气base64值作为head
+   - head中一般是一些元信息：例如加密算法等,一般是直接用其base64值作为head
     - head = base64({ type: xxx, alg: xxxx })
    - payload: 用户的登录信息 + 过期时间；所以 一般服务端难以主动让token失效
-    - head = base64({ username: xxx, expire: xxx }) // 不要再这里放密码，这个基本就是明文传输
+    - payload = base64({ username: xxx, expire: xxx }) // 不要再这里放密码，这个基本就是明文传输
    - signature: 由于token是服务端生成的 所以秘钥是在服务端的，别人拿不走，保证了安全性。signature的职能是保证token不被篡改。
     这个signature是服务端根据用户的登录信息 + 自己的秘钥生成的一个签名，以后从 请求的 http.request-head.Athorization 中拿到token字符串，会用自己的秘钥解析拿到用户信息进行鉴权，好处是自己不用维护session表，减轻了服务端的压力
     - 服务端验证：服务端接收到请求之后，从 Token 中拿出 header 和 payload ，然后通过HS256算法将 header 和 payload 和 “盐” 值 进行计算得出内容，让计算出的内容与Token中的第三部分，也就是Signature去比较，如果一致则验证通过，反之则失败。
@@ -243,6 +243,7 @@
 - cross site scripting: 跨站脚本注入
 - [web安全](https://febook.hzfe.org/awesome-interview/book1/network-security)
 - 与客户端比较相近
+- 本质上 都是注入攻击：就是一段非法的js在客户端执行了
 
 #### 类型
 
@@ -273,7 +274,7 @@
     - eg:
     ```md
     1. 攻击者诱导被害者打开链接 hzfe.org?name=<script src="http://a.com/attack.js"/>。
-    2. 被攻击网站前端取出 URL 的 name 字段后未经转义直接通过 innerHTML 渲染到页面中。
+    2. 被攻击网站<前端>取出 URL 的 name 字段后未经转义直接通过 innerHTML 渲染到页面中。
     3. 被害者在不知情的情况下，执行了攻击者注入的脚本。
     ```
 
@@ -312,7 +313,7 @@
   - post型
     - 在iframe中写一个隐藏的表单，打开页面自定执行表单的提交，实现成本稍高
 - 防御：
-  - 服务端：
+  - 服务端:
     1. 放弃cookie,使用 CSRF Token 验证用户身份 （可以理解为就是token）
       - 可以再加上验证码：确保行为来自用户本身 表单提交 加入验证码 - 确保表单提交是一个用户行为 而不是黑客行为
     2. Cookie有一个新的属性——SateSite。能够解决CSRF攻击的问题。

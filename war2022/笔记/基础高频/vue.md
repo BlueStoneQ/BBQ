@@ -80,7 +80,7 @@ function observer (target) {
   // 处理数组:数组这里是对需要响应式的数组 替换其隐式原型 - 原型走我们用AOP切入响应式逻辑的一个数组原型,这个原型上的push之类的方法都切入了响应式的逻辑
   if (Array.isArray(target)) {
     // 响应式数组的原型需要替换为响应式原型 这样找方法优先找到的是响应式原型AOP改写后的方法
-    target.__proto__ = newArrayProto;
+    target.__proto__ = _ArrayProto;
   }
   // 处理object 递归处理每一个属性 （基础类型在Observer函数入口处处理了）
   for (let key in target) {
@@ -162,6 +162,12 @@ function defineReactive (target, key, val) {
 2. key的作用
   - 用来标记一个节点：是否一样，也就是标记节点的唯一性
   - index不能唯一标识一个节点 节点的index会因为顺序的改变，也就是顺序变了后，原来的index不一定指向原来的节点了
+  - Key 值来判断该元素是新近创建的还是被移动而来的元素，从而减少不必要的元素重渲染此外，
+  - key是用于追踪哪些列表中元素被修改、被添加或者被移除的辅助标识。在开发过程中，我们需要保证某个元素的 key 在其同级元素中具有唯一性。
+
+3. 为什么不要使用index作为key?
+  - https://juejin.cn/post/6844904113587634184#heading-9
+  - 其实 就是key + tagName一致的话 会判定为sameNode,然后接下来就会进行对比，改造原来的dom，而不是复用原来就有的node
 
 ### Vue异步更新策略 
 - 异步更新：
@@ -191,9 +197,11 @@ function defineReactive (target, key, val) {
 
 ### defineProperty的缺陷
 - 以下情况无法触发：
-  - 数组下标修改数据，数组的长度改变
-  - 对象新增和删除属性
-  - 数组的一些方法执行：push pop等
+  - 数组
+    - 下标修改数据，数组的长度改变
+    - 一些方法执行：push pop等
+  - 对象
+    - 新增和删除属性
 
 ### 如何拦截数组的操作？？
 - 为什么vue不使用Object.defineProperty来完成对数组的监听呢？通过网上查阅，发现使用Object.defineProperty监听数组性能很差，方便性得到的好处小于性能带来的损失，得不偿失。
@@ -765,6 +773,16 @@ export default {
   ```
 
 ## vue vs React
+- 参考：
+  - [剑指前端-diff](https://febook.hzfe.org/awesome-interview/book3/frame-diff#1-diff-%E7%AE%97%E6%B3%95)
+  - [剑指前端-vue和React的区别](https://febook.hzfe.org/awesome-interview/book4/frame-react-vs-vue)
+- 更新DOM时机：
+  - Vue基于snabbdom库，它有较好的速度以及模块机制。Vue Diff使用双向链表，边对比，边更新DOM。
+  - React主要使用diff队列保存需要更新哪些DOM，得到patch树，再统一操作批量更新DOM。
+- Vue 的 Diff 算法和 React 的类似，只在同一层次进行比较，不进行跨层比较。
+  - 这一句的话理解是：也就是判定2个节点的是否异同，不会去考量其子节点的异同。当前节点考量的无非就是tagName key 之类的。
+  - 这就是 所谓的同层比较
+  - 如果两个元素被判定为不相同，则不继续递归比较
 
 # vuex
 ## vuex中为什么把把异步操作封装在action，把同步操作放在mutations？

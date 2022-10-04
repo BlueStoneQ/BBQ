@@ -29,19 +29,72 @@ const flatObj2Tree = (data) => {
     // 删除掉pid属性
     delete item.pid;
 
+    // 父节点为根节点, 这里根据题目要求为pid === null
+    if (pid === null) {
+      result.push(item);
+    }
+
+    // 父节点为非根节点
     if (id2Objmap.has(pid)) {
       const parentItem = id2Objmap.get(pid);
 
       parentItem.children = [].concat(parentItem.children || [], item);
-
-      continue;
     }
-
-    result.push(item);
   }
 
   return result;
 }
+
+/**
+ * 方法1-pro：迭代法 - 将方法1中的2次迭代合并为一次
+ * 边迭代 边构建
+ * 剑指前端：https://febook.hzfe.org/awesome-interview/book3/coding-arr-to-tree#%E5%8F%98%E4%BD%93%E4%B8%80
+ */
+const flatObj2Tree1 = (data) => {
+  // defend
+  const result = [];
+  // 可查表
+  const id2Objmap = new Map();
+
+  for (let item of data) {
+    // 查下当前item的父元素在不在查表中
+    const { pid, id } = item;
+
+    if (!id2Objmap.has(id)) {
+      // 有效的id 但是map中没有的 我们要在map中建立该id为key的值
+      id2Objmap.set(id, item);
+    } else {
+      // 如果当前id之前已经有值了 可以合并当前值 - 为的是一些在后面初始化为{ children: [] } 的pid-item,遇到了它们本来的值
+      id2Objmap.set(id, { ...item, ...id2Objmap.get(id) });
+    }
+
+    // 父节点为根节点
+    if (pid === null) {
+      // 如果当前节点是在root下 题目中为pid === null, 则将该节点放在root节点下
+      delete result.pid; // 剔除pid属性
+
+      result.push(item);
+      continue;
+    }
+
+    // 父节点为非根节点
+    // 1. 如果父节点不存在 则初始化父节点
+    if (!id2Objmap.has(pid)) {
+      id2Objmap.set(pid, {});
+    }
+    // 2. 如果父节点没有children节点 则初始化children节点
+    const parentItem = id2Objmap.get(pid);
+    if (!parentItem.children) {
+      parentItem.children = [];
+    }
+
+    // 3. 将当前item放置到对应的父节点下
+    parentItem.children.push(item);
+  }
+
+  return result;
+}
+
 
 
 /**
@@ -62,7 +115,8 @@ const source = [
   { pid: 4, id: 6, data: "4-1" },
 ];
 
-console.dir(JSON.stringify(flatObj2Tree(source), 2));
+// console.dir(JSON.stringify(flatObj2Tree(source), 2));
+console.dir(JSON.stringify(flatObj2Tree1(source), 2));
 
 // expect 转换为: 
 // const tree = {
