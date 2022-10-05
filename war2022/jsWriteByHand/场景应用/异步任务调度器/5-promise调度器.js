@@ -45,6 +45,11 @@
       this.maxRunningCount = maxRunningCount; // 最多可以并发执行的任务数量
       // this.doneTaskCount = 0; // 已经执行结束的任务数量
     }
+
+    /**
+     * 任务注册器
+     * @param {*} promiseCreator 是一个函数 返回值必须是一个promise
+     */
     add(promiseCreator) {
       this.taskQueue.push(promiseCreator);
     }

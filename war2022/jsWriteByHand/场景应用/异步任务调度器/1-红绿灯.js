@@ -19,10 +19,12 @@ class PipeLine {
     this.isStop = false; // 是否停止任务执行
   }
 
-  // 可以理解为koa的use，就是往队列中加入一个任务
+  /**
+   * 可以理解为koa的use，就是往队列中加入一个任务
+   * @param {function} task 是一个函数 返回值必须是一个promise
+   */
   register (task) {
     this.taskQueue.push(task);
-    console.log(this.taskQueue);
   }
 
   // 从任务队列中取出队头的任务 执行
@@ -51,10 +53,12 @@ class PipeLine {
 
 // test
 /**
- * 返回一个promise creator， 这是一个HOF（高阶函数）
+ * HOF（高阶函数）
+ * 返回一个promise creator， 这是一个函数, 返回值为promise
+ * 其实这个函数还可以拆分：promiseIfy是一个，内部的setTimeout是一个逻辑
  * @param {*} fn 
  * @param {*} delay 
- * @returns 
+ * @returns { function } 
  */
 const taskPromiseify = (fn, delay) => {
   return () => new Promise((resolve, reject) => {
@@ -69,12 +73,21 @@ const task1Creater = taskPromiseify(() => { console.log('red'); }, 3000);
 const task2Creater = taskPromiseify(() => { console.log('green'); }, 2000);
 const task3Creater = taskPromiseify(() => { console.log('yellow'); }, 1000);
 
-const pipeLine = new PipeLine(true);
-pipeLine.register(task1Creater);
-pipeLine.register(task2Creater);
-pipeLine.register(task3Creater);
+// const pipeLine = new PipeLine(true);
+// pipeLine.register(task1Creater);
+// pipeLine.register(task2Creater);
+// pipeLine.register(task3Creater);
 
-pipeLine.run();
+// pipeLine.run();
+
+// 使用外部定义的通用解决方案
+const PipeLine1 = require('./通用版解决方案.js');
+const pipeLine1 = new PipeLine1(true);
+pipeLine1.register(task1Creater);
+pipeLine1.register(task2Creater);
+pipeLine1.register(task3Creater);
+
+pipeLine1.run();
 
 
 /** ------------------------------------------------------------------------------------------------------------ */
