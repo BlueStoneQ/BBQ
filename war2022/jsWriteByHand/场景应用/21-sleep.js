@@ -15,7 +15,6 @@
  */
 
 /**
- * 
  * @param {*} delay 睡眠时间
  * @returns 
  */

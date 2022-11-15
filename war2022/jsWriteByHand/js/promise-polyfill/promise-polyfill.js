@@ -170,6 +170,7 @@ MyPromise.resolve = (param) => {
     return param;
   }
   // 非promis类型 则包装为一个promise 且状态触发未fulfilled
+  
   return new MyPromise((resolve) => {
     resolve(param);
   });

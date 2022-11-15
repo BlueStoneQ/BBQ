@@ -8,3 +8,12 @@ const swapNumWithoutTemp = (a,  b) => {
   b = a - b; // a + b - b = a
   a = a - b; // a + b - a = b
 }
+
+/**
+ * 方法2：利用^来交换
+ */
+const swap1 = (arr, index1, index2) => {
+  arr[index1] = arr[index1] ^ arr[index2];
+  arr[index2] = arr[index1] ^ arr[index2];
+  arr[index1] = arr[index1] ^ arr[index2];
+}

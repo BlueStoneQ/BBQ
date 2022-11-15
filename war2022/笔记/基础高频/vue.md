@@ -25,7 +25,13 @@
 当有新的Watcher实例生成时会执行get方法，而get方法内的代码是这样的：
   - 依赖：是什么？Dep Watcher 又是怎样的一个数据结构？
   - 发生的时机：在初始化 Vue 的每个组件时，会对组件的 data 进行初始化，就会将由普通对象变成响应式对象，在这个过程中便会进行依赖收集的相关逻辑
-3. 依赖收集在Dep中, 依赖就是Watcher，一般一个data对应一个Dep, 一个组件对应一个Watcher
+3. 依赖收集在Dep中, 依赖就是Watcher（其实一个组件就对应一个Watcher），一般一个data对应一个Dep, 一个组件对应一个Watcher
+
+### 关于响应式：Watcher Dep
+- 既然模板渲染需要用到某个数据，那么一定会对这个数据进行访问，所以只要拦截getter，就有时机做出处理,所以在getter里，我们进行依赖收集（所谓依赖，就是这个组件所需要依赖到的数据）
+- 依赖收集：Watcher订阅者是Observer和Compile之间通信的桥梁，主要做的事情是: ①在自身实例化时往属性订阅器(dep)里面添加自己 ②自身必须有一个update()方法 ③待属性变动dep.notice()通知时，能调用自身的update()方法，并触发Compile中绑定的回调，则功成身退。
+- 一个组件对应一个Watcher（自身有一个update方法），一个属性有自己的dep队列，当属性变化时，会触发自身dep队列中的每个Watcher.update()
+- 所以 vue的渲染粒度是组件
 
 ### vue2 简易响应式处理方案
 - [bilibili-vue2响应式处理](https://www.bilibili.com/video/BV1VA411x76D?p=3&vd_source=9365026f6347e9c46f07d250d20b5787)
@@ -167,7 +173,7 @@ function defineReactive (target, key, val) {
 
 3. 为什么不要使用index作为key?
   - https://juejin.cn/post/6844904113587634184#heading-9
-  - 其实 就是key + tagName一致的话 会判定为sameNode,然后接下来就会进行对比，改造原来的dom，而不是复用原来就有的node
+  - 例如这个场景，2个节点完全不一样，但是排序后index一样，其实 就是key + tagName一致的话 会判定为sameNode(这里就失真了，本来就不是同一组件，应该在这一层就处理掉),然后接下来就会递归进行对比子组件，结果子组件完全不一样，造成很大的性能开销
 
 ### Vue异步更新策略 
 - 异步更新：
@@ -193,7 +199,7 @@ function defineReactive (target, key, val) {
 
 
 ### vue.$mount
-- 默认情况下我们的模版 index.html 里面有一个 id 为 app 的 div 元素。我们最终的应用程序代码会替换掉这个元素，也就是 <div id="app"></div>；对，我们 Vue 渲染出来的内容是替换掉它，而不是插入在这个节点中。
+- 默认情况下我们的模版 index.html 里面有一个 id 为 app 的 div 元素。我们最终的应用程序代码会**替换**掉这个元素，也就是 <div id="app"></div>；对，我们 Vue 渲染出来的内容是替换掉它，而不是插入在这个节点中。
 
 ### defineProperty的缺陷
 - 以下情况无法触发：
@@ -205,7 +211,8 @@ function defineReactive (target, key, val) {
 
 ### 如何拦截数组的操作？？
 - 为什么vue不使用Object.defineProperty来完成对数组的监听呢？通过网上查阅，发现使用Object.defineProperty监听数组性能很差，方便性得到的好处小于性能带来的损失，得不偿失。
-- 中间层我们给他起个名字arrayMethods, 我们让数组实例array的__proto__属性指向arrayMethods, arrayMethods的__proto__属性指向Array.prototype，这样，当我们通过实例去访问数组的变异方法时，根据原型链的查找规则，会先在arrayMethods对象中查找， 这样，我们就实现了对数组变异方法的拦截， 代码如下
+- 其实 就是 在ArrayPrototype和数组之间增加一个原型，在这个原型上重写了原来的数组方法（根据方法沿着原型链访问，就等于在到达数组之前的先访问了中间层原型的方法，本质就是拦截了），并用AOP的方式植入了响应式的逻辑。
+- 中间层我们给他起个名字middleLayer, 我们让数组实例array的__proto__属性指向middleLayer, middleLayer的__proto__属性指向Array.prototype，这样，当我们通过实例去访问数组的变异方法时，根据原型链的查找规则，会先在middleLayer对象中查找， 这样，我们就实现了对数组变异方法的拦截， 代码如下
 ```js
 // 数组的变异方法
 const variationMethods = ['splice', 'sort', 'push', 'pop', 'reverse', 'shift', 'unshift']
@@ -333,9 +340,7 @@ visibility:hidden; 元素会被隐藏，并且会占据原来的位置，整体�
   v-bind:value="searchText"
   v-on:input="searchText = $event.target.value"
 >
-
-### $nexttick
-
+```
 ### $nexttick
 - nextTick 不仅是 Vue 内部的异步队列的调用方法，同时也允许开发者在实际项目中使用这个方法来满足实际应用中对 DOM 更新数据时机的后续逻辑处理
 
@@ -348,6 +353,31 @@ visibility:hidden; 元素会被隐藏，并且会占据原来的位置，整体�
   - 插件
   - 过滤器
   - extends
+
+### $set的用法
+```js
+data () {
+  return {
+    student: {
+      name: '',
+      sex: ''
+    }
+  }
+}
+mounted () { // ——钩子函数，实例挂载之后
+  // this.student.age = 24 // 不触发响应式
+  this.$set(this.student,"age", 24) // 触发响应式
+}
+```
+
+### computed vs watch
+- 总结：
+  - computed 计算属性 : 依赖其它属性值，并且 computed 的值有缓存，只有它依赖的属性值发生改变，下一次获取 computed 的值时才会重新计算 computed 的值。
+  - watch 侦听器 : 更多的是观察的作用，无缓存性，类似于某些数据的监听回调，每当监听的数据变化时都会执行回调进行后续操作。
+- 运用场景：
+  - 当需要进行数值计算,并且依赖于其它数据时，应该使用 computed，因为可以利用 computed 的缓存特性，避免每次获取值时都要重新计算。
+  - 当需要在数据变化时执行异步或开销较大的操作时，应该使用 watch，使用 watch 选项允许执行异步操作 ( 访问一个 API )，限制执行该操作的频率，并在得到最终结果前，设置中间状态。这些都是计算属性无法做到的。
+  - computed 的使用场景可以被 watch 覆盖这一结论。但在具体的使用上还是优先考虑 computed，因为相同场景下 watch 所需的代码量和性能开销一般来说会比 computed 大
 
 ## 组件通信
 ```
@@ -573,7 +603,7 @@ this.$route.params.id
 
 ### 嵌套路由
 - route配置中增加children配置
-- 组件中可以用<vvue-router>对渲染位置进行占位
+- 组件中可以用<vue-router>对渲染位置进行占位
 
 ### vue-router前端路由原理
 ```
@@ -693,7 +723,7 @@ store.state.a // -> moduleA 的状态
 store.state.b // -> moduleB 的状态
 ```
 
-### matation为甚不能做异步操作
+### mutation为甚不能做异步操作
 - Vuex中所有的状态更新的唯一途径都是mutation
 - 每个mutation执行完成后都会对应到一个新的状态变更，这样devtools就可以打个快照存下来，然后就可以实现 time-travel 了。如果mutation支持异步操作，就没有办法知道状态是何时更新的，无法很好的进行状态的追踪，给调试带来困难。
 

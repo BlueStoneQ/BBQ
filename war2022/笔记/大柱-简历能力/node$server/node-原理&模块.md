@@ -14,7 +14,7 @@
 按计划 坚持去做
 ```
 
-## 参考资料
+### 参考资料
 - [nodejs系列系统教程-掘金](https://juejin.cn/post/7095713577209692168)
 - [gitbook:koa-server实践](https://chenshenhai.github.io/koa2-note/note/route/koa-router.html)
 
@@ -28,7 +28,7 @@
 
 ### libuv
 - 本质上就是对于各种操作系统的IO操作处理为了异步（事件驱动）的api
-  - 讲阻塞 和 非阻塞的api 都通过event-loop处理为异步api 
+  - 将阻塞 和 非阻塞的api 都通过event-loop处理为异步api 
   - nodejs本身的架构：事件驱动架构
 
 ### event-loop

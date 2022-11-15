@@ -39,7 +39,7 @@ class PipeLine {
     }
 
     task().then(() => {
-      this._runTask(); // 继续执行下一个任务
+      this._runTask(); // [⭕️]继续执行下一个任务
     }).catch(); // catch中 就不执行了run了 停止执行
   }
 

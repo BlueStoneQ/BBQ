@@ -9,6 +9,8 @@
  * d(c(b(a()))) => compose(d, c, b, a)
  * 2022-3-2
  * https://github.com/mqyqingfeng/Blog/issues/45
+ * 
+ * 相对而言：任务从左向右执行 就是 pipe
  */
 
 const compose = (...fnList) => {

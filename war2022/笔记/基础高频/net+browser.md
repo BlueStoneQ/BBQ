@@ -28,7 +28,8 @@
 ### HTTP缓存
 - 强缓存
   - response: cache-control: max-age: xxx(s)
-  - response: expires: 过期时间点
+  - response: expires: 过期时间点（受系统时间影响）
+  - 注: 如果expires和cache-control同时存在，cache-control会覆盖expires，建议两个都写
 - 协商缓存
   - response: etag: 文件hash
     + request: IF-None-Match
@@ -58,6 +59,25 @@
 1. 客户端发送到服务端：cookie携带在http.request-head.Cookie字段中
   - (https://blog.csdn.net/weixin_44419984/article/details/108660747)
 - coockie 不能跨域
+##### cookie: sameSite
+- 防止CSRF攻击:
+- [cookie: sameSite](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
+- Strict
+  - 最为严格，完全禁止第三方 Cookie，跨站点时，任何情况下都不会发送 Cookie。换言之，只有当前网页的 URL 与请求目标一致，才会带上 Cookie。
+- Lax
+  - 规则稍稍放宽，大多数情况也是不发送第三方 Cookie，但是导航到目标网址的 Get 请求除外。
+- None:
+  - Chrome 计划将Lax变为默认设置。这时，网站可以选择显式关闭SameSite属性，将其设为None。不过，前提是必须同时设置Secure属性（Cookie 只能通过 HTTPS 协议发送），否则无效。
+  - Set-Cookie: widget_session=abc123; SameSite=None; Secure
+
+##### cookie: 跨域方案
+- CORS:方案：
+  - server:
+    - response.header
+      - Access-Control-Allow-Credentials: true
+      - Access-Control-Allow-Origin: [特定域名] // 不可以是*
+  - Browser:
+    - XMLHttpRequest发请求需要设置withCredentials=true，fetch 发请求需要设置 credentials = include
 
 #### session
 1. 最大的问题：集群之间不能共享 - 其实可以通过DB server来共享
@@ -118,9 +138,14 @@
 
 #### http2的优势??
 - 多路复用
+  - 在 HTTP 1.x 中，如果想并发多个请求，必须使用多个 TCP 链接，且为了控制资源，有时候还会对单个域名有 6-8个的TCP链接请求限制。
+    而在 HTTP/2 中，有了二进制分帧之后，不再依赖 TCP 链接去实现多流并行了，
+    同域名下所有通信都在单个连接上完成。
+    单个连接可以承载任意数量的双向数据流。
 - server-push
 - 头部压缩
 - 二进制分帧
+  - HTTP/2 采用二进制格式传输数据，而非 HTTP 1.x 的文本格式
 
 ## https
 
@@ -599,7 +624,7 @@
     }
     ```
   - 被遗忘的定时器和回调函数
-    - 定时器未被清除
+    - 定时器未被清除，定时器的回调中有对外部变量的引用
   - DOM引用
     ```js
     var refA = document.getElementById('refA');

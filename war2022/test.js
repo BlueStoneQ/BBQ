@@ -1,0 +1,1 @@
+// 给定一个String：'a(3)b(1)cde(2)f(0)'，期望输出结果：'aaabcdee'。

@@ -100,12 +100,34 @@ loader执行顺序：右 -> 左
     - 在打包的时候，被打包的代码会做这些替换，处理dev和prod环境的不同
     - 注意：key: JSON.stringify('123'); // 因为替换的时候 一层str 会直接作为codeStr插入，也就是作为代码了
 
+## hush vs chunkhush vs contenthush
+- [hush vs chunkhush vs contenthush](https://juejin.cn/post/6844903998944706574)
+- hush: 整个项目
+- chunkHush: 以entry Point为分割点，该文件属于的chunk变化 就会影响
+- contentHash: 当前文件变化才会使用
+- 场景与使用：
+  - production
+    - 只需要contenthash就可以了，修改哪个文件才改变哪个文件的hash。其它的hash不变可以继续从缓存里读取，以加快访问速度
+  - development环境
+    - 不需要hash直接展示名称，毕竟生成hash也需要消耗一定资源，cache还会影响开发体验。
+
 # loader
 ## CDN与publicpath
 - 在构建过程中，将引⽤的静态资源路径修改为CDN上对应的路径。可以利⽤webpack对于 output 参数和各loader的 publicPath 参数来修改资源路径
+- 其实这里说的所有资源的基础路径是指项目中引用css，js，img等资源时候的一个基础路径，这个基础路径要配合具体资源中指定的路径使用，所以其实打包后资源的访问路径可以用如下公式表示：
+  - 静态资源最终访问路径 = output.publicPath + 资源loader或插件等配置路径
+  - 在dev模式下：publicpath: ''; prod模式下：publicPath: CDNPath
 ## url-loader file-loader
 - 使用url-loader, 必须安装file-loader，url-loader会使用file-loader
   - 虽然代码没有配置 file-loader，但还是需要使用 npm i file-loader -D 安装
+- file-loader在Webpack中的作用是，处理文件导入地址并替换成其访问地址，并把文件输出到相应位置。 其中导入地址包括了JavaScript和CSS等导入语句的地址，例如JS的import和CSS的url()
+  - 引用路径的问题
+    - 举例：拿 background 样式用 url 引入背景图来说，众所周知，webpack 最终会将各个模块打包成一个文件，因此我们样式中的 url 路径是相对入口 html 页面的，而不是相对于原始 css 文件所在的路径。这就会导致图片引入失败。
+    - webpack 将会在打包输出中自动重写文件路径为正确的 URL。- file-loader 可以解析项目中的 url 引入（不仅限于 css），根据我们的配置，将图片拷贝到相应的路径，修改打包后文件引用路径，使之指向正确的文件。
+
+
+## vue-style--loader vs style-loader
+- vue-style-loader 跟 style-loader 基本用法跟功能是一样的，都是往 dom 里面插入一个 style 标签去让样式生效的，但是 vue-style-loader 支持 vue 中的 ssr（服务端渲染），所以如果需要支持服务端渲染的 vue 项目，就需要用到 vue-style-loader了，如果一般的 vue 项目的话，推荐使用 style-loader，毕竟 style-loader 支持的功能还是丰富些，比如可以懒注入、可以指定位置插入标签等等。
 
 # 常见场景
 ## dev-server

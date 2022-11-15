@@ -80,7 +80,6 @@ const before = function(selfFn, insertFn) {
 }
 
 /**
- * 
  * @param {Function} selfFn 原本的函数
  * @param {Function} insertFn 插入的函数
  */
