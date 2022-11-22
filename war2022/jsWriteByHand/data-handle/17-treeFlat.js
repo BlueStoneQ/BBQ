@@ -24,7 +24,7 @@ const tree2FlatObj = (tree) => {
     result.push(item);
   }
 
-  return tree2FlatObj(tree);
+  return result;
 }
 
 

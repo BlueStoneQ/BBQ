@@ -16,6 +16,11 @@
         position: absolute;
         left: 0;
         top: 0;
+        /* 
+        在元素上，content 的初始值为 ‘normal’。
+        在:before和:after上，如果指定了content 的初始值为 ‘normal’，则计算为 ‘none’ 。
+        content 的值设置为 ‘none’ 不会生成伪元素。
+        */
         content: '';
         width: 200%;
         height: 200%;
