@@ -80,7 +80,7 @@ Function.prototype._bind = function() {
   // me: 我们要理解 F 是bind返回的一个新函数 而this是我们被bind处理的函数 它们2个是独立的，this被bind处理后 本身什么也没有变 所以 这里要斩断新函数F 和 原来函数this的关系
   // 在普通面试中 如果面试官不做要求 可以不写这一步
   const fNOP = function() {};
-  fNOP.prototype = this.prototype;
+  fNOP.prototype = fn.prototype;
   F.prototype = new fNOP(); // 等于新的F的原型是原来函数的原型的实例 - 本质上就是用原型链链了起来
 
   // return
