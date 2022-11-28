@@ -231,12 +231,12 @@ MyPromise.race = (promiseList) => {
 }
 
 // catch只是then的一种别名
-MyPromise.catch = (onrejected) => {
+MyPromise.prototype.catch = (onrejected) => {
   return this.then(null, onrejected);
 }
 
 // 调用一遍，this.then保持value reason的透传 callback被执行一遍 继续返回promise 以保持链式调用，并保持callBack前后的参数不变
-MyPromise.finally = (callback) => {
+MyPromise.prototype.finally = (callback) => {
   // 再调用了一遍then
   return this.then(
     value => MyPromise.resolve(callback()).then(() => value),

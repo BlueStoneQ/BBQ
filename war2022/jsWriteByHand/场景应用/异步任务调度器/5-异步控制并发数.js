@@ -5,7 +5,7 @@
  * [异步控制并发数](https://juejin.cn/post/7031322059414175774#heading-6)
  * 这里其实相当于把promise调度器中的startRun和run写在了一起
  */
-const limitRequest = (urlList, maxTaskCount = 3) => {
+const limitRequest = (urlList, maxTaskCount = 3, callback) => {
   return new Promise((resolve, reject) => {
     const taskTotalCount = urlList.length; // 任务的总体数量
     let taskDoneCount = 0;// 当前执行了的任务数量
@@ -26,13 +26,15 @@ const limitRequest = (urlList, maxTaskCount = 3) => {
       // 执行任务
       axios.post(nowUrl).then(res => {
         // 成功的操作
+        // TODO: 装填结果
         }).catch(err => {
           // 失败的操作
         }).finally(() => {
           taskDoneCount++; // 又一个任务执行完了 执行结束的任务数量+1
           if (taskDoneCount >= taskTotalCount) {
             // 已经执行的任务数量等于大于总体的任务数量时 整个promise的任务可以结束了（或者任务队列为空时都可） - 任务已经执行完了 
-            resolve();
+            // resolve();
+            callback && callback();
           } else {
             // 还未执行完任务 则调用任务启动器 执行队列中下一个任务
             // ！！！关键 所有的任务调度 都是这种在then中之类任务结束的地方 递归调用启动器 启动下一个任务
