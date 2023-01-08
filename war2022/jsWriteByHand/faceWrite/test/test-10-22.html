@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diag</title>
+  <style>
+    .mask {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .diag {
+      width: 400px;
+      height: 260px;
+      position: absolute;
+      top: 150px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #FFF;
+    }
+
+    .header {
+      height: 50px;
+      border-bottom: 1px solid #00E;
+    }
+
+    .body {
+      padding: 20px;
+    }
+
+    .footer {
+      height: 50px;
+    }    
+  </style>
+</head>
+<body>
+  <div class="mask">
+    <div class="diag">
+      <div class="header"></div>
+      <div class="body">这是一段文本</div>
+      <div class="footer">
+        <div ></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

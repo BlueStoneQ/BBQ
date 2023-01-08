@@ -30,7 +30,7 @@ function _new () {
   const flag = res && (typeof res === 'object' || typeof res === 'function');
   
   // 3. constructor 有有效返回值 则直接使用该返回值 否则 使用我们构建的对象作为实例
-  return flag ? res : newObj; 
+  return flag ? res : newObj;
 }
 
 
