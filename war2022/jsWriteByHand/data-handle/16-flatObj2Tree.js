@@ -97,7 +97,9 @@ const flatObj2Tree1 = (data) => {
 
 /**
  * 方法3：只依靠递归 不使用map 
- * 时间复杂度：O(2^n)
+ * 时间复杂度：O(2^n)， 时间复杂度过高 不建议使用
+ *  复杂度分析：https://github.com/youngyangyang04/leetcode-master/blob/master/problems/%E5%89%8D%E5%BA%8F/%E9%80%92%E5%BD%92%E7%AE%97%E6%B3%95%E7%9A%84%E6%97%B6%E9%97%B4%E4%B8%8E%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90.md
+ * ·递归时间复杂度分析：递归的次数 * 每次递归中的操作次数n
  * 空间复杂度：O(1)
  * 思路也比较简单，实现一个方法，该方法传入tree父节点和父id，循环遍历数组，无脑查询，找到对应的子节点，push到父节点中，再递归查找子节点的子节点。
  * https://juejin.cn/post/6987224048564437029
