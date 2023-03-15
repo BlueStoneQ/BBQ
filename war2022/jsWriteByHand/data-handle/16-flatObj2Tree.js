@@ -95,12 +95,36 @@ const flatObj2Tree1 = (data) => {
   return result;
 }
 
-
-
 /**
- * 方法2： 递归法？？ 
+ * 方法3：只依靠递归 不使用map 
+ * 时间复杂度：O(2^n)
+ * 空间复杂度：O(1)
+ * 思路也比较简单，实现一个方法，该方法传入tree父节点和父id，循环遍历数组，无脑查询，找到对应的子节点，push到父节点中，再递归查找子节点的子节点。
+ * https://juejin.cn/post/6987224048564437029
  * https://febook.hzfe.org/awesome-interview/book3/coding-arr-to-tree#%E8%A7%A3%E6%B3%95%E4%B8%80
  */
+const flatObj2Tree2 = (items) => {
+  const res = []
+
+  const getChildren = (parentChildren, parentId) => {
+    for (const item of items) {
+      if (parentId === item.pid) {
+        const newItem = {
+          children: [],
+          ...item
+        }
+        parentChildren.push(newItem)
+        getChildren(newItem.children, newItem.id)
+        
+        if (newItem.children.length <= 0) delete newItem.children
+      }
+    }
+  }
+
+  getChildren(res, null)
+
+  return res
+}
 
 
 // test
@@ -116,7 +140,8 @@ const source = [
 ];
 
 // console.dir(JSON.stringify(flatObj2Tree(source), 2));
-console.dir(JSON.stringify(flatObj2Tree1(source), 2));
+// console.dir(JSON.stringify(flatObj2Tree1(source), 2));
+console.dir(JSON.stringify(flatObj2Tree2(source), 2));
 
 // expect 转换为: 
 // const tree = {
