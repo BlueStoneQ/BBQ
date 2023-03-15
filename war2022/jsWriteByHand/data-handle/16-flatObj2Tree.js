@@ -46,7 +46,7 @@ const flatObj2Tree = (data) => {
 }
 
 /**
- * 方法1-pro：迭代法 - 将方法1中的2次迭代合并为一次
+ * 方法1-pro[最优]：迭代法 - 将方法1中的2次迭代合并为一次
  * 边迭代 边构建
  * 剑指前端：https://febook.hzfe.org/awesome-interview/book3/coding-arr-to-tree#%E5%8F%98%E4%BD%93%E4%B8%80
  */
@@ -64,20 +64,19 @@ const flatObj2Tree1 = (data) => {
       // 有效的id 但是map中没有的 我们要在map中建立该id为key的值
       id2Objmap.set(id, item);
     } else {
-      // 如果当前id之前已经有值了 可以合并当前值 - 为的是一些在后面初始化为{ children: [] } 的pid-item,遇到了它们本来的值
-      id2Objmap.set(id, { ...item, ...id2Objmap.get(id) });
+      // 如果当前id之前已经有值了 可以合并当前值 - 为的是一些在下面初始化为{ children: [] } 的pid-item,遇到了它们本来的值
+      id2Objmap.set(id, { ...item, ...id2Objmap.get(id) }); // ...id2Objmap.get(id) 是后面 id2Objmap.set(pid, {}) 所提前构建的
     }
 
     // 父节点为根节点
     if (pid === null) {
       // 如果当前节点是在root下 题目中为pid === null, 则将该节点放在root节点下
-      delete result.pid; // 剔除pid属性
-
+      delete item.pid; // 剔除pid属性
       result.push(item);
       continue;
     }
 
-    // 父节点为非根节点
+    // 父节点为非根节点 1. 通过map找到 或者 在map中构造父节点 2. 剔除要加入的item.pid 3. 加入item
     // 1. 如果父节点不存在 则初始化父节点
     if (!id2Objmap.has(pid)) {
       id2Objmap.set(pid, {});
@@ -87,6 +86,8 @@ const flatObj2Tree1 = (data) => {
     if (!parentItem.children) {
       parentItem.children = [];
     }
+
+    delete item.pid; // 剔除pid属性
 
     // 3. 将当前item放置到对应的父节点下
     parentItem.children.push(item);
@@ -99,7 +100,8 @@ const flatObj2Tree1 = (data) => {
  * 方法3：只依靠递归 不使用map 
  * 时间复杂度：O(2^n)， 时间复杂度过高 不建议使用
  *  复杂度分析：https://github.com/youngyangyang04/leetcode-master/blob/master/problems/%E5%89%8D%E5%BA%8F/%E9%80%92%E5%BD%92%E7%AE%97%E6%B3%95%E7%9A%84%E6%97%B6%E9%97%B4%E4%B8%8E%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90.md
- * ·递归时间复杂度分析：递归的次数 * 每次递归中的操作次数n
+ * ·递归时间复杂度分析：递归的次数n * 每次递归中的操作次数n
+ *  每次递归实际上 就是解决一个item，那么一共有n次递归，则节点有2^n + 1个节点，则复杂度为2^n
  * 空间复杂度：O(1)
  * 思路也比较简单，实现一个方法，该方法传入tree父节点和父id，循环遍历数组，无脑查询，找到对应的子节点，push到父节点中，再递归查找子节点的子节点。
  * https://juejin.cn/post/6987224048564437029
@@ -142,8 +144,8 @@ const source = [
 ];
 
 // console.dir(JSON.stringify(flatObj2Tree(source), 2));
-// console.dir(JSON.stringify(flatObj2Tree1(source), 2));
-console.dir(JSON.stringify(flatObj2Tree2(source), 2));
+console.dir(JSON.stringify(flatObj2Tree1(source), 2));
+// console.dir(JSON.stringify(flatObj2Tree2(source), 2));
 
 // expect 转换为: 
 // const tree = {
