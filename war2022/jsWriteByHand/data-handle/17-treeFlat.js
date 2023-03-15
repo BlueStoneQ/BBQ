@@ -2,24 +2,26 @@
  * 将tree型结构flat成扁平的结构
  * 2022-7-2
  * 
+ * Tree的扁平化
  * me：一个多叉树的遍历，然后再访问者中加入扁平化数据的操作
  * 
- * ❌ - 未完成
+ * 参考：https://juejin.cn/post/6987224048564437029
  */
 
-const tree2FlatObj = (tree) => {
-  // base case
-  if (tree.length === 0) {
-    return tree;
-  }
-
-
+/**
+ * 方法1: 迭代法
+ * @param {*} tree 
+ * @returns 
+ */
+const flatTree1 = (tree) => {
   let result = [];
 
   for (const item of tree) {
-    if (item.children) {
-      result = result.concat(tree2FlatObj(item.children));
+    if (item.children && item.children.length) {
+      result = result.concat(flatTree1(item.children));
     }
+
+    delete item.children
 
     result.push(item);
   }
@@ -27,35 +29,47 @@ const tree2FlatObj = (tree) => {
   return result;
 }
 
+/**
+ * 利用reduce实现
+ */
+const flatTree2 = (tree) => {
+  return tree.reduce((lastRes, item) => {
+    // otherItem 除去children的其他属性
+    const { children = [], ...otherItem } = item
+    return lastRes.concat(otherItem, children && children.length ? flatTree2(children) : [])
+  }, [])
+}
 
 // test
-const input = [{
-  id: 1,
-  name: 'body',
-  children: [{
-    id: 2,
-    name: 'title',
-    children: [{
-      id: 3,
-      name: 'div'
-    }]
-  }]
-}]
+let tree = [
+  {
+      "id": 1,
+      "name": "1",
+      "pid": 0,
+      "children": [
+          {
+              "id": 2,
+              "name": "2",
+              "pid": 1,
+              "children": []
+          },
+          {
+              "id": 3,
+              "name": "3",
+              "pid": 1,
+              "children": [
+                 {
+                   "id": 4,
+                   "name": "4",
+                   "pid": 3,
+                   "children": []
+                 }
+              ]
+          }
+      ]
+  }
+]
 
-
-// 期望的结果
-const expectRes = [{
-  id: 1,
-  pid: 0,
-  name: 'body'
-}, {
-  id: 2,
-  pid: 1,
-  name: 'title'
-}, {
-  id: 3,
-  pid: 2,
-  name: 'div'
-}]
-
-console.dir(JSON.stringify(tree2FlatObj(input), 2));
+// 以下2个测试不要连续进行，因为第一个会在原来位置更改tree， 导致第二次输入变形
+console.log('tree2FlatObj1: \n', flatTree1(tree))
+console.log('tree2FlatObj2: \n', flatTree2(tree))
