@@ -9,6 +9,8 @@
 
 /**
  * ES5实现
+ * 注意:arguments的处理：https://juejin.cn/post/6844904151680286734
+ * 当然 也可以使用...restParams
  * @param {*} fn 
  * @returns 
  */
@@ -19,12 +21,12 @@ function curry (fn) {
   }
   // init data
   const needArgslength = fn.length; // 该函数的形参格式利用闭包进行记录
-  const originalArgs = [].slice.call(arguments, 1); // arguments 数组化  并从中剥离出参数部分
+  const originalArgs = [].slice.call(arguments, 1); // arguments 数组化  并从中剥离出参数部分（拆去被柯里化的函数）
 
   // return new function 
   return function() {
       // 合并参数
-      const combineArgs = originalArgs.concat([...arguments]);
+      const combineArgs = originalArgs.concat([].slice.call(arguments));
 
       // 判断参数是否满足length个
       if (combineArgs.length >= needArgslength) {

@@ -99,6 +99,8 @@ const flatObj2Tree1 = (data) => {
 /**
  * 方法3：只依靠递归 不使用map 
  * 时间复杂度：O(2^n)， 时间复杂度过高 不建议使用
+ *  因为每一个元素的状态无外乎取与不取，一共2种状态 就是2的来历
+ *  - 可以参考回溯算法的复杂度分析：https://zhuanlan.zhihu.com/p/448969860
  *  复杂度分析：https://github.com/youngyangyang04/leetcode-master/blob/master/problems/%E5%89%8D%E5%BA%8F/%E9%80%92%E5%BD%92%E7%AE%97%E6%B3%95%E7%9A%84%E6%97%B6%E9%97%B4%E4%B8%8E%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90.md
  * ·递归时间复杂度分析：递归的次数n * 每次递归中的操作次数n
  *  每次递归实际上 就是解决一个item，那么一共有n次递归，则节点有2^n + 1个节点，则复杂度为2^n

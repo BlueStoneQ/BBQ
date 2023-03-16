@@ -22,6 +22,9 @@
     - [AOP 装饰器 职责链](https://youfindme.cn/2021/06/27/%E6%B5%85%E8%B0%88JavaScript%E4%B8%AD%E7%9A%84AOP%E5%92%8C%E8%A3%85%E9%A5%B0%E5%99%A8/)
     aop 和 另一个语法：装饰器语法 或者 设计模式，在功能上有很大重叠，基本可以互相代替
     - 装饰器模式：本质上就是动态地为⼀个对象增加功能，但是不改变其结构 - 装饰器有个很大的问题，对于每一个方法，我们都要手动写一遍日志，实在是太麻烦了，而且很啰嗦
+    - AOP是js实现装饰器模式的一种方式
+    - 装饰器语法可以实现AOP
+    - AOP手法实现装饰器模式 和 责任链 区别：在于注入的函数是否可以阻断后面逻辑执行，装饰器是静默注入
  */
 
 /**
@@ -58,6 +61,24 @@ Function.prototype.after = function(fn) {
   }
 }
 
+/**
+ * 环绕通知：around
+ * @param {*} fn 
+ */
+Function.prototype.around = function(fn) {
+  const selfFn = this;
+
+  return function() {
+    // before
+    fn && fn.call(this, ...arguments);
+    // 执行原来函数的逻辑 先把结果记录下来 一会儿返回
+    const result = selfFn.call(this, ...arguments);
+    // after
+    fn && fn.call(this, ...arguments);
+    // 返回之前记录的结果
+    return result;
+  }
+}
 
 
 

@@ -10,6 +10,8 @@
  * 这里的实现 是不改变this
  * https://github.com/mqyqingfeng/Blog/issues/43
  * TODO: 占位的实现 ？
+ * 
+ * 其实 偏函数 是一个比较细分的柯里化，通过内置函数，可以产生一个可以随处移动的函数
  */
 
 const partial = (fn, ...args) => {
