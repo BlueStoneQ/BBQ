@@ -8,18 +8,21 @@
  * 
  *答案：
  https://segmentfault.com/a/1190000023783535?sort=newest
+
+ 请参考：《正则表达式必知必会》章8：回溯引用
  */
 
 const isValidHtmlTag = (str) => {
   // defend
 
-  return /<[^>]+>/g.test(str);
+  return /<([^>]+)>[^<|>]*<\/\1>/g.test(str);
 }
 
 // test
 const testStrs = [
-  '<div></div>',
-  '<div></d'
+  '<div>123</div>',
+  '<div>123></div>',
+  '<div>123</d'
 ];
 
 testStrs.forEach(str => {
