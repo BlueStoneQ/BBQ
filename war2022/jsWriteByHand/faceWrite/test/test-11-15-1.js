@@ -1,3 +1,6 @@
+/**
+ * 预请求
+ */
 class PreFetch {
   constructor () {
     this.map = new Map();

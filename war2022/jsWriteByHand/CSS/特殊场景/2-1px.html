@@ -22,7 +22,7 @@
         content 的值设置为 ‘none’ 不会生成伪元素。
         */
         content: '';
-        width: 200%;
+        width: 200%; /* 长宽提前设置为200%, scale(0.5)后刚好是100%，所有只有border: 1px这个粗细值给scale(0.5)了 */
         height: 200%;
         transform: scale(0.5);
         transform-origin: left top;

@@ -19,7 +19,7 @@ const getMaxSum = (nums) => {
   let left = 0, right = 0;
   // algo
   while (right < nums.length) {
-    const willInNum = nums[right];
+    const willInNum = nums[right]; 
     sum += willInNum;
     if (sum > maxSum) {
       maxSum = sum;

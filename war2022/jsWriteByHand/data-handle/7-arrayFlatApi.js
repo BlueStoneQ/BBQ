@@ -29,7 +29,7 @@ const _flat = (arr, depth = 0) => {
 }
 
 /**
- * 方法2：reduce（代替了遍历） + 递归
+ * 方法2(优先)：reduce（代替了遍历） + 递归
  */
 const _flat2 = (arr, depth = 0) => {
   // base case

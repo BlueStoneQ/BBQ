@@ -51,8 +51,8 @@
   /**
    * 重构的职能模块清晰版
    * 按照这个架构 我越发觉得class更适合组织这个代码
-   * @param {*} arg 
-   * @returns 
+   * @param {*} arg
+   * @returns
    */
   const myDeepClone = (arg) => {
     // defend
@@ -67,8 +67,8 @@
 
     /**
      * 主体逻辑:类型判断 + 调用各种类型的处理方案
-     * @param {*} _arg 
-     * @returns 
+     * @param {*} _arg
+     * @returns
      */
     const _myDeepClone = (_arg) => {
       // defend

@@ -59,7 +59,7 @@ class PipeLine {
       this.endTaskCount++
 
       if (this._isFinishAllTask()) {
-        this.resolve(this.results) // 改变结果promise的状态
+        this.resolve(this.results) // 改变结果this.promise的状态，将结果传递给this.promise
         return
       }
 

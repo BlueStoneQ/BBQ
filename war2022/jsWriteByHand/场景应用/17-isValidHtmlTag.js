@@ -22,6 +22,7 @@ const isValidHtmlTag = (str) => {
 const testStrs = [
   '<div>123</div>',
   '<div>123></div>',
+  '<div></div>',
   '<div>123</d'
 ];
 

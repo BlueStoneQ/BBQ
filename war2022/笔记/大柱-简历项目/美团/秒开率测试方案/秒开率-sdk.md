@@ -218,11 +218,13 @@ pageFst = function (pageObj) {
 ### 核心实现
 - 拦截生命周期
 ```js
-oldOnload = pageObj.onLoad;
-pageObj.onLoad = funciton (...args) {
-  // 注入的逻辑
-  // 调用原来的onLoad
-  oldOnload && oldOnload.call(this, ...args);
+const hookPage = funciton (pageObj) {
+  oldOnload = pageObj.onLoad;
+  pageObj.onLoad = funciton (...args) {
+    // 注入的逻辑
+    // 调用原来的onLoad
+    oldOnload && oldOnload.call(this, ...args);
+  }
 }
 ```
 - 测速函数实现sampling

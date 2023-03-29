@@ -5,7 +5,7 @@
 const memo = (fn) => {
   const memo = new Map();
   return (...args) => {
-    const key = Array.from(args).sort().toString();
+    const key = args.sort().toString();
     if (memo.has(key)) return memo.get(key);
 
     const result = fn(...args);

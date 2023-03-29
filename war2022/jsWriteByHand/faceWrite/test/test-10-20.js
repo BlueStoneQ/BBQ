@@ -12,6 +12,7 @@ const searchVal = (arr, val) => {
 }
 
 (() => {
+  // 二分法search
   const binarySearch = (arr, val) => {
     // defend
     const len = arr.length;

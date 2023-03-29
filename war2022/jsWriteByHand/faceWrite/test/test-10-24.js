@@ -16,7 +16,7 @@ const _instanceOf = (instance, constructor) => {
   
 }
 
-var levelOrder = function(root) {
+var BFS = function(root) {
   // defend
   if (root === null) return null;
   // init data

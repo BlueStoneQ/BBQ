@@ -1,6 +1,7 @@
 /**
  * 2022-6-29
  *  [连续子数组最大和](https://leetcode.cn/problems/lian-xu-zi-shu-zu-de-zui-da-he-lcof/)
+ * DP看这个 我已经写过的: https://leetcode.cn/problems/maximum-subarray/
  * 方法2：DFS 枚举每个子数组情况
  * @param {*} nums 
  * @returns 

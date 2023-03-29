@@ -15,8 +15,8 @@ const memoize = (fn) => {
   const memo = new Map(); // 或者也可以挂载到函数句柄上 memoize.memo = new Map()
 
   return (...args) => {
-    // 生成key ： 这里的算法 采用将所有args进行序列化
-    const key = JSON.stringify(args);
+    // 生成key ： 这里的算法 采用将所有args进行序列化, 排序后保证序列化的字符串排列顺序始终一致
+    const key = JSON.stringify(args.sort());
     // 缓存中有 就返回缓存值
     if (memo.has(key)) return memo.get(key);
     // 缓存中没有 调用函数逻辑 

@@ -19,7 +19,7 @@ function _new () {
   // defend
   if (typeof constructor !== 'function') {
     // 一般使用throw TypeError('xxx');
-    throw TypeError('type error');
+    throw new TypeError('type error');
   }
   const newObj = Object.create(constructor.prototype); // 如果不使用create，可以使用不标准的__proto__实现继承
   // algo
@@ -47,7 +47,7 @@ function _new2 () {
   // 实现新对象和构造函数之间的原型链继承，这里有个隐患：__proto__ 不是js标准，是大部分浏览器的默认实现，所以，这个写法其实很不可靠
   obj.__proto__ = Constructor.prototype;
   // 通过apply将Constructor中的this绑定为obj, 运行constructor(工厂生产), 拿到构造函数的返回值
-  var res = Constructor.call(obj, arguments); 
+  var res = Constructor.apply(obj, arguments); 
 
   const flag = res && (typeof res === 'object' || typeof res === 'function');
   // 根据new的特性和构造函数返回值 确定最终new的返回值: ret为基本类型 就返回obj,忽略基本类型的返回值；ret为对象时，返回ret本身
