@@ -46,9 +46,13 @@ me: 客观来讲 这个sdk 整体代码组织比较混乱 你吸收有益的
     - page
     - component
 2. onTouch: tryCompute
-3. onHide/onUnload: tryCompute
+3. onHide/onUnload: tr3. yCompute
 
 而数据上报只有：onHide/onUnload
+
+## 振幅算法
+- 1. 连续3次记录速率小于 10px/100ms
+- 2. 向上追溯 找到最近的一个大于这个速率的，它后面的这个就是最初的稳定点 
 
 ## 核心实现
 1. 页面生命周期的拦截实现

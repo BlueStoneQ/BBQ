@@ -25,7 +25,7 @@ class TaskManager {
     // 根据最新策略 + 为每个任务根据策略配置找到对应的priority
     this.queue.push({
       task,
-      priority: getPriority(type)
+      priority: getPriority(type) 
     })
 
     // 当前队列只有刚刚加入的一个任务 && 当前没有任务执行 => 则执行新填入的任务
