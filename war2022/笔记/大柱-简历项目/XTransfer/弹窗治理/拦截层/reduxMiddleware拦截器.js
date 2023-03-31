@@ -19,8 +19,8 @@ const popMiddleware = store => next => action => {
     const task = () => {
       // 该promise会在弹窗调度器中被return并执行
       return new Promise((resolve, reject) => {
-        action.resolve = resolve // 通过action将resolve和reject传递到对应的弹窗中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
-        action.reject = reject
+        action.payload.$resolve = resolve // 通过action将resolve和reject传递到对应的弹窗中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
+        action.payload.$reject = reject
         next(action) // 触发弹窗显示，在相关的关闭弹窗的reducer中可以调用该resolve和reject
       })
     }
@@ -33,4 +33,23 @@ const popMiddleware = store => next => action => {
 
   // 不需要拦截的action 直接走下一个中间件
   next(action)
+}
+
+// 对相应的reducer也要做一定的改造
+function show(state = initialState, action) {
+  const { $resolve, $reject } = action.payload
+  switch (action.type) {
+    case 'show':
+      return {
+        ...state,
+        show: {
+          show: true,
+          popTask: { $resolve, $reject }
+        }
+      }; // 这样 component可以通过react-redux.connect.mapStateToProps拿到这个新的状态中的resolve, 在自己弹窗关闭的函数中调用resolve/reject => 驱动调度中心任务链继续向前
+    case 'hide':
+      return { ...state, b: action.payload };
+    default:
+      return state
+  }
 }
