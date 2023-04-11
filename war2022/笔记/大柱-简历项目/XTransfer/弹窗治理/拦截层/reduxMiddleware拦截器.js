@@ -13,12 +13,13 @@ const needInterceptActionTypeList = [
 ]
 
 const popMiddleware = store => next => action => {
-  // 判定type是否在拦截名单内
-  if (needInterceptActionTypeList.includes(action.type)) {
+  // 判定type是否在拦截名单内: action.payload.from === 'popManager' 用来标志是否来自popManager的执行：dispatch，从popManager dispatch到这里，则直接走后门的next
+  if (needInterceptActionTypeList.includes(action.type) || !action.payload.from === 'popManager') {
     // 弹窗调度器需要的task: promiseCreator
     const task = () => {
       // 该promise会在弹窗调度器中被return并执行
       return new Promise((resolve, reject) => {
+        action.payload.from = 'popManager'
         action.payload.$resolve = resolve // 通过action将resolve和reject传递到对应的弹窗中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
         action.payload.$reject = reject
         next(action) // 触发弹窗显示，在相关的关闭弹窗的reducer中可以调用该resolve和reject

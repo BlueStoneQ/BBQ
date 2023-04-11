@@ -23,21 +23,25 @@ class MyPromise {
     this.onRejectedCallbacks = [];
 
     this.resolve = (val) => {
-      this.status = STATUS.FULFILLED;
-      this.value = val;
-      // 执行队列中的方法
-      this.onFullfilledCallbacks.forEach(callback => {
-        callback(this.value);
-      });
+      if (this.status === STATUS.PENDING) {
+        this.status = STATUS.FULFILLED;
+        this.value = val;
+        // 执行队列中的方法
+        this.onFullfilledCallbacks.forEach(callback => {
+          callback(this.value);
+        });
+      }
     }
 
     this.reject = (reason) => {
-      this.status = STATUS.REJECT;
-      this.reason = reason;
-      // 执行队列中的方法
-      this.onRejectedCallbacks.forEach(callback => {
-        callback(this.reason);
-      });
+      if (this.status === STATUS.PENDING) {
+        this.status = STATUS.REJECT;
+        this.reason = reason;
+        // 执行队列中的方法
+        this.onRejectedCallbacks.forEach(callback => {
+          callback(this.reason);
+        });
+      }
     }
     
     try {

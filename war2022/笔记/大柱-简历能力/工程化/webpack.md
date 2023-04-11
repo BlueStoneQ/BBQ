@@ -14,7 +14,14 @@
 ## module，chunk 和 bundle 的区别是什么？
 - [webpack易混淆概念](https://juejin.cn/post/6844904007362674701#heading-0)
 - module，chunk 和 bundle 其实就是同一份逻辑代码在不同转换场景下的取了三个名字：
-我们直接写出来的是 module，webpack 处理时是 chunk，最后生成浏览器可以直接运行的 bundle。
+我们直接写出来的是 module，webpack 处理时是 chunr'r'r'rk，最后生成浏览器可以直接运行的 bundle。
+
+## hash chunkhash contentHash
+hash 计算与整个项目的构建相关；
+
+chunkhash 计算与同一 chunk 内容相关；
+
+contenthash 计算与文件内容本身相关。
 
 ### 配置
 - [webpack配置案例](https://segmentfault.com/a/1190000007972133?utm_source=sf-similar-article)

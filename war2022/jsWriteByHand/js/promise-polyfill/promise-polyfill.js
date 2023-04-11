@@ -62,6 +62,7 @@ class MyPromise {
       // this.onFullfilledCallbacks.push(onFulfilled);
       // this.onRejectedCallbacks.push(onrejected);
       let promise2 = new MyPromise((resolve, reject) => {
+        // 被push进去的task: 本质上 是个promiseCreator 只不过这里用setTimeout代替了promise
         this.onFullfilledCallbacks.push(() => {
           // 这里其实是用setTimeout将then中的函数 执行放到了下一次eventLoop之中，用宏任务代替promise的微任务
           setTimeout(() => {
@@ -92,8 +93,8 @@ class MyPromise {
       let promise2 = new MyPromise((resolve, reject) => {
         setTimeout(() => {
           try {
-            const x = onFulfilled(this.reason);
-            resolvePromise(promise2, x, resolve, reject);
+            const x = onFulfilled(this.reason); // 立刻执行
+            resolvePromise(promise2, x, resolve, reject); // 决定通过resolve传递的值
           } catch(error) {
             reject(error);
           }

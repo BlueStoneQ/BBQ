@@ -28,8 +28,10 @@
 ### HTTP缓存
 - 强缓存
   - response: cache-control: max-age: xxx(s)
+    - max-age 是从响应报文的生成时间（Date 字段）开始计算的
   - response: expires: 过期时间点（受系统时间影响）
   - 注: 如果expires和cache-control同时存在，cache-control会覆盖expires，建议两个都写
+  - 命中强缓存：返回200
 - 协商缓存
   - response: etag: 文件hash
     + request: IF-None-Match
@@ -81,26 +83,31 @@
 
 #### session
 1. 最大的问题：集群之间不能共享 - 其实可以通过DB server来共享
+  - 同域名 同窗口 标签页：可以共享
 2. 消耗服务器资源 
 
-#### token:JWTT
-   - 一般携带在 http.request-head.Athorization字段中
-   - 一般存储在localStorage中
-   - 组成：head.payload.signature
-   - head中一般是一些元信息：例如加密算法等,一般是直接用其base64值作为head
-    - head = base64({ type: xxx, alg: xxxx })
-   - payload: 用户的登录信息 + 过期时间；所以 一般服务端难以主动让token失效
-    - payload = base64({ username: xxx, expire: xxx }) // 不要再这里放密码，这个基本就是明文传输
-   - signature: 由于token是服务端生成的 所以秘钥是在服务端的，别人拿不走，保证了安全性。signature的职能是保证token不被篡改。
-    这个signature是服务端根据用户的登录信息 + 自己的秘钥生成的一个签名，以后从 请求的 http.request-head.Athorization 中拿到token字符串，会用自己的秘钥解析拿到用户信息进行鉴权，好处是自己不用维护session表，减轻了服务端的压力
-    - 服务端验证：服务端接收到请求之后，从 Token 中拿出 header 和 payload ，然后通过HS256算法将 header 和 payload 和 “盐” 值 进行计算得出内容，让计算出的内容与Token中的第三部分，也就是Signature去比较，如果一致则验证通过，反之则失败。
-      - signature = crypto(head, payload, privite_key);
-    - token的缺陷：
-      - 一般放在localstorage中，如果发生了XSS，被攻击者获取到了token，由于在expire前服务端无法使token失效，所以在失效前攻击者一直可以冒充用户
-        - 解决方案：在DB中反向维护一个token的黑名单
+#### token:JWT
+- 携带：一般携带在 http.request-head.Athorization字段中
+- 客户端存储：一般存储在localStorage中
+- 生成+验证：服务端
+- 组成：head.payload.signature
+  - head中一般是一些元信息：例如加密算法等,一般是直接用其base64值作为head
+  - head = base64({ type: xxx, alg: xxxx })
+  - payload: 用户的登录信息 + 过期时间；所以 一般服务端难以主动让token失效
+  - payload = base64({ username: xxx, expire: xxx }) // 不要再这里放密码，这个基本就是明文传输
+  - signature: 由于token是服务端生成的 所以秘钥是在服务端的，别人拿不走，保证了安全性。signature的职能是保证token不被篡改。
+  这个signature是服务端根据用户的登录信息 + 自己的秘钥生成的一个签名，以后从 请求的 http.request-head.Athorization 中拿到token字符串，会用自己的秘钥解析拿到用户信息进行鉴权，好处是自己不用维护session表，减轻了服务端的压力
+- 服务端验证：服务端接收到请求之后，从 Token 中拿出 header 和 payload ，然后通过HS256算法将 header 和 payload 和 “盐” 值 进行计算得出内容，让计算出的内容与Token中的第三部分，也就是Signature去比较，如果一致则验证通过，反之则失败。
+  - signature = crypto(head, payload, privite_key);
+- token的缺陷：
+  - 一般放在localstorage中，如果发生了XSS，被攻击者获取到了token，由于在expire前服务端无法使token失效，所以在失效前攻击者一直可以冒充用户
+    - 解决方案：在DB中反向维护一个token的黑名单
       
 
 #### 单点登录
+##### 各个网站的server是同域名+cookie单点登录
+1. 借助cookie在同域名下会被携带
+##### 各个网站的server是不同域名
 - A网站
 1. 单点登录的原理其实是：会有一个专门SSO的服务端，当用户访问网站A时，由于用户请求没有携带coockie 或者 token等有效信息，则会重定向到SSO服务器
 2. SSO一看 用户的请求也没有认证的信息 就给用户弹出一个登录页面，用户登录后： 
@@ -176,10 +183,18 @@
     - server在通信开始 会发送证书 给client, client来判断证书是否合法
   - 数字签名 - 为了防止证书被中间人篡改：
     - 其实 我们也经常用生成摘要来确保文件有无修改
-      - 生成：CA会对server+自己的很多信息进行hash生成一个摘要，然后用自己的private_key加密这个摘要，生成数字签名，这个签名 + 其他各种信息 = 数字证书，将这个证书颁发给server（因为hash是单向算法，一般只能由内容生成摘要，而不能通过摘要生成内容，这里用自己的私钥加密，就确保私钥不会在网络中传输，而证书中的public-Key只能解密，不能加密，也确保了证书不会被伪造）
+      - 生成：
+        - CA签名：CA会对server+自己的很多信息进行hash生成一个摘要，然后用自己的private_key加密这个摘要，生成数字签名，
+          - CA签名 = 加密（hash(server注册信息)，CA.private_key）
+        - CA证书：这个签名 + 其他各种server的注册信息 = 数字证书，
+        - 将这个证书颁发给server（因为hash是单向算法，一般只能由内容生成摘要，而不能通过摘要生成内容，这里用自己的私钥加密，就确保私钥不会在网络中传输，而证书中的public-Key只能解密，不能加密，也确保了证书不会被伪造）
+      - browser所在的OS有内置的根证书，里面有CA的publick_key用来解密签名
     - 对比：
-      - 用证书中的public_Key解密 传递过来的数字签名
+      - 用OS.根证书中的public_Key解密 传递过来的数字签名
+        - hash1 = 解密（CA证书.签名, OS.CA根证书.public_key）
       - 从原始信息 通过相同的hash算法生成一个签名 和签名解密出来的签名进行对比，来确定证书没有被篡改
+        - hash2 = hash(CA证书.其他server的注册信息)
+      - 比对: hash1 和 hash2
 
 ### 什么是中间人攻击
 ```
@@ -311,6 +326,10 @@
     -  黑名单过滤：例如拦截< >
     - 白名单过滤: 例如
   1. 开启 CSP（Content Security Policy，内容安全策略），规定客户端哪些外部资源可以加载和执行，降低 XSS 风险。
+    - [CSP](https://www.ruanyifeng.com/blog/2016/09/csp.html)
+      - 开发者明确告诉客户端，哪些外部资源可以加载和执行，等同于提供白名单。它的实现和执行全部由浏览器完成，开发者只需提供配置
+        - 一种是通过 HTTP 头信息的Content-Security-Policy的字段。
+        - 另一种是通过网页的<meta>标签
   3. 输出过滤:表单提交时等需要对内容进行转义和过滤
   4. 设置cookie: http-only, 禁止 JavaScript 读取 Cookie 防止被窃取。
   ```js
@@ -319,9 +338,10 @@
   ```
 
 ### CSRF
+- https://tech.meituan.com/2018/10/11/fe-security-csrf.html
 - cross site request forgery ： 跨站请求伪造
 - 原理：攻击者诱导受害者进入第三方网站，在第三方网站中向被攻击网站发送跨站请求。利用受害者在被攻击网站已经获取的身份凭证，达到冒充用户对被攻击的网站执行某项操作的目的。
-  - 本质上只由于cookie机制引起的
+  - 本质上只由于cookie机制引起的(浏览器向域名a的server请求时，会携带上a的cookie)
 - eg：
   ```md
   1. 受害者登录a.com，并保留了登录凭证（Cookie）。
@@ -341,8 +361,9 @@
   - 服务端:
     1. 放弃cookie,使用 CSRF Token 验证用户身份 （可以理解为就是token）
       - 可以再加上验证码：确保行为来自用户本身 表单提交 加入验证码 - 确保表单提交是一个用户行为 而不是黑客行为
+      - 但是这个token不要用cookie存储
     2. Cookie有一个新的属性——SateSite。能够解决CSRF攻击的问题。
-      - 它表示，只能当前域名的网站发出的http请求，携带这个Cookie
+      - 它表示，只有从该cookie属于的域名的网站发出的http请求，携带这个Cookie
       - 当然，由于这是新的cookie属性，在兼容性上肯定会有问题。
     3. 检测request.head中的origin 和 Referer
       - Origin 指示了请求来自于哪个站点，只有服务器名，不包含路径信息，浏览器自动添加到http请求 Header 中，无需手动设置
@@ -350,7 +371,7 @@
       - 当Origin和Referer头文件不存在时该怎么办？如果Origin和Referer都不存在，建议直接进行阻止，特别是如果您没有使用随机CSRF Token（参考下方）作为第二次检查。
       - 目前这种方案，使用的人比较少。可能存在的问题就是，如果连Referer字段都能伪造，怎么办？
     4. 双重 Cookie 验证
-      - 原理：利用攻击者不能获取到 Cookie 的特点，在 URL 参数或者自定义请求头上带上 Cookie 数据，服务器再验证该数据是否与 Cookie 一致。
+      - 原理：利用攻击者不能获取到 Cookie 的特点(cookie: http-only)，在 URL 参数或者自定义请求头上带上 Cookie 数据，服务器再验证该数据是否与 Cookie 一致。
       - 优点：无需使用 Session，不会给服务器压力
     5. 尽量使用post
 - 关于CSRF如何获取到cookie的？
@@ -428,10 +449,17 @@
     - 防御：全站使用https 使得攻击者无法获取你的响应报文的明文 也就无法劫持你的内容
 
 ### 同源策略与跨域
+- 概念: 同源: 协议、端口号、域名必须一致
+- 首先：同源策略是一个浏览器的安全策略，也就是请求在浏览器阶段，会进行同源策略的检查
+- 同源政策主要限制了三个方面：
+  - 当前域下的 js 脚本不能够访问其他域下的 cookie、localStorage 和 indexDB。
+  - 当前域下的 js 脚本不能够操作访问操作其他域下的 DOM。
+  - 当前域下 ajax 无法发送跨域请求
 
 ### 跨域解决方案
 - CORS
   - 服务端设置：Access-Control-Allow-Origin
+    - 该字段是知会浏览器的
     - 该字段是必须的。它的值要么是请求时Origin字段的值，要么是一个*，表示接受任意域名的请求。
   - 跨域不通过 这个错误无法通过状态码识别，因为返回的状态码可能是200。
   - 非简单请求的CORS请求，会在正式通信之前，增加一次HTTP查询请求，称为"预检"请求（preflight）。预检请求使用的方法：OPTIONS。会在req.header.Origin中携带自身的域名
@@ -510,6 +538,10 @@
     - 定时器 事件 异步http 都是执行完异步任务后，将回调加入任务队列（宏任务 微任务），js引擎会根据event-loop（任务调度机制），执行队列中的任务。
 
 ## 浏览器缓存
+### session-storage
+- Local Storage、Session Storage 和 Cookie 都遵循同源策略。
+- 但 Session Storage 特别的一点在于，即便是相同域名下的两个页面，只要它们不在同一个浏览器窗口中打开，那么它们的 Session Storage 内容便无法共享。
+  - 即 在同一个窗口的2个同源页面 可以共享session
 
 ## 本地存储
 
@@ -584,7 +616,7 @@
 - [GC-bilibili](https://www.bilibili.com/video/BV1o44y1z7bQ?spm_id_from=333.337.search-card.all.click&vd_source=9365026f6347e9c46f07d250d20b5787)
 - 目前来看，垃圾回收主要针对的是：堆内存
 - 引用计数：
-  - 当一个对象有一个引用指向它时，那么这个对象的引用就+1，当一个对象的引用为0时，这个对象就可以被销毁掉；这个算法有一个很大的弊端就是会产生循环引用
+  - 当一个对象有一个引用指向它时，那么这个对象的引用就+1，当一个对象的引用为0时，这个对象就可以被销毁掉；这个算法有一个很大的弊端就是循环引用的内存就释放不了了
   - 其实就是堆内存的回收，当这块堆内存有1个及以上的引用指向时，该堆内存就不会被回收
 - 标记清除：
   - 这个算法是设置一个根对象（root object），垃圾回收器会定期从这个根开始，找所有从根开始有引用到的对象，对于哪些没有引用到的对象，就认为是不可用的对象；这个算法可以很好的解决循环引用的问题。
@@ -620,7 +652,7 @@
     - 解决办法：严格模式
     ```js
     function foo（arg）{ 
-      bar =“some text”; // bar将泄漏到全局.
+      bar =“some text”; // bar将泄漏到全局 成为全局变量
     }
     ```
   - 被遗忘的定时器和回调函数
@@ -629,7 +661,7 @@
     ```js
     var refA = document.getElementById('refA');
     document.body.removeChild(refA); // dom删除了
-    console.log(refA, "refA");  // 但是还存在引用能console出整个div 没有被回收
+    console.log(refA, "refA");  // 但是还存在引用能console出整个div div本身的内存引用还未清零 所以没有被回收
     ```
     - 原因：保留了DOM节点引用，导致GC没有回收
     - 解决方案：ref = null, 或者使用weakMap

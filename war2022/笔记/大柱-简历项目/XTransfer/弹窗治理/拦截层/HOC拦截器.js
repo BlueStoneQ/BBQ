@@ -20,7 +20,7 @@ export const PopHOC = function(wrappedComponent) {
       // 该promise会在弹窗调度器中被return并执行
       return new Promise((resolve, reject) => {
         setShow(true) // 触发弹窗显示
-        popTask.resolve = resolve // 通过task将resolve和reject传递到wrapComp中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
+        popTask.resolve = resolve // 通过props.task将resolve和reject传递到wrapComp中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
         popTask.reject = reject
       })
     }
