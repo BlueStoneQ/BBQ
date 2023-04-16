@@ -50,9 +50,44 @@ me: 客观来讲 这个sdk 整体代码组织比较混乱 你吸收有益的
 
 而数据上报只有：onHide/onUnload
 
-## 振幅算法
-- 1. 连续3次记录速率小于 10px/100ms
-- 2. 向上追溯 找到最近的一个大于这个速率的，它后面的这个就是最初的稳定点 
+## 振幅算法（废弃）
+~~- 1. 连续3次记录速率小于 10px/100ms~~
+~~- 2. 向上追溯 找到最近的一个大于这个速率的，它后面的这个就是最初的稳定点 ~~
+
+## 振幅算法：向上追溯法[为准]
+1. 在每次setData触发的sampling函数中，我们获取到靶点的位置和时间戳，
+  - 判断靶点和record队列队尾的记录比较，时间相隔是否超过100ms
+    - 该record就加入到record中
+    - 超过100ms 则表示该节点可能比较稳定了，这个时候，从record中倒序去找最近的一个记录点，
+      - 该记录满足：与它之前的记录b的距离间隔小于20px(20px基本体验为已经页面已经比较稳定了)
+        - 该记录点b就会被标记为秒开FST的endTime,停止测速（状态机改为stop）
+```js
+const simpling = funciton() {
+  const now = Date.now()
+  const targetViewTop = getReact().top()
+  const lastRecord = this.record[this.record.length - 1]
+
+      this.record.push({
+      targetViewTop,
+      timeStamp: now
+    })
+
+  if (now - lastRecord.timeStamp >= 100ms) {
+    for (let i = this.record.length - 1; i >= 1; i--) {
+      const curItem = this.record[i]
+      const preItem = this.record[i - 1]
+      if (curItem.targetViewTop -  preItem.targetViewTop > 20px) {
+        // 遇到了大于20px的间隔（振幅），则停止寻找，证明还未达到稳定的判定的判定标准
+        break;
+      } else {
+        // 间隔小于20px的 则持续向上找 找到最早的一个记录的时间戳 就是稳定的开始，选作endTime
+        this.status = 'stopSampling'
+        this.endTime = preItem.timeStamp
+      }
+    }
+  }
+}
+```
 
 ## 核心实现
 1. 页面生命周期的拦截实现
@@ -98,7 +133,7 @@ fst.registe = function() {
   Component = function(compObj) {
     // 其实 这里就是对Compnent的输入进行一次wrap加工后 再吐给oldComponent
     const hookSetData = function() {
-      const oldSetData = this.setData; // 这里的this会在hookSetData的调用环境中通过call注入
+      const oldSetData = this.setData; // 这里的this会在hookSetData的调用环境中通过call注入，本质上就是comObj
       this.setData = function(data, callback) {
         oldSetData.call(this, data, () => {
           // 重写callBack

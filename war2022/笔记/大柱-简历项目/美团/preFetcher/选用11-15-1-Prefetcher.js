@@ -20,7 +20,7 @@ class PreFetch {
     const item  = this.map.get(path);
     const { taskQueue, injectParams } = item;
     const mergedParams = this._mergeParams(injectParams, queryParams);
-
+    
     for (const task of taskQueue) {
       result.push(task(mergedParams));
     }

@@ -10,7 +10,7 @@ Array.prototype._map = function() {
     throw new Error('参数必须是函数');
   }
 
-  const result = []; 
+  const result = [];
 
   const curArray = this;
 

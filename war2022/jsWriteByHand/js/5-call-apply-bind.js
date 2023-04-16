@@ -74,8 +74,8 @@ Function.prototype._bind = function() {
   // 维护原型关系
   // 这里的主要目的是为了让 F（生成的新函数） 可以和 fn（被bind的函数）原型链 链接起来 - 这样  这个方法就和原来的方法在原型链的表现傻瓜表现一致了，
   //     原来函数原型链上的属性和方法，bind生成的F 也可以同样访问了
-  // 至于通过fNOP这样的一个空函数进行原型链链接
-  // 正解：因为为了避免执行fn中的逻辑会带来副作用（同时在bind时就执行了被bind的函数，不符合bind函数功能设计），而一个空函数fNOP执行new fNOP()不会有什么副作用，因为该函数本质上逻辑体式空的
+  // 至于通过fNOP这样的一个空函数进行原型链链接：
+  //    正解：因为为了避免执行fn中的逻辑会带来副作用（同时在bind时就执行了被bind的函数，不符合bind函数功能设计），而一个空函数fNOP执行new fNOP()不会有什么副作用，因为该函数本质上逻辑体式空的
   // 该解释站不住脚：是为了避免F.prototype 修改 污染到原函数fn.prototype 
   // 解释：https://github.com/mqyqingfeng/Blog/issues/12
   // 如果我们直接将 F.prototype = this.prototype，我们直接修改 F.prototype 的时候，也会直接修改绑定函数的 prototype。这个时候，我们可以通过一个空函数来进行中转

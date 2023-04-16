@@ -33,6 +33,15 @@ function f (): nerver {
 - unkonw不能赋值给其他已定类型的变量
   - 只能给自己赋值任何类型
 
+### type vs interface
+- https://github.com/SunshowerC/blog/issues/7#
+- type 可以而 interface 不行
+  - type 可以声明基本类型别名，联合类型，元组等类型
+  - type 语句中还可以使用 typeof 获取实例的 类型进行赋值
+- interface 可以而 type 不行
+  - interface 能够声明合并
+    - 即多个interface的声明可以合并
+
 ### 连接符 & |
 ### 对象
 1. 后来添加任意属性

@@ -28,12 +28,13 @@ const limitRequest = (urlList, maxTaskCount = 3, callback) => {
         // 成功的操作
         // TODO: 装填结果
         }).catch(err => {
+          reject(err)
           // 失败的操作
         }).finally(() => {
           taskDoneCount++; // 又一个任务执行完了 执行结束的任务数量+1
           if (taskDoneCount >= taskTotalCount) {
             // 已经执行的任务数量等于大于总体的任务数量时 整个promise的任务可以结束了（或者任务队列为空时都可） - 任务已经执行完了 
-            // resolve();
+            resolve(res);
             callback && callback();
           } else {
             // 还未执行完任务 则调用任务启动器 执行队列中下一个任务

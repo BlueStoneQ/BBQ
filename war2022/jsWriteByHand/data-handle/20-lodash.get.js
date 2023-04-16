@@ -10,10 +10,9 @@ const myGet = (source, path, defaultValue = undefined) => {
   let res = source
 
   for (const key of keyList) {
-    // 之所以要包一层Object，因为null 与 undefined 取属性会报错，所以使用 Object 包装一下
-    res = Object(res)[key]
+    res = res && res[key]
 
-    if (res === undefined) {
+    if (!res) {
       return defaultValue
     }
   }
