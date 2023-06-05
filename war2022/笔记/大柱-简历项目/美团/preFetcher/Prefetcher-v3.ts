@@ -49,7 +49,7 @@ class PreFetcher {
     }
 
     emit(pagePath: string): void {
-        if (!this.pagePath2InfoMap.has(pagePath)) throw new Error('The pageUrl is invalid');
+        if (!this.pagePath2InfoMap.has(pagePath)) return;
 
         const pageInfo  = this.pagePath2InfoMap.get(pagePath);
         const { taskMap, injectParams } = pageInfo as IPageInfo;
@@ -76,7 +76,14 @@ class PreFetcher {
         });
     }
 
-    _retry(pageInfo: IPageInfo, taskItem: ITaskItem, resultResolve: Function, resultReject: Function, maxRepeatTimes: number = 10, maxDuration: number = 10000) {
+    _retry(
+        pageInfo: IPageInfo,
+        taskItem: ITaskItem,
+        resultResolve: Function,
+        resultReject: Function,
+        maxRepeatTimes: number = 10,
+        maxDuration: number = 10000
+    ) {
         const startTime = Date.now();
         let repeatTimes = 0;
 
