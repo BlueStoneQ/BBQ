@@ -40,7 +40,7 @@ class PreFetcher {
         this.pagePath2InfoMap = new Map<string, IPageInfo>();
     }
 
-    register(pagePath: string, taskMap: TTaskMap, injectParams: IParams = {}) {
+    register(pagePath: string, taskMap: TTaskMap, injectParams: IParams = {}): void {
         this.pagePath2InfoMap.set(pagePath, {
             taskMap,
             injectParams,
@@ -48,7 +48,7 @@ class PreFetcher {
         });
     }
 
-    emit(pagePath: string) {
+    emit(pagePath: string): void {
         if (!this.pagePath2InfoMap.has(pagePath)) throw new Error('The pageUrl is invalid');
 
         const pageInfo  = this.pagePath2InfoMap.get(pagePath);
@@ -59,11 +59,11 @@ class PreFetcher {
         (pageInfo as IPageInfo).mergedParams = this._mergeParams(injectParams, queryParams);
         
         for (const taskItem of taskMap) {
-        taskItem[1].resPromise = taskItem[1].task((pageInfo as IPageInfo).mergedParams);
+            taskItem[1].resPromise = taskItem[1].task((pageInfo as IPageInfo).mergedParams);
         }
     }
 
-    getResult(pagePath, taskKey) {
+    getResult(pagePath: string, taskKey: string): Promise<any> {
         const pageInfo = this.pagePath2InfoMap.get(pagePath);
         const taskItem = (pageInfo as IPageInfo).taskMap.get(taskKey);
 
@@ -71,12 +71,12 @@ class PreFetcher {
             (taskItem as ITaskItem).resPromise
                 .then(res => resolve(res))
                 .catch(err => {
-                    this._retry(pageInfo, taskItem, resolve, reject);
+                    this._retry(pageInfo as IPageInfo, taskItem as ITaskItem, resolve, reject);
                 })
         });
     }
 
-    _retry(pageInfo, taskItem, resultResolve, resultReject, maxRepeatTimes = 10, maxDuration = 10000) {
+    _retry(pageInfo: IPageInfo, taskItem: ITaskItem, resultResolve: Function, resultReject: Function, maxRepeatTimes: number = 10, maxDuration: number = 10000) {
         const startTime = Date.now();
         let repeatTimes = 0;
 
