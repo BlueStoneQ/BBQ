@@ -6,7 +6,7 @@
 
 const myGet = (source, path, defaultValue = undefined) => {
   // 格式化path: a[3].b -> a.3.b -> [a,3,b]
-  const keyList  = path.replace(/\[(\d+)\]/, '.$1').split('.')
+  const keyList  = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let res = source
 
   for (const key of keyList) {

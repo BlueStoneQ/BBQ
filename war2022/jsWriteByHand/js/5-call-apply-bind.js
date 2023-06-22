@@ -76,11 +76,11 @@ Function.prototype._bind = function() {
   //     原来函数原型链上的属性和方法，bind生成的F 也可以同样访问了
   // 至于通过fNOP这样的一个空函数进行原型链链接：
   //    正解：因为为了避免执行fn中的逻辑会带来副作用（同时在bind时就执行了被bind的函数，不符合bind函数功能设计），而一个空函数fNOP执行new fNOP()不会有什么副作用，因为该函数本质上逻辑体式空的
-  // 该解释站不住脚：是为了避免F.prototype 修改 污染到原函数fn.prototype 
+  // ~~该解释站不住脚：是为了避免F.prototype 修改 污染到原函数fn.prototype 
   // 解释：https://github.com/mqyqingfeng/Blog/issues/12
   // 如果我们直接将 F.prototype = this.prototype，我们直接修改 F.prototype 的时候，也会直接修改绑定函数的 prototype。这个时候，我们可以通过一个空函数来进行中转
   // me: 我们要理解 F 是bind返回的一个新函数 而this是我们被bind处理的函数 它们2个是独立的，this被bind处理后 本身什么也没有变 所以 这里要斩断新函数F 和 原来函数this的关系
-  // 在普通面试中 如果面试官不做要求 可以不写这一步
+  // 在普通面试中 如果面试官不做要求 可以不写这一步~~
   const fNOP = function() {};
   fNOP.prototype = fn.prototype;
   F.prototype = new fNOP(); // 等于新的F的原型是原来函数的原型的实例 - 本质上就是用原型链链了起来

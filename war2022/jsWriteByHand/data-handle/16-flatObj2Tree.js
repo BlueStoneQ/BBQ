@@ -18,6 +18,7 @@ const flatObj2Tree = (data) => {
 
   const id2Objmap = new Map();
 
+  // 需要建立一张： id->item的查表
   for (const item of data) {
     const { id } = item;
     id2Objmap.set(id, item);

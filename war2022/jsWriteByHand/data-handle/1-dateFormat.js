@@ -20,7 +20,7 @@ const dateFormat = (date, format = 'yyyy/MM/dd') => {
 
   // algo: 其实就是在模版中用实际的数字替换相关占位符
   format = format.replace(/dd/, day);
-  format = format.replace(/MM/, month);y
+  format = format.replace(/MM/, month);
   format = format.replace(/yyyy/, year);
 
   // return 

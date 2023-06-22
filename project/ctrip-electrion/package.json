@@ -1,0 +1,19 @@
+{
+  "name": "ctrip-electrion",
+  "version": "1.0.0",
+  "description": "A demo of electron for ctrip",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "test"
+  },
+  "keywords": [
+    "electron",
+    "demo"
+  ],
+  "author": "qiaoyang",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^25.1.1"
+  }
+}

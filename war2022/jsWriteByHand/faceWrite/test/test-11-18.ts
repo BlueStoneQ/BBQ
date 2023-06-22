@@ -1,7 +1,7 @@
 // ant 保险
 // 设计一个函数 warpFunc，可以对其他任意函数 funcX 进行处理，并满足：warpFunc(funcX)(x1)(x2)(x3)()的结果等同于funcX(x1, x2, x3) ，funcX可以为任意函数，且参数数量不固定。
 
-export function warpFunc(fn, originalArgs) {
+export function warpFunc(fn, ...originalArgs) {
   // defend
   if (typeof fn !== 'Function') {
     throw new Error('first param must be function');
@@ -12,10 +12,10 @@ export function warpFunc(fn, originalArgs) {
   const _fn = function (...args) {
     const combineArgs = [...originalArgs, ...args];
     if (args.length === 0) {
-      return fn.apply(this, combineArgs);
+      return fn.call(this, ...combineArgs);
     }
 
-    return warpFunc(fn, combineArgs);
+    return warpFunc(fn, ... combineArgs);
   }
 
   return _fn;
