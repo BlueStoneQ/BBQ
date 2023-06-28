@@ -45,9 +45,12 @@ const flat3 = (arr) => {
 /**
  * reduce方法 
  * es6的flat方法
- * 
- * 
  */
+const flat4 = (arr) => {
+  return arr.reduce((pre, cur) => {
+    return Array.isArray(cur) ? pre.concat(flat4(cur)) : pre.concat(cur)
+  }, []);
+}
 
 
 
@@ -64,6 +67,8 @@ console.log('flat1', flat1(input));
 console.log('flat2', flat2(input));
 
 console.log('flat3', flat3(input));
+
+console.log('flat4', flat4(input));
 
 console.log('Array.flat', input.flat(Infinity));
 

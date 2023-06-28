@@ -36,7 +36,7 @@ const flatTree2 = (tree) => {
   return tree.reduce((lastRes, item) => {
     // otherItem 除去children的其他属性
     const { children = [], ...otherItem } = item
-    return lastRes.concat(otherItem, children && children.length ? flatTree2(children) : [])
+    return lastRes.concat(otherItem, (children && children.length) ? flatTree2(children) : [])
   }, [])
 }
 

@@ -1,0 +1,18 @@
+    - 引用计数的缺陷：无法处理循环引用的问题
+    - 内存泄漏场景
+    - 怎么监测内存泄漏
+    - webpack打包过程
+    - net & browser
+    - object.entries()的使用
+    - 再看看JD:
+    - flutter Vs RN
+        - Flutter 原生控件的接入上是仍不如 React Native 稳定。
+        - 在插件这一块的体验， Flutter 是略微优于 React Native 的。
+        - 在 React Native 同等条件下， Android 比 IOS 大很多 ，这是因为 IOS 自带了 JSCore ，而 Android 需要各类动态 so 内置支持，而且这里 Android 的动态库 so 是经过了 ndk 过滤后的大小，不然还会更大。
+        - Flutter 和 React Native 则是相反，因为 Android 自带了 skia ，所以比没有自带 skia 的 IOS 会小得多。
+        - 理论性能，在理论上 Flutter 的设计性能是强于 React Native ，这是框架设计的理念导致的，Flutter 在少了 OEM Widget ，直接与 CPU / GPU 交互的特性，决定了它先天性能的优势。
+        - RN 本身的局限性在于开发适配和性能上，因为平台依赖性太强导致的版本升级和痛点不断 ， 而这个Flutter 给予无法比拟的：因为flutter直接越过了系统本身，和GPU硬件打交道
+    - tari vs electron
+    - taro 和 跨端
+    - crn类似的封装
+    - CDN原理
