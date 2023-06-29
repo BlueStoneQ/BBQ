@@ -277,6 +277,11 @@
 - 前2次挥手：断开了客户端向服务端发送请求的链接，
 - 但是 此时 服务端可能数据还未发送完，等到服务端将数据给客户端发送完后，服务端再主动向客户端挥手，断开 服务端到客户端的连接
 
+### TCP 队头拥塞
+
+### TCP VS UDP
+- https://jaminzhang.github.io/network/The-Difference-Between-TCP-And-UDP-Protocol/
+
 ## DNS
 
 ## 网络安全
