@@ -373,7 +373,7 @@
       - 当Origin和Referer头文件不存在时该怎么办？如果Origin和Referer都不存在，建议直接进行阻止，特别是如果您没有使用随机CSRF Token（参考下方）作为第二次检查。
       - 目前这种方案，使用的人比较少。可能存在的问题就是，如果连Referer字段都能伪造，怎么办？
     4. 双重 Cookie 验证
-      - 原理：利用攻击者不能获取到 Cookie 的特点(cookie: http-only)，在 URL 参数或者自定义请求头上带上 Cookie 数据，服务器再验证该数据是否与 Cookie 一致。
+      - 原理：利用攻击者不能获取到 Cookie 的特点(cookie: http-only)，在 URL 参数或者自定义请求头上带上 Cookie 数据，服务器再验证该数据（head.CSRF-TOKEN）是否与 head.Cookie 一致。
       - 优点：无需使用 Session，不会给服务器压力
     5. 尽量使用post
 - 关于CSRF如何获取到cookie的？

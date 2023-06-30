@@ -47,6 +47,7 @@ const searchVal = (arr, val) => {
         smallArrStart = i;
         smallArrEnd = len - 1;
         bigArrEnd = i - 1;
+        break;
       }
     }
   

@@ -26,8 +26,7 @@ exec('./mysqlout.bat', function (err, stdout, stderr) {
 });
 ```
 在request中，上传文件使用formData:
-```md
-#### multipart/form-data (Multipart Form Uploads)
+multipart/form-data (Multipart Form Uploads)
 
 For `multipart/form-data` we use the [form-data](https://github.com/form-data/form-data) library by [@felixge](https://github.com/felixge). For the most cases, you can pass your upload form data via the `formData` option.
 
@@ -65,4 +64,14 @@ request.post({url:'http://service.com/upload', formData: formData}, function opt
   console.log('Upload successful!  Server responded with:', body);
 });
 ```
+
+## 监听Ctrl+C
+但在你按下Ctrl-C要杀掉服务器时，这种关闭不干净，并且所有等待中的连接都会被丢掉。解决办法是捕获SIGINT信号并阻止服务器接受连接，并在结束进程之前完 成所有已有连接的处理。监听process.on('SIGINT', ...)可以实现这一办法。事件名称就是 信号名称:
+```js
+process.on('SIGINT', function() {
+  server.close()
+})
 ```
+
+## 关于同步函数
+Node.js中的同步函数 如你所知，Node的API大部分是异步函数，从不阻塞事 件循环，那么为什么还要大费周章地引入这些文件系统函数的同步版本呢?因为Node 自己的require()函数是同步的，并且它的实现用到了fs模块的函数，所以必须有同步 版。无论如何，同步函数只应该用在启动时，或者模块最初加载时，之后再也不要用了。

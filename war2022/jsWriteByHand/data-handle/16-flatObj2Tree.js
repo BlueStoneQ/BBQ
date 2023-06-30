@@ -61,6 +61,7 @@ const flatObj2Tree1 = (data) => {
     // 查下当前item的父元素在不在查表中
     const { pid, id } = item;
 
+    // 处理id
     if (!id2Objmap.has(id)) {
       // 有效的id 但是map中没有的 我们要在map中建立该id为key的值
       id2Objmap.set(id, item);
@@ -69,6 +70,7 @@ const flatObj2Tree1 = (data) => {
       id2Objmap.set(id, { ...item, ...id2Objmap.get(id) }); // ...id2Objmap.get(id) 是后面 id2Objmap.set(pid, {}) 所提前构建的
     }
 
+    // 处理pid
     // 父节点为根节点
     if (pid === null) {
       // 如果当前节点是在root下 题目中为pid === null, 则将该节点放在root节点下

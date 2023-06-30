@@ -4,6 +4,28 @@
  * 参考: [利用promise.race实现](https://cloud.tencent.com/developer/article/1785993)
  */
 
+/**
+ * 新解决方案：利用包装函数
+ */
+const wrapPromiseWithCancel = (promise) => {
+  const rejectP = new Promise((resolve, reject) => {
+    promise.reject = reject
+  })
+
+  return Promise.race([this, rejectP])
+}
+
+Promise.prototype.cancel = function () {
+  // 原来的promise实例就是这里this
+  this.reject('cancel')
+}
+
+
+
+/**
+ * 旧解决方案
+ */
+
 const constructor = Promise.prototype.constructor;
 Promise.prototype.constructor = function(...args) {
   constructor.apply(this, args)

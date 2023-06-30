@@ -34,7 +34,7 @@
 	return()=>{
       // componentWillUnmount 逻辑
     }
-  })
+  }, [])
   ```
 ### useRef
 ### useContext
@@ -67,7 +67,7 @@
     - 什么是不必要的effect?
     ```js
     const Component = () => {
-      // 在 re-renders 之间缓存 a 的引用
+      // 在 re-renders 之间缓存 a 的引用，因为test变化 不一定a一定会变化，等于是在useEffect之前加了一层缓存
       const a = useMemo(() => ({ test: 1 }), []);
 
       useEffect(() => {
@@ -91,8 +91,8 @@
 - 总结：
   - 大部分的 useMemo 和 useCallback 都应该移除，他们可能没有带来任何性能上的优化，反而增加了程序首次渲染的负担，并增加程序的复杂性。
   - 使用 useMemo 和 useCallback 优化子组件 re-render 时，必须同时满足以下条件才有效。
-  - 子组件已通过 React.memo 或 useMemo 被缓存
-  - 子组件所有的 prop 都被缓存
+    - 子组件已通过 React.memo 或 useMemo 被缓存
+    - 子组件所有的 prop 都被缓存
   - 不推荐默认给所有组件都使用缓存，大量组件初始化时被缓存，可能导致过多的内存消耗，并影响程序初始化渲染的速度
 ### useCallback
 - 勾住”组件属性中某些处理函数，创建这些函数对应在react原型链上的变量引用。useCallback第2个参数是处理函数中的依赖变量，只有当依赖变量发生改变时才会重新修改并创建新的一份处理函数。
@@ -138,9 +138,17 @@ const parent = () => {
   4. 当返回的是原始数据类型如字符串、数字、布尔值，就不要使用useMemo了。
   5. 不要盲目使用这些hooks。
   6. 而useCallback useMemo优化re-render的前提就是使用了React.memo
-    - useCallback useMemo 是在父组件中传递给Child组件props的时候使用
+    - useCallback useMemo 是在父组件中传递给Child组件props的时候使用，用来包装父组件传递给子组件的方法/引用值
     - React.memo是用来包裹子组件的
-
+### 为什么 hooks 不能写在循环或者条件判断语句里
+- https://blog.csdn.net/m0_65121454/article/details/128635452
+- 因为 hooks 为了在函数组件中引入状态，维护了一个有序表。
+  这样每次执行才能保证状态能对应上。
+  比如第一次执行函数组件时，我们拿到状态 count（通过useState，初始值为 0 ）和 bool（通过 useState，初始值为 false），它们其实被保存到一个有序表中，它们的值会记录下来： [0, false] 。
+  第二次执行函数组件， 会 按顺序 从这个表中拿出 0 和false，赋值给 count 和 bool。
+  如果你把 hook 写到判断条件下，导致某个 useState 不执行了，这里我们假设 count 的 useState 因为判断条件没有执行，会发生什么？结果是 bool 拿到了 0，发生了错位。
+  函数本身不能保存状态，我们需要额外维护一个有序的表，在执行 useState 之类的 hook 时，将它们保存到这个表里。
+  这要求每次函数组件的 hook 执行的位置相同，数量正确，否则会导致错位，不能拿到预期的状态值。
 
 ## 具体问题
 ### 自定义hooks vs HOC vs render-props
