@@ -2,6 +2,7 @@
 - [koa-session的使用:写得更清晰系统](https://blog.csdn.net/weixin_41258881/article/details/104419480)
 - [koa-session的使用](https://juejin.cn/post/6948780829921247269)
 - https://segmentfault.com/a/1190000019086415
+- 源码解读: https://juejin.cn/post/6844904181799583752
 ## 场景：登录状态管理
 - cookie-id + session的模型：
 - jwt
@@ -14,7 +15,10 @@
   - get
   - set(val)
 - session: 默认存储在什么地方呢
-  - 内存：在整个service的生命周期中？
+  - 存储模式：
+    1. 客户端模式：默认模式：cooie模式：常用的JWT之类的token形式 可以采用这种，优点是不占用是
+    2. store模式：存储在服务端的session策略，这个需要提供store或者ContextStore选项，来接入各种各样的服务端session存储策略
+
 
 # koa-body
 - 关于TS 使用 type来获取类型：

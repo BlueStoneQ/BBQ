@@ -1,3 +1,8 @@
+## crc
+- https://www.npmjs.com/package/crc
+- 生成hush?
+## is-type-of
+- 完整的type类型判断
 ## request
 - 核心实现：http.request(reqOptions), 利用http/https.request()
 ```js

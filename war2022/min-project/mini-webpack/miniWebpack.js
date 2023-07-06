@@ -79,6 +79,7 @@ class Compiler {
     )
     this.generate(dependencyGraph)
   }
+  // source ->  AST -> transform -> target
   build(filename) {
     const { getAst, getDependecies, getCode } = Parser
     const ast = getAst(filename)
