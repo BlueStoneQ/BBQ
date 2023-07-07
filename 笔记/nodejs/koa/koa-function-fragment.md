@@ -1,25 +1,4 @@
-## koa中间件中异常的处理
-- https://segmentfault.com/a/1190000023327434
-```js
-// middlewares/catcherror.js
-// 定义处理异常的中间件
-const createErrCatchMiddleWare  = (ops, app) => {
-  return async(ctx, next) => {
-    try{
-        await next();
-    }catch(error){
-        if(error.errorCode){
-            console.log("捕获到异常")
-            return ctx.body = errror.msg;
-        }
-    }
-  }
-}
-
-// 中间件放在洋葱的最外层：注册在最前面, 这样利用洋葱模型可以捕获到接下来的错误
-koaApp.use(createErrCatchMiddleWare())
-```
-## node向另外一个服务器发送文件
+## node向另外一个服务器发送文件 d
 - https://www.cnblogs.com/yourstars/p/6728765.html
 ```js
 var exec = require('child_process').exec;
@@ -32,7 +11,7 @@ exec('./mysqlout.bat', function (err, stdout, stderr) {
         console.error(err);
         return;
     }
-    request.post('http://120.11.xx.19:3000/upload', {
+    request.post('http://120.11.xx.19:3000/upload', { d
         formData: {
             title: 'upload sqlfile',
             description: 'Sent on ' + new Date(),
