@@ -1,7 +1,12 @@
+# 图形库
+# 图像识别@AI
 # cli脚手架
 - https://github.com/imaoda/js-front-end-practice/blob/master/%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%BC%81%E4%B8%9A%E7%BA%A7%E8%84%9A%E6%89%8B%E6%9E%B6.md
 # dependence
 ## yeoman
+## download-git-repo：下载模版
+## git-clone: 也可以下载模版
+## download-package-tarball: 下载模版
 ## handlebars
 - js语义化模版库，实现项目的模版部分
 ## inquirer
@@ -19,10 +24,12 @@
 ## 锦上添花	cross-spawn	跨平台的child_process (跨 Windows/Mac)
 ## 锦上添花	osenv	跨平台的系统信息
 ## 锦上添花	open	跨平台打开 app，比如调试的时候开打 chrome
+## shelljs
 # devDependence
 # 待分类
-# dependence
-## fs-extra
+# devdependence
+## chokidar
+- 监听文件变化 fs.watch()这样的 工业级版
 ## performance-now
 ## oauth-sign
 ## http-signature
