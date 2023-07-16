@@ -32,3 +32,18 @@ const createErrCatchMiddleWare  = (ops, app) => {
 // 中间件放在洋葱的最外层：注册在最前面, 这样利用洋葱模型可以捕获到接下来的错误
 koaApp.use(createErrCatchMiddleWare())
 ```
+
+# 案例1: 
+- https://juejin.cn/post/6844903855772303367
+- https://github.com/bayi-lzp/koa-template
+## router设计
+### publicRouter
+### privateRouter
+- 会有jwt: router.use(jwtMiddleware)
+## middle-ware
+### koa-jwt
+### jsonwebtoken
+### koa-views
+- koa的模版能力，类似express.app.render()
+### koa-helmet
+- 设置安全相关http-head： https://juejin.cn/post/6844903699584647175

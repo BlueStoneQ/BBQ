@@ -26,7 +26,10 @@
 ## 锦上添花	open	跨平台打开 app，比如调试的时候开打 chrome
 ## shelljs
 # devDependence
-# 待分类
+# server
+# dependence
+## bcrypt
+- Bcrypt是一个加盐的哈希函数，是专门用来对密码做哈希处理的第三方模块。Bcrypt特别适 合处理密码，因为计算机越来越快，而bcrypt能让破解变慢，从而有效对抗暴力攻击
 # devdependence
 ## chokidar
 - 监听文件变化 fs.watch()这样的 工业级版
@@ -56,6 +59,8 @@ self.req = self.httpModule.request(reqOptions)
 ```js
 promise = dispatchRequest.call(this, newConfig);
 ```
+# portfinder
+- 返回一个不被占用的port
 # devDependence
 ## karma
 ## rimraf
@@ -66,3 +71,7 @@ https://zhaoda.net/2015/10/16/browserify-guide/
 - 原理：
     - 理想情况下，大部分不涉及io操作的模块可以在浏览器中直接运行。
     - 部分不能直接运行的，会被打包为一些专门为browser提供的模块类型
+
+# 工程化
+# DB
+## redis

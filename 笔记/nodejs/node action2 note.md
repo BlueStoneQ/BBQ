@@ -67,6 +67,40 @@ expressApp.configure('dev', function() {
     expressApp.use()
 })
 ```
+### 认证
+### 分页
+### RestApi
+### 内容协商
+### 错误处理
+- 通常来说，不应该把错误细节透漏给客户端，因为可能会暴露安全漏洞
+- 方案1: 错误中间件一般放在洋葱的核心，或者注册在中间件队列的队尾，其他组件的err都是通过next传递下去？
+    - 官方推荐：在洋葱内侧处理：https://www.expressjs.com.cn/zh-cn/guide/error-handling.html
+    - Express 随附一个内置的错误处理程序，负责处理应用程序中可能遇到的任何错误。这个缺省的错误处理中间件函数添加在中间件函数集的末尾。
+        - 如果将错误传递到 next() 且未在错误处理程序中进行处理，那么该错误将由内置的错误处理程序处理；错误将写入客户机的堆栈跟踪内。堆栈跟踪不包含在生产环境中。
+        - 如果在开始写响应之后调用 next() 时出错（例如，如果在以流式方式将响应传输到客户机时遇到错误），Express 缺省错误处理程序会关闭连接并使请求失败。
+- 方案2: error-middleware放在洋葱外层，通过try catch 在catch中收集到里层中间件throw出来的err并做统一处理？
+    - 这个方案适合koa: https://demopark.github.io/koa-docs-Zh-CN/error-handling.html
+        - 因为koa使用了async await, 所以可以使用try catch来捕获冒泡上来的错误
+- 方案3: koa错误处理：
+    - 错误事件侦听器可以用 app.on('error') 指定。如果未指定错误侦听器，则使用默认错误侦听器。错误侦听器接收所有中间件链返回的错误，如果一个错误被捕获并且不再抛出，它将不会被传递给错误侦听器。如果没有指定错误事件侦听器，那么将使用 app.onerror，除非 error.expose 为 true 或 app.silent 为 true 或 error.status 为 404，否则只简单记录错误。
+#### 404错误
+- 404中间件函数就 是用在其他所有中间件函数之后的普通函数。如果到它那里了，你可以肯定不会有其他任何东西 想要给出响应了，所以你可以继续向前，渲染一个模板，或者以你喜欢的方式响应。
+```js
+// express 
+res.render('404')
+```
+- 关于res.render:
+```js
+//设计模板引擎   ejs
+app.set("views","mb");//设置需要渲染的目录下模板文件
+// 在mb/下有一个404.ejs模版文件
+app.set("view engine","ejs");
+app.get("/",function(req,res){
+    res.render("404",{
+        news:['1','2']
+    });
+    app.listen(3000)
+```
 ### express.logger
 - 程序的需求取决于它所运行的环境。比如说，当你的产品处于开发环境中时，你可能想要详 尽的日志，但在生产环境中，你可能想要精简的日志和gzip压缩
 ## Redis
