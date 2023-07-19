@@ -38,7 +38,7 @@ const _flat2 = (arr, depth = 0) => {
   }
   // 利用reduce遍历 + 遇到item为Array的情况 就需要递归处理
   return arr.reduce((pre, cur) => {
-    return pre.concat(Array.isArray(cur) ? _flat2(cur, depth - 1) : cur);
+    return pre.concat((Array.isArray(cur) && depth !== 0) ? _flat2(cur, depth - 1) : cur);
   }, []);
 }
 

@@ -1,4 +1,46 @@
 
+# 逻辑骨架：
+- 注册端
+  - fstSDK.regist:
+    - 用AOP方式重写Component
+- 测速端
+    - 靶点view
+    - 容器层: 容器组件 - 内置了对touch事件的监听
+    - hook:
+        - pageObj.
+            - Page: export FSTBase(pageObj)
+            - pageObj.onLoad
+                - set.startTime 
+                - set.status = pending
+                - hookSetData: this.setData
+            - pageObj.onHide
+                - 上报
+        - Component: 重写全局
+            - setData
+                - hook: obj.attached
+                    - hook: setData
+                        - const curPage = getCurrentPages();
+                        - fstReport.sampling(curPage);
+    - splibing:
+        - status:
+            - null
+            - pending
+            - end
+        - findEndTime
+            - touch
+            - getReactBinding(targetView).top > clientHeight
+            - 追溯算法：
+                - Component.setData.setRecord(taregtView.top),
+                    - curTargetView.record.time - record[last].time > MAX_RANGE 
+                    - 向上追溯：
+                        - for: 倒序 :recordList
+                            - if (curRecord.top - preRecord.top) continue 
+                            - 直到找到不满足以上条件的一个curRecord, 
+                                - 则该record.time 作为this.endTime
+                                - 同时：更改状态机状态：this.status = end
+- 上报端
+
+
 # 主题
 - [本地源码位置](/Users/qiaoyang/code/grocery/mnpm/wxapp-fst-sdk)
 - [git-ssh](ssh://git@git.sankuai.com/~xuhan02/wxapp-fst-sdk.git)

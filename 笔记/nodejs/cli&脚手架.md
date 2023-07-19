@@ -102,6 +102,7 @@ const verConfig = [{
 ```js
 require('rimraf')(distPath, err => {
   if (err) throw err;
+  // 构建
   webpack(webpackConfig, (err, stats) => {
       if (err) throw err;
 
