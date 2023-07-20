@@ -7,6 +7,14 @@
 /**
  * 新解决方案：利用包装函数
  */
+// const wrapPromiseWithCancel = (promise) => {
+//   const rejectP = new Promise((resolve, reject) => {
+//     promise.reject = reject
+//   })
+
+//   return Promise.race([this, rejectP])
+// }
+
 const wrapPromiseWithCancel = (promise) => {
   const rejectP = new Promise((resolve, reject) => {
     promise.reject = reject
