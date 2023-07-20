@@ -50,6 +50,24 @@ const flatObj2Tree = (data) => {
  * 方法1-pro[最优]：迭代法 - 将方法1中的2次迭代合并为一次
  * 边迭代 边构建
  * 剑指前端：https://febook.hzfe.org/awesome-interview/book3/coding-arr-to-tree#%E5%8F%98%E4%BD%93%E4%B8%80
+ * 
+ * 思路骨架：
+- map<id, node>
+- while
+    - root节点处理
+        - pid === null
+        - del pid
+        - res.push(rootNode)
+    - 其他节点处理
+        - map.has(pid)
+            - yes: 
+                - parant = map.get(pid)
+                - parant.child.push(curNode)
+            - no: 
+                - parent = { children: [] }
+                - map.set(pid, parent)
+                - parent.children.push(curNode)
+                - curNode: del pid
  */
 const flatObj2Tree1 = (data) => {
   // defend

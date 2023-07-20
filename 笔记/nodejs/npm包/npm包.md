@@ -1,7 +1,12 @@
+# 图形库
+# 图像识别@AI
 # cli脚手架
 - https://github.com/imaoda/js-front-end-practice/blob/master/%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E4%BC%81%E4%B8%9A%E7%BA%A7%E8%84%9A%E6%89%8B%E6%9E%B6.md
 # dependence
 ## yeoman
+## download-git-repo：下载模版
+## git-clone: 也可以下载模版
+## download-package-tarball: 下载模版
 ## handlebars
 - js语义化模版库，实现项目的模版部分
 ## inquirer
@@ -19,10 +24,15 @@
 ## 锦上添花	cross-spawn	跨平台的child_process (跨 Windows/Mac)
 ## 锦上添花	osenv	跨平台的系统信息
 ## 锦上添花	open	跨平台打开 app，比如调试的时候开打 chrome
+## shelljs
 # devDependence
-# 待分类
+# server
 # dependence
-## fs-extra
+## bcrypt
+- Bcrypt是一个加盐的哈希函数，是专门用来对密码做哈希处理的第三方模块。Bcrypt特别适 合处理密码，因为计算机越来越快，而bcrypt能让破解变慢，从而有效对抗暴力攻击
+# devdependence
+## chokidar
+- 监听文件变化 fs.watch()这样的 工业级版
 ## performance-now
 ## oauth-sign
 ## http-signature
@@ -49,6 +59,8 @@ self.req = self.httpModule.request(reqOptions)
 ```js
 promise = dispatchRequest.call(this, newConfig);
 ```
+# portfinder
+- 返回一个不被占用的port
 # devDependence
 ## karma
 ## rimraf
@@ -59,3 +71,7 @@ https://zhaoda.net/2015/10/16/browserify-guide/
 - 原理：
     - 理想情况下，大部分不涉及io操作的模块可以在浏览器中直接运行。
     - 部分不能直接运行的，会被打包为一些专门为browser提供的模块类型
+
+# 工程化
+# DB
+## redis
