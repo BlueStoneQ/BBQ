@@ -47,7 +47,7 @@ console.log('方法2: getWinPath([1, 2, 3], 30): ', getWinPath([1, 2, 3], 30));
 
 /** 
  * 方法1:
- *  优点：可以枚举出各种策略下的必赢路径，从实际开发软件的角度技术密集程度和实用程度超过方法1
+ *  优点：可以枚举出各种策略下的必赢路径，从实际开发软件的角度技术密集程度和实用程度超过方法2
  *  缺点：其实不能完全确保必赢,管道最后一个环节计算量很大
  * 基于DFS回溯的暴力枚举法 + 管道式的处理：
  * - 管道式处理（实现了一个简单的同步任务管道式调度器）
@@ -173,10 +173,10 @@ const getSingletonFn = (fn) => {
     }
 }
 
-const getPipeLineSinleton = getSingletonFn(() => new PipeLine())
+const getPipeLineSingleton = getSingletonFn(() => new PipeLine())
 
 const pipe = function(task) {
-    const pipeLine = getPipeLineSinleton();
+    const pipeLine = getPipeLineSingleton();
     if (!pipeLine.pipe || typeof pipeLine.pipe !== 'function') pipeLine.pipe = pipe;
 
     pipeLine.addTask(task);
