@@ -107,8 +107,8 @@ const STRATEGY = {
  */
 const getWinPathList = (pathList, strategy) => {
     const strategy2LastNum = {
-        [STRATEGY.first]: 1,
-        [STRATEGY.second]: 0,
+        [STRATEGY.first]: 1, // path.length为奇数，则 path.length % 2 === 1
+        [STRATEGY.second]: 0, // path.length为偶数，则 path.length % 2 === 0
     }
 
     return (pathList || []).filter(path => path.length%2 === strategy2LastNum[strategy]);
