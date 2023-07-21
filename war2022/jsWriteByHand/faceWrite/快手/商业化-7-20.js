@@ -166,7 +166,7 @@ const getSingletonFn = (fn) => {
     let instance = null;
     return function (...args) {
         if (instance === null) {
-        instance = fn.apply(this, args);
+            instance = fn.apply(this, args);
         }
 
         return instance;
