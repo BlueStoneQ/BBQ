@@ -50,9 +50,9 @@ console.log('方法2: getWinPath([1, 2, 3], 30): ', getWinPath([1, 2, 3], 30));
  *  优点：可以枚举出各种策略下的必赢路径，从实际开发软件的角度技术密集程度和实用程度超过方法1
  *  缺点：其实不能完全确保必赢,管道最后一个环节计算量很大
  * 基于DFS回溯的暴力枚举法 + 管道式的处理：
- * - 管道式处理
+ * - 管道式处理（实现了一个简单的同步任务管道式调度器）
  * - 中间函数1: DFS回溯: 枚举出每条选择路径 得到一个路径的集合（二维数组：[路径1， 路径2]）
- * - 中间函数2: 对这个集合做一次filter, 能赢的选择是首尾一样的（或者个数是奇数的路径），得到所有可以赢的集合
+ * - 中间函数2: 对这个集合做一次filter, 根据先选和后选有不同的策略, 根据不同的策略可以输出对应的必赢链
  * - 选择函数：每次输入当前累积的和curSum，然后在可以赢的序列中找到前面的和为curSum的序列，吐出next元素，作为下一次选择
  * 
  * 可以建立一个缓存型的查表：避免多次运算：
@@ -63,6 +63,12 @@ console.log('方法2: getWinPath([1, 2, 3], 30): ', getWinPath([1, 2, 3], 30));
  * ...
  */
 
+/**
+ * 回溯: 枚举出所有的可能的分支路径
+ * @param {*} targetSum 
+ * @param {*} numList 
+ * @returns 
+ */
 const getAllpath = (targetSum, numList) => {
     if (!numList || !Array.isArray(numList) || numList.length === 0) return [];
 
@@ -88,17 +94,17 @@ const getAllpath = (targetSum, numList) => {
     return pathList;
 }
 
+const STRATEGY = {
+    first: 1,
+    second: 2,
+}
 /**
- * 
+ * 根绝不同策略对路径进行过滤 得出必赢路径集合
  * @param {string} strategy 参赛者是第一个挑，还是第二个挑，对应2套筛选策略
  *                              - 第一个挑 则 奇数个元素的path 最后一个是参赛者 可以赢
  *                              - 第二个挑 则 偶数个元素的path 最后一个是参赛者
  * @returns 
  */
-const STRATEGY = {
-    first: 1,
-    second: 2,
-}
 const getWinPathList = (pathList, strategy) => {
     const strategy2LastNum = {
         [STRATEGY.first]: 1,
@@ -125,7 +131,9 @@ const getWinPathList = (pathList, strategy) => {
 // test
 // getPathList(20, [1, 2]).getWinPathList()
 
-// 顺手写一个pipe工具 实现函数管道式调用
+/**
+ * 顺手写一个pipe工具 实现函数管道式调用
+ */
 class PipeLine {
     constructor() {
         this.taskQueue = []; // 这里就先处理简单的同步任务,需要的话,我们也可以处理异步任务链
