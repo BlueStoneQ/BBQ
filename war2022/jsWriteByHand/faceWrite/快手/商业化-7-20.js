@@ -111,7 +111,7 @@ const getWinPathList = (pathList, strategy) => {
         [STRATEGY.second]: 0, // path.length为偶数，则 path.length % 2 === 0
     }
 
-    return (pathList || []).filter(path => path.length%2 === strategy2LastNum[strategy]);
+    return (pathList || []).filter(path => path.length % 2 === strategy2LastNum[strategy]);
 }
 
 // 再做一次去重过滤 序列化后 相同的可以去掉
