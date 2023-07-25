@@ -142,7 +142,7 @@ class PipeLine {
 
     /**
      * 注册任务到流水线的任务队列中
-     * @param {*} task 是一个HOF 我们result记录的是每一步该HOF产生的函数执行后的结果
+     * @param {function} task 
      */
     addTask(task) {
         this.taskQueue.push(task);
