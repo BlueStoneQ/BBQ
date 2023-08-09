@@ -30,7 +30,7 @@
 
 const getWinPath = (slectList, targetSum) => {
     const winPath = [];
-    const slectListSum = (slectList || []).reduce((cur, pre) => pre + cur, 0);
+    const slectListSum = (slectList || []).reduce((pre, cur) => pre + cur, 0);
 
     while (targetSum > 0) {
         winPath.push(targetSum);
@@ -61,6 +61,11 @@ console.log('方法2: getWinPath([1, 2, 3], 30): ', getWinPath([1, 2, 3], 30));
  * 2: [2, 1]
  * 3: [2, 1]
  * ...
+ * 
+ * TODO: version2 升级：8-2：
+ *  1. 第三步：利用正则匹配到第一个就停止匹配（每个path都join成string, 利用prePathStr来构造正则进行匹配，匹配到第一个即可停止匹配），同时筛除掉之前已经不匹配的：看看是否需要给孟哥😂
+    2. 重新完善下pipe的getResult，采用callback的形式
+    3. 采用node.readline实现问答交互式的 根据甲乙来给出下一步指导，可以快速实现下，如果还有后续可以发下
  */
 
 /**
@@ -164,6 +169,7 @@ class PipeLine {
 // 单例
 const getSingletonFn = (fn) => {
     let instance = null;
+
     return function (...args) {
         if (instance === null) {
             instance = fn.apply(this, args);
