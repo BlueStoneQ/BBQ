@@ -73,5 +73,7 @@ https://zhaoda.net/2015/10/16/browserify-guide/
     - 部分不能直接运行的，会被打包为一些专门为browser提供的模块类型
 
 # 工程化
+## 解析yaml配置 : js-yaml
+## 判定某个命令行是否安装 command-exists
 # DB
 ## redis
