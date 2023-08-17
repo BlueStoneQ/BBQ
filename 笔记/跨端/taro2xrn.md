@@ -47,8 +47,8 @@
 - [taro:插件编写](https://docs.taro.zone/docs/2.x/plugin#%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AA%E6%8F%92%E4%BB%B6)
 # build
 - XXtaro cli build --type xrn -> taro build ...args -> 模版项目中：taro中配置+注册了taro-plugin
-    -> taro调用:taro-plugin-xrn -> taro-target-code:crn-code
-    -> rn-cli:build -> metro-plugin -> rn-target-code
+    -> taro调用:taro-plugin-xrn -> output: crn-code
+    -> rn-cli:build -> metro-plugin -> rn-target-code:rn-bundles
 
 # taro-plugin-xrn
 - ctx.registerPlatform // 对编译平台进行扩展
