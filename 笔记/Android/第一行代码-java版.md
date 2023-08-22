@@ -13,6 +13,65 @@
 ## layout
 - xml
 - android_layout_weight ： 这里竞然将Edit Text 和Button 的宽度都指定成了odp，这样文本编辑框和按钮还 能显示出来吗?不用担心，由于我们使用了android:layout_weight 属性，此时控件的宽度就 不 应 该 再 由 a n d r o i d : l a y o u t _ w i d t h 来 决 定 ， 这 里 指 定 成 o d p 是 一种 比 较 规 范 的 写 法 
+### 布局
+- 线性布局
+    - 只有LinearLayout 支持使用 l ayout wei ght 属性来实现按比例指定控件大小的功能，其他两种布局都不支持
+    - wrap:
+        - <LinearLayout>
+        - android:orientation="horizontal"
+    - item:
+        - android:layout_gravity="top"/center_vertical/bottom
+        - android:layout_weight="1" // 类似flex: shrink
+            - 此时 一般规范写法 会将 android:layout_weight="0dp"
+- 相对布局
+    - wrap:
+        - <RelativeLayout>
+    - item: 
+        - 相对于parent: 
+            - android:layout_alignParentleft、
+            - android:layout_alignParentTop
+            - android:layout_alignparentRight 
+            - android: layout_ alignParentBottom
+            - android:layout_centerInParent
+        - 相对于其他元素：
+            - android: l a y o u tabove="aid/button3"
+            - a n d r o i d : l a y o u tt o L e f t o f = " @ i d / b u t t o n 3 "
+            - android:id="@+id/button4"
+            - android:layout width="wrap content"
+            - android:layout_height="wrap_content"
+            - android:layout below="@id/button3"
+            - android:layout toLeftof="aid/button3"
+            - android:layout_alignleft 表示让一个控件的左边缘和另一个控件的左边缘对齐, 
+            - android:layout_alignRight表示让一 个控件的右边缘和另一个控件的右边缘对齐。
+            - android:layout_alignTop
+            - android: layou t_al ignBot tom
+- 帧布局
+    - FrameLayout 由于定位方式的欠缺，导致它的应用场景也比较少
+    - wrap:
+        - <FrameLayout></FrameLayout>
+- 百分比布局
+    - 我们可以不再使用wr ap_ con t en t、mat ch_ par en t 等方式来指定控件的大小，而是允许直接指 定控件在布局中所占的百分比，这样的话就可以轻松实现平分布局甚至是任意比例分割布局的 效果了。
+    - 比较新，考虑兼容
+    - 不同于前了种布局，百分比布局属于新增布局，那么怎么才能做到让新增布局在所有Android 版本上都能使用呢?为此，Android 团队将百分比布局定义在了support 库当中，我们只需要在项 目的build.gradle 中添加百分比布局库的依赖，就能保证百分比布局在Android 所有系统版本上的 兼容性 了。
+    - 打开app/build.gradle 文件，在dependencies 闭包中添加奶下内容: 
+    ```js
+    dependencies {
+        compile
+        fileTree (dir: 'libs', include: ['*.jar']) 
+        compile 'com.android. support: appcompat-v7:24.2.1' compile 'com.android. support: percent:24.2.1'  // 新增
+        testCompile 'junit:junit:4.12'
+    }
+    ```
+    - 需 要 注 意 的 是 ， 每 当 修 改 了任 何 g r a d l e 文 件 时 ， A n d r o i d S t u d i o 都 会 弹 出 一 个 如 图 3. 2 5 所 示的提示。
+    - gradl e 文件自上次同步之后又发生 了变化，需要再次同步才能使项目正 常工作。这里只需要点击Sync Now 就可以了，然后gradle 会开始进行同步，把我们新添加的百 分比布局库引人到项目当中。
+    - 最 外 层 我 们 使 用 了 P e r c e n t F r a m e L a y o u t ，由 于 百 分 比 布 局 并 不 是 内 置 在 系 统 S D K 当 中 的 ， 所 以 需 要 把 完 整 的 包 路 径 写 出 来 。 然 后 还 必 须 定 义一 个 a p p 的 命 名 空 间 ，这 样 才 能 使 用 百 分 比 布 局 的自定 义属性。
+    ```xml
+    <android.support.percent. PercentFrameLayout
+        xmlns: android="http: //schemas.android.com/apk/res/android" 
+        xmlns: app="http: //schemas.android.com/apk/res-auto" android: layoutwidth="matchparent"
+        a n d r o i d : l a y o u th e i g h t = " m a t c hp a r e n t " >
+    </a n d r o i d . s u p p o r t . p e r c e n t . P e r c e n t F r a me L a y o u t >
+    ```
 ### value
 ### drawble
 - 更多的时 候美工只会提供给我们 一份图片，这时你就把所有图片都放在**drawable-xxhdpi** 文件夾下就好了，

@@ -45,14 +45,33 @@
     
 # 系统打底
 - [taro:插件编写](https://docs.taro.zone/docs/2.x/plugin#%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AA%E6%8F%92%E4%BB%B6)
+- [xtaro跨端实践](https://mp.weixin.qq.com/s/1ufn4jIIRH0Ba665UOsKrw)
 # build
 - XXtaro cli build --type xrn -> taro build ...args -> 模版项目中：taro中配置+注册了taro-plugin
-    -> taro调用:taro-plugin-xrn -> output: crn-code
-    -> rn-cli:build -> metro-plugin -> rn-target-code:rn-bundles
+    -> taro调用:taro-plugin-xrn -> taro-output: crn-code
+    -> 手动: rn-cli:build -> metro-plugin -> rn-output:rn-bundles
 
 # taro-plugin-xrn
 - ctx.registerPlatform // 对编译平台进行扩展
 - 职能：
+    - build crn
+        1. 在output的文件中利用模版+配置注入以下文件（本质: 注入crn工程需要的一些文件）：
+            1. main.js ， 继承了crn.APP + 路由等
+            2. index.ios.js + index.android.js 
+            3. 相关CRN-proj需要的配置：
+                - metroConfig
+                    - import: xtaro-metro-crn
+                    - resolver: xtaro-metro-crn.resolver
+                    - transformer: xtaro-metro-crn.transformer
+                - babelConfig
+                    - preset: metro-react-native-babel-preset
+                    - plugin: 
+                        - @babel/plugin-proposal-decorators
+                        - babel-plugin-dynamic-import-node
+            4. 根据taro-input源码 + 模版：批量生成页面：
+                - 生成源码路径
+                - 源码 + 模版：批量生成业务页面
+    - build mp
 # metro-plugin-xrn
 - 职能：
 
