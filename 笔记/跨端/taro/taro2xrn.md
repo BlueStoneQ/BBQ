@@ -49,7 +49,13 @@
 # build
 - XXtaro cli build --type xrn -> taro build ...args -> 模版项目中：taro中配置+注册了taro-plugin
     -> taro调用:taro-plugin-xrn -> taro-output: crn-code
-    -> 手动: rn-cli:build -> metro-plugin -> rn-output:rn-bundles
+        => taro产出的代码在dist下，而这个事xrn-cli的input (dist下的是标准的xrn源码)
+    -> 手动: xrn-cli:build -> metro-plugin -> rn-output:rn-bundles
+        - 替换了dist:xrn代码中的运行时库:组件库别名替换:
+            - 替换@tarojs/components + @tarojs/taro + @tarojs/runtime 为 @ctrip/xtaro-components-crn
+        - 支持部分平台文件：index.xrn.jsx index.xrn.scss
+        - 支持scss样式文件: @tarijs/rn-style-transformer
+        - 支持CSSModule样式: babel-plugin-transform-react-jsx-to-rn-stylesheet
 
 # taro-plugin-xrn
 - ctx.registerPlatform // 对编译平台进行扩展

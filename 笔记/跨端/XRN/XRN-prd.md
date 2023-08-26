@@ -5,7 +5,7 @@
 所以重点是prd + 技术方案：一定要打磨到解决所有关键技术点
 ```
 ## 概述：版本设计
-### version0.x.x
+### version0.x.x 主干核心
 1. version0.0.1: 首先抛开远程发布+多bundle 相关概念, 先把android单边走通，我们渐进增强。我们的首先是：
     - rn-cli create a project
     - 用Android实现一个壳子, 里面先实现一个单容器_RNView：继承自ReactRootView
@@ -45,7 +45,7 @@
     - 获取bundle-manage-server中的bundle注册信息
     - 根据注册信息，根据容器id获取对应的bundle
     - 加载bundle + 运行
-9. version0.0.8: bundle-manage-platform
+9. version0.0.8: bundle-manage-platform@nestjs+DB
     - 手动发布平台：（基于类似taro的pipe-line平台设计）
         - pipeLine 和 手动发布能力：分开，手动发布能力封装为官方中间件
 9. version0.0.9: devOps流水线version1:自动化发布
@@ -65,23 +65,26 @@
     - APP Page 各自生命周期设计：
         - 在容器加载的各个阶段 触发生命周期（注册回调）
     - route统一和注入
-### version1.x.x 稳定可用版本,主干基本已经稳定,增加各种场景的处理
-1. version1.0.0 
-2. 安全: bundle的防注入处理？？
+    - 更新并调通 新的bundle-template
+### version1.x.x 稳定可用版本,主干基本已经稳定,增加各种经典核心场景的处理
+1. 真机调试 ： cli preview生成二维码真机预览
 3. lazyrequire
-4. common-bundle: 例如组件库, 避免每个bundle都打包一份在自己的bundle中:
+4. common-bundle: 例如组件库, 避免每个bundle都打包一份在自己的bundle中
 5. 预加载、预请求
+9. bundle-template进一步完善：UT/AT graphQL TS
+12. 包内路径映射本地调试
+6. cid uuid各种id的生成
+### version2.x.x IOS版
+- IOS版完成version1 和 version2 的能力
+### version3.x.x more sexy
+1. 安全: bundle的防注入处理？？- facebook在RN中应该做了 
 6. 监控：异常 性能
 7. 埋点：pv 等自动上报
 8. 排障：sourceMap 流量回放平台
-9. bundle-template进一步完善：UT/AT graphQL TS
+11. hermes引入？
 10. XRN配套的dev-tools ? 评估是否有必要
     - 本地调试
     - 真机调试
-        - cli preview生成二维码真机预览
-11. hermes引入？
-12. 包内路径映射本地调试
-### version2.x.x 引入IOS
 # xrn-cli
 # xrn-runtime-framework
 # xrn-proj-template

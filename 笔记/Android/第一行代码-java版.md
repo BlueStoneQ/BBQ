@@ -92,5 +92,23 @@
 - 方案1：子线程: message -> 主线程：Handler -> 操作UI
 - 方案2：AsyncTask
     - 底层还是用的异步消息机制处理
-
 ## 一个下载案例的实现@最佳实现
+
+# 广播Boradcast
+## 类型
+- 标准广播
+- 有序广播：类似pipeLine
+## 系统广播
+- 动态接收
+- 静态注册接收
+    - eg: 开机启动
+    - IDE: 右击com.example.broadcasttest 包-I ew-rOther BroadcastReceiver
+    - 定义boradcast
+    - 在AndroidManifest.xml中配置
+        - < a p p l i c a t i o n > 标 签 内 出 现 了一 个 新 的 标 签 < r e c e i v e r > ， 所 有 静 态 的 广 播 接 收 器都是在这里进行注册的。它的用法其实和<act ivity>标签非常相似，也是通过android:name 来 指 定 具 体 注 册 哪 一个 广 播 接 收 器 ，而 e n a b l e d 和 e x p o r t e d 属 性 则 是 根 据 我 们 刚 才 勾 选 的 状 态 自动生成的。
+## 自定义广播
+- 发送
+- 接收
+## 本地广播
+- 发送
+- 接收
