@@ -114,7 +114,10 @@
 - 接收
 
 # 持久化
+## 文件存储
+- 简单的文本数据或者 二进制数据
 ## SharedPreference
+- 简单键值对
 - SharedPreferences 文件是使用xML格式来对数据进行管理
 - 创建SharedPreference
     1. Context 类中的getSharedPreferences()方法
@@ -159,7 +162,8 @@ int age = pref.getInt("age", 0);
 boolean married = pref.getBoolean("married", 0);
 ```
 
-## SQLite
+## SQLite、
+- 复杂的关系型数据
 - 创建数据库
     - SQLiteOpenHelper 帮助类，抽象类（必须创建一个自己的帮助类继承该抽象类）
     - 在自己的帮助类里必须重写：onCreate() 和 onUpgrade()，
@@ -292,15 +296,58 @@ public class MainActivity extends AppCompatActivity {
     }
     ```
     - 创建litepal.xml
+    ```xml
+    <litepal>
+        <dbname value= "BookStore" ></dbname>
+        <version value="2" ></version>
+        <list>
+            <mapping class="com.example. l i t e p a l t e s t . Book"></mapping> 
+            <mapping class="com.example. l i t e p a l t e s t . Category"></mapping>
+        </list>
+    </litepal>
+    ```
     - 配置AndroidManifest.xml
+    ```xml
+    <application
+        android: name="org. litepal.LitePalApplication"
+    ></application>
+    ```
 - 创建和升级DB
+    - 表的元操作：创建 删除 列的更改 增加 删除 都需要update db version
 - 使用LitePal添加数据
 - 使用LitePal更新数据
 - 使用LitePal删除数据
 - 使用LitePal查询数据
+```java
+List<Book> books = DataSupport.findAll (Book.class); for (Book book: books) {
+    Log.d("MainActivity",, "bookname is " + book.getName()); 
+    Log.d("MainActivity" "bookauthor i s " + book.getAuthor ( )); 
+}
 
+List<Book> books = Datasupport.select("name", "author", "pages")
+                                .where("pages > ?", "400")
+                                .order ("pages")
+                                .limit (10)
+                                .offset (10)
+                                .find (Book.class);
+// 这段代码就表示，查询Book表中第11~20 条满足页数大于400这个条件的name、author 和pages 这了列数据，并将查询结果按照页数升序排列。
+```
 # 内容提供器：跨程序共享数据
-## 访问其他程序的数据
+- 运行时权限
+- 如果一个应用程序通过内容提供器对其数据提供了外部访问接又，那么任何其他的应用程序 就都可以对这部分数据进行访问
+## 访问其他程序的数据（读取/操作）
+- ContentResolver
+- Context.getContextResolver()
+- 操作不接受表名，接收一个内容URI
+    - com.example.app.provider/table1
+    - com.example.app.provider/table2
+    - 解析URI字符串为URI对象：Uri uri = Uri.parse("com.example.app.provider/table1")
+- 增 insert()
+- 删 delete()
+- 改 update()
+- 查 query()
+    - 查询结构还是Cursor
 ## 创建自己的内容提供器
+- 新建一个类继承ContentProvider
 
 
