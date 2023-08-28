@@ -116,6 +116,25 @@
 # 持久化
 ## 文件存储
 - 简单的文本数据或者 二进制数据
+- 写
+    - FileOutputStream out = Context.openFileOutput(文件名, 文件操作模式)
+        - Context.MODE_PRIVATE
+        - Context.MODE_APPEND
+    - BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out))
+    - writer.write('要写入的数据')
+    - 查看数据是否已经保存到文件中：
+        - Android Device Monitor:
+            - Android Studio 导航栏 - Tools - Android - File Explorer - 找到 /data/data/包名/files -> 右键，导出到电脑上 打开查看
+- 读
+    - FileInputStream in = Context.openFileIutput(要读取的文件名)
+    - BufferedReader reader = new BufferedReader(new inputStreamReader(in))
+    ```java
+    StringBuilder content = new StringBuilder();
+
+    while ((line = reader.readLine()) !== null) {
+        content.append(line)
+    }
+    ```
 ## SharedPreference
 - 简单键值对
 - SharedPreferences 文件是使用xML格式来对数据进行管理
@@ -349,5 +368,3 @@ List<Book> books = Datasupport.select("name", "author", "pages")
     - 查询结构还是Cursor
 ## 创建自己的内容提供器
 - 新建一个类继承ContentProvider
-
-
