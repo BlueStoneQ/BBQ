@@ -112,3 +112,195 @@
 ## 本地广播
 - 发送
 - 接收
+
+# 持久化
+## SharedPreference
+- SharedPreferences 文件是使用xML格式来对数据进行管理
+- 创建SharedPreference
+    1. Context 类中的getSharedPreferences()方法
+        - 参数
+            - preference文件名称
+                - 指定的文件不存在，则会创建一个
+                - 存放在：/data/data/<package.name>/shared_prefs/
+            - 操作模式
+                - 目前只有默认的操作模式：MODE_PRIVATE, 表示只有当前这个程序才能对这个SharedPreference进行读写
+    2. Activity类中的getPreferences方法
+        - 参数：操作模式
+        - 因为使用该方法会自动将当前活动的类名作为sharedPreference的文件名
+    3. PreferenceManager 类中的getDefaultSharedPreferences()方法
+        - 静态方法
+            - 接收 一个context 参数，并自动使用当前应用程序的包名作为前缀 来命名  SharedPreferences 文件
+        - 获取Editor: 
+            - preference = PreferenceManager.getDefaultSharedPreferences(context)
+            - editor = preference.edit()
+        - 添加数据: push
+            - editor.pushBoolean()
+            - editor.pushString()
+        - 提交数据：editor.apply
+```java
+SharedPreferences.Editor editor = getSharedPreferences('data', MODE_PRIVATE).edit();
+
+editor.putString ("name", "Tom");
+editor.putInt ("age", 28);
+editor.putBoolean ("married", false);
+
+editor.apply ();
+```
+- 写
+- 读
+    -  每 种 g e t 方 法 都 对 应 了 S h a r e d - Preferences.Editor中的一种put方法
+    - 这些get 方法都接收两个参数，第 一个参数是键， 传人存储数据时使用的键就可以得到相应的值了;第 二个参数是默认值，即表示当传人的键找不 到对应的值时会以什么样的默认值进行返回。
+    - 不过这些get方法不是挂载在editor上的 而是直接挂载在preference上的
+    - 索引preference凭的是存储preference的文件名
+```java
+SharedPreferences pref = getSharedPreferences('data', MODE_PRIVATE)
+
+int age = pref.getInt("age", 0);
+boolean married = pref.getBoolean("married", 0);
+```
+
+## SQLite
+- 创建数据库
+    - SQLiteOpenHelper 帮助类，抽象类（必须创建一个自己的帮助类继承该抽象类）
+    - 在自己的帮助类里必须重写：onCreate() 和 onUpgrade()，
+        - 在里面分别实现创建和升级数据库的逻辑
+    - 实例方法：
+        - 这2个方法都可以创建或者打开一个现有数据库，并返回有一个可对数据库进行读写操作的对象
+        - getReadableDatabase()
+            - 当数据库补课写入的时候（如磁盘空间已满）
+                - 返回的对象将以只读的方式打开DB
+        - getWritableDatabase()
+                - 则会出现异常
+    - 构造方法 * 2：
+        - 一般选用参数少一点的那个构造方法即可
+        - 参数：
+            - context
+            - 数据库名
+            - 自定义的cursor：一般传入null
+            - 当前数据库版本号，用于对数据库升级操作
+    - 构建出SQLiteOpenHelper 的实例之后， 再 调 用 它 的 g e t R e a d a b l e D a t a b a s e ( ) 或 g e t w r i t a b l e D a t a b a s e ( )方 法 就 能 够 创 建 数 据 库 了 ， 数据库文件会存放在/data/data/-packagename-/databases/ 目录下
+    - 此时，重写的oncreat e()方法 也会得到执行，所以通常会在这里去处理 一些创建表的逻辑
+    - 创建数据库：
+        - 将创建表的SQL语句拼成一个字符串常量，然后在onCreate(数据库创建成功的hook)中调用SQLiteDatabase的execSQL()去执行该建表语句
+- 检查数据库是否创建成功：adb shell
+    - adb放在platform-tools下 命令行中使用，先要把这个工具配置到环境变量中
+```shell
+adb shell # 进入设备控制台
+cd /data/data/com.example.databasetest/databases/
+ls
+# 这个目录下出现了两个数据库文件， 一个正是我们创建的BookStore.db，而另一个BookStore. db-journal 则是为了让数据库能够支持事务而产生的临时日志文件，通常情况下这个文件的大小 都是0字节。
+sqlite3 数据库名 # 用sqlite命令 打开数据库
+.table # 查看目前数据库中有哪些表
+# 此时数据库中有两张表, android met adata 表是每个数据库中都会自动生成的， 不用管它，而另外 一张Book 表就是我们在MyDatabaseHfelper 中创建的了
+.schema # 查看它们的建表语句
+.exit # 或者 .quit退出数据库编辑
+exit # 退出设备控制台
+```
+- SQLite: 数据类型：
+    - integer
+    - real 浮点
+    - text
+    - blob
+- 升级数据库
+    - onUpgrade()
+    - 很重要，因为onCreate只在数据库创建成功的时候执行一次
+    - 除非卸载掉app（此时原来的SQLite数据库也会被清除），再重新安装app，才会执行onCreate
+    - 所以 我们在onUpgrade()中执行创建表的SQL语句
+    - 触发onUpgrade执行：更新下数据库的版本号
+```java
+public class MainActivity extends AppCompatActivity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate (Bundle savedInstanceState) {
+        s u p e r . o n C r e a t es a v e d I n s t a n c e S t a t e ) ;
+        setContentView(R. layout.activitymain);
+        // 在这里更新版本
+        dbHelper = new MyDatabaseHelper(this, "BookStore.db", null, 2);
+    }
+```
+- 调用SQLiteOpenHelper的getReadableDatabase()或getwri table- Database()，这两个方法还都会返回 一个 SQLiteDatabase对象，借助这个对象就可以对数据进行CRUD 操作 了
+- 添加数据
+    - insert(表名, 为空的列自动赋值NULL(一般用不到这个功能，直接传入null)，ContentValues对象 )
+    ```java
+    soLiteDatabase db = dbHelper.getWritableDatabase () ; ContentValues values = new ContentValues);
+    // 开始组装 第一条数据
+    values.put ("name" "The Da Vinci Code"); 
+    values.put("author", "Dan Brown"); 
+    values.put("pages", 454);
+    values.put("price", 16.96);
+    db.insert("Book", null, values);  // 插入第一条数据
+    values.clear();
+    // 开始组装第二条数据
+    values.put("name", "The Lost Symboi"); 
+    values.put ("author" "Dan Brown")
+    values.put("pages", 510);
+    values.put ("price", 19.95);
+    db. insert(“Book", null, values); // 插入第二条数据
+    ```
+- 更新数据
+    - update(表名, ContentValues对象, 3 4参数都是用来约束更新某一行或者几行中的数据，不指定就是默认更新所有行)
+    ```java
+    ContentValues values = new ContentValues();
+    values.put("price", 10.99);
+    db.update("Book", values, "name = ?", new String[] { "The bighead" });
+    // 第三个参数对应SQL中的where部分，表示更新所有name = ?的行，？是一个占位符，第四个字符串数组为第三个参数中每个占位符指定相应的内容，因此上面语句是将 The bighead这本书的价格改成10.99
+    ```
+- 删除数据
+    - delete(表名, 2 3参数，用来约束删除某一行或者某几行，不指定的话就是删除所有行)
+    ```java
+    SQLiteDatabase db = dbHelper.getWritableDatabase();
+    // 仅删除那些页数超过500 页的书
+    db.delete ("Book", "pages > ?", new String[] { "500" }); 
+    ```
+- 查询数据 
+    - query() // 最短的一个重载参数有7个，其实就是把SQL查询语句用一个方法表示出来
+    - 调用query()会返回一个Cursor对象，查询到的数据都将从这个对象中取出
+    ```java
+    SQLiteDatabase db = dbHelper.getWritableDatabase () ;
+    // 查询Book 表中所有的数据
+    Cursor cursor = db.query ("Book", null, null, null, null, null, null); if (cursor.moveToFirst()) {
+        do{
+            // 適历Cursor 对象，取出数据并打印
+            String name = cursor.getstring(cursor.getColumnIndex("'name"));
+            String author = cursor.getString(cursor.getColumnIndex
+            ("author"));
+            int pages = cursor.getInt (cursor.getColumnIndex("pages"));
+            double price = cursor.getDouble(cursor.getColumnIndex ("price"));
+        } while (cursor.moveToNext ());
+    }
+
+    cursor.close();
+    ```
+- 使用SQL操作DB(我的选择)：
+    - 增删改
+        - 增：db.execSQL("insert into Book (name, author, pages, price) values(?, ?, ?, ?)", new String[] { "The bighead", "dan", "454", "19.69" })
+        - 删: db.execSQL("delete from Book where pages > ?", new String[] { "500" }) 
+        - 改: db.execSQL("update Book set price = ? where name = ?", new String[] {"10.10", "The bighead"})
+    - 查
+        - db.rawQuery("select * from Book", null)
+## 使用LitePal操作DB
+- 开源库, andorid数据库框架，ORM
+- 配置LitePal
+    - 那么怎样才能在项目中使用开源库呢?过去的方式比较复杂，通常需要下载开源库的 Jar 包 或者源码，然后再集成到我们的项目当中。而现在就简单得多了，大多数的开源项目都会将版本 提交到jcenter 上，我们只需要在app/build.gradle 文件中声明该开源库的引用就可以了。
+    ```Groovy
+    // 编辑app/build.gradle
+    dependencies {
+        compile fileTree(dir: 'libs', include: ['*.jar'])
+        compile 'com.android.support: appcompat-V7:23.2.0'
+        testCompile 'junit:junit:4.12'
+        compile 'org.litepal.android:core: 1.3.2'
+    }
+    ```
+    - 创建litepal.xml
+    - 配置AndroidManifest.xml
+- 创建和升级DB
+- 使用LitePal添加数据
+- 使用LitePal更新数据
+- 使用LitePal删除数据
+- 使用LitePal查询数据
+
+# 内容提供器：跨程序共享数据
+## 访问其他程序的数据
+## 创建自己的内容提供器
+
+
