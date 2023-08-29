@@ -111,11 +111,17 @@
     }]
 }
 ```
-7. ark全链路解决方案
-- me: 物料端构建：
+7. ark全链路解决方案@me:
+- 物料端构建：
     - xml -node-xml-parser-> xmlJson -> tansform(我们当ast看，提供tranverse + visitor, 来构建我们最终的组件UI-json) -> UI-json
     - js -node.fs.read-> jsCodeStr -> 将其注入到UI-json的codeStr属性中（或者将其发布到静态服务器后，将地址先挂在codeStr属性中）
     - wxss - postCss-plugin:将其注入到UI-json中的style属性中
+- 运行时：
+    - UI: render-engine: 模版 + 自定义组件
+    - JS: eval/new Function()/jsEngine() + runtime(api+页面容器模版)
+        - 页面容器模版：获取搭建好的页面str, 解析后将
+            - UI-json: 通过setData传递给wxml.renderTemplate
+            - codeStr: 交给当前的jsEngine.run(codeStr)
 
 # my-design@ark
 - 物料端
