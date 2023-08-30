@@ -708,11 +708,592 @@ startService(intentService);
 # 基于位置开发
 
 # 网络&webview
+## webview
+- layout.xml
+```xml
+<WebView
+    android:id="@+id/web_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+/>
+```
+- activity中使用webview:
+```java
+WebView webView = (WebView) findViewById(R.id.web_view);
+// 设置webview一些属性：这里让webview支持js
+webView.getSetting().setJavaScriptEnabled(true);
+// 当需要从 一个网页跳转到另一个网页时， 我们希望日标网页仍然在当前WebView中显示，而不是打开系统浏览器
+webView.setWebViewClient(new WebViewClient());
+// 加载网址
+webView.loadUrl('http://xxx.xxx.xx');
+```
+- 配置网络静态权限：AndroidManifest.xml
+```xml
+<uses-permission android: name="android.permission .INTERNET" /> </manifest>
+```
+## HTTP
+- HttpURLConnection
+    ```java
+    // - 获取HtpURLConnection实例
+    URL url = new URL("http://xxx.x.x");
+    HtpURLConnection connection = (HtpURLConnection) url.openConnection();
+    // - 设置：请求方法 链接超时 消息头等
+    connection.setRequestMethod("GET");
+    connection.setConnectTimeout(8000);
+    connection.setReadTimeout(8000);
+    // - 获取返回的输入流：getInputstream()
+    InputStream in = connection.getInputStream();
+    // - 关闭连接
+    connection.disconnect();
+    ```
+    - 一般在实践中 我们会用线程来发起网络耗时操作：
+    ```java
+    // 在activity中
+    new Tread(new Runnable() {
+        @Overload
+        public void run() {
+            HttpURLConnection connection = null;
+            BufferedReader reader = null;
+            try {
+                // 网络请求, 拿到返回流InputStream in(见上)
+                ...
+                // 读取获取到的输入流
+                reader = new BufferedReader(new InputStreamReader(in));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = read.readLine()) != null) {
+                    response.append(line);
+                }
+                showResponse(response.toString());
+            } catch(Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
+    })
+
+    ...
+
+    // 在主线程总操作UI
+    private void showResponse(final String response) {
+        //  这 里 为 什 么 要 用 这 个 r u n On U i T h r e a d ( ) 方 法 呢 ? 这 是 因 为 Androi d 是不允许在子线程中进行UI 操作的，我们需要通过这个方法将线程切换到 主线程，然后 再更新UI 元素
+        runUiThread(new Runnable()) {
+            @Overload
+            public void run() {
+                // 在这里操作UI
+                responseText.setText(response);
+            }
+        }
+    }
+    ```
+    - 提交数据
+    ```java
+    connection.setRequestMethod("POST");
+    DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+    out.writeBytes("username=admin&password=123456");
+    ```
+- OkHttp: 开源库, 首选
+    - 添加依赖
+    ```groovy
+    dependencies {
+        ...
+        compile 'com.squareup.okhttp3:okhttp:3.4.1'
+    }
+    ```
+        - 添加后构建，会自动下载2个库：OkHttp 和 Okio（前一个的基础）
+    - 创建实例
+    - get请求
+        - 创建request对象
+        - build()来设置方法
+        - 创建Call对象， 发送请求
+        - 处理response
+    - post请求
+        - 需要构建出一个requestBody对象来存放待提交的参数
+## XML
+- pull解析
+    -  首 先 要 获 取 到 一个 XmLPulIParserFactory的实例，
+    - 并借助这个实例得到XmLPul1Parser 对象，
+    - 然后调用 XmLPulLParser 的set Input ()方法将服务器返回的XML数据设置进去就可以开姶解析
+    - 解 析的过程也非常简单，通过getEventType()可以得到当前的解析事件，然后在 一个while循环 中不断地进行解析，
+        - 如果当前的解析 事件不等于XmlPulParser.END_DOCUMENT，说明解析工 作 还 没 完成 ， 调 用 n e x t ( ) 方法 后 可 以 获取 下一 个解 析 事件
+        - 在whi le 循环中，我们通过getName()方法得到当前节点的名字，如果发现节点名等于id name 或version ，就调用nex tTex t ( ) 方法来获取节点内具体的内容，每当解析完一个app 节点后 就将获取到的内容打印出来。 
+```xml
+<apps>
+    <app>
+        <id>1</id>
+        <name>aa</name>
+    </app>
+    <app>
+        <id>2</id>
+        <name>bb</name>
+    </app>
+</apps>
+```
+```java
+try {
+    XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+    XmlPullParser xmlPullParser = factory.newPullParser();
+    // 开始解析
+    xmlPullParser.setInput(new StringReader(xmlData));
+    int eventType = xmlPullParser.getEventType();
+    String id = "";
+    String name = "";
+
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        String nodeName = XmlPullParser.getName();
+
+        switch(eventType) {
+            // 开始解析某个节点
+            case XmlPullParser.START_TAG: {
+                if ("id".equals(nodeName)) {
+                    // 获得节点的具体内容
+                    id = XmlPullParser.nextText();
+                    break;
+                }
+
+                if ("name".equals(nodeName)) {
+                    name = XmlPullParser.nextText();
+                    break;
+                }
+
+                break;
+            }
+            // 解析完某个节点
+            case XmlPullParser.END_TAG: {
+                if ("app".equals(nodeName)) {
+                    // 打印之类的
+                    Log.d("id is" + id);
+                    Log.d("name is" + name);
+                }
+                break;
+            }
+            default: break;
+        }
+
+        // next到下一个节点
+        eventType = XmlPullParser.next();
+    }
+} catch(Exception e) {}
+```
+- SAX解析
+    - 它的用法比Pull 解析要复杂一些，但在语义方面会更加清楚
+    - 新建 一个类继承自DefaultHandler，并重写父类的5个方法
+```java
+// 定义SAX解析器
+public class ContentHandler extends DefaultHandler {
+    private String nodeName;
+    private StringBuilder id;
+    private StringBuilder name;
+
+    @Overload
+    public void startDocument() throws SAXException {
+        id = new StringBuilder();
+        name = new StringBuilder();
+    }
+
+    @Overload
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        // 记录当前节点名
+        nodeName = localName;
+    }
+
+    @Overload
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        // 根据当前的节点名判断將内容添加到哪 一个StringBuilder对象中
+        if ("id".equals(nodeName)) {
+            id.append(ch, start, length);
+            return;
+        }
+        if ("name".equals(nodeName)) {
+            name.append(ch, start, length);
+            return;
+        }
+    }
+
+    @Overload
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        if ("app".equals(localName)) {
+            Log.d("id is" + id.toString().trim());
+            // 最后要将StringBuilder清空掉
+            id.setLength(0);
+        }
+    }
+
+    @Overload
+    public void endDocument() throws SAXException {
+        super.endDocument();
+    }
+}
+
+// 在Activity中调用MyHandler来解析xmlData
+try {
+    SAXParserFactory factory = SAXParserFactory.newInstance();
+    XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+    ContentHandler handler = new ContentHandler();
+    xmlReader.setContentHandler(handler);
+    xmlReader.parse(new InputSource(new StringReader(xmlData)));
+} catch(Exception e) {}
+```
+- DOM解析
+## JSON
+- 比起xML，JSON 的主要优势在于它的体积更小，在网络上传输的时候可以更省 流量。但缺点在于，它的语义性较差，看起来不如XML 直观
+- JSONObject:
+❓：嵌套递归型json如何解析：？
+```java
+try {
+    JSONArray jsonArray = new JSONArray(jsonData);
+
+    for (int i = 0; i < jsonArray.length(); i++) {
+        JSONObject jsonObject = jsonArray.getJSONObject(i);
+        String id = jsonObject.getString("id");
+    }
+} catch(Exception e) {}
+```
+- GSON ： 开源库，Google，更简单易用，
+    - 可以将一个json-str直接映射成一个对象
+    - 添加依赖:app/build.gradle
+    ```groovy
+    dependencies {
+        ...
+        compile 'com.google.code.gson:gson: 2.7'
+    }
+    ```
+    ```java
+    // 解析
+    Gson gson = new Gson();
+    App person = gson.fromJson(jsonData, App.class);
+    // 解析json数组 借助TypeToken 将期望解析成 的数据类型传人到fromJson( ) 方法中
+    list<App> people = gson.fromJson(jsonData, new TypeToken<List<App>>(){}.getType());
+
+    // 定义App
+    public class App {
+        private String id; 
+        private String name; 
+        private String version; 
+
+        public String getId() { return id; }
+        public void setId (String id) { this.id = id; }
+        public String getName () { return name; }
+        public void setName (String name) { this.name = name; } 
+    }
+
+    // 使用Gson
+    try {
+        Gson gson = new Gson();
+        List<App> applist = gson.fromJson(jsonData, new TypeToken<List<App>>(){}.getType());
+
+        for (App app : appList) {
+            Log.d("id is " + app.getId());
+        }
+    } catch() {}
+    ```
+## 网络编程最佳实践
+- 通常情况下我们都应该将这些通用的网络操作提取到一个公共的类里，并提供一个静 态方法，当想要发起网络请求的时候，只需简单地调用 一下这个方法即可
+- java回调机制：传入一个回调实例，实例上会挂载着定义的回调方法
+- 使用基于 HttpURLConnection 的类 + java回调机制
+- 使用基于 OkHttp + java回调机制
+```java
+// 方法1：基于HttpURLConnection
+// 定义Http的工具类
+public class HttpUtil {
+    public static void sendHttpRequest(final String address, final HttpCallbackListener listener) {
+        new Thread(run Runnable() {
+            @Overload
+            public void run() {
+                HttpURLConnection connection = null;
+                try {
+                    URL url = new URL(address);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    InputStream in = connection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = read.readLine()) != null) {
+                        response.append(line);
+                    }
+
+                    if (listener != null) {
+                        // 调用成功回调
+                        listener.onFinish(response.toString());
+                    }
+                } catch(Exception e) {
+                    if (listener !== null) {
+                        // 调用回调
+                        listener.onError(e);
+                    }
+                } finally {
+                    if(connection != null) {
+                        connection.disconnect();
+                    }
+                }
+            }
+        }).start();
+    }
+}
+
+// 定义回调方法挂载对象的接口，要实现这个接口，在2个方法中编写自己的回调逻辑
+public interface HttpCallbackListener {
+    void onFinish(String response);
+    void onError(Exception e);
+}
+
+// 调用HttpUtil
+HttpUtil.sendHttpRequest(address, new HttpCallbackListener () {
+    @Overload
+    public void onFinish (String response) {
+        // 在 这 里根 据 返 回 内 容 执 行 具 体 的 逻 辑
+    }
+    @Override
+    public void onError(Exception e) { 
+        // 在这里对异常情況进行处理
+    }
+})
+
+// 方法1: 基于OkHttp，自身有回调接口
+public class HttpUtil {
+    public static void sendOkHttpRequest(String address, okhttp3.Callback callBack) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new request.Builder()
+            .url(address)
+            .build();
+
+        client.newCall(request).enqueue(callback);
+    }
+}
+
+// 调用
+HttpUtil.sendOkHttpRequest("http://www.baidu.com", new okhttp3.Callback() {
+    @Override
+    public void onResponse (Call call, Response response) throws IOException { 
+        //得到服务器返回的具体内容
+        String responseData = response.body().string();
+    }
+
+    @Override
+    public void onFailure(Call call, IOException e) {
+        //在这里对异常情况进行处理
+    } 
+};
+```
+- 不管是使用HttpURLConnection 还是OkHtp，最终的回调接又都还是在 子线程中运行的，因此我们不可以在这里执行任何的UI 操作，除非借助runOnUi Thread ( ) 方法 * 进行线程转换
+
+# 基于位置的服务 LBS
+## 申请百度地图
+- 定位：
+    - 基于GPS：精度高，只能室外使用，室内信号差？， 需要手机硬件支持
+    - 基于网络： 利用手机附近的基站进行三角定位，精度一般，室内外都可以使用
+        - 因为Google的服务不在国内，导致网络定位API失效
+- 所以 一般实践用的是国内的一些第三方公司的SDK,例如百度地图 高德等：
+- 申请APIKey
+    - 申请百度开发账号
+    - 提供打包程序签名的SHA1指纹：
+        - 开发版SHA1
+            - 默认用debug.keystore生成的指纹
+            - 查看：右侧工具栏 - Gradle - 项目名 - :app - Tasks - android
+                    - 双击 signingReport
+        - 发布版SHA1
+            - 创建：keytool -list -v -keystore <签名文件路径>
+    - 申请到百度地图的API Key
+- 依赖：
+    - 下载百度 LBS的SDK: （开发包）
+        - 基础地图SDK
+        - 定位SDK
+    - 解压开发包，libs目录下就是我们需要的：
+        - jar 是java层需要的
+        - so文件 是Native层需要的 
+            - so文件 C/C++编写 用NDK编译出来的
+    - 将依赖放到正确位置：
+        - jar包：放在app/libs下
+        - so文件：src/main 新建一个目录 jniLibs/  
+    - gradle
+        - gradle中有自动编译jar包到项目中的声明， 会将libs 日录下所有以jar 结尾的文件添加到当前项目的引用中
+        ```groovy
+        dependencies {
+            compile fileTree(dir: 'lib', include: ['*.jar'])
+        }
+        ```
+        - 但是 我们手动放的jar包 需要手动点击下顶部工具栏的 Sync按钮
+            - 点击Sync 按钮之后，1ibs 目录下的jar 文件就会多出 一个向右的箭头，这就表示项目已经能 引 用 到 这 些 J a r 包 了
+    - 配置SDK需要的权限
+## 使用百度定位
+- 确定自己的经纬度
+## 使用百度地图
+- 让地图显示出来
+- layout.xml使用百度自定义的Map组件，需要加上完整包名
+```xml
+<com.baidu.mapapi.map.MapView
+    android:id="@+id/bmapView"
+    android:layout_width="match_parent"
+    android:layoutheight="match parent"
+    android:clickable="true" />
+```
+
+# 1期高级技巧
+## 全局获取Context
+- Activity本身就是一个Context, 所以在Activity内本身就可以通过this访问到context
+- 我们可以定制一个自己的Application来管理全局的状态信息
+```java
+public class MyApplication extends Application {
+    private static Context context;
+
+    @Overload
+    public void onCreate() {
+        context = getApplicationContext();
+    }
+
+    public static Context getContext() {
+        return context;
+    }
+}
+```
+- 告诉系统当程序启动的时候，初始化MyApplication，而不是默认的Application
+    - 在AndroidManifest.xml中指定即可:  在 指 定 My A p p l i c a t i o n 的 时 候 一 定 要 加 上 完 整 的 包 名 ， 不 然 系 统 将 无 法 找 到 这 个类。
+```xml
+<manifest>
+    ...
+    <application
+        android: name="com. example.networktest.MyApplication"
+    ></application>
+</manifest>
+```
+- 这样，不论你在项目的任何地方使用context, 只要调用下MyApplication.getContext()
+- 当时为了让LitePal可以正常工作，要求必须在 AndroidManifest.xml 中配置如下内容:
+```xml
+<application
+    android: name="org. litepal.LitePalApplication">
+</application>
+```
+其实道理也是一样的，因为经过这样的配置之后，LitePal就能在内部自动获取到context 了。
+- 如果我们已经配置过了自己的Application 怎么办?这样 岂不是和LitePalApplicat ion 冲突了?没错，任何一个项目都只能配置一个Application,
+    - 解决方案：LitePal 提供了很简单的解决方案，那就是在我们自己的Appl icat ion 中去调用 L i t e P a l 的 初 始 化 方 法 就 可 以 了， 如 下所 示 :
+    - 在MyApplication.onCreate()中调用：LitePalApplication.initialize (context);
+## 使用intent传递对象
+- 启动活动 发送广播 启动服务，就是各个部件之间通信的时候使用的。
+- intent传递非对象：
+    - intent.putExtra("key1", "value1");
+    - intent.getIntExtra("key1", "");
+- intent传递对象：
+    - Serializable方式：序列化  
+        - 序列化的方法也很简单，只需要让一个类去 实 现 s e r i a l i z a b l e 这 个 接 又 就 可 以 了
+        ```java
+        // 定义
+        public class Person implements Serializable {}
+
+        // 使用
+        Person person = new Person();
+
+        ...
+        // 设置
+        Intent.putExtra("person_data", person);
+
+        // 获取
+        // 调用了getserial izabl eExtra()方法来狱取通过参数传递过来的序列化对象，接着再 将 它 向 下转 型 成 P e r s o n 对 象 
+        Person person = (Person) getIntent().getserializableExtra("person_data");
+        ```
+    - Parcelable方式
+        - 实现原理是将 一个完整的对象进行分解，而分解后的每一部分都是Intent 所支持的数据类型，这样也就实现传递对象的功能了
+        - 实现Parcelable接口
+            - 重写 describecontents(直接返回0)
+            - 重写 writeToParcel
+                - 调用Parcel.writeXxx()方法 将Persion中的字段一一写出
+                    - wirteString()
+                    - wirteInt()
+            - 提供一个名为CREATOR的常量, 这里创建了 Parcelable. Creator 接又的 一个实现，并将泛型指定为Person
+        ```java
+        // 定义
+        public class Person implements Parcelable {
+            private String name;
+            private Int age;
+
+            ...
+
+            @Overload
+            public int describeContents() { return 0; }
+
+            @Overload
+            public void writeToParcel(Parcel dest, int flags) {
+                dest.wrietString(name);
+                dest.writeInt(age);
+            }
+
+            public static final Parcelable.Creator<Person> CREATOR = new Parcelable.Creator<Person>() {
+
+                @Overload
+                public Person createGromParcel(Person source) {
+                    Person person = new Person();
+
+                    person.name = source.readString();
+                    person.age = source.readInt();
+
+                    return person;
+                }
+
+                @Overload
+                public Person[] newArray(int size) {
+                    return new Person[size];
+                }
+            }
+        }
+        // 使用:设置
+        Intent.putExtra("person_data", person);
+        // 使用:获取
+        Person person= (Person) getIntent().getParcelableExtra("person_data");
+        ```
+- 对比：
+对比一下，Serializable的 方式较为简单，但由于会把整个对象进行序列化，因此效率会比Parcelable 方式低 一些，所以在 通 常 情 况 下 还 是 更 加 推 荐 使 用 P a r c e l a b l e 的 方 式 来实 现 I n t e n t 传 递 对 象 的 功 能 。
+    
+## 定制自己日志工具
+- 开发一个日志对象，对象根据level属性来打印日志:
+```java
+public class LogUtil {
+    public static final int VERBOSE = 1;
+    public static final int WARN = 4;
+    public static final int NOTHING = 6; // 不打印任何日志
+
+    public static int level = VERBOSE; // 这里值其实可以从配置常量中读取 在不同的环境中 读取不同的配置
+
+    public Static void v(String tag, String msg) {
+        if (level <= VERBOSE) {
+            Log.v(tag, msg);
+        }
+    }
+
+    public Static void w(String tag, String msg) {
+        if (level <= WARN) {
+            Log.v(tag, msg);
+        }
+    }
+}
+```
+## 调试app
+- 在当前进程中 使用Android顶部工具栏的 Attachdebugger toAndroidprocess按钮：
+## 创建定时任务
+- Java Timer类
+    -  T i m e r 有 一 个 明显的短板，它并不太适用于那些需要长期在后台运行的定时任务
+    - 手机休眠状态，CPU长时间不操作会进入睡眠状态， Timer 中的定时任务无法正常运行
+    Timer 中的定时任务无法正常运行
+- Android Alerm机制
+    - Alarrn 则具有唤醒 CPU的功能，它可以保证在大多数情况下需要执行定时任务的时候CPU都能正常工作
+    - 唤醒CPU和唤醒屏幕完全不是 一个概念
+## 多窗口模式编程
+## lambda表达式
+
+# 容器专题：webview
+# 容器专题：RN: RectView
 
 # 进阶技巧
 ## 组件化
 ## 模块化
 ## 依赖管理：引用和发布
-
-# 容器专题：webview
-# 容器专题：RectView
