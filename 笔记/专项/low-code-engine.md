@@ -122,6 +122,12 @@
         - 页面容器模版：获取搭建好的页面str, 解析后将
             - UI-json: 通过setData传递给wxml.renderTemplate
             - codeStr: 交给当前的jsEngine.run(codeStr)
+- 组件通信：
+    - 参考
+- 依赖common
+    - 单独有common目录
+    - 该目录会单独打包上报
+    - 并根据搭建的页面中的dependences属性进行SSG: - 并打包注入
 
 # my-design@ark
 - 物料端

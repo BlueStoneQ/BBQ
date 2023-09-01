@@ -1,5 +1,6 @@
 # 参考
 - https://cloud.tencent.com/developer/article/2228412
+- https://mp.weixin.qq.com/s/1ufn4jIIRH0Ba665UOsKrw
 
 # 实现载体
 - taro-plugin
@@ -80,7 +81,24 @@
     - build mp
 # metro-plugin-xrn
 - 职能：
-
+    - 别名替换：原有的taro引用替换为XRN自己实现的一些运行时
+- 构建过程中替换运行时：
+    - 所谓不同平台适配，就是在构建时通过webpack/metro等，对taro/runtime等运行时库进行别名替换，替换为为各平台适配的rumtime库
+    - 例如使用babel-plugin对import语句进行别名替换
+    ```js
+    visitor: {
+        ImportDeclaration(path) {
+            const source = path.get('source');
+            if (source.isStringLiteral()) {
+                if (source.node.value === "@tarojs/components") {
+                    source.replaceWith(
+                        t.stringLiteral(`@nnfs/compoent`);
+                    );
+                }
+            }
+        }
+    }
+    ```
 # 范式积累
 
 ## taro-plugin

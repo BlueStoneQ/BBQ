@@ -3,7 +3,6 @@
 - 服务
 - 广播
 - 线程
-
 # UI
 - 位置：res/layout/xxx.xml
 - width & height: match_parent、til l_parent 和wrap_content
@@ -1140,6 +1139,422 @@ HttpUtil.sendOkHttpRequest("http://www.baidu.com", new okhttp3.Callback() {
     android:clickable="true" />
 ```
 
+
+# 多媒体
+## app运行在手机上
+- 手机侧：
+    - 设置 - 开发者选项 - 勾选：USB调试
+    - 开发者选项入口：关于手机 - 最下面版本号：连续点击
+- Android stidio:
+## 使用通知
+- 获取 NotificationManager 
+- Builder构造器来创建Notification
+    - API不稳定，我们这里使用support库提供的兼容API
+- 设置Notification
+- notify显示通知
+```java
+NotificationManager manager = (NotificationManager) getService(NOTIFICATION_SERVICE);
+NOTIFICATION notification = new NotificationCompat.Builder()
+    .setContentTitle("大标题")
+    .setCOntentText("内容")
+    .setWhen(System.currrentTimeMillis)
+    .setSmallIcon(R.mipmp.small_icon)
+    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.lar_icon))
+    .setContentIntent(pi) // 增加点击的意图pi，例如增加点击事件, 定义见下面
+    .setAutoCancel(true) // 取消通知-方法1: 通知自己取消自己
+    .setSound(Uri.fromFile(new File("system/media/audio/ringtones.Luna.ogg"))) // 在通知的时候 播放一段音频
+    .setVibrate(new long[] {0, 1000, 0, 1000}) // 通知的时候震动:静止 震动 静止 ... // 震动需要配置静态权限：VIBRATE
+    .setStyle(new NotificationCompat.BigTextStyle().bigText("长文本")) // 允许构建富文本，可以显示长文本
+    .setStyle(new NotificationCompat.BigPictureStyle().bigPicture(
+        BItmapFactory.decodeRedource(getResources(), R.drawable.big_image)
+    )) // 显示大图片
+    .setPriority() // 设置优先级：5个常量
+    .build();
+
+int notitionId = 1;
+manager.notify(notitionId, notification);
+// 取消通知-方法2
+manager.cancel(notitionId);
+
+// 通过意图描述通知点击的事件：从一个活动调到另一个活动
+Intent intent = new Intent(this, AnotherActivity.class);
+PendingIntent pi = (PendingIntent) getActivity(this, 0, intent, 0);
+```
+- 通知栏：增加点击能力
+- Intent Vs PendingIntent
+    - PendingIntent 倾向于在某个合适的时机执行某个动作，也可以理解为延迟执行的Intent
+    - 获取实例的静态方法
+        - getActivity
+        - getBroadcast
+        - getService
+## 调用摄像头
+- 使用<ImageView>显示图片
+- 使用File对象来存储拍下的照片
+    - 应用关联目录 可以 避免申请SD卡读写权限
+        -  具 体 的 路 径 是/ s d c a r d / A n d r o i d / d a t a / - p a c k a g e n a m e > / c a c h e
+- 将File转化为Uri对象 
+    - Uri.fromFile 
+    - FileProvider.getUriForFile将File封装成一个封装过的Uri
+        - 因为从Android 7.0 系统开始，直接使用本地真实路径的Uri 被认为是不安全的，会抛出 一 个 F i l e U r i E x p o s e d E x c e p t i o n 异 常 。 而 F i l e P r o v i d e r 则 是 一 种 特 殊 的 内 容 提 供 器 ， 它 使 用 了和 内 容提供器类似的机制来对数据进行保护
+- Intent: 
+    - 描述打开照相机：action: android.media.action.IMAGE_CAPTURE 
+    - 照相结果输出到Uri指定的目录: putExtra
+    - startActivityForResult() 启动活动
+- 将拍的照片设置到ImangeView中显示出来
+    - 因为startActivityForResult， 拍完后 返回结果会到 onActivityResult()中
+```java
+// 创建file对象 用于存储拍照后的图片， getExternalCacheDir 获取 应用关联缓存目录
+File outputImage = new File(getExternalCacheDir(), "output_img.jpg");
+try {
+    if (outputImage.exists()) {
+        outputImage.delete();
+    }
+
+    outputImage.createNewFile();
+} catch(IOException e) {}
+// File对象转为Uri
+Uri imageUri;
+if (Build.VERSION.SDK_INT >= 24) {
+    imageUri = FileProvider.getUriForFile(
+        MainActivity.this, 
+        "com. example. cameraalbumtest.fileprovider",
+        outputImage);
+} else {
+    imageUri = Uri.fromFile(outputImage);
+}
+// 关键：构建启动相机的Intent + 设置存储照片位置
+Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+// 启动相机程序
+startActivityForResult(intent, TAKE_PHOTO);
+
+// 拍照后:在onActivityResult中 将拍摄的结果显示出来
+@Overload
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    switch (requestCode) {
+        case TAKE_PHOTO:
+            if (resultCode == RESULT_OK) {
+                try {
+                    // 将拍摄照片显示出来
+                    Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                    // 当然 这里为了突出核心 一般图片元素的获取我们可以放在onCreate中
+                    ImageView picture = (ImageView) findViewById(R.id.picture);
+                    picture.setImageBitmap(Bitmap);
+                } catch(FileNotFoundException e) {}
+            }
+            break;
+        default:
+            break;
+    }
+}
+```
+## 调用相册
+- 运行时权限申请：WRITE_EXTERNAL_STORAGE
+- 打开相册：构建Intent + 发送Intent
+- 选择图片后的回调
+```java
+// 运行时权限申请：WRITE_EXTERNAL_STORAGE
+if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+        Manifest.permission, WRITE_EXTERNAL_STORAGE
+    }, 1); // 最后一个参数是onRequestPermissionsResult中的入参：requestCode的值
+    // 申请权限，用户点击允许/拒绝后，会触发onRequestPermissionsResult
+} else {
+    openAlbum();
+}
+
+private void openAlbum() {
+    // 关键：打开相册：构建Intent + 发送Intent
+    Intent intent = new Intent("android.intent.action.GET_CONTEN");
+    intent.setType("image/*");
+    startActivityForResult(intent, CHOOSE_PHOTO);
+}
+
+// 选择图片后的回调
+@Overload
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+}
+
+// 申请权限，用户点击允许/拒绝后，会触发onRequestPermissionsResult
+@Overload
+protected void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
+    // 如果申请成功 可以继而打开相册
+}
+```
+
+## 播放多媒体文件
+- 播放音频
+    - 获取 MediaPlyer
+    - 设置音源path: FilePath 不是 Uri 或者 Bitmap
+    - 播放前准备
+    - 播放
+    - 暂停
+    - 停止
+    - 释放掉MediaPlyer相关资源
+- 播放视频
+    - 类似播放音频，获取 VideoView类(背后仍用的MediaPlayer对视频文件进行控制)
+    - 设置播放视频文件的FilePath
+    - 一般在onDestroy中需要释放掉VideoView占用的资源：suspend()
+    - 缺点：不是万能的，支持格式 和 播放效率方面不足
+    - 想要仅仅使用 videoView编写出一个功能很强大的播放器是不太现实的
+
+# UI
+## 程序界面
+## 常用控件用法
+- TextView
+- Button
+- EditText
+- ImageView
+- ProgressBar
+- AlertDialog
+- ProcessDialog
+## 四种基本布局
+## 自定义控件
+- 所用的所有控件都是直接或间接继承自View 
+- 引入布局
+    - 新建组件自身的布局：UI xml
+    - 在主要布局中引入这个组件的布局：
+    ```xml
+    <linearLayout>
+        <include layout="@layout/title"/>
+    </linearLayout>
+    ```
+- 创建自定义控件
+    - 例如控件使用LinearLayout
+    ```java
+    public class TitleLayout extends LinearLayout {
+
+        public TitleLayout(Context context, AttributeSet attr) {
+            super(context, attrs);
+            LayoutInflater.from(context).inflate(R.layout.title, this);
+            // 自定义控件中的控件
+            Button titleBack = (Button) findViewById(R.id.title_back);
+            // 可以定义一些自定义控件的行为
+        }
+    }
+    ```
+## ListView 
+- width + height: match_Parent : 占满屏幕
+- 设置数据
+    - ArrayAdapter
+    - ListView.setAdapter(arrtAdpter)
+- 设置item-view
+    - 新建layout_item.xml
+- 定义item对应的实体类
+```java
+public class Fruit {
+    private String name;
+    private Int imageId;
+
+    public Fruit(String name, int imageId) {
+        this.name = name;
+        this.imageId = imageId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getImageId() {
+        return iamgeId;
+    }
+}
+```
+- 为ListView子项指定一个item自定义布局:
+    - 该Layout是和Item子项：Fruit绑定在一起，Fruit作为Item设置到ListView中的
+- 创建数据的自定义适配器
+```java
+public class FruitAdapter extends ArrayAdapter<Fruit> {
+    private int resourceId;
+
+    public FruitAdapter(Context context, int textViewResourceId, List<Fruit> objects) {
+        super(context, textViewResourceId, objects);
+        resourceId = textViewResourceId;
+    }
+
+    // 这个方法在每个子项被滚动到屏幕内的时候会被调用 
+    @Overload
+    public View getView(int position, View convertView, ViewGroup parent) {
+        Fruit fruit = getItem(position); // 获取当前item实例
+        // 加载item的layout.xml
+        View view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
+        // 获得item.layout中的控件
+        ImageView fruitImage = (ImageView) view.findViewById(R.id.fruit_image);
+        TextView fruitName = (TextView) view.findViewById(R.id.fruit_name);
+        // 将item的值映射到View上
+        fruitTmage.setImagereSource(fruit.getImageId());
+        fruitName.setText(fruit.getName());
+
+        return view;
+
+    }
+}
+```
+- 引用该自定义item控件 + ListView
+```java
+FruitAdapter adapter = new FruitAdapter(MainActivity.this,
+R. layout.fruit item, fruitlist);
+ListView listView = (ListView) findViewById (R.id.list_view); listView.setAdapter (adapter);
+```
+- listView点击事件
+- 提升ListView的运行效率[容易问]
+    - 之所以说ListView 这个控件很难用，就是因为它有很多细节可以优化，其中运行效率就是很 重要的一点
+    -  g e t V i e w ( )方 法 中 还 有 一 个 c o n v e r t V i e w 参 数 ， 这 个 参 数 用 于 将 之 前 加 载好的布局进行缓存，以便之后可以进行重用
+## RecyclerView[更推荐]
+    - ListView需要手动优化
+    - ListView无法横向滚动
+## 最佳实践
+# Fragment
+## 使用
+- 面向一套代码适配：手机 和 平板：
+- 为每个Fragment建立一个xml
+- 建立：LeftFragment extends Fragment
+    - 建议使用support-v4 库中的 android.support.v4.app.Fragment
+    - 不需要在 build.gradle文件中添加support-v4 库的依赖，因为build.gradle文件中已经添加了appcompat-v7, 这个库会将support -v4库也一起引人
+```java
+public class LeftFragment extends Fragment {
+    @Overload
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle saveInstanceState) {
+        // 加载布局
+        View view = inflater.inflate(R.layout.left_fragment, container, false);
+        return view;
+    }
+}
+```
+- 静态引入fragment: layout.xml引入fragment
+    - 需要通过android:name 属性来显式指明要添加的碎片类名，注意一定要 将类的包名也加上。
+```xml
+<fragment
+    android:id="@+id/left_fragment"
+    android:name="com.example.fragmenttest.LeftFragment""
+/>
+```
+- 在活动中动态加载Fragment
+    - 碎片真正的强大之处在于， 它可以在程序运行时动态地添加到活动当中。根据具体情况来动态地添加碎片，你就可以将程序 界面定制得更加多样化。
+    - 创建待添加的碎片实例
+    - 获取FragmentManager : 在活动中可通过 getSupportFragmentManager()
+    - 开启一个事务：beginTransaction()
+    - 向容器添加或者替换碎片：replace
+    - 提交事务：commit
+```java
+// 例如在activity中点击某个按钮 然后替换一个碎片
+FragmentManager fragmentManager = getSupportFragmentManager();
+FragmentTransaction transaction = fragmentManager.beginTransaction();
+transaction.replace(R.id.right_layout, fragment); //  params: 容 器 的 i d 和 待 添 加 的碎 片实例
+transaction.commit(); 
+```
+- 在碎片中模拟返回栈
+    - 在创建的是时候，将这个fragment加入到返回栈中
+    - transaction.addToBackStack(null);
+- 碎片与活动之间通信
+    - 活动中调用碎片：
+        - FragmentManager 提供了一个类似于 findviewById() 的方法，专门用于从布局文件中获取碎片的实例，代码如下所示:
+        ```java
+        RightFragment rightFragment = (RightFragment) getFragmentManager().findFragmentById (R.id.right_fragment);
+        ```
+    - 碎片中获取活动实例：
+        - MainActivity activity= (MainActivity) getActivity() ;
+        - 碎片中获取context: getActivity() // 获取到的活动本身就是context
+- 碎片与碎片之间通信：
+    - 碎片A - 获取：活动 - 得到：碎片B
+## 生命周期：类似Activity
+- 运行状态
+- 暂停状态
+- 停止状态
+    - 用户不可见
+    - 可能会被系统回收
+- 销毁状态
+
+- Fragment和Activity一般是绑定在一起的，Fragment一般是镶嵌在Activity中
+
+- 回调
+    - onAttach
+    - onCreateView
+    - onActivityCreated
+    - onDestroView
+    - onDetach
+## 动态加载布局
+- 根据分辨率 或者 屏幕大小 决定加载哪个布局
+- 限定符：类似css中的媒体查询：
+    - 目录命名上：
+        - 单页模式:res/layout/xx.xml
+            - 包含1个碎片
+        - 多页模式:res/large-layout/xx.xml
+            - 可以包含2个碎片
+            - 那些屏幕被认为 是large 的设备就会自动加载layout-large 文件夹下的布局
+    - 大小 限定符
+    - 分辨率 限定符
+    - 方向 限定符
+- 最小宽度限定符
+    - 最小宽度限定符允许我们对屏幕的宽度指定一个最小值(以dp 为单位)，然后以这个最小值 为临界点，屏幕宽度大于这个值的设备就加载 一个布局，屏幕宽度小于这个值的设备就加载另 一 个布局。
+    - res/layout-sw600dp/xx.xml
+        - 屏幕width > 600dp : res/layout-sw600dp/xx.xml
+        - 屏幕width < 600dp : res/layout/xx.xml
+# UI:materialDesign
+## ToolBar
+## 滑动菜单
+## 悬浮按钮和可交互提示
+## 卡片式布局
+## 下拉刷新
+## 可折叠式标题栏
+
+# 发布到应用商店
+## 生成正式签名的APK文件
+- 使用android studio生成
+    - 查看debug.keystore文件地址:
+        - Android studio右侧工具栏的Gradle ›项目名一r app Tasks- randroid，双击signingReport,
+    -  生成：
+        - A n d r o i d S t u d i o 导 航 栏上的Build -GenerateSignedAPK
+        -  C r e a t e n e w 按钮 ， 然 后 会 弹 出 一个新的对话框来让我们填写创建keystore 文件所必要的信息。
+            - Validity那一栏填写的是keystore 文件的有效时长，单位是年， 一般建议 时问可以填得长一些，比如我填了30年。
+        - app-release apk 就是带有正式签名的APK文件了
+- 使用Gradle生成
+    - 如果你想将Gradle 完全精通的话，这个难度就比较大了。Gradle 的用法极为丰富，想要完全掌握它的用法，其复杂程度并不亚于学习一门新的语言(Gradle 是使 用Groovy 语言编写的)。而Android 中主要只是使用Gradle 来构建项目而已，因此这里我们掌握 一 些它的基本用法就好了，重点还是要放在功能开发上面，不要本末倒置了
+    - 。 A n d r o i d S t u d i o 项 目 的 根 目 录 下 有 一个 g r a d l e . p r o p e r t i e s 文 件 ， 它是专门用来配置全局键值对数据的
+        - 目前keystore 文 件的所有信息都是以明文的形式直接配置在build.gradle中的 ，这样就不太安全。Android推荐的 做法是将这类敏感数据配置在 一个独立的文件里面，然后再在build.gtadle中通过键值去读取这些数据
+        - 我 们只需要将 gradle,properties 文件保护好就行了，比如说将它从Git 版本控制中排除。这样 gradleproperties文件就只会保留在本地，从而也就不用担心keystore 文件的信息会泄漏了
+    - 配置gradle: app/build.gradle，在release闭包下配置：
+    ```groovy
+    android {
+        signingConfigs {
+            config {
+                storeFile file(":/Users/Administrator/Documents/guolin.jks") // 指定keyStore文件位置
+                storePassword '1234567
+                keyAlias 'guolindev'
+                keyPassword '1234567'
+            }
+        }
+    }
+    ```
+- 生成APK
+    - Android Studio中内置了很多的Gradle Tasks，其中就包括了生成APK文件的Task。点击右侧 工 具栏的Gradle -项目名一:app--Tasks-sbuid
+    - assembleDebug用于生成测试版的APK 文件，assembleRelease 用于生成正式版的APK 文 件 ， a s s e m b l e 用 于同 时 生 成 测 试 版 和 正 式 版 的 A P K 文 件 。 在 生 成 A P K 之 前 ， 先 要 双 击 c l e a n 这个Task来清理一下当前项目，然后双击assenbleRelease
+    - apk-out: app/buildloutputs/apk
+- 生成多渠道APK文件
+    - 对不同的应用商店提供不同版本的需求：（一般没有这种需求）
+    - app/build.gradle
+    - 配置：productFlavors 在里面可以添加不同渠道的差异化配置
+## 申请应用商店账号
+## 发布app
+- 针对未签名APK直接签名：
+    - 点击下载应用按钮，先将加固后的APK 文件下载下来。接下来的工作就有点烦琐了，因为 A n d r o i d S t u d i o 中 并 没 有 提 供 对 一 个 未 签 名 的 A P K 直 接 进 行 签 名 的 功 能 ， 因 此 我们 只 能 通 过 最 原 始 的 方 式， 使 用 j a r s i g n e r 命 令 来 进 行 签 名 。
+    在命令行界面按照以下格式输人签名命令:
+    jarsigner - verbose - sigalg SHAlwithRSA -digestalg SHAl -keystore [keystore 文件路径〕 -storepass 〔keystore 文件密码〕〔待签名APK路径】〔keystore 文件别名】
+    将 [ ] 中 的 描 述 替 换 成 k e y s t o r e 文 件 的 具 体 信 息 就 能 签 名 成 功 了 ，注 意 [ ] 符 号 是 不 需 要 的 。 接 着我们将 签名后的 APK 文件重新 上传就 可以 了。
+## 嵌入广告以盈利
+- 腾讯广告联盟（原广点通）
+- 接入广告SDK
+- 更新APK-version + 重新发布到app商店
+    - app/build.gradle
+```groovy
+android {
+    defaultConfig {
+        versionCode 2
+        versionName "1.1"
+    }
+}
+```
 # 1期高级技巧
 ## 全局获取Context
 - Activity本身就是一个Context, 所以在Activity内本身就可以通过this访问到context
@@ -1287,9 +1702,83 @@ public class LogUtil {
 - Android Alerm机制
     - Alarrn 则具有唤醒 CPU的功能，它可以保证在大多数情况下需要执行定时任务的时候CPU都能正常工作
     - 唤醒CPU和唤醒屏幕完全不是 一个概念
-## 多窗口模式编程
-## lambda表达式
+    - 范式：
+        - getsystemService(Context.ALARM_SERVICE) => AlarmManager
+            - set:
+                - 模式
+                - 时间
+                - pendingIntent: 启动服务或者广播
+                    - 来源：getService / getBroadcast
+    ```java
+    // 建立一个每隔1h就会执行一次的任务：服务
+    public class LongRunningService extends Service {
+        @Overload
+        public IBinder onBind(Intent intent) { return null; }
 
+        @Overload
+        public void onStartCommand(Intent intent, int flags, int startId) {
+            new Thread(new Runnable() {
+                @Overload
+                public void run() {
+                    // 需要每隔1h就执行具体任务
+                }
+            }).start();
+
+            // 启动定时任务：1h后再次启动该服务
+            // 获取AlarmManager
+            AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            // 计算定时时间
+            int h = 60 * 60 * 1000;
+            long triggerAtTime = SystemClock.elapsedRealtime() + h; // 从开机时间到现在的时间（现在） + 1h = 从现在起一个小时后
+            // 设置Intent: 从当前任务 跳到 下一个当前任务，是同一个任务
+            Intent i = new Intent(this, LongRunningService.class);
+            PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+            // 设置定时器
+            manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime, pi);
+            // Service固定范式：调用Service.onStartCommand
+            return super.onStartCommand(intent, flags, startId);
+        }
+    }
+    // 启动该服务
+    Intent intent = new Intent(context, LongRunningService.class);
+    context.startService(intent);
+    ```
+- 如果你要求Alarm任务的执行时间必须淮确无误，Android 仍然提供了解决方案。 使用AlarmManager 的setExact ()方法来替代set ()方法，就基本上可以保证任务能够准时 执行了。
+    - 从Andr oid 4. 4 系统开始，Alar m任务的触发时间将会变得不准确，有可 能会延迟 一段时问后任务才能得到执行。这并不是个bug，而是系统在耗电性方面进行的优化。 系 统 会 自 动 检 测 目 前 有 多 少 A l a r m 任 务 存 在 ，然 后 将 触 发 时 间 相 近 的 几 个 任 务 放 在 一 起 执 行 ， 这 就可以大幅度地滅少CPU被唤醒的次数，从而有效延长电池的使用时间
+- Doze模式
+    - Android 6.0以上
+    - 在Doze模块下， A l a r m 任 务 将 会 在 下次 退 出 D o z e 模 式 的 时 候 执 行， 也就是Alarm会不准时
+    -  如 果 你 真 的 有 非 常 特 殊 的 需 求 ，要 求 A l a r m 任 务 即 使 在 D o z e 模 式 下也 必 须 正 常 执 行 ， Android还是提供了解决方案。调用AlarmManager 的setAndAl lowwhileIdle()或setExact-
+    A n d A l l o w w h i l e I d l e ( ) 方 法 就 能 让 定 时 任 务 即 使 在 D o z e 模 式 下也 能 正 常 执 行 了，这 两 个 方 法 之 间的区别和set () 、setExact ()方法之间的区别是一样的。
+## 多窗口模式编程
+- 多窗口声明周期
+- 关闭多窗口模式
+## lambda表达式
+- java8 新特性
+- L a m b d a 表 达 式 却最低兼容到Android2.3系统，基本上可以算是覆盖所有的Android 手机了
+- 本质上是一种匿名方法，它既没有方法名，也即没有访问修饰符和返回值类 型，使用它来编写代码将 会更加简洁，也更加易读
+- 配置：app/build.gradle
+```groovy
+android {
+    defaultConfig {
+        jackOptions.enable = true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+```
+// me: 很像箭头函数
+```java
+// 开启一个线程
+new Tread(() -> {
+    // 处理逻辑
+}).start();
+// 凡是这种只有一个待实现方法的接又，都可以使用Lambda 表达式的写法
+// eg: 开启子线程 、 设置点击事件
+button.setOnClickListener(v -> {});
+```
 # 容器专题：webview
 # 容器专题：RN: RectView
 

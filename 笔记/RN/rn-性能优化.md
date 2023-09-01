@@ -1,6 +1,8 @@
 ## 参考
 1. https://supercodepower.com/react-native-performance-js
 
+2. [RN性能优化-原生侧](https://zhuanlan.zhihu.com/p/530381812)
+
 ## js-bundle优化
 ### 1. 减小js0-bundle体积
 1. 使用 react-native-bundle-visualizer 查看包体积
