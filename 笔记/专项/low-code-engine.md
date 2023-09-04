@@ -123,7 +123,7 @@
             - UI-json: 通过setData传递给wxml.renderTemplate
             - codeStr: 交给当前的jsEngine.run(codeStr)
 - 组件通信：
-    - 参考
+    - 参考Android中的provider + 消费者的概念，给出一个解决方案
 - 依赖common
     - 单独有common目录
     - 该目录会单独打包上报

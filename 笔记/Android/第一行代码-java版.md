@@ -1,8 +1,8 @@
 # 四大组件
 - activity
-- 服务
-- 广播
-- 线程
+- Service
+- Broadcast
+- Content-provider
 # UI
 - 位置：res/layout/xxx.xml
 - width & height: match_parent、til l_parent 和wrap_content
@@ -1492,8 +1492,69 @@ transaction.commit();
         - 屏幕width > 600dp : res/layout-sw600dp/xx.xml
         - 屏幕width < 600dp : res/layout/xx.xml
 # UI:materialDesign
-## ToolBar
+-  Design Support库
+## Toolbar
+- 隐藏：默认的ActionBar
+    - AndroidManifest.xml
+    - <style parent="Theme. AppCompat.Light.DarkActionBar">
+    - 用Toolbar 来替代ActionBar，因此需要指定 一个不带ActionBar的主题
+        - 设置为淡色主题 然后把一些相关的颜色都设置下
+- layout.xml中使用Toobar 代替 ActionBar:
+```xml
+<FrameLayout 
+    xmlns: android="http: //schemas.android.com/apk/res/android" xmlns:app="http: //schemas.android.com/apk/res-auto">
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layoutwidth="matchparent"
+        android:layoutheight="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+</FrameLayout>
+```
+- 指定命名空间：xmlns:app, 所以 后面可以使用：app:popupTheme
+- 很多的Material 属性在5.0之前的系统中并不存在
+    -  兼 容 之 前 的 老 系 统 ， 我 们 就 不 能 使 用 a n d r o i d : a t t r i b u t e 这 样 的 写 法 了， 而 是 应 该 使 用 app:attribute.
+- 在Activity中使用toobar
+```java
+public void onCreated() {
+    // 调用 setSupportActionBar()方法并将Toolbar 的实例传人，这样我们就做到既使用了Toolbar，又 让 它 的 外 观 与 功 能 都 和 A c t i o n B a r 一 致 了。
+    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+    setSupportActionBar(toolbar);
+}
+```
+- 定义toolBar内容元素的menu xml文件
+    - app:showAsAction: 指定该元素的显示场景和处理方案，传递定义好的常量
+    - res -> New Directory -> menu文件夹 -> new Menu resource file -> toolbar.xml
+- toolbar的menu中各个元素点击回调: on0ptionsItemSelected
 ## 滑动菜单
+- DrawerLayout
+    - 布局, 
+    - 子控件：
+        - 主屏幕显示内容
+        - 滑动菜单中显示的内容
+```xml
+<android.support.v4.widget.DrawerLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" 
+    android:id="@+id/drawer_layout">
+    <!--主屏幕中显示的内容-->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="matchparent" 
+            android:layout_height="?attr/actionBarSize" 
+            android:background="?attr/colorPrimary"
+            android:theme="@style/Theme0verlay.AppCompat.Dark.ActionBar" app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+    </FrameLayout>
+    <!--滑动菜单显示的内容 layout_gravity 必须指定左边还是右边, start是根据语言顺序-->
+    <TextView
+        android:layout_gravity="start"
+        android:text="This is menu"/>
+</android.support.widget.DrawerLayout>
+```
+- NavigationView
 ## 悬浮按钮和可交互提示
 ## 卡片式布局
 ## 下拉刷新
