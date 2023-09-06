@@ -60,4 +60,4 @@ docker-compose up -d
     - maven是jenkins构建java需要的
     - 前端需要不同的构建器
 - 配置目标服务器：构建结果push到目标服务器上
-- [书签](https://www.bilibili.com/video/BV16X4y1W7jS/?p=9&spm_id_from=pageDriver&vd_source=9365026f6347e9c46f07d250d20b5787)
+- 
