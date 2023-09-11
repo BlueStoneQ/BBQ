@@ -1,3 +1,7 @@
+# 装饰器
+- class装饰器
+- 属性装饰器
+- 方法装饰器
 # class中的get set拦截器
 - https://blog.csdn.net/qq_30100043/article/details/53542920
 ```js

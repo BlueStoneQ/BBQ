@@ -1,0 +1,51 @@
+# 资料
+【【GeekHour】一小时Redis教程】 https://www.bilibili.com/video/BV1Jj411D7oG/?share_source=copy_web&vd_source=daeaf2f951ad6eacf4cc7d9c4da82233
+
+# 概览
+- remote dictionary server
+- 基于内存
+- 应用：DB cache MQ
+- noSQL
+- 数据库的性能瓶颈：磁盘IO
+- 使用方式：
+  - cli
+  - api
+  - GUI
+- 启动服务：前台运行：redis-server
+- 启动客户端：redis-cli
+- gui: redisinsight
+- host+port： 就是可以确定一个DB服务
+- 存储形式：k-v
+
+# 命令行
+- SET GET DEL 
+- EXISTS KEYS  FLUSHALL 
+- SET key value
+- key区分大小写
+- 默认使用字符串作为类型存储数据，二进制安全（以二进制形式存储）
+- 默认不支持中文
+  - redis-cli启动 则显示的中文是二进制的十六进制表示
+  - redis-cli --raw // 指定以原始的样子现实，就可以显示中文内容了
+- 过期时间
+  - TTL key // 查看key的过期时间
+  - expire key 10 // 设置key的过期时间为10s
+  - SETEX name 5 一键三连 // 设置name的值为5，过期时间为5s
+  - SETNX // 只有当key不存在时才设置key-value
+
+# list
+- 可以实现MQ： 消息队列
+- LPUSH
+- LPOP
+- RPUSH
+- RPOP
+- LRANGE
+- LLEN
+- LTRIM
+
+# Set
+- 无序，不重复
+- SADD
+- SMEMBER
+- SISMEMBER
+- SREM
+- 集合运算
