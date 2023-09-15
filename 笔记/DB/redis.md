@@ -1,7 +1,9 @@
 # 资料
-【【GeekHour】一小时Redis教程】 https://www.bilibili.com/video/BV1Jj411D7oG/?share_source=copy_web&vd_source=daeaf2f951ad6eacf4cc7d9c4da82233
+- 【【GeekHour】一小时Redis教程】 https://www.bilibili.com/video/BV1Jj411D7oG/?share_source=copy_web&vd_source=daeaf2f951ad6eacf4cc7d9c4da82233
+- 【【狂神说Java】Redis最新超详细版教程通俗易懂】 https://www.bilibili.com/video/BV1S54y1R7SB/?p=4&share_source=copy_web&vd_source=daeaf2f951ad6eacf4cc7d9c4da82233
 
 # 概览
+- no sql： not only sql
 - remote dictionary server
 - 基于内存
 - 应用：DB cache MQ

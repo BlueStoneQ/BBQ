@@ -2,6 +2,7 @@
 例子驱动
 ```
 # 资料
+- [神光:nest小册:作为学习大纲](https://juejin.cn/book/7226988578700525605/section/7229127664756326455)
 - 【Nestjs 全家桶系列】 https://www.bilibili.com/video/BV1NG41187Bs/?p=2&share_source=copy_web&vd_source=daeaf2f951ad6eacf4cc7d9c4da82233
 
 
@@ -90,3 +91,15 @@ class Controller {
 # Security
 # GraphQL
 # micro-service
+- https://juejin.cn/book/7226988578700525605/section/7236156501499330618
+- 不过微服务和微服务之间一般不是用 http 来通信的。
+为什么呢？
+因为 http 的请求响应会携带大量的 header：
+增大了通信的开销。
+所以服务和服务之间没必要用 http，直接用 tcp 就好了。
+# MQ：RabbitMQ
+- https://juejin.cn/book/7226988578700525605/section/7236156565277900858
+- amqplib 的包，这个是 rabbitmq 的 node 客户端（amqp 是 rabbitmq 的协议）
+- 流量削峰：
+  - 数据库的并发比较低，我们可以通过 MQ 把消费的上限调低，就能保证数据库服务不崩。比如 10w 的消息进来，每次只从中取出 1000 来消
+- 
