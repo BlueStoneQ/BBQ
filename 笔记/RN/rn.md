@@ -11,7 +11,7 @@
 
 # RN原理
 - 框架会将我们开发 的所有 JavaScript代码，包括 React Native框架代码 、 第三方组件代码、业务逻辑 代码、 图片等资源都将打包在一个JSBundle文件中， 
-# RN热更新
+# RN热更新·
 - RN框架本身就支持增量热更新:
   - React Native 框架一个最大的特性就是热更新的功能，用户可以在不更新 App 的情况下进行 App 的热更新，甚至支持增量热更新，服务器只需要给用户下发新增 的代码与资源文件， React Native 框架会自动进行 JS Bundle 文件的合并， App 在重 新加载了 JS Bundle 后， App 的功能与内容也进行了更新
   - react Native框架只是提供了热更新的功能基础，具体的功能需要自己去使用

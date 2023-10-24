@@ -1,5 +1,5 @@
 ## 使用小程序template + 递归 + 循环 对json-schema进行解析
-- https://developers.weixin.qq.com/miniprogram/dev/reference/wxml/template.html
+- https://developers.weixin.qq.com/m iniprogram/dev/reference/wxml/template.html
 ```xml
 <!-- A模版 定义 -->
 <template name="a">
@@ -10,7 +10,7 @@
       <template is="b" data="{{...item}}" />  
     </block>
   </view>
-</template>
+</template>              
 
 <!-- b模版 定义 -->
 <template name="b">

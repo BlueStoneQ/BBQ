@@ -51,3 +51,44 @@
 - SISMEMBER
 - SREM
 - 集合运算
+
+# Geospatial
+- redis 3.2之后
+- 作用：
+  1. 存储地理位置信息 
+  2. 计算地理位置相关信息：城市之间距离 城市附近的多少千米以内的城市查询等
+- 增
+- 删
+- 改
+- 查
+
+# Bitmap
+- 字符串类型的扩展，使用一个string类型来模拟一个bit数组
+- 作用：
+  - 只记录0/1, 支持位运算
+  - 记录用户的用户签到情况/在线状态/是否点过赞
+
+# Bitfiled
+- 可以将很多整数存储到一个较大的位图中，更高效地使用内存
+- Bitfiled VS BitMap
+  - Bitfiled存储的数字，BitMap存储的是单个位，只有0/1值
+# 事务
+- 一次执行多个命令
+  - 但是不保证原子性
+- MULTI  + EXEC/DISCARD
+
+# 持久化
+- RDB：redis dataBase
+  - 适合定期备份
+- AOF: append only file
+  - 每次写入内存数据时，会在一个文件中记录一条写日志，redis启动时可以根绝这个记录文件来重建redis的内存数据
+  - 开启：redis.conf中 appendonly yes，重启redis
+
+# 主从复制
+- 主（写） -> 从（读）
+- 配置方法:
+  - redis.conf
+    - 改动port 
+    
+# 哨兵模式
+-  
