@@ -74,12 +74,17 @@
   - Bitfiled存储的数字，BitMap存储的是单个位，只有0/1值
 # 事务
 - 一次执行多个命令
-  - 但是不保证原子性
+  - 但是不保证原子性：不保证事务中的所有命令执行成功
+  - 不会因为一个命令的执行失败导致其他命令的不被执行
+  - 在队列中装入一组命令进行执行
 - MULTI  + EXEC/DISCARD
 
 # 持久化
 - RDB：redis dataBase
-  - 适合定期备份
+  - 适合定期备份，快照的思维
+  - 手动触发快照：
+    - save
+    - bgsave： 但是fork子进程也会占用redis主进程
 - AOF: append only file
   - 每次写入内存数据时，会在一个文件中记录一条写日志，redis启动时可以根绝这个记录文件来重建redis的内存数据
   - 开启：redis.conf中 appendonly yes，重启redis
