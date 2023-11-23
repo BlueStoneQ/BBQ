@@ -115,6 +115,43 @@ app.get("/",function(req,res){
 ## 命令行
 1. 跟所有终端程序一样，你可以用引号把中间有空格的参数合成一个参数
 2. 打印彩色：console.log('\033[32mhello\033[39m')
+# children_process
+## 主进程和子进程通信
+1. **主进程监听子进程的 'message' 事件**：子进程可以通过 `process.send()` 方法发送消息给主进程，主进程可以通过监听 `process.on('message')` 事件来接收这些消息。
+
+
+```javascript
+// 子进程
+process.send('Hello from child process!');
+
+// 主进程
+process.on('message', (message) => {
+  console.log(`Received message from child: ${message}`);
+});
+```
+2. **使用 `child_process` 模块**：可以使用 `child_process` 模块创建子进程，并使用它的 `stdin`、`stdout` 和 `stderr` 属性进行通信。例如：
+
+
+```javascript
+const { spawn } = require('child_process');
+const subprocess = spawn('node', ['child.js']);
+
+subprocess.stdout.on('data', (data) => {
+  console.log(`stdout: ${data}`);
+});
+
+subprocess.stderr.on('data', (data) => {
+  console.error(`stderr: ${data}`);
+});
+
+subprocess.on('close', (code) => {
+  console.log(`child process exited with code ${code}`);
+});
+```
+在上面的例子中，我们创建了一个子进程来运行 `child.js` 文件。子进程的标准输出和错误输出被连接到主进程的相应事件监听器上，这样主进程就可以读取子进程的输出。当子进程结束时，主进程会接收到一个 'close' 事件。
+3. **使用 `net` 模块建立 TCP 连接**：如果你需要在主进程和子进程之间传输更复杂的数据，比如大文件或者实时数据，可以考虑使用 `net` 模块建立 TCP 连接。这需要更多的编程工作，但是可以实现更复杂的通信需求。
+4. **使用 `ipc` 模块**：在主进程和渲染进程之间可以使用 `ipc` 模块进行通信。渲染进程可以通过 `ipc` 模块发送同步或异步消息给主进程，主进程也可以通过 `ipc` 模块发送消息给渲染进程。这种方式主要用于在主进程和渲染进程之间共享一些数据或者进行一些同步操作。
+5. **使用 `SharedArrayBuffer` 和 `postMessage`**：这是一种更现代的方式，可以在主进程和子进程之间传递更复杂的数据类型。通过 `SharedArrayBuffer` 可以共享一块内存，然后通过 `postMessage` 和 `on('message')` 可以在不同的进程之间传递消息。这种方式需要更多的编程工作，但是可以实现更复杂的通信需求。
 ## process
 1. 因为stderr通常是调试时用的，不会用来发送结构化数据，也不会构建管道，所以一般都不会直接访问process.stderr，而是使用console.error()
 ## npm

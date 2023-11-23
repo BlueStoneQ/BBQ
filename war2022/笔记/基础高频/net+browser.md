@@ -61,6 +61,18 @@
 1. 客户端发送到服务端：cookie携带在http.request-head.Cookie字段中
   - (https://blog.csdn.net/weixin_44419984/article/details/108660747)
 - coockie 不能跨域
+#### 在HTTP请求和响应中，与Cookie相关的常见请求头和响应头包括：
+- 请求头（Request Headers）：
+  - Cookie: 用于向服务器发送已存在的Cookie信息。客户端会在每个HTTP请求的头部中加入Cookie信息，以便服务器能够识别用户身份并保持会话状态。
+- 响应头（Response Headers）：
+  - Set-Cookie: 用于在HTTP响应中设置新的Cookie信息。服务器可以使用Set-Cookie头来发送新的Cookie，并指示客户端在后续的请求中携带该Cookie。
+  - Expires: 用于设置Cookie的过期时间。该响应头指示浏览器在指定的时间之后停止使用该Cookie。
+  - Max-Age: 用于设置Cookie的最大存在时间。该响应头指示浏览器在指定的时间之后删除该Cookie。
+  - Path: 用于指定Cookie生效的路径。如果设置了Path，则Cookie仅在该路径及其子路径下生效。
+  - Domain: 用于指定Cookie生效的域名。如果设置了Domain，则Cookie在该域名及其子域名下生效。
+  - Secure: 用于指示仅在HTTPS连接中传输Cookie。当设置了Secure时，浏览器仅会在HTTPS连接中发送Cookie，以保护Cookie的安全性。
+  - HttpOnly: 用于指示Cookie仅可通过HTTP请求访问，而无法通过客户端脚本访问（如JavaScript）。这有助于防止跨站脚本攻击（XSS）。
+  请注意，上述响应头是常见的与Cookie相关的响应头，但实际使用中可能会有其他的响应头或请求头与Cookie相关。
 ##### cookie: sameSite
 - 防止CSRF攻击:
 - [cookie: sameSite](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
@@ -87,7 +99,7 @@
 2. 消耗服务器资源 
 
 #### token:JWT
-- 携带：一般携带在 http.request-head.Athorization字段中
+- 携带：一般携带在 http.request.head.Athorization字段中
 - 客户端存储：一般存储在localStorage中
 - 生成+验证：服务端
 - 组成：head.payload.signature

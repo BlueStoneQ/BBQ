@@ -123,8 +123,15 @@ router.post(
 
 # koa-static
 1. 从其他中间件返回后 如果什么都没有携带 则证明没有命中其他路由 则走静态资源的检查：静态资源检查是在接口之后  整个洋葱的最外层，兜底的时候发挥作用
-2. 作为依赖型中间件 错误不应自己处理 应该抛出 由调用层决定如何处理
+2. 作为依赖型中间件 错误不应自己处理 应该抛出(throw) 由调用层决定如何处理
+  - koaApp.on('error', () => {})
+  - process.on('error', () => {})
 3. 在这里只是决定了next()的调用时机，确定了自己的调用时机
+```js
+app.use(koaStaticServer('public'));
+// 访问地址 localhost:3000/test.jpg
+// 注意上面这个路径请求的是/test.jpg，前面并没有public，说明koa-static对请求路径进行了判断，发现是文件就映射到服务器的public目录下面，这样可以防止外部使用者探知服务器目录结构。
+```
 # koa-send
 - koa-static的核心功能实现
 - 掌握吸收一个middleware的思路：
@@ -140,7 +147,17 @@ router.post(
     - 兜底处理
 - 静态文件从server到client 核心实现：
 ```js
+// 因为nodejs中的res本身就是一个stream
 ctx.body = fs.createReadStream(path)
+// res其实是http.ServerResponse类的一个实例，而http.ServerResponse本身又继承自Stream类：
+// koa中对于ctx.body的处理：
+const res = ctx.res; 
+const body = ctx.body; 
+
+// 如果body是个流，直接用pipe将它绑定到res上
+if (body instanceof Stream) return body.pipe(res);
+
+return res.end(body); 
 ```
 - 缓存处理
 
