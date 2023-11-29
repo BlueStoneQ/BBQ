@@ -13,7 +13,7 @@ const needInterceptActionTypeList = [
 ]
 
 const popMiddleware = store => next => action => {
-  // 判定type是否在拦截名单内: action.payload.from === 'popManager' 用来标志是否来自popManager的执行：dispatch，从popManager dispatch到这里，则直接走后门的next
+  // 判定type是否在拦截名单内: action.payload.from === 'popManager' 用来标志是否来自popManager的执行：dispatch，从popManager dispatch到这里，则直接走后面的next
   if (needInterceptActionTypeList.includes(action.type) || !action.payload.from === 'popManager') {
     // 弹窗调度器需要的task: promiseCreator
     const task = () => {

@@ -1,5 +1,6 @@
 /**
  * 预请求
+ * - 其实retry应该放在fetch本身中，这里应该职责单一
  */
 class PreFetch {
   constructor () {
