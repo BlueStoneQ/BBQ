@@ -3,6 +3,7 @@
 ## 参考
 - 《深入浅出vue》
 - [掘金小测-vue运行机制](https://juejin.cn/book/6844733705089449991)
+- [剑指前端](https://github.com/HZFE/awesome-interview)
 
 ## 原理
 
