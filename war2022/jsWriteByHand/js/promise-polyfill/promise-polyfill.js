@@ -241,7 +241,7 @@ MyPromise.prototype.finally = (callback) => {
   // 再调用了一遍then
   return this.then(
     value => MyPromise.resolve(callback()).then(() => value),
-    reason => MyPromise.resolve(callback()).then(() => { throw reason })
+    reason => MyPromise.resolve(callback()).then(reason => { throw reason })
   );
 }
 

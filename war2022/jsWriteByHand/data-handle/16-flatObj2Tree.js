@@ -5,6 +5,7 @@
  * https://febook.hzfe.org/awesome-interview/book3/coding-arr-to-tree
  * 其实就是根据pid 来生成树型结构
  * TODO: 1. 其实 应该要考这种的互相转换
+ * 2. 关键字：构建中间数据结构:id2ObjMap
  */
 
 /**

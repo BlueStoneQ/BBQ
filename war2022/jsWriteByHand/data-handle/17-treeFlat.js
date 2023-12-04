@@ -71,5 +71,15 @@ let tree = [
 ]
 
 // 以下2个测试不要连续进行，因为第一个会在原来位置更改tree， 导致第二次输入变形
-console.log('tree2FlatObj1: \n', flatTree1(tree))
+// console.log('tree2FlatObj1: \n', flatTree1(tree))
 console.log('tree2FlatObj2: \n', flatTree2(tree))
+
+/**
+ *  expect: 
+[
+  { id: 1, name: '1', pid: 0 },
+  { id: 2, name: '2', pid: 1 },
+  { id: 3, name: '3', pid: 1 },
+  { id: 4, name: '4', pid: 3 }
+] 
+ */
