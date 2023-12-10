@@ -174,6 +174,7 @@ const simpling = funciton() {
 // 因为这个重写是在项目的onlunch中 所以 并不知道是哪个组件 只有在组件执行时 才会拿到组件的this
 fst.registe = function() {
 
+  // Component本质是一个全局方法，入参就是组件的配置obj
   oldComponent = Component;
 
   Component = function(compObj) {
@@ -194,11 +195,12 @@ fst.registe = function() {
     }
 
     // 然后在组件的attach中执行hookSetData 会注入this
+    const originalAttached = compObj.attached
     compObj.attached = function(...args) {
       // 对setData进行hook
       hookSetData.call(this); // 这里的this就是attached的执行环境
       // 可能没声明attached
-      attached && attached.call(this, args);
+      originalAttached && originalAttached.call(this, ...args)
     }
 
     // return 出compObj, 因为最终小程序框架需要的是Component的执行结果
