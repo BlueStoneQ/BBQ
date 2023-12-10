@@ -36,3 +36,7 @@ const preFetch = (app, query) => {
 ## 各个板块的实现
 
 ## 部分关键实现：能够小规模code出来
+
+## 经典问题
+1. retry请求问题
+  - retry一般是集成在我们封装的fetch中

@@ -1,5 +1,18 @@
 
 # hooks
+## useEffect模拟生命周期
+```js
+useEffect(() => {  
+  // 这里的代码在组件首次渲染后运行一次 componentDidMount 
+  return () => {  
+    // 这里的代码在组件卸载时运行 componentWillUnmount
+  };  
+}, []);  // 空数组表示这个副作用只会在首次渲染和更新后运行，以及在卸载时运行
+
+useEffect(() => {  
+  // 不传递这个数组，那么组件每次渲染时都会执行副作用函数 componentDidUpdate
+});
+```
 ## useReducer+useContext来代替redux管理状态
 - https://juejin.cn/post/6995105000523317278
 - https://juejin.cn/post/6844904153773244429
@@ -60,6 +73,11 @@ const SubRoot = () => {
 
 export ConextProvider(SubRoot)
 ```
+## useRef+forwardRef
+## 优化：useMemo + useCallback
+
+# 常用自定义hook
+- https://juejin.cn/post/6844904074433789959
 
 # 考点
 ## react hooks原理 为什么不能再循环 条件 和嵌套函数中使用

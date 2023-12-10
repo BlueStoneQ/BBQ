@@ -1,4 +1,8 @@
 
+## 探针SDK
+### 普适性能探针SDK设计
+- [SDK设计](https://segmentfault.com/a/1190000040796868#item-1-11)
+
 # 逻辑骨架：
 - 注册端
   - fstSDK.regist:

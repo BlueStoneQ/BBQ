@@ -2,7 +2,6 @@
 const config = {}; // global
 const fst = {
   records: [], // 采样点记录
-
 };
 
 const register = function() {}
@@ -21,4 +20,8 @@ function sampling() {
   // isReachedBottom
   // tryComputedFst
 }
+
+// 使用方法
+// 1. 小程序app启动时，进行register，内部是用AOP对全局的Component进行重写，注入测速逻辑
+// 2. 采用BaseWrap的形式，对pageOpt进行: hookSetData + 生命周期拦截
 
