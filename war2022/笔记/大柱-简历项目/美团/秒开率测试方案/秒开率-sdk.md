@@ -113,11 +113,6 @@ const simpling = funciton() {
   const targetViewTop = getReact().top()
   const lastRecord = this.record[this.record.length - 1]
 
-      this.record.push({
-      targetViewTop,
-      timeStamp: now
-    })
-
   if (now - lastRecord.timeStamp >= 100ms) {
     for (let i = this.record.length - 1; i >= 1; i--) {
       const curItem = this.record[i]
@@ -131,6 +126,14 @@ const simpling = funciton() {
         this.endTime = preItem.timeStamp
       }
     }
+  }
+
+  // 如果没有stop: 则可以记录当前记录到record队列中
+  if (this.status === 'stop') {
+    this.record.push({
+      targetViewTop,
+      timeStamp: now
+    })
   }
 }
 ```
