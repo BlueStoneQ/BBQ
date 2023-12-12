@@ -33,6 +33,7 @@ export const PopHOC = function(wrappedComponent) {
       })
     }
 
+    // 不是用show的弹窗组件，可以配置项props的映射关系，或者再包一层，用show作为props来映射到组件真正管理是否显示的props上
     return <wrappedComponent show={_show} popTask { ...otherProps }></wrappedComponent>
   }
 }

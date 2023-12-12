@@ -8,7 +8,12 @@ import taskManager from '../调度中心/弹窗异步任务管理器'
 import { taskType } from '../策略中心/策略配置中心'
 
 const originalRequest = PermissionsAndroid.request
-export const PermissionsAndroidHook = (permisstionType, config = {}) => {
+PermissionsAndroid.request = (permisstionType, config = {}) => {
+  // 如果要拦截的弹窗type不在对应策略中 则会直接调用弹窗
+  if (!this.getStrategy().includes(permisstionType)) {
+    return originalRequest(permisstionType, config)
+  }
+
   // 定义该任务
   const task = () => {
     // 拉起弹窗
@@ -16,7 +21,7 @@ export const PermissionsAndroidHook = (permisstionType, config = {}) => {
       // 触发弹窗显示
       originalRequest(permisstionType, config).then(res => {
         if (res === PermissionsAndroid.RESULTS.GRANTED) return resolve(res)
-        reject()
+        reject() // 该task结束，调度中心会取队列中下一个任务进行执行
       }).catch(err => {
         reject()
       })

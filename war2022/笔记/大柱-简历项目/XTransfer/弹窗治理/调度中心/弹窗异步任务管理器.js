@@ -40,7 +40,7 @@ class TaskManager {
     // }
   }
 
-  // 需要一个timeout，每次填入也会检查timeout, 如果超过timeout，则会立刻执行队列，按照已有顺序执行
+  // 需要一个timeout，每次填入也会检查timeout, 如果超过timeout，则会立刻执行队列，按照已有顺序执行,timeout的起点 是第一个task加入的时间
   run() {
     // 更改状态机状态
     if (this.status !== status.RUN_ING) this.status = status.RUN_ING

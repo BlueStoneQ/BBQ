@@ -22,7 +22,7 @@ const popMiddleware = store => next => action => {
         action.payload.from = 'popManager'
         action.payload.$resolve = resolve // 通过action将resolve和reject传递到对应的弹窗中 在弹窗确认/关闭的时候 调用resolve， 来通知倒调度中心
         action.payload.$reject = reject
-        next(action) // 触发弹窗显示，在相关的关闭弹窗的reducer中可以调用该resolve和reject
+        next(action) // 触发弹窗显示，在相关的关闭弹窗的reducer中可以调用该resolve和reject，这里是在调度中心的run中执行，开始弹窗
       })
     }
 
