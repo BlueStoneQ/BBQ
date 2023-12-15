@@ -47,7 +47,7 @@ function show(state = initialState, action) {
           show: true,
           popTask: { $resolve, $reject }
         }
-      }; // 这样 component可以通过react-redux.connect.mapStateToProps拿到这个新的状态中的resolve, 在自己弹窗关闭的函数中调用resolve/reject => 驱动调度中心任务链继续向前
+      }; // ⭕️如何关闭当前弹窗 - 让弹窗任务进入下一个队列中任务：这样 component可以通过react-redux.connect.mapStateToProps拿到这个新的状态中的resolve, 在自己弹窗关闭的函数中调用resolve/reject => 驱动调度中心任务链继续向前
     case 'hide':
       return { ...state, b: action.payload };
     default:
