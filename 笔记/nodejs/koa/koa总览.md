@@ -1,3 +1,36 @@
+<!-- TOC -->
+
+- [资料](#%E8%B5%84%E6%96%99)
+- [目录结构设计](#%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1)
+- [ctx](#ctx)
+- [中间件](#%E4%B8%AD%E9%97%B4%E4%BB%B6)
+- [route](#route)
+- [error处理](#error%E5%A4%84%E7%90%86)
+- [logger](#logger)
+- [优化部署与云](#%E4%BC%98%E5%8C%96%E9%83%A8%E7%BD%B2%E4%B8%8E%E4%BA%91)
+  - [1. 性能指标](#1-%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87)
+  - [2. 性能指标优化](#2-%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%E4%BC%98%E5%8C%96)
+- [单元测试](#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95)
+- [登录](#%E7%99%BB%E5%BD%95)
+- [鉴权](#%E9%89%B4%E6%9D%83)
+  - [1. cookie](#1-cookie)
+  - [2. session](#2-session)
+  - [3. JWT](#3-jwt)
+- [专项](#%E4%B8%93%E9%A1%B9)
+  - [1. koa-static](#1-koa-static)
+  - [2. 文件上传](#2-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0)
+  - [3. 大文件断点续传](#3-%E5%A4%A7%E6%96%87%E4%BB%B6%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0)
+    - [3.1. 文件断点续传：下载](#31-%E6%96%87%E4%BB%B6%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E4%B8%8B%E8%BD%BD)
+    - [3.2. 文件断点续传：上传](#32-%E6%96%87%E4%BB%B6%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E4%B8%8A%E4%BC%A0)
+    - [3.3. 断点续传：总结](#33-%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0%E6%80%BB%E7%BB%93)
+- [DB连接](#db%E8%BF%9E%E6%8E%A5)
+  - [1. mysql](#1-mysql)
+  - [2. mongoDB](#2-mongodb)
+  - [3. redis](#3-redis)
+- [error](#error)
+- [tips](#tips)
+
+<!-- /TOC -->
 # 资料
 - 《koa2与Nodejs实战》
   - https://github.com/ikcamp
@@ -67,7 +100,7 @@ ctx.body = { foo: 1 };
 # error处理
 - 部分错误展示为错误页：
 ```js
-const numjucks = require('numjucks');
+const nunjucks = require('nunjucks');
 
 koaApp.on('error', (err, ctx) => {
   ctx.response.status = err.code || 500;
@@ -110,6 +143,7 @@ ctx.app.emit('error', err, ctx) 这行代码的作用是手动触发一个名为
   - 中间件函数发生错误：当一个中间件函数在执行过程中出现错误，可以通过抛出异常或者返回一个错误状态码来标记错误。此时，Koa会将错误传递给下一个中间件函数，直到找到一个处理错误的中间件函数或者达到应用程序的末尾。
   - 自定义错误处理：如果需要在应用程序中实现自定义的错误处理逻辑，可以使用 ctx.app.emit('error', err, ctx)
 # logger
+- koa-log
 # 优化部署与云
 ## 性能指标
 ## 性能指标优化
@@ -545,3 +579,26 @@ nodeServer这边安装的各种驱动mysql/sequalize其实就是DB-client,
 next(new Error('error info'))
 ```
 # tips
+1. app.use(router.allowedMethods())有什么作用
+`app.use(router.allowedMethods())`的作用是向Koa应用添加一个中间件，该中间件会检查HTTP请求方法是否被路由定义所允许。
+在Koa框架中，每个路由可以定义一个或多个允许的HTTP请求方法。例如，一个路由可能只允许GET请求，而另一个路由可能允许GET和POST请求。`router.allowedMethods()`方法返回一个中间件，该中间件将检查当前请求的HTTP方法是否与路由定义的方法匹配。
+通过将`app.use(router.allowedMethods())`添加到Koa应用的中间件堆栈中，我们确保在尝试访问一个不允许的HTTP方法的路由时，Koa将返回一个405方法不允许的错误响应。这有助于保护我们的应用，确保只允许适当的HTTP方法访问每个路由。
+2. koa-router如何定义哪些http请求方法被允许
+在Koa-router中，你可以通过在路由定义中指定`methods`属性来定义哪些HTTP请求方法被允许。`methods`属性是一个数组，包含允许的HTTP请求方法。
+```javascript
+const Router = require('koa-router');
+
+const router = new Router();
+
+// 只允许GET请求访问该路由
+router.get('/allowed-get', { methods: ['GET'] }, (ctx, next) => {
+  ctx.body = 'This route is allowed for GET requests.';
+  next();
+});
+
+// 只允许POST请求访问该路由
+router.post('/allowed-post', { methods: ['POST'] }, (ctx, next) => {
+  ctx.body = 'This route is allowed for POST requests.';
+  next();
+});
+```

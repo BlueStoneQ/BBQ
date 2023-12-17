@@ -1,4 +1,4 @@
-## node向另外一个服务器发送文件 d
+## node向另外一个服务器发送文件
 - https://www.cnblogs.com/yourstars/p/6728765.html
 ```js
 var exec = require('child_process').exec;

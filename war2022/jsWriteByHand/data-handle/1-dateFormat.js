@@ -19,12 +19,9 @@ const dateFormat = (date, format = 'yyyy/MM/dd') => {
   const year = date.getFullYear();
 
   // algo: 其实就是在模版中用实际的数字替换相关占位符
-  format = format.replace(/dd/, day);
-  format = format.replace(/MM/, month);
-  format = format.replace(/yyyy/, year);
-
-  // return 
-  return format;
+  return format = format.replace(/dd/, day)
+    .replace(/MM/, month)
+    .replace(/yyyy/, year);
 }
 
 
