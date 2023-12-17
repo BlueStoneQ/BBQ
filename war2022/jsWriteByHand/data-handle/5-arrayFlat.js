@@ -15,13 +15,7 @@ const flat1 = (arr) => {
   let result = [];
 
   for (const item of arr) {
-    if (Array.isArray(item)) {
-      // 是数组 递归处理成
-      result = result.concat(flat1(item));
-      continue;
-    }
-    // base case 
-    result.push(item);
+    result = result.concat(Array.isArray(item) ? _flat(item, depth - 1) : item);
   }
 
   return result;

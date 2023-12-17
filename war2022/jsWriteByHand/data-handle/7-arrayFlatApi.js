@@ -16,13 +16,8 @@ const _flat = (arr, depth = 0) => {
 
   let result = [];
   // 遍历递归
-  for (let i = 0; i < arr.length; i++) {
-    const item = arr[i];
-    if (Array.isArray(item)) {
-      result = result.concat(_flat(item, depth - 1));
-    } else {
-      result = result.concat(item);
-    }
+  for (const item of arr) {
+    result = result.concat(Array.isArray(item) ? _flat(item, depth - 1) : item);
   }
 
   return result;
