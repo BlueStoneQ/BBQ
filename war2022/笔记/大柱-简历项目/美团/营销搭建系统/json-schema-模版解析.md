@@ -1,5 +1,6 @@
 ## 使用小程序template + 递归 + 循环 对json-schema进行解析
 - https://developers.weixin.qq.com/m iniprogram/dev/reference/wxml/template.html
+- 拿到json-shema后，通过data注入到渲染容器组件，渲染容器组件通过：循环渲染出原生组件 + 递归渲染自定义组件
 ```xml
 <!-- A模版 定义 -->
 <template name="a">

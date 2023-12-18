@@ -36,6 +36,7 @@ const searchVal = (arr, val) => {
     }
   }
   
+  // 分割成 大数组（升序）和小数组（降序） 记录2个小数组的startIndex,endIndex
   const searchVal1 = (arr, val) => {
     // defend
     // init data
