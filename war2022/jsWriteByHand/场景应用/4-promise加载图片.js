@@ -6,12 +6,12 @@ const loadImg = (imgUrl) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
 
-    img.onload = () => {
-      resolve();
+    img.onload = res => {
+      resolve(res);
     };
 
-    img.onerror = () => {
-      reject();
+    img.onerror = err => {
+      reject(err);
     };
 
     img.src = imgUrl;
@@ -19,8 +19,8 @@ const loadImg = (imgUrl) => {
 }
 
 // test
-loadImg('http://zzz/xxx.png').then(() => {
+loadImg('http://zzz/xxx.png').then(res => {
   console.log('加载成功');
-}).catch(() => {
+}).catch(err => {
   console.log('加载失败');
 });

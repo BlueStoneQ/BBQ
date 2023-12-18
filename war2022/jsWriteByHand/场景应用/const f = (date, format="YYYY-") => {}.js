@@ -1,1 +1,0 @@
-const f = (date, format="YYYY-") => {}
