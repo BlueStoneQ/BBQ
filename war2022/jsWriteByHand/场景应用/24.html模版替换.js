@@ -5,7 +5,7 @@
 
 String.prototype.replaceTPL = function (kvObj) {
     // 注意：要使用this就不要使用箭头函数 箭头函数的this是从定义环境向上捕获的 不指向当前字符串
-    return this.replace(/\{(\w+)\}/ig, (match, p1) => {
+    return this.replace(/\{([^\{|\}]+)\}/g, (match, p1) => {
         return kvObj[p1] || ''
     });
 }
