@@ -38,7 +38,7 @@
   // 继承属性
   function SubType(name, age) {
     // 调用父类构造函数 注入当前this 将父类的属性挂载到当前的this上
-    SuperType.call(this, name); // 父类构造函数第二次调用
+    SuperType.call(this, name); // 在new Subtype()时 父类构造函数第二次调用
 
     this.age = age;
   }
@@ -77,7 +77,7 @@
     this.age = age;
   }
 
-  // 继承方法 - 这里是和组合继承不同的地方,这里有个工具方法
+  // 继承方法 - 这里是和组合继承不同的地方,这里有个工具方法：给subConstructor构造了一个prototype，该prototype是通过Object.create创造的super.prototype的原型
   const inheritPrototype = (subConstructor, superConstructor) => {
     // object将给定的值包装为一个新对象-如果给定值是一个已经存在的对象，则会返回这个已经存在的值（相同地址）
     // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/Object

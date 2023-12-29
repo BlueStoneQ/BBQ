@@ -33,13 +33,14 @@ const TYPE = {
 const _typeof = (value) => {
   // defend
   // case1 null: 其实 null 也可以用下面的方法获取
-  if (value === null) return `${value}`;
+  if (value === null) return 'null';
   // case2 引用类型
   if (typeof value === 'object') {
-    const protoTypeStr = Object.prototype.toString.call(value);
-    return protoTypeStr.split(' ')[1].split(']')[0].toLowerCase(); // 抠出array 等等真正的类型字符串
-    // 也可以用正则抠出具体类型 match(/(\w+)\]/)[1]， 如下：
-    // return Object.prototype.toString.call(value).match(/(\w+)\]/)[1].toLowerCase();
+    // 也可以用正则抠出具体类型 match(/(\w+)\]/)[1]， 如下：🔥
+    return Object.prototype.toString.call(value).match(/(\w+)\]/)[1].toLowerCase();
+    // 方法2：传统split的方法 专业度低
+    // const protoTypeStr = Object.prototype.toString.call(value);
+    // return protoTypeStr.split(' ')[1].split(']')[0].toLowerCase(); // 抠出array 等等真正的类型字符串
   }
   // case3 基础类型
   return typeof value;

@@ -26,9 +26,8 @@ const throttle1 = (fn, delay = 300) => {
     // defend
     if (now - start < delay) return;
     
-    const context = this;
     // 放行 执行
-    fn && fn.apply(context, args);
+    fn && fn.apply(this, args);
     start = now;
   }
 }
@@ -44,11 +43,8 @@ const throttle2 = (fn, delay = 300) => {
     // defend
     if (timer) return;
 
-    // init data
-    const context = this;
-
     timer = setTimeout(() => {
-      fn && fn.apply(context, args);
+      fn && fn.apply(this, args);
       // 本次执行结束 重置timer
       clearTimeout(timer);
       timer = null;

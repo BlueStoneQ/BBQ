@@ -370,3 +370,32 @@ setInterval(timer => {
   if (a === 3) cancelAnimationFrame(timer)
 }, 1000)
 ```
+
+## 高阶
+### eval和new Function的区别
+- 两者都可以用来执行代码，但它们在作用域上有一些区别。
+
+- 在 JavaScript 中，`eval` 和 `new Function` 都可以用来创建新的代码执行环境，但它们在作用域上有一些区别。
+
+`eval` 函数会将传入的字符串作为代码执行，它使用当前执行上下文的变量作用域。也就是说，如果在 `eval` 中定义的变量，它们在全局作用域中可见。例如：
+
+```javascript
+let a = 1;
+eval("let b = 2;");
+console.log(a, b); // 1 2
+```
+
+在这个例子中，我们在全局作用域中定义了一个变量 `a`，然后使用 `eval` 执行了一段代码，定义了一个变量 `b`。当我们输出 `a` 和 `b` 时，可以看到它们都在全局作用域中。
+
+而 `new Function` 创建的函数，它的作用域是创建函数时所在的词法环境。也就是说，如果在 `new Function` 中定义的变量，它们只能在创建函数的作用域中可见。例如：
+
+```javascript
+let a = 1;
+let func = new Function("let b = 2;");
+func();
+console.log(a, b); // ReferenceError: b is not defined
+```
+
+在这个例子中，我们在全局作用域中定义了一个变量 `a`，然后使用 `new Function` 创建了一个函数，该函数内部定义了一个变量 `b`。当我们调用这个函数时，变量 `b` 只在函数的作用域中可见，变量 `a` 仍然是全局作用域中的变量。
+
+总结一下，`eval` 的作用域是全局作用域，而 `new Function` 的作用域是创建函数时所在的词法环境。

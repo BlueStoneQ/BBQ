@@ -91,7 +91,7 @@ class Fst {
         targetTop,
         timeStamp: Date.now()
       })
-      // 追溯启动条件：当前记录距离上次超过100ms 则表示该节点可能比较稳定了，这个时候，从record中倒序去找最近的一个稳定记录点
+      // 追溯启动条件：当前记录距离上次超过100ms 则表示该节点可能比较稳定了，这个时候，从record中倒序去找最近的一个稳定记录点(稳定记录点就是连续间隔小于20px的最早记录)
       let curRecord = this.recordList[i]
       let preRecord = this.recordList[i - 1] // 倒序到第二个元素, 因为每次要取2个元素做比较
 
