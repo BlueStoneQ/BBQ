@@ -2,7 +2,9 @@
 
 
 ## HTML
-
+### onLoad vs DOMContentLoaded
+- onLoad 事件在页面所有资源（包括 CSS、JavaScript 和图片等）都加载完成后触发
+- DOMContentLoaded 事件在页面的主要 HTML 内容被解析并加载完成后触发。
 
 ## CSS
 

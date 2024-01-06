@@ -399,3 +399,30 @@ console.log(a, b); // ReferenceError: b is not defined
 在这个例子中，我们在全局作用域中定义了一个变量 `a`，然后使用 `new Function` 创建了一个函数，该函数内部定义了一个变量 `b`。当我们调用这个函数时，变量 `b` 只在函数的作用域中可见，变量 `a` 仍然是全局作用域中的变量。
 
 总结一下，`eval` 的作用域是全局作用域，而 `new Function` 的作用域是创建函数时所在的词法环境。
+
+### 性能指标
+前端性能指标主要包括以下几个方面：
+
+1. First Paint (FP)：首次绘制时间，即页面中可见部分的第一个像素出现在屏幕上的时间。
+2. First Contentful Paint (FCP)：页面中开始呈现内容的第一个时间。
+3. First Meaningful Paint (FMP)：页面中开始呈现有意义的内容的第一个时间。
+4. Largest Contentful Paint (LCP)：页面中最大内容元素绘制完成的时间。
+5. Time to First Interactive (TTI)：页面中开始交互的时间。
+
+这些指标的计算方式如下：
+
+1. FP：使用 Performance 对象中的 `firstPaint` 属性得到。
+2. FCP：使用 Performance 对象中的 `firstContentfulPaint` 属性得到。
+3. FMP：使用 Performance 对象中的 `firstMeaningfulPaint` 属性得到。
+4. LCP：使用 Performance 对象中的 `largestContentfulPaint` 属性得到。
+5. TTI：使用 Performance 对象中的 `timeToFirstInteractive` 属性得到。
+
+常规值如下：
+
+1. FP：通常在 100ms 内，但某些情况下可能会达到数秒。
+2. FCP：通常在 500ms 内，但某些情况下可能会达到数秒。
+3. FMP：通常在 1000ms 内，但某些情况下可能会达到数秒。
+4. LCP：通常在 2000ms 内，但某些情况下可能会达到数秒。
+5. TTI：通常在 500ms 内，但某些情况下可能会达到数秒。
+
+需要注意的是，这些指标的计算方式可能会受到浏览器版本、网络速度、设备性能等因素的影响，因此不能一概而论。同时，这些指标并不能完全代表页面性能的好坏，只能提供一定的参考。在实际开发中，需要根据具体需求进行相应的优化和调整。
