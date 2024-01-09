@@ -16,6 +16,11 @@
   - [1. cookie](#1-cookie)
   - [2. session](#2-session)
   - [3. JWT](#3-jwt)
+- [双工通信](#%E5%8F%8C%E5%B7%A5%E9%80%9A%E4%BF%A1)
+  - [1. websocket](#1-websocket)
+  - [2. socket.io](#2-socketio)
+  - [3. SSE](#3-sse)
+  - [4. 长轮询](#4-%E9%95%BF%E8%BD%AE%E8%AF%A2)
 - [专项](#%E4%B8%93%E9%A1%B9)
   - [1. koa-static](#1-koa-static)
   - [2. 文件上传](#2-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0)
@@ -321,6 +326,13 @@ const anthMiddleware = async (ctx, next) => {
   }  
 };
 ```
+
+# 双工通信
+## websocket
+## socket.io
+## SSE
+## 长轮询
+## 短轮询
 
 # 专项
 ## koa-static
