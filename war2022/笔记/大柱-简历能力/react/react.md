@@ -53,3 +53,10 @@ class MouseTracker extends React.Component {
 - 其实很简单，就是一个函数，这个函数里面使用hook的api
 - 局限：hook只能在组件顶层使用，不可在分支语句中使用
 
+## 原理
+- me: hooks其实是一种常见模式。在链表或者Tree/队列上挂载注册的hooks:
+  - mounted() 
+  - update()
+  - unmounted()
+- 我们用的useXXX本质上就是一种注册器，它会在fiber节点的MemorisedState上按照useXXX的调用顺序，进行注册，每次注册就是add一个链表节点，记录本次调用的一些数据等，当然，我们还可以在不同的触发时机执行mounted() update() unmounted()，这些东西本质上就是hooks, 这是一个常见的具有扩展性的设计模式。每次执行函数式组件的时候，都会到对应的fiber节点上，找到对应的MenorisedState节点，按照链表顺序去执行对应hooks。不同节点取不同的hooks执行，挂载阶段就执行mounted-hooks, 更新节点就执行update-hooks, 卸载阶段就执行unmounted-hooks
+
