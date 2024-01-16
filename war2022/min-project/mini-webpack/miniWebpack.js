@@ -9,6 +9,30 @@ const parser = require('@babel/parser')
 const traverse = require('@babel/traverse').default
 const { transformFromAst } = require('@babel/core')
 
+/**
+ * 利用babel进行依赖分析：
+ * 首先说dependenceMap的数据结构：（是一个打平的dependenceMap, 没有再深一层的嵌套）
+ {
+  './src/index.js': {
+    dependecies: { './hello.js': './src/hello.js' },
+    code: '"use strict";\n\nvar _hello = require("./hello.js");\n\ndocument.write((0, _hello.say)("webpack"));'
+  },
+  './src/hello.js': {
+    dependecies: {},
+    code:
+      '"use strict";\n\nObject.defineProperty(exports, "__esModule", {\n  value: true\n});\nexports.say = say;\n\nfunction say(name) {\n  return "hello ".concat(name);\n}'
+  }
+}
+ * 
+ * 这是一个很经典的babel的算法，从入口文件开始，在babel-plugin中用traverse + ImportDeclaration
+ * 获得import语句中依赖的文件名fileName, 将这个依赖fileName压入到当前模块的dependenceMap.dependences队列中
+ * 然后当前模块的dependenceMap构建完以后，取出当前模块的dependences队列，然后对队列中每个依赖路径进行如此重复的操作，
+ * 例如依次取出'./hello.js', 构建第二个key为'./src/hello.js'的map<k,v>
+ * 在堆hello.js进行依赖分析的时候，又构建出第三个，hello.js的依赖
+ * 形成依赖的dependenceMap，加入到总的dependenceMap中
+ * 
+ * 到后面，这个dependenceMap就是直接会被用实参的形式注入到最终打包的匿名立即执行函数中，这dist就可以运行起来了
+ */
 const Parser = {
   getAst: path => {
     // 读取入口文件

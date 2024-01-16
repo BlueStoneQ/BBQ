@@ -1,6 +1,7 @@
 // 简易手写一个秒开测速sdk 可以放到工程里测一测
 // 在小程序app初始化阶段app.js中调用
 const register = function() {
+  // 初始化元信息：bundleId + 配置数据：采样率samplingRate
   // hook Component
   const originalComponent = Comment;
 
@@ -60,6 +61,9 @@ const pageBase = function(pageObj) {
 class Fst {
   constructor(page) {
     this.page = page || this._getCurPage()
+    // 核心数据
+    this.startTime = 0
+    this.endTime = 0
     // 将当前fst实例挂载在页面对象上
     this.page.fst = this
     this.recordList = [] // 采样点记录
@@ -81,8 +85,8 @@ class Fst {
     this.status = 'stop'
   }
 
-  // 测速：targetView距离页面顶部的距离
-  sample() {
+  // addRecord 测速：targetView距离页面顶部的距离
+  sampling() {
     // 状态机判断
     if (this.status !== "sampling") return;
 
