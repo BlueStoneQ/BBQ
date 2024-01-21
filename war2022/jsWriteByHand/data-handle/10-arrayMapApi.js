@@ -14,8 +14,8 @@ Array.prototype._map = function() {
 
   const curArray = this;
 
-  for (let i = 0; i < curArray.length; i++) {
-    result.push(fn(this[i]));
+  for (const item of curArray) {
+    result.push(fn(item));
   }
 
   return result;

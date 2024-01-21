@@ -4,7 +4,11 @@
 ## HTML
 ### onLoad vs DOMContentLoaded
 - onLoad 事件在页面所有资源（包括 CSS、JavaScript 和图片等）都加载完成后触发
-- DOMContentLoaded 事件在页面的主要 HTML 内容被解析并加载完成后触发。
+- DOMContentLoaded 事件在页面的主要 HTML 内容被解析并加载完成后触发。（script标签的defer异步加载后执行的时机就是DOMContentLoaded）
+
+### script中的defer和async
+- defer：延迟执行，在HTML解析完成后，触发DOMContentLoaded事件之前执行，只执行一次
+- async：异步执行，下载完就执行，执行完后继续执行HTML，可以执行多次
 
 ## CSS
 
@@ -18,7 +22,7 @@
 3. 在 BFC 中，盒子从包含块的顶部开始，在垂直方向上一个接一个的排列。相邻盒子之间的垂直间隙由它们的 margin 值决定。在同一个 BFC 中，相邻块级盒子的垂直外边距会合并
 4. BFC中布局环境的独立性：BFC内外互不影响。
   - BFC 包含内部的浮动（解决内部浮动元素导致的高度塌陷）。
-  - BFC 排斥外部的浮动（触发 BFC 的元素不会和外部的浮动元素重叠）。
+  - BFC 排斥外部的浮动（触发 BFC 的元素不会和外部的浮动元素重叠）
   - 外边距折叠的计算不能跨越 BFC 的边界
 5. 各自创建了 BFC 的兄弟元素互不影响（注：在水平方向上多个浮动元素加一个或零个触发 BFC 的元素可以形成多列布局）
 - 通过 BFC 可以实现灵活健壮的自适应布局，在一行中达到类似 flexbox 的效果

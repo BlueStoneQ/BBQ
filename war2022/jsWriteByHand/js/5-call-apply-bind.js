@@ -57,7 +57,7 @@ Function.prototype._bind = function() {
 
   // init data
   const originalContext = arguments[0] || window;
-  const originalParams = Array.prototype.slice.call(arguments, 1) || [];
+  const originalParams = Array.prototype.slice.call(arguments, 1) || []; // 当然我们也可以用Array.from(arguments)来将arguments预处理为数组args
   const fn = this;
   
   // 定义返回的函数 这里要用ES5函数 因为bind后的函数 依然可以用作构造函数 且构造函数的this为其实例

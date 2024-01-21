@@ -93,82 +93,82 @@ pipeLine1.run();
 /** ------------------------------------------------------------------------------------------------------------ */
 // 要有task包装器的概念
 
-// const LIGHT = {
-//   red: 'red',
-//   green: 'green',
-//   yellow: 'yellow'
-// };
+const LIGHT = {
+  red: 'red',
+  green: 'green',
+  yellow: 'yellow'
+};
 
-// const method = {
-//   red: red,
-//   green: green,
-//   yellow: yellow
-// }
+const method = {
+  red: red,
+  green: green,
+  yellow: yellow
+}
 
-// // callback实现
-// const callBackTest = () => {
-//   const task = (delay, type, callback) => {
-//     setTimeout(() => {
-//       // 执行对应的方法
-//       method[type]();
+// callback实现
+const callBackTest = () => {
+  const task = (delay, type, callback) => {
+    setTimeout(() => {
+      // 执行对应的方法
+      method[type]();
       
-//       callback && callback();
-//     }, delay);
-//   }
+      callback && callback();
+    }, delay);
+  }
 
-//   const step = () => {
-//     task(3000, LIGHT.red, () => {
-//       task(1000, LIGHT.green, () => {
-//         task(2000, LIGHT.yellow, step); // 递归step 重新开启下一个循环
-//       });
-//     });
-//   }
+  const step = () => {
+    task(3000, LIGHT.red, () => {
+      task(1000, LIGHT.green, () => {
+        task(2000, LIGHT.yellow, step); // 递归step 重新开启下一个循环
+      });
+    });
+  }
 
-//   step();
-// }
+  step();
+}
 
-// // promise实现
-// const promiseTest = () => {
-//   const task = (delay, type) => {
-//     return new Promise((resolve, reject) => {
-//       setTimeout(() => {
-//         method[type]();
-//         resolve();
-//       }, delay);
-//     });
-//   }
+// promise实现
+const promiseTest = () => {
+  const task = (delay, type) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        method[type]();
+        resolve();
+      }, delay);
+    });
+  }
 
-//   const step = () => {
-//     task(3000, LIGHT.red).then(() => {
-//       return task(1000, LIGHT.green);
-//     }).then(() => {
-//       return task(2000, LIGHT.yellow);
-//     }).then(() => step());
-//   }
+  const step = () => {
+    task(3000, LIGHT.red).then(() => {
+      return task(1000, LIGHT.green);
+    }).then(() => {
+      return task(2000, LIGHT.yellow);
+    }).then(() => step());
+  }
 
-//   step();
-// }
+  step();
+}
 
-// // async实现
-// const asyncTest = () => {
-//   const task = (delay, type) => {
-//     return new Promise((resolve, reject) => {
-//       setTimeout(() => {
-//         method[type]();
-//         resolve();
-//       }, delay);
-//     });
-//   }
+// async实现
+const asyncTest = () => {
+  const task = (delay, type) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        method[type]();
+        resolve();
+      }, delay);
+    });
+  }
 
-//   const step = async () => {
-//     await task(3000, LIGHT.red);
-//     await task(1000, LIGHT.green);
-//     await task(2000, LIGHT.yellow);
-//     step(); // 重新开启下一个循环
-//   }
+  const step = async () => {
+    await task(3000, LIGHT.red);
+    await task(1000, LIGHT.green);
+    await task(2000, LIGHT.yellow);
+    step(); // 重新开启下一个循环
+  }
 
-//   step();
-// }
+  step();
+}
 
 // // test
 // function red() {

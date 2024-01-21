@@ -17,8 +17,7 @@ const uniqueArray2 = (arr) => {
   const map = {}; // Map也可以
   const res = [];
 
-  for (let i = 0; i < arr.length; i++) {
-    const item = arr[i];
+  for (const item of arr) {
     if (map[item]) continue;
     res.push(item);
     map[item] = true;

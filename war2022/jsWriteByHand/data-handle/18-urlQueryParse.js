@@ -31,7 +31,7 @@ const parseParam1 = function(url) {
 const formatVal = function(val) {
   // 判空
 
-  const _val = decodeURI(val)
+  const _val = decodeURIComponent(val)
 
   return /^\d+$/.test(_val) ? +_val : _val
 }

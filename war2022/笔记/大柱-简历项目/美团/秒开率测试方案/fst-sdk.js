@@ -166,6 +166,15 @@ class Fst {
     return this.resultPromise
   }
   // static 方法: getInstance
+
+  report() {
+    (new Image()).src=`xxx/xxx.img?fst=${this.endTime - this.startTime}`
+  }
+}
+
+// 采样率阀门算法,采样率算法一般用在整个测速startRecord之前，会判定是否进行测速，如果没有命中测速，则就不会启动后续流程
+const isSampling = (samplingRate = 1) => {
+  return Math.random() < samplingRate
 }
 
 // 使用方法

@@ -13,8 +13,7 @@ Array.prototype._filter = function() {
 
   const curArray = this;
 
-  for (let i = 0; i < curArray.length; i++) {
-    const item = this[i];
+  for (const item of curArray) {
     if (fn(item)) {
       result.push(item);
     }
