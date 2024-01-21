@@ -15,18 +15,22 @@
 //   return Promise.race([this, rejectP])
 // }
 
-const wrapPromiseWithCancel = (promise) => {
+// 使当前promise在status凝固前可以被取消
+Promise.prototype.cancelIfy = function (){
   const rejectP = new Promise((resolve, reject) => {
-    promise.reject = reject
+    this.reject = reject
   })
 
   return Promise.race([this, rejectP])
 }
 
 Promise.prototype.cancel = function () {
-  // 原来的promise实例就是这里this
+  // 原来的promise实例就是这里this，这里执行了注入的rejectP的reject
   this.reject('cancel')
 }
+
+// 使用
+promise.wrapPromiseWithCancel(promise).cancel().then() // 这里其实取消的就是p1中race的promise
 
 
 
