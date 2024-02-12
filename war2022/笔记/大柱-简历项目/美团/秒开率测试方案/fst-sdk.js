@@ -1,6 +1,6 @@
 // 简易手写一个秒开测速sdk 可以放到工程里测一测
 // 在小程序app初始化阶段app.js中调用
-const register = function() {
+const register = function({ meat, options }) {
   // 初始化元信息：bundleId + 配置数据：采样率samplingRate
   // hook Component
   const originalComponent = Comment;
@@ -101,7 +101,7 @@ class Fst {
 
       if (curRecord.timeStamp - preRecord.timeStamp < 100) return;
 
-      // 倒序向上追溯：找寻最早的稳定振幅时机
+      // 倒序向上追溯：找寻最早的稳定振幅时机，这是一个减少误差的手段
       for (let i = this.recordList.length - 1; i > 1;i--) {
         curRecord = this.recordList[i]
         preRecord = this.recordList[i - 1] // 倒序到第二个元素, 因为每次要取2个元素做比较
