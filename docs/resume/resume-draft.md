@@ -67,8 +67,8 @@
 
 - AI Agent 系统设计与开发（MCP Server 开发与注册、Prompt Engineering、工具链集成）
 - AI 融入研发全流程：AI Coding + AI Review + AI 辅助架构设计
-- 基于 MCP 打通研发全链路自动化：飞书（需求）→ Figma（设计）→ AI Agent（生成代码）→ DevTools（验证渲染）→ Gerrit（Code Review）→ Jira（Bug 管理）
-- 工作模式实践：架构师 + 产品经理综合视角 + AI 高效执行，一人全栈全链路交付
+- 基于 MCP 打通研发全链路自动化：飞书MCP（需求）→ Figma MCP（设计）→ Kiro（生成代码）→ DevTools MCP（验证渲染）→ Gerrit MCP（Code Review）→ Jira MCP（Bug 管理）
+- 工作模式实践：架构师 + 产品经理综合视角 + AI 高效执行，一人Team级规格全栈全链路交付
 
 ---
 
@@ -106,25 +106,12 @@
 
 #### ② 快应用框架（跨端框架 · Android 原生 · 包体积治理）【能力线 2 + 3】
 
-- 背景：小米系统级快应用运行时框架（com.miui.hybrid），为 IoT 生态提供轻应用运行能力，预装在 ROM product 分区
-- 框架架构理解：
-  - JS→Native View 渲染方案（类 RN，全原生 View，非 WebView）
-  - V8 引擎（J2V8 同步绑定）+ 三线程异步渲染管线（JS Thread / IO Thread / UI Thread）
-  - 双通道 Bridge：渲染通道（callNative，批量 JSON）+ Feature 通道（JsBridge.invoke，同步零序列化）
-  - 9 大核心子系统：JS 引擎、JS Framework（infras.js）、Bridge、渲染引擎、样式引擎、Feature/API、路由、包管理、生命周期
-- 核心贡献（包体积治理 + 内存合规）：
-  - 预装包 153MB → ~60MB（buildForRom 条件编译 + 凡泰/百度/声网模块裁剪）
-  - dex 44.4MB → 27MB（-39%，proguard 严格混淆）
-  - 排查 consumerProguardFiles 传递阻塞 R8 裁剪的根因（新增模块宽泛 keep 规则通过 consumer 机制传递）
-  - resConfigs 限制 16 种语言 + shrinkResources 移除未使用资源
-  - 凡泰模块反射解耦（编译时强依赖 → 运行时弱依赖，buildForRom 不再编译失败）
-  - 百度 metadata 冗余声明清理（防止商店误判能力）
-  - DEX Layout Optimization 启动内存优化
-  - CI/CD 构建环境修复（prebuild.sh SDK 35）+ ROM 出包全流程打通
-- 技术决策：
-  - buildForRom 条件编译 vs 插件化 vs 动态加载 → 选最低成本方案（条件编译 + 自升级）
-  - 凡泰/百度走自升级而非动态加载（整个 Java 模块动态加载 = 插件化，成本极高）
-  - 反射 vs 注解处理器的 trade-off 评估
+- 小米系统级快应用运行时框架，类 RN 架构（JS 驱动 Native View 渲染，非 WebView），V8 引擎 + J2V8 同步 Bridge
+- 预装包体优化：使用条件编译、resConfigs、shrinkResources、proguard 混淆等手段，预装包 153MB → ~60MB，dex 44.4MB → 27MB（-39%）
+- 排查 consumerProguardFiles 传递阻塞 R8 的根因，修复混淆未生效问题
+- 凡泰/百度模块裁剪与降级方案：反射解耦编译依赖 + metadata 入口控制 + 自升级兜底
+- DEX Layout Optimization 启动内存优化
+- CI/CD 构建环境修复 + ROM 出包全流程打通
 
 #### ③ 快应用 IDE（AIOT-IDE / QuickApp Studio，桌面端 Electron 应用）【能力线 2】
 
@@ -139,11 +126,11 @@
 
 ---
 
-### 3.2 XC·机票事业部·机酒终端组（2023.5 ~ 2023.9）【能力线 2】
+### 3.2 XC·机票事业部·机酒终端组: 资深工程师（2023.5 ~ 2023.9）【能力线 2】
 
 #### ① XC App 机酒频道 + 国际化 App（React Native）
 
-- 使用公司自研跨端 CRN 框架（React Native）
+- CRN 框架（React Native 的企业级定制）工程化实践
 - 业务分频道、分 bundle、分版本热更新上线
 - BFF 层 GraphQL 聚合裁剪接口
 - CI/CD 配置和优化
@@ -151,7 +138,7 @@
 
 ---
 
-### 3.3 XT·技术部·金融产品（2022.12 ~ 2023.3）【能力线 2 + 3】
+### 3.3 XT·技术部·金融产品:前端架构师（2022.12 ~ 2023.3）【能力线 2 + 3】
 
 #### ① XT App（React Native）
 
@@ -164,7 +151,7 @@
 #### ② 全链路代码质量治理【能力线 3】
 
 - 代码规范设计
-- 推动全链路（编码时 → Git Hooks → CI/CD）卡控方案完善
+- 推动全链路（编码时Lint → Git Hooks → CI/CD）卡控方案完善
 - Review 机制的设计和推动落地
 
 ---
@@ -207,8 +194,9 @@
 
 ### 3.6 DFGX·技术一部·前端开发组（2017.9 ~ 2019.8）
 
-- 面向政企 toB 领域，独立负责景区信息平台
-- 技术栈：React, MobX/Redux, Ant Design, ECharts, H5/HybridApp
+- 面向政企 toB 领域，独立负责景区多个信息平台系统
+- 业务类型：PC 端（门户网站、管理平台）、移动端（H5/HybridApp/微信小程序）、大屏、直播监控
+- 技术栈：React、MobX/Redux、Ant Design、ECharts、jQuery、Bootstrap
 - 带队开发：带领 5 人团队完成交付
 
 ---
