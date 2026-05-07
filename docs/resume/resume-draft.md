@@ -47,7 +47,7 @@
 
 ## 一、专业技能
 
-### 能力线 1：全栈全链路交付
+### 1. 全栈全链路交付
 
 - 前端：React/Vue3/Nuxt、TypeScript、Vite、ECharts
 - 后端：Node.js、Koa/Express、GraphQL
@@ -55,7 +55,7 @@
 - DevOps：CI/CD 流水线搭建、Docker 部署、灰度发布
 - 监控运维：错误上报、埋点体系、性能检测、监控告警、日志分析
 
-### 能力线 2：跨端开发与框架设计
+### 2. 跨端开发与框架设计
 
 - 跨端框架：React Native（CRN）、快应用框架（JS→Native View）、小程序
 - 桌面端：Electron（VS Code 二次开发 和 插件开发）
@@ -63,7 +63,7 @@
 - 核心能力：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型方法论
 - 终端覆盖：Web / RN App / 小程序 / 桌面端（Electron）/ 跨端框架层
 
-### 能力线 3：前端工程化体系建设
+### 3. 前端工程化体系建设
 
 - 构建工具：Webpack、Vite、Babel、Rollup、Gradle
 - 工程化：脚手架 CLI、monorepo、CI/CD 流水线、发布体系、插件机制
@@ -71,7 +71,7 @@
 - 性能治理：性能探针 SDK、包体积优化（R8/shrinkResources/条件编译）、秒开率优化
 - 设计实践：设计模式、函数式编程、AOP、DDD
 
-### 能力线 4：AI Agent 开发与 AI 融入开发实践
+### 4. AI Agent 开发与 AI 融入开发实践
 
 - AI Agent 系统设计与开发（MCP Server 开发与注册、Prompt Engineering、工具链集成）
 - 基于 MCP 打通研发全链路自动化：飞书MCP（需求）→ Figma MCP（设计）→ Kiro（生成代码）→ DevTools MCP（验证渲染）→ Gerrit MCP（Code Review）→ Jira MCP（Bug 管理）
