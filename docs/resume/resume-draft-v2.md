@@ -18,26 +18,27 @@
 
 - 前端：React / Vue3 / Nuxt、TypeScript、Vite、ECharts
 - 后端：Node.js、Koa / Express、GraphQL
-- 数据与运维：MySQL 建模、CI/CD、Docker、灰度发布、监控告警、日志排查
+- 数据与运维：MySQL 表结构设计、CI/CD、Docker、灰度发布、监控告警、日志排查
 
 ### 2. 跨端开发与框架设计
 
 - 跨端：React Native（CRN）、快应用框架（JS → Native View）、小程序
 - 桌面端：Electron（VS Code 二次开发 / 插件）
 - Android 原生：Java / C++、Gradle、NDK、V8 / J2V8、JNI、R8
+- 跨端工程化：分 bundle、版本管理、热更新、多端构建发布
 - 核心：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型
 
-### 3. 前端工程化体系建设
+### 3. 大前端工程化体系建设
 
 - 构建：Webpack、Vite、Babel、Rollup、Gradle
 - 工程化：脚手架 CLI、CI/CD 流水线、发布体系、插件机制
-- 质量：ESLint、Git Hooks、全链路卡控（编码 → CI → 发布）
+- 质量：ESLint、Git Hooks、CI/CD 全链路卡控、自动化测试
 - 性能：性能探针 SDK、包体优化（R8 / 条件编译）、秒开率优化
 
 ### 4. 设计与研发实践
 
-- 设计实践：设计模式、函数式、AOP、DDD
-- AI 辅助研发：Prompt Engineering、MCP 工具链集成，融入研发全流程提效
+- 设计实践：设计模式、函数式、AOP、DDD、TDD
+- AI 辅助研发：MCP 工具链集成、AI Coding 融入日常研发流程
 
 ---
 
@@ -70,9 +71,9 @@
 系统级快应用运行时，**JS 驱动 Native View 渲染（非 WebView）**，V8 + J2V8 同步 Bridge（类 JSI）。
 
 - 包体优化：预装包 **153MB → ~60MB**，dex **44.4MB → 27MB（-39%）**
-- 排查 **consumerProguardFiles 传递阻塞 R8** 的根因，修复混淆未生效
 - 模块裁剪与降级方案：**反射解耦编译依赖** + metadata 入口控制 + 自升级兜底
-- DEX Layout Optimization 启动内存优化
+- **DEX Layout Optimization** 启动内存优化（PSS MAX **41MB → 35.8MB**）
+- 自动化测试：Python + pytest + uiautomator2 驱动设备自动化，覆盖启动/滑动/点击等场景，支持 Android / HarmonyOS / iOS 三端
 
 #### ③ 快应用 IDE（桌面端 Electron 应用）
 
@@ -98,7 +99,7 @@
 
 ### 3.3 XT·技术部·金融产品: 前端架构师（2022.12 ~ 2023.3）
 
-#### ① XT App（React Native） — 团队阻塞点与难点爆破
+#### ① XT App（React Native + Android + IOS） — 团队阻塞点与难点爆破
 
 - **一键注册**：RN 混合原生开发，一键获取用户手机号
 - **弹窗治理**（弹出时机冲突 & 顺序混乱）

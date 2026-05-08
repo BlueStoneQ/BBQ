@@ -82,3 +82,153 @@
 1. 每个雷点排完后，在 resume-draft-explain.md 里补充完整的 Q&A
 2. 如果排不掉（真没做过/记不清），从 draft-v2 里去掉该点，不硬撑
 3. 排雷优先级：MPU 上传 > ECharts > 一键注册 > 签名 / CI 修复
+
+
+---
+
+## MT 打车
+
+### 微前端
+
+- 简历写了"Vue + ElementUI + 微前端"
+- 需要确认：
+  - [ ] 用的什么微前端方案？（qiankun / single-spa / iframe / Module Federation？）
+  - [ ] 为什么要用微前端？解决什么问题？（多团队独立部署？渐进式迁移？）
+  - [ ] 你在里面做了什么？是搭建微前端架构还是在已有架构下开发子应用？
+- 如果只是在别人搭好的微前端架构下写子应用，面试时不主动展开
+
+
+---
+
+## Android 基础认知补课（高优先级）
+
+> 前端出身，简历写了 Android 原生技术栈，面试必追问。需要快速建立系统认知。
+
+### 需要补的知识点
+
+- [ ] Android 开发上架全流程（开发 → 编译 → 签名 → 打包 → 上架 / ROM 预装）
+- [ ] Gradle 构建体系：module / dependency / buildType / productFlavor / task
+- [ ] AAR 管理：什么是 AAR、和 JAR 的区别、本地依赖 vs 远程仓库、版本冲突处理
+- [ ] NDK / JNI：C++ 代码怎么集成到 Android 项目、CMakeLists 配置、so 库加载
+- [ ] V8 / J2V8：V8 引擎在 Android 里怎么跑、J2V8 的绑定机制、和 JSI 的对比
+- [ ] R8 / ProGuard：混淆 + 裁剪 + 优化的完整流程、keep 规则、consumerProguardFiles 传递机制
+- [ ] 插件化基本认知：什么是插件化、为什么需要、主流方案（RePlugin / Shadow / VirtualAPK）、和动态加载的区别
+- [ ] JS 到 Java/Kotlin 的迁移认知：两种语言的核心差异、协程 vs Promise、类型系统差异
+- [ ] Android 线程模型：主线程 / 工作线程 / Handler / Looper、和 JS 单线程模型的对比
+- [ ] APK 结构：dex / resources / assets / manifest / so 各是什么
+
+### 学习策略
+
+- 不需要能手写 Android 应用，需要能讲清楚原理和 trade-off
+- 用 AI 辅助快速建立认知框架，重点理解"为什么"而不是"怎么写"
+- 结合快应用框架项目的实际代码来理解，不要脱离项目空学
+
+
+---
+
+## Electron / VS Code 扩展基础认知补课
+
+> 简历写了桌面端 Electron（VS Code 二次开发 / 插件），需要能讲清楚核心概念。
+
+### 需要补的知识点
+
+- [ ] Electron 架构：主进程（Main）vs 渲染进程（Renderer）、IPC 通信
+- [ ] VS Code 扩展 vs 二次开发的区别：Extension API vs fork VS Code
+- [ ] VS Code Extension API 核心：activate/deactivate、Command、TreeView、WebView
+- [ ] Language Server Protocol（LSP）：为什么要独立进程、JSON-RPC 通信、核心 method
+- [ ] Debug Adapter Protocol（DAP）：调试器怎么和 IDE 对接
+- [ ] Electron 打包发布：electron-builder、跨平台构建（macOS/Linux/Windows）
+- [ ] 性能问题：Electron 内存占用高的原因、优化手段
+
+### 学习策略
+
+- 结合 AIOT-IDE 项目实际做的事来理解
+- 重点是 LSP 和 DAP 的原理（面试最可能追问）
+- Electron 架构讲清楚主进程/渲染进程/IPC 就够了
+
+
+### 面试必问：为什么二开 VS Code？做了什么？
+
+- [ ] 为什么不用纯插件方式，要二开？（trade-off：插件能力有限 vs 二开成本高）
+  - 可能的答案：需要深度定制 UI（自定义侧边栏/面板）、需要修改编辑器核心行为、需要集成非标准协议的调试器、需要品牌化（去掉 VS Code logo 换成自己的）
+- [ ] 具体二开了哪些部分？改了 VS Code 的什么？
+  - 需要回忆：是 fork 了 VS Code 源码改的，还是用 Extension Host + WebView 实现的？
+  - 改了哪些 UI？加了哪些面板？
+- [ ] 和纯插件开发的边界在哪？哪些功能用插件做，哪些必须二开？
+
+
+---
+
+## 跨端工程化认知补课
+
+> 简历写了"分 bundle、版本管理、热更新、多端构建发布"，需要能讲清楚方案。
+
+### 需要对齐的知识点
+
+- [ ] 分 bundle：为什么要分？怎么分的？按业务/按频道/按路由？拆分粒度怎么定？
+- [ ] 版本管理：bundle 版本和 App 版本的关系？怎么做版本兼容？灰度策略？
+- [ ] 热更新：RN 热更新的原理（CodePush / 自建方案）？和 App Store 审核的关系？安全性？回滚机制？
+- [ ] 多端构建发布（iOS / Android）：一套代码怎么出两端产物？CI/CD 怎么配的？签名/证书管理？
+- [ ] CRN 和标准 RN 的工程化差异：CRN 在这些方面做了什么定制？
+
+### 学习策略
+
+- 结合 XC CRN 项目的实际经验来理解
+- 重点是"为什么这样做"（trade-off），不是"怎么配置"
+
+
+---
+
+## 包体优化方案整理
+
+> 简历写了"预装包 153MB → ~60MB，dex 44.4MB → 27MB（-39%）"，需要系统梳理方案。
+
+### 需要对齐的知识点
+
+- [ ] 包体优化的完整手段清单（你用了哪些、还有哪些没用）：
+  - R8 混淆/裁剪/优化
+  - shrinkResources（资源裁剪）
+  - resConfigs（只保留特定语言资源）
+  - 条件编译（你的开源项目）
+  - 模块裁剪（凡泰/百度模块移除）
+  - so 库裁剪（只保留特定 ABI：armeabi-v7a / arm64-v8a）
+  - 图片压缩（WebP 转换）
+  - ProGuard/R8 keep 规则优化
+- [ ] 每个手段的原理：为什么能减小包体？减的是什么部分（dex / resources / assets / native）？
+- [ ] 你的排查过程：consumerProguardFiles 问题怎么发现的、怎么定位的、怎么修的
+- [ ] 包体优化的度量方式：怎么看哪个模块/类/资源占了多少空间？（APK Analyzer？）
+- [ ] trade-off：裁剪过度会导致什么问题？（运行时 ClassNotFoundException、资源找不到等）
+
+### 学习策略
+
+- 结合快应用框架的实际优化过程来整理
+- 重点是能讲清楚"每个手段砍的是什么、为什么有效、风险是什么"
+
+
+### buildForRom 方案梳理（面试必问）
+
+- [ ] 为什么选择 buildForRom 这个方案？背景是什么？（预装 vs 应用市场版本的区别？）
+- [ ] 如何实践的？Gradle 里怎么配的？哪些模块在 buildForRom=true 时被排除？
+- [ ] 排除后怎么保证功能降级不 crash？（反射解耦 + metadata 入口控制 + 自升级兜底）
+- [ ] 包体优化的体系化方案是什么？（不是零散的手段，而是一个有优先级、有度量、有验证的完整流程）
+  - 度量：怎么分析包体组成？（APK Analyzer / bundletool）
+  - 目标：预装包的体积限制是多少？谁定的？
+  - 手段排序：先砍什么收益最大？（模块裁剪 > R8 > 资源裁剪 > so 裁剪 > 图片压缩）
+  - 验证：优化后怎么验证功能完整性？（自动化测试？冒烟测试？）
+  - 持续监控：怎么防止包体回涨？（CI 卡控？包体基线？）
+
+
+---
+
+## XM 快应用框架 CI/CD 构建环境修复
+
+> 简历写了"CI/CD 构建环境修复"，需要丰满细节。
+
+### 需要回忆/补充
+
+- [ ] 构建环境修复具体修了什么？（Node.js 版本升级之外还有什么？）
+- [ ] 构建失败的具体报错是什么？根因是什么？
+- [ ] ROM 出包全流程：从源码到最终 ROM 镜像经过哪些步骤？
+- [ ] 刷机流程：用什么工具？fastboot？MiFlash？
+- [ ] 这个"全流程打通"之前是什么状态？（之前是手动？还是根本跑不通？）
+- [ ] 你做了什么让它打通的？（写了脚本？修了配置？搭了流水线？）
