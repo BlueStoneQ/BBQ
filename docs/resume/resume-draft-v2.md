@@ -87,7 +87,7 @@
 
 - 包体优化：预装包 **153MB → ~60MB**，dex **44.4MB → 27MB（-39%）**
 - 模块裁剪与降级方案：**反射解耦编译依赖** + metadata 入口控制 + 自升级兜底
-- **DEX Layout Optimization** 启动内存优化（PSS MAX **41MB → 35.8MB**）
+- 启动内存优化：DEX 布局优化，热代码前置减少 page fault（PSS MAX **41MB → 35.8MB**）
 - 自动化测试：Python + pytest + uiautomator2 驱动设备自动化，覆盖启动/滑动/点击等场景，支持 Android / HarmonyOS / iOS 三端
 
 #### ③ 快应用 IDE（桌面端 Electron 应用）
