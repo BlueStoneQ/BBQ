@@ -111,3 +111,39 @@ Mako 自动记录到 `.mako/traces/`，`mako trace` 命令用 AI 分析执行历
 ## Q: 为什么不用 RAG/向量数据库？
 
 2026 年模型上下文窗口已经 128K-1M tokens，很多场景直接塞进去不需要 RAG。Agent 的核心价值是"能做事"（Tool Use），不是"知道更多"（RAG）。上下文管理（压缩/摘要）是简化版 RAG，已内置在 Agent 框架中。
+
+
+---
+
+## Q: 基于 MCP 打通研发全链路是什么意思？
+
+### 本质
+
+把研发流程中每个系统（飞书/Figma/Chrome/Gerrit/Jira）都通过 MCP 协议连接到 AI Agent，Agent 作为中枢自动驱动整个流程。
+
+### 全链路
+
+```
+飞书 MCP（读需求文档）
+  → Figma MCP（读设计稿节点/样式）
+  → Agent（生成代码）
+  → DevTools MCP（打开浏览器验证渲染）
+  → Gerrit MCP（提交 Code Review）
+  → Jira MCP（更新 Bug 状态）
+```
+
+### 每个 MCP 做什么
+
+| MCP Server | 能力 | 场景 |
+|-----------|------|------|
+| Figma MCP | 读取设计稿节点/样式/布局 | AI 根据设计稿生成代码 |
+| DevTools MCP | 打开浏览器/截图/查看 DOM/网络/性能 | AI 验证代码渲染结果 |
+| Gerrit MCP | 读取 CR 评论/提交 review/查看 diff | AI 理解 review 意见并修复 |
+| Jira MCP | 读取 bug 描述/更新状态 | AI 根据 bug 描述定位修复 |
+| 飞书 MCP | 读取文档/表格 | AI 理解需求 |
+
+### "一人 Team 级规格全栈全链路交付"
+
+架构师定义做什么 + 怎么做，AI Agent 通过 MCP 连接各系统高速执行。一个人 + AI = 以前一个小团队的产出。
+
+前提：全栈视野（能 review AI 产出的任何端代码）+ 系统设计能力（定义正确架构让 AI 在上面跑）。

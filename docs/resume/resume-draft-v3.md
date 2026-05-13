@@ -42,6 +42,7 @@
 - Android 原生：Java / C++、Gradle、NDK、V8 / J2V8、JNI、R8
 - 跨端工程化：分 bundle、版本管理、热更新、多端构建发布
 - 核心：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型
+- 设计实践：设计模式、函数式、AOP、DDD、TDD
 
 ### 3. 大前端工程化体系建设
 
@@ -51,10 +52,8 @@
 - 性能：性能探针 SDK、包体优化（R8 / 条件编译）、秒开率优化
 
 ### 4. AI Agent 开发与 AI 融入开发实践
-
-- 设计实践：设计模式、函数式、AOP、DDD、TDD
 - AI Agent 系统设计与开发：微内核架构、ReAct 循环、Tool Use、MCP 协议、Skill 系统
-- 基于 MCP 打通研发全链路自动化：飞书（需求）→ Figma（设计）→ Agent（编码）→ DevTools（验证）→ Gerrit（Review）→ Jira（Bug）
+- 基于 MCP 打通研发全链路自动化：飞书MCP（需求）→ Figma MCP（设计）→ Kiro（编码）→ DevTools MCP（验证）→ Gerrit MCP（Review）→ Jira MCP（Bug）
 - 工作模式：架构师 + 产品经理综合视角 + AI 高效执行，一人 Team 级规格全栈全链路交付
 
 ---
