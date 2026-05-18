@@ -48,3 +48,41 @@
 - 灰度发布验证
 
 **最大的坑不是 RN 本身，是第三方库兼容性。** 升级前先盘点所有依赖。
+
+---
+
+## 七、状态管理选型
+
+### 快速对比
+
+| 维度 | Redux (Toolkit) | MobX | Zustand |
+|------|----------------|------|---------|
+| 理念 | 单一 store + action + reducer | 可观察对象 + 自动追踪 | 极简 store + hook |
+| 样板代码 | 中 | 少 | 极少 |
+| TS 支持 | 好 | 一般 | 极好（天然） |
+| 包体 | ~11KB | ~16KB | ~1KB |
+| 适合 | 大型团队/复杂状态流 | 已有 MobX 项目/OOP 风格 | 新项目/追求简洁 |
+
+### 为什么 Zustand 是 2026 新项目首选
+
+- 极简：一个函数创建 store，一个 hook 消费，无 Provider
+- TS 天然友好：类型推导完美
+- 性能好：selector 机制，只有用到的字段变化才重渲染
+- 体积小：~1KB
+
+### 对已有项目的建议
+
+- 现有 MobX/Redux → 不急着迁移
+- 新模块 → 用 Zustand，和旧 store 共存
+- 统一 → 渐进式迁移
+
+### IoT App 状态分层
+
+| 状态 | 方案 |
+|------|------|
+| 设备列表/连接状态（全局共享） | Zustand store |
+| 用户/token（全局+持久化） | Zustand + MMKV persist |
+| 服务端数据缓存 | TanStack Query（不放 store） |
+| 页面内表单（局部） | useState / React Hook Form |
+
+**不是所有状态都放全局 store。** 服务端数据用 Query 管，局部用 useState，只有跨页面共享的才放 Zustand。
