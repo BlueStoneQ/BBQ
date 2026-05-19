@@ -1,25 +1,27 @@
 # RN 知识体系
 
-> 场景驱动 + 问题驱动。以"IoT App 通过 BLE 连接智能硬件"为主线串联。
+> 从骨架理解 RN：构建 → 加载 → 运行 → 优化 → 工程化
+> 场景：IoT App，BLE 连接智能硬件
 
 ---
 
-## 目录
+## 目录（按认知顺序）
 
-- [rn-native-communication.md](./rn-native-communication.md) — RN ↔ Native 通信（JSI/TurboModule/事件回传/BLE 场景）
-- [build-system.md](./build-system.md) — 工程构建（Metro/Hermes/.hbc/多 Bundle 组装 APK/热更新能力）
-- [performance.md](./performance.md) — 大前端性能优化（启动/渲染/内存/方法论）
-- [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/Monorepo/分 Bundle/热更新推送）
+### 骨架：RN 怎么跑起来的
 
----
+1. [build-system.md](./build-system.md) — 构建过程（Metro + Hermes + APK 组装 + Link 机制）
+2. [rn-runtime.md](./rn-runtime.md) — 加载与运行时（Bundle 加载 → 容器初始化 → 渲染 → 逻辑执行）
 
-## 核心场景
+### 支干：核心能力
 
-**App 架构**：RN App → TurboModule（BLE 插件）→ Android BLE API → 智能硬件
+3. [rn-native-communication.md](./rn-native-communication.md) — RN ↔ Native 通信（JSI / TurboModule / BLE 场景）
+4. [performance.md](./performance.md) — 性能优化（启动/渲染/内存/列表/下沉策略）
+5. [gesture-animation.md](./gesture-animation.md) — 手势动画（Reanimated 3 / Gesture Handler）
+6. [conditional-compile.md](./conditional-compile.md) — 条件编译与包体裁剪
 
-**围绕这个场景的关键问题**：
+### 血肉：工程化与选型
 
-1. RN 和 Native 怎么通信？→ rn-native-communication.md
-2. JS 源码怎么变成设备上能跑的东西？→ build-system.md
-3. 性能怎么测、怎么优化？→ performance.md
-4. 怎么支撑多团队并行、独立发版？→ architecture-engineering.md
+7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/分 Bundle/热更新/CLI）
+8. [rn-2026-stack.md](./rn-2026-stack.md) — 2026 选型 + 目录结构 + 状态管理
+9. [firebase-ops.md](./firebase-ops.md) — 运维监控（Firebase/Sentry/选型）
+10. [debugging-issues.md](./debugging-issues.md) — 调试与常见问题归因

@@ -425,3 +425,20 @@ JS → JSI（C++ Host Object）→ JNI → Java/Kotlin 代码
 | 状态管理 | JS 侧状态机 | 断开→连接中→已连接→错误，UI 驱动 |
 
 ---
+
+### 补充：iOS 动态加载限制
+
+- iOS **禁止运行时动态加载原生代码**（App Store 政策 + 系统代码签名验证）
+- Android 技术上能 dlopen .so（Google Play 不推荐但能做）
+- iOS 连技术上都做不到——未签名代码无法执行
+- iOS 的 C++ 库必须编译时静态链接进 App（Framework 形式）
+- **唯一能动态加载的是 JS**（解释执行，非原生机器码）
+- 这就是为什么 RN 热更新只能更新 JS Bundle，不能更新原生层
+
+| | Android | iOS |
+|---|---------|-----|
+| 原生代码动态加载 | 技术上能（dlopen） | 不能（禁止） |
+| JS Bundle 动态加载 | ✅ | ✅ |
+| 库格式 | .so | Framework (.framework/.xcframework) |
+
+---
