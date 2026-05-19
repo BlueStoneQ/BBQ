@@ -1,18 +1,18 @@
-# 面试笔记（边聊边记）
+# 技术笔记（边聊边记）
 
-> 核心优先，确认后记录。过一会儿整理。
+> 核心优先，确认后记录。
 
 ---
 
 ## 核心定位
 
-- 投的是 JD2（大前端架构师/RN 技术负责人）
-- 他们的 App：IoT 类，RN 开发，BLE 连接智能硬件
+- 目标：大前端架构师 / RN 技术负责人
+- 场景：IoT App，RN 开发，BLE 连接智能硬件
 - 链路：RN App → Native Module（BLE 插件）→ Android/iOS 蓝牙 API → 硬件
 
-## 我的价值主张
+## 价值主张
 
-1. 帮他们建设 CRN 级别的全套工程化方案（分 Bundle/热更新/灰度/CI/CD/DDD 规划）
+1. 帮助建设 CRN 级别的全套工程化方案（多 Bundle/热更新/灰度/CI/CD/DDD 规划）
 2. RN ↔ Native 桥接深度能力（造过类 RN 框架，写 TurboModule 是降维）
 3. 体验优于速度：BLE 稳定性和速率是追求（连接成功率、重连、传输效率）
 
@@ -469,5 +469,22 @@ JS → JSI（C++ Host Object）→ JNI → Java/Kotlin 代码
 - Expo Managed 这些都做不了
 
 可以单独用 Expo 的部分工具（expo-modules-core/expo-dev-client），不需要全盘 Expo。
+
+---
+
+### ART / JVM vs JS 引擎
+
+**ART（Android Runtime）**：Android 的运行时，执行 DEX 字节码。类比：ART 之于 Android = V8 之于 Chrome。
+
+**JVM/ART 和 JS 引擎本质一样**——都是"把高级语言代码变成机器能执行的指令"的中间层。
+
+| | JVM / ART | V8 / Hermes |
+|---|-----------|-------------|
+| 输入 | .class / .dex（字节码） | .js / .hbc（源码或字节码） |
+| 核心工作 | 字节码 → 机器码 + GC | JS → 机器码 + GC |
+| AOT | ART 安装时预编译 | Hermes 构建时预编译 |
+| JIT | ART 运行时热点编译 | V8 运行时热点编译 |
+
+区别只是叫法（虚拟机 vs 引擎）和输入格式，干的事一样。
 
 ---
