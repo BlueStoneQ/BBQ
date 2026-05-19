@@ -86,3 +86,37 @@
 | 页面内表单（局部） | useState / React Hook Form |
 
 **不是所有状态都放全局 store。** 服务端数据用 Query 管，局部用 useState，只有跨页面共享的才放 Zustand。
+
+### Zustand 使用范式
+
+**1. 创建 store**（状态 + 操作，一个函数搞定）
+
+```typescript
+const useDeviceStore = create((set, get) => ({
+  devices: [],
+  connectedId: null,
+  addDevice: (device) => set((state) => ({ devices: [...state.devices, device] })),
+  connect: (id) => set({ connectedId: id }),
+  disconnect: () => set({ connectedId: null }),
+  isConnected: () => get().connectedId !== null,
+}))
+```
+
+**2. 组件中消费**（selector 只订阅用到的字段，其他变了不重渲染）
+
+```typescript
+const devices = useDeviceStore((state) => state.devices)
+const connect = useDeviceStore((state) => state.connect)
+```
+
+**3. 组件外也能用**（Native 事件回调/工具函数中直接调用）
+
+```typescript
+useDeviceStore.getState().connect(deviceId)
+```
+
+**核心范式特征**：
+- 无 Provider（不像 Redux/Context）
+- selector 自动优化重渲染
+- 组件内外都能读写
+- 一个 store = 一个 hook
