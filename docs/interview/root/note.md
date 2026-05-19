@@ -442,3 +442,32 @@ JS → JSI（C++ Host Object）→ JNI → Java/Kotlin 代码
 | 库格式 | .so | Framework (.framework/.xcframework) |
 
 ---
+
+### RN 常用插件 + Expo 选型
+
+**常用插件（2026）**：
+
+| 类别 | 插件 |
+|------|------|
+| 导航 | @react-navigation/native + native-stack |
+| 状态 | zustand |
+| 网络 | axios + @tanstack/react-query |
+| 列表 | @shopify/flash-list |
+| 动画 | reanimated + gesture-handler |
+| 存储 | react-native-mmkv |
+| 图片 | react-native-fast-image |
+| 国际化 | i18next |
+| 相机 | react-native-vision-camera |
+| BLE | react-native-ble-plx |
+| 推送 | @react-native-firebase/messaging |
+| Crash | @sentry/react-native |
+
+**Expo 选型**：IoT + BLE 场景不推荐 Expo Managed，用 Bare RN。原因：
+- 需要写 BLE TurboModule（Expo 受限）
+- 需要控制 Gradle 配置
+- 需要分 Bundle + 自建热更新
+- Expo Managed 这些都做不了
+
+可以单独用 Expo 的部分工具（expo-modules-core/expo-dev-client），不需要全盘 Expo。
+
+---
