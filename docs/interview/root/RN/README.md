@@ -17,6 +17,7 @@
 
 3. [rn-native-communication.md](./rn-native-communication.md) — RN ↔ Native 通信（JSI / TurboModule / BLE 场景）
 4. [performance.md](./performance.md) — 性能优化（启动/渲染/内存/列表/下沉策略）
+5. [performance-layers.md](./performance-layers.md) — 性能优化分层体系（React/RN框架/Native/工程化 + 场景题）
 5. [gesture-animation.md](./gesture-animation.md) — 手势动画（Reanimated 3 / Gesture Handler）
 6. [conditional-compile.md](./conditional-compile.md) — 条件编译与包体裁剪
 
