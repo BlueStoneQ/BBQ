@@ -138,27 +138,58 @@ UI Thread（Android 主线程）
 
 ## 六、内存管理（坑）
 
-**V8 对象有自己的 GC，Java 对象也有 GC，两者独立。J2V8 创建的对象横跨两个 GC 系统。**
+**V8 堆上的对象由 V8 GC 统一管理。** V8 GC 判断"能不能回收"看：还有没有引用指向它。
 
-**规则**：所有 `V8Object` / `V8Array` / `V8Function` 用完必须手动 `close()`。
+引用来源两种：
+- **JS 侧引用**：JS 变量/闭包持有（V8 GC 自己能追踪）
+- **Java 侧引用**：通过 J2V8 的 Handle 持有（V8 GC 看到"有外部 Handle" → 不回收）
 
-```
-// ❌ 内存泄漏
-V8Object obj = new V8Object(runtime);
-obj.add("key", "value");
-// 忘了 close → V8 堆上的对象永远不会被回收
+### close() 的本质
 
-// ✅ 正确
-V8Object obj = new V8Object(runtime);
-try {
-    obj.add("key", "value");
-    // 使用...
-} finally {
-    obj.close();  // 释放 V8 引用
+`close()` = 释放 Java 侧的 Handle = 告诉 V8 GC "外部不再引用了"。
+
+之后 V8 GC 只看 JS 侧还有没有引用：
+- JS 侧也没引用 → 回收
+- JS 侧还有引用 → 不回收（正常）
+
+### 为什么 call() 返回后可以 close
+
+调用是同步的。`callback.call()` 返回时 JS 函数已执行完。如果 JS 需要数据，它已经用自己的变量引用了（JS 内部引用，不依赖 Java Handle）。Java Handle 只是"传递数据的临时通道"，传完断开。
+
+### 什么需要 close，什么不需要
+
+| 场景 | 需要 close | 原因 |
+|------|-----------|------|
+| 挂在 global 的桥接对象 | 不需要 | 跟随 Runtime 生命周期，数量固定 |
+| 方法调用时创建的临时 V8Array/V8Object | **需要** | 每次调用都创建，不 close 就泄漏 |
+| 回调时创建的临时结果 | **需要** | 同上 |
+
+### 内存爆炸场景
+
+```java
+// ❌ BLE 数据每秒 100 次，每次创建 V8Array 不 close
+void onDataReceived(byte[] data) {
+    V8Array args = new V8Array(runtime);
+    args.push(data);
+    callback.call(null, args);
+    // 忘了 close → 每秒泄漏 100 个 Handle → V8 GC 永远不回收 → 内存爆炸
+}
+
+// ✅ 正确：用完立即 close
+void onDataReceived(byte[] data) {
+    V8Array args = new V8Array(runtime);
+    try {
+        args.push(data);
+        callback.call(null, args);
+    } finally {
+        args.close();  // 释放 Java 侧 Handle，V8 GC 可以回收了
+    }
 }
 ```
 
-**为什么 Java GC 不能自动回收？** 因为 V8Object 在 Java 堆上只是一个"引用句柄"（几十字节），真正的数据在 V8 堆上。Java GC 回收了句柄，但 V8 堆上的数据不知道该释放了 → 泄漏。
+### 规则
+
+**谁创建谁 close，用完立即 close。** 同步调用场景下，`call()` 返回 = 消费完 = 可以 close。
 
 ---
 
@@ -203,3 +234,61 @@ J2V8 = V8 的 C++ API 通过 JNI 封装成 Java API
 ```
 
 J2V8 不是新技术，就是一层 JNI 封装。类比：JDBC 之于数据库 = J2V8 之于 V8。
+
+---
+
+## 九、通信本质：三层穿透
+
+### 为什么需要 C++ 当中间人
+
+JS 和 Java 是两个完全隔离的运行时，没有直接通信能力。但 C++ 两边都能摸到：
+- V8 是 C++ 写的 → C++ 能直接操作 V8 内部
+- JNI 是 Java↔C++ 的标准桥梁 → C++ 能直接调 Java
+
+所以 C++ 是桥。
+
+```
+JS 世界（V8 引擎内部）
+    ↕  V8 C++ API（Host Object）
+C++ 世界（JNI 胶水）
+    ↕  JNI
+Java 世界（Android）
+```
+
+### 注册时发生了什么
+
+```
+Java: registerJavaMethod("connect")
+  → JNI 调 C++
+    → C++ 在 V8 里创建一个"假的 JS 函数"
+    → 这个函数的函数体不是 JS 代码，而是"通过 JNI 调 Java"
+    → 挂到 JS 全局对象上
+```
+
+**本质**：在 V8 里注册了一个 Host Function，它的实现是"JNI 回调 Java"。
+
+### 调用时发生了什么
+
+```
+JS: NativeBLE.connect("deviceId")
+  → V8 发现 connect 是 Host Function
+  → 执行 C++ 实现：
+    → 把 JS 参数转成 JNI 类型
+    → JNI 调 Java 的 connect 方法
+    → Java 执行完返回
+    → 把 Java 返回值转成 JS 值
+  → JS 拿到结果
+```
+
+### 为什么是同步的
+
+整个过程在同一个线程（JS Thread）上顺序执行：函数调用链一路穿下去再一路返回来。没有异步队列，没有消息传递。
+
+### 和旧 RN Bridge 的本质区别
+
+```
+旧 Bridge：JS → 序列化 JSON → 消息队列 → 等待 → Native 取出 → 反序列化 → 执行（异步）
+J2V8/JSI：JS → C++ → JNI → Java → 原路返回（同步，函数调用链直接穿透）
+```
+
+**一句话**：不是"发消息"，是"函数调用链直接穿透三层"。快就快在没有中间商。

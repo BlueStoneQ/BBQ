@@ -305,3 +305,86 @@ Bundle 就是 JS 打包产物，只需要：
 4. 放入 APK assets/ 或热更新下发
 
 Metro 不依赖 init 生成的项目结构，只需要入口文件 + metro.config.js。
+
+---
+
+## 十、RN 实例池化（多 Bundle 容器管理）
+
+### 本质
+
+`Map<String, ReactInstanceManager>` — key 是 Bundle 名，value 是已加载好的 RN 实例。
+
+### 为什么池化
+
+创建 RN 实例耗时（加载 Bundle + 初始化 Hermes + 注册模块 ~200-500ms）。池化 = 提前创建好，跳转时直接取 → 秒开。
+
+### 核心 RN API
+
+| API | 作用 |
+|-----|------|
+| `ReactInstanceManager.builder()` | 构建 RN 实例（配置 Bundle 路径/引擎/模块） |
+| `.setBundleAssetName("device.hbc")` | 指定加载哪个 Bundle |
+| `.setJSMainModuleName("index")` | 指定 JS 入口模块 |
+| `.addPackage(new BLEPackage())` | 注册 Native Module |
+| `.build()` | 创建实例 |
+| `ReactRootView.startReactApplication(manager, "ModuleName")` | 启动渲染 |
+| `manager.destroy()` | 销毁实例（回收时调用） |
+
+### 策略设计
+
+**预热（什么时候创建）**：
+
+| 策略 | 时机 | 适用 |
+|------|------|------|
+| 启动预热 | 首屏渲染完后空闲时 | Common + 首页模块 |
+| 预测预热 | 用户进了列表 → 预热详情模块 | 大概率下一步用的 |
+| 懒创建 | 跳转时池里没有才创建 | 低频模块 |
+
+**池大小**：一般 2-4 个实例（每个 ~20-50MB），不能太多。
+
+**回收（什么时候释放）**：
+
+| 策略 | 触发 | 回收什么 |
+|------|------|---------|
+| LRU | 池满要创建新的 | 最久没用的 |
+| 内存压力 | 系统 `onTrimMemory` | 非当前页面的全部 |
+| 超时 | 离开模块超过 N 分钟 | 该模块实例 |
+| 保底 | Common 永不回收 | — |
+
+### 伪代码
+
+```kotlin
+class RNInstancePool(private val maxSize: Int = 3) {
+    private val pool = LinkedHashMap<String, ReactInstanceManager>()
+
+    fun get(bundleName: String): ReactInstanceManager {
+        pool[bundleName]?.let { return it }
+        if (pool.size >= maxSize) evictLRU()
+        return createInstance(bundleName).also { pool[bundleName] = it }
+    }
+
+    fun preload(bundleName: String) {
+        if (pool.size < maxSize && !pool.containsKey(bundleName)) {
+            pool[bundleName] = createInstance(bundleName)
+        }
+    }
+
+    fun onTrimMemory(currentModule: String) {
+        pool.keys.filter { it != "common" && it != currentModule }
+            .forEach { pool.remove(it)?.destroy() }
+    }
+
+    private fun createInstance(bundleName: String): ReactInstanceManager {
+        return ReactInstanceManager.builder()
+            .setBundleAssetName("$bundleName.hbc")
+            .addPackages(PackageList(application).packages)
+            .setIsNewArchEnabled(true)
+            .build()
+    }
+
+    private fun evictLRU() {
+        val oldest = pool.keys.first { it != "common" }
+        pool.remove(oldest)?.destroy()
+    }
+}
+```

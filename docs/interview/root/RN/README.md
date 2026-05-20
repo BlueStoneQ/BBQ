@@ -9,8 +9,9 @@
 
 ### 骨架：RN 怎么跑起来的
 
-1. [build-system.md](./build-system.md) — 构建过程（Metro + Hermes + APK 组装 + Link 机制）
-2. [rn-runtime.md](./rn-runtime.md) — 加载与运行时（Bundle 加载 → 容器初始化 → 渲染 → 逻辑执行）
+1. [rn-full-picture.md](./rn-full-picture.md) — 全景（目录结构 → 构建 → 启动 → 渲染 → JS 调 Native）
+2. [build-system.md](./build-system.md) — 构建过程（Metro + Hermes + APK 组装 + Link 机制）
+3. [rn-runtime.md](./rn-runtime.md) — 加载与运行时（Bundle 加载 → 容器初始化 → 渲染 → 逻辑执行）
 
 ### 支干：核心能力
 

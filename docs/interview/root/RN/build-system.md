@@ -16,7 +16,21 @@
 
 ## Metro
 
-**本质**：RN 专用的 JS 打包器。把散落的 JS/TS 模块打成 Bundle 文件。
+**本质**：RN 专用的 JS 打包器。把散落的 JS/TS 模块打成 Bundle 文件 + 提取静态资源。
+
+**产出两样东西**：
+1. **Bundle 文件**（.js 或 .hbc）— 所有 JS 代码
+2. **assets 目录**（图片/字体）— `require('./icon.png')` 引用的资源被 copy 出来
+
+Bundle 里只有 JS 代码 + 资源 ID 引用，静态文件不在 Bundle 里。
+
+```
+npx react-native bundle --platform android \
+  --bundle-output dist/index.android.bundle \   ← JS Bundle
+  --assets-dest dist/assets/                     ← 静态文件
+```
+
+打 APK 时：Bundle → `assets/`，图片 → `res/drawable-xxx/`（按分辨率分目录）。
 
 **为什么不用 Webpack**：Metro 针对 RN 特化——增量构建极快（文件级缓存）、支持平台后缀解析（`.android.ts` / `.ios.ts`）、内置 HMR、输出格式适配 Hermes。
 
@@ -99,6 +113,42 @@ AAR 是 Native 层的库，和 JS Bundle 是不同维度：
 - AAR → Native 能力（TurboModule 实现）
 - 两者通过 TurboModule Spec 契约关联
 - 构建时各自独立，Gradle 最终组装进同一个 APK
+
+---
+
+## 多 Bundle 组装成 IPA（iOS 侧）
+
+### IPA 内部结构
+
+```
+MyApp.app/（IPA 解压后）
+├── MyApp（可执行二进制）       ← Swift/ObjC + RN 框架 + TurboModule
+├── Frameworks/
+│   ├── hermes.framework       ← Hermes 引擎
+│   └── React.framework        ← RN 框架
+├── main.jsbundle              ← JS Bundle（或 .hbc，内置在 main bundle）
+├── assets/                    ← 图片/字体等静态资源
+└── Info.plist                 ← 应用配置
+```
+
+### 和 Android 的对比
+
+| | Android（APK） | iOS（IPA） |
+|---|---------------|-----------|
+| Bundle 存放 | `assets/` 目录 | main bundle（App 包内）或 Documents 目录 |
+| Native 代码 | classes.dex + .so | 可执行二进制 + .framework |
+| 热更新 Bundle 存放 | 内部存储 `/data/data/包名/` | Documents 或 Library 目录（沙盒内） |
+| 构建工具 | Gradle | Xcode (xcodebuild) |
+| 构建环境 | Linux/macOS/Windows | 只能 macOS |
+
+### 多 Bundle 在 iOS 的处理
+
+和 Android 思路一样：
+- Common Bundle 内置在 App 包内（main bundle）
+- Business Bundle 通过热更新下发到 Documents 目录
+- 运行时根据路由从对应路径加载
+
+区别：iOS 沙盒机制限制只能访问自己的目录，热更新 Bundle 只能存在 Documents/Library 下。
 
 ### DDD + Monorepo 映射
 

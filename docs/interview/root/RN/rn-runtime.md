@@ -76,10 +76,10 @@ App 启动 → 加载 common.hbc（公共依赖，必须先加载）
 2. 注册 Native Modules / TurboModules（懒加载模式下只注册入口，不实例化）
 3. 执行 Bundle 入口代码
 4. 入口代码调用 AppRegistry.registerComponent('App', () => App)
-5. RN 框架调用 App 组件的 render()
-6. 生成 Virtual DOM 树
-7. 通过 Fabric 将 Virtual DOM 映射为 Native View 操作指令
-8. UI 线程执行指令 → 创建 Android View → 显示
+5. RN 框架调用hbc中的APP 组件的 render()
+6. React Reconciler 生成 Virtual DOM → diff → 产生渲染指令
+7. 渲染指令通过 JSI 传给 C++ Fabric → Yoga 算布局（精确坐标/尺寸）
+8. Fabric 通过 JNI 调 Java ViewManager → UI Thread 创建 Native View → 显示
 ```
 
 ---
