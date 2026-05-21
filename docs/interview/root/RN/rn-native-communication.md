@@ -62,6 +62,12 @@
 
 用 `TurboModule` 接口声明"JS 侧能调什么"。这个文件是给 Codegen 看的，它会据此生成 C++/JNI 胶水 + Kotlin 抽象类。
 
+**约定**：
+- 文件名必须 `Native` 开头（如 `NativeBLE.ts`）
+- 接口名必须叫 `Spec`（Codegen 按这个名字识别）
+- 放在 `package.json` 的 `codegenConfig.jsSrcsDir` 指定的目录下
+- 一般放 `src/native-modules/`
+
 ```
 interface Spec extends TurboModule {
   connect(deviceId): Promise<void>   // 异步，等连接结果
@@ -140,6 +146,29 @@ function useBLE() {
 
 **为什么被动用事件不用 Promise？** BLE 是持续状态流（多次触发、时机不确定），不是一次性请求。
 
+### 事件通信的实现本质
+
+事件不经过 Codegen，走的是 JSI 直调（新架构下）：
+
+```
+初始化时：
+  JS: emitter.addListener("BLE_DATA", callback)
+    → callback 函数引用被传到 C++ 层保存
+
+事件发生时：
+  Java: emit("BLE_DATA", data)
+    → JNI → C++ 层
+    → C++ 拿到之前保存的 JS callback 引用
+    → 在 JS Thread 上直接调用这个引用
+    → JS callback 执行
+```
+
+**本质**：C++ 层是中间人——被 Java 通过 JNI 调用，同时持有 JS 函数引用能直接调 JS。不需要序列化队列。
+
+**和 TurboModule 的区别**：
+- TurboModule 方法（JS→Native）：Codegen 生成胶水，类型安全
+- EventEmitter 事件（Native→JS）：无 Codegen，字符串约定，C++ 直调 JS 函数引用
+
 ---
 
 ## 六、BLE 高频数据流，新架构收益
@@ -212,3 +241,37 @@ function useBLE() {
 2. **通信快**：JSI 直调（<1ms），旧模块 Bridge 异步（~10ms）
 3. **类型安全**：TS Spec + Codegen 编译时检查，旧模块运行时才崩
 4. **同步方法**：支持同步返回，旧模块强制异步
+
+---
+
+## 十、JS 引擎对 JS 世界的操作能力
+
+从 C++ 侧（JSI/J2V8）能对 JS 世界做什么：
+
+| 操作 | 做什么 | 类比 JS 代码 |
+|------|--------|-------------|
+| 执行代码 | 执行一段 JS 字符串/字节码 | `eval("...")` |
+| 读全局变量 | 获取 JS 全局对象上的值 | `globalThis.xxx` |
+| 写全局变量 | 往 JS 全局挂东西 | `globalThis.NativeBLE = {...}` |
+| 创建对象 | 在 JS 堆上创建对象/数组 | `{}` / `[]` |
+| 读写属性 | 获取/设置对象的属性 | `obj.key` / `obj.key = value` |
+| 调用函数 | 调用一个 JS 函数 | `callback(args)` |
+| 注册 Host 函数 | 注册"假 JS 函数"（实际执行 C++/Java） | JS 做不到 |
+| 获取函数引用 | 拿到 JS 函数引用，后续可调用 | 保存 callback |
+
+**一句话**：C++ 侧对 JS 世界有"上帝视角"——能创建/读/写/调用任何东西，还能注入 JS 里不存在的能力。这就是 JSI 双向通信的基础。
+
+### V8 / J2V8 核心 API 对照
+
+| 操作 | V8 C++ API | J2V8 Java API | 干什么 |
+|------|-----------|---------------|--------|
+| 创建运行环境 | `v8::Isolate::New()` + `v8::Context::New()` | `V8.createV8Runtime()` | 创建一个完整的 JS 执行环境 |
+| 执行 JS 代码 | `v8::Script::Compile()` + `Run()` | `runtime.executeScript(code)` | 跑一段 JS |
+| 往全局挂对象 | `context->Global()->Set(key, obj)` | `runtime.add("NativeBLE", bridge)` | 让 JS 能访问到这个对象 |
+| 创建 JS 对象 | `v8::Object::New(isolate)` | `new V8Object(runtime)` | 在 JS 堆上创建对象 |
+| 设置属性 | `obj->Set(context, key, value)` | `v8Obj.add(key, value)` | 给对象加属性 |
+| 注册 Host 函数 | `v8::FunctionTemplate::New(isolate, cppCallback)` | `v8Obj.registerJavaMethod(instance, method, jsName, types)` | 让 JS 调用时执行 C++/Java 代码 |
+| 调用 JS 函数 | `jsFunc->Call(context, receiver, argc, argv)` | `v8Function.call(receiver, args)` | 从 Native 侧主动调 JS 函数 |
+| 读属性 | `obj->Get(context, key)` | `v8Obj.get(key)` | 读 JS 对象的属性值 |
+| 释放引用 | Handle scope 自动管理 | `v8Obj.close()` | 告诉 GC 这个引用不用了 |
+| 销毁环境 | `isolate->Dispose()` | `runtime.release()` | 销毁整个 JS 运行环境 |
