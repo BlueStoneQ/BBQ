@@ -22,6 +22,12 @@
 5. [gesture-animation.md](./gesture-animation.md) — 手势动画（Reanimated 3 / Gesture Handler）
 6. [conditional-compile.md](./conditional-compile.md) — 条件编译与包体裁剪
 
+### 场景专题
+
+11. [iot-ble-performance.md](./iot-ble-performance.md) — IoT App 性能方案（BLE+WiFi共存/流畅度/优化方案）
+12. [ux-engineering.md](./ux-engineering.md) — 性能体验升级治理专项（感知速度/交互反馈/视觉稳定/组件体系）
+13. [theme-i18n.md](./theme-i18n.md) — Theme 适配 + 国际化（Dark Mode/i18n/RTL/Design Token）
+
 ### 血肉：工程化与选型
 
 7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/分 Bundle/热更新/CLI/实例池）
