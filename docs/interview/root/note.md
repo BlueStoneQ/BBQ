@@ -488,3 +488,19 @@ JS → JSI（C++ Host Object）→ JNI → Java/Kotlin 代码
 区别只是叫法（虚拟机 vs 引擎）和输入格式，干的事一样。
 
 ---
+
+### RN Android 层核心对象
+
+| 对象 | 干什么 |
+|------|--------|
+| `ReactApplication` | App 入口接口 |
+| `ReactNativeHost` | 配置 RN 运行时（Bundle 路径/引擎/模块） |
+| `ReactInstanceManager` | RN 运行时实例（Hermes + 模块 + 生命周期） |
+| `ReactRootView` | RN 渲染的容器 View |
+| `ReactActivity` | 承载 RN 页面的 Activity |
+| `TurboReactPackage` | 注册 TurboModule |
+| `Promise` | 异步结果返回给 JS |
+
+关系：ReactNativeHost（配置）→ ReactInstanceManager（引擎）→ ReactRootView（容器）= 一个能跑的 RN 页面。
+
+---

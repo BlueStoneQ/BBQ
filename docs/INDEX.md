@@ -25,12 +25,16 @@
   - [构建（Metro/Hermes/Link/APK）](./interview/root/RN/build-system.md)
   - [运行时（加载/渲染/逻辑）](./interview/root/RN/rn-runtime.md)
   - [性能优化](./interview/root/RN/performance.md)
+  - [性能优化分层体系](./interview/root/RN/performance-layers.md)
+  - [性能分析工具与排查](./interview/root/RN/performance-profiling.md)
   - [架构和工程化治理](./interview/root/RN/architecture-engineering.md)
   - [手势动画](./interview/root/RN/gesture-animation.md)
   - [条件编译/包体裁剪](./interview/root/RN/conditional-compile.md)
   - [2026 选型 + 状态管理](./interview/root/RN/rn-2026-stack.md)
   - [调试与问题归因](./interview/root/RN/debugging-issues.md)
   - [Firebase/运维](./interview/root/RN/firebase-ops.md)
+- XRN 多 Bundle 方案
+  - [导航与路由设计](/home/mi/disk/qiaoyang/code/my-github/XRN/docs/note/navigation-and-routing.md)
 
 ---
 
@@ -41,6 +45,8 @@
   - [CRN 企业级](./resume/explain/3.2-xc/rn-native-stack/crn-enterprise.md)
   - [快应用运行时](./resume/explain/3.2-xc/rn-native-stack/quickapp-runtime.md)
   - [Android 底层](./resume/explain/3.2-xc/rn-native-stack/android-native.md)
+- [Android 系统知识（17 主题）](./resume/explain/3.1-xm/quickapp-framework/android-note/README.md)
+- [Android 系统知识（17 主题）](./resume/explain/3.1-xm/quickapp-framework/android-note/README.md)
 
 ---
 

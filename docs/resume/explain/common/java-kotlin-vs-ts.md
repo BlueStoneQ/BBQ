@@ -162,3 +162,33 @@ Kotlin 是 Java 的"现代化改良版"，完全兼容 Java（可以互调）。
 | 字符串模板 | `"Hello " + name` | `"Hello $name"` |
 
 **一句话**：Kotlin 之于 Java ≈ TypeScript 之于 JavaScript。解决了痛点（空安全/类型推断/简洁语法），完全兼容旧代码。
+
+---
+
+## 九、Kotlin 作用域函数（TS 没有的）
+
+Kotlin 有一组"作用域函数"，用于对象创建后链式配置。TS 没有对应语法。
+
+| 函数 | this/it | 返回值 | 用途 |
+|------|---------|--------|------|
+| `apply {}` | this = 对象 | 对象本身 | 创建后配置（Builder 模式替代） |
+| `also {}` | it = 对象 | 对象本身 | 创建后做副作用（打日志等） |
+| `let {}` | it = 对象 | Lambda 返回值 | 空安全链式调用 |
+| `run {}` | this = 对象 | Lambda 返回值 | 对象上执行计算 |
+
+**最常用的 `apply`**：
+
+```kotlin
+// Kotlin
+val intent = Intent(context, XRNActivity::class.java).apply {
+    putExtra("route", "order/detail")  // this 省略，指向 intent
+    putExtra("params", bundleOf("id" to "123"))
+}
+
+// 等价 TS（没有 apply 语法糖）
+const intent = new Intent(context, XRNActivity.class);
+intent.putExtra("route", "order/detail");
+intent.putExtra("params", { id: "123" });
+```
+
+**本质**：`apply {}` = 创建对象 + 花括号里配置它 + 返回对象本身。花括号是 Kotlin Lambda 语法，里面的 `this` 指向对象可省略。

@@ -8,6 +8,8 @@
 ## 目录
 
 - [一、本质问题](#一本质问题)
+  - [手势动画到底在做什么？](#手势动画到底在做什么)
+  - [为什么 RN 动画容易卡？](#为什么-rn-动画容易卡)
 - [二、解决方案：Gesture Handler + Reanimated 3](#二解决方案gesture-handler--reanimated-3)
 - [三、IoT App 典型场景](#三iot-app-典型场景)
 - [四、手势冲突解决](#四手势冲突解决)
@@ -17,6 +19,41 @@
 ---
 
 ## 一、本质问题
+
+### 手势动画到底在做什么？
+
+两步：
+1. **监听手势**（Pan/Pinch/Rotate）→ 拿到手势类型 + x/y 坐标（或距离/角度）
+2. **把这些值实时映射到 View 的 style 属性** → 产生"跟手"的视觉效果
+
+**动画效果作用于 View 的 style 属性**，核心就这几个：
+
+| 属性 | 对应手势 | 效果 | 为什么性能好 |
+|------|---------|------|-------------|
+| `transform: translateX/Y` | Pan（拖拽） | 元素跟手移动 | GPU 合成层，不触发布局 |
+| `transform: scale` | Pinch（捏合） | 放大缩小 | 同上 |
+| `transform: rotate` | Rotate（旋转） | 旋转 | 同上 |
+| `opacity` | 任意 | 淡入淡出/按下变暗 | GPU 合成层 |
+| `width/height` | Pan（拖拽边缘） | 拉伸/收缩 | ⚠️ 触发重新布局，慎用 |
+
+**一句话本质**：手势给坐标值，动画把坐标值实时映射到 View 的 transform/opacity → 视觉上"跟手"。
+
+**具体例子：手指拖拽一个卡片**
+
+```
+拖拽中：手势给你 translationX = 150（手指移了 150px）
+       → 你把这个值赋给 View 的 transform: [{ translateX: 150 }]
+       → View 就跟着手指移动了 150px
+
+松手后：withSpring(0) — 用弹簧动画把 translateX 从 150 回到 0
+       → View 弹性回弹到原位
+```
+
+整个过程就是：手势产生数值 → 数值驱动 style 属性 → 视觉跟手。松手后用物理动画（弹簧/衰减）让值回归 → 自然的回弹效果。
+
+**为什么最常用 transform + opacity？** 因为它们是 GPU 合成层属性，不触发重新布局（和 Web 里 CSS transform 一样的道理）。改 width/height 会触发 Yoga 重新算布局 → 性能差。
+
+### 为什么 RN 动画容易卡？
 
 RN 动画卡的根因：**动画计算跑在 JS 线程，和业务逻辑抢 16ms 帧预算。**
 
@@ -49,6 +86,114 @@ Reanimated 3：驱动动画（worklet 在 UI 线程，不过 JS）
 ### Gesture Handler 是什么
 
 第三方手势库，把手势识别从 JS 线程移到 Native 层。支持声明式手势冲突解决。
+
+### 安装：为什么 Native 层必须安装？
+
+这两个库都是 **"JS API + Native 运行时"的混合库**，不是纯 JS 库，所以必须 rebuild Native。
+
+```bash
+# Reanimated
+yarn add react-native-reanimated
+cd ios && pod install
+# babel.config.js 必须加插件（构建时提取 worklet 函数）：
+plugins: ['react-native-reanimated/plugin']
+
+# Gesture Handler
+yarn add react-native-gesture-handler
+cd ios && pod install
+# Android: MainActivity 里包一层 GestureHandlerRootView
+```
+
+**为什么不能纯 JS？**
+
+| 库 | Native 层做了什么 | 为什么必须 Native |
+|---|---|---|
+| Reanimated | 在 UI 线程创建独立的轻量 JS 运行时，执行 worklet | worklet 要在 UI 线程跑，JS 线程做不到 |
+| Gesture Handler | 用 Native 手势识别器（Android `MotionEvent` / iOS `UIGestureRecognizer`） | 手势识别必须在 Native UI 层，JS 拿不到原始触摸流 |
+
+**Reanimated Native 侧的三件事**：
+1. 创建 UI 线程上的轻量 JS 运行时（执行 worklet 代码）
+2. 接收 Babel 插件提取出的 worklet 函数并在 UI 线程执行
+3. 直接操作 Native View 属性（不回 JS 线程）
+
+**一句话**：worklet 能在 UI 线程跑，是因为 Native 侧有一个独立的小型 JS 引擎在 UI 线程等着执行它。
+
+### 使用时需要写 Native 代码吗？
+
+**不需要。** 使用时全部在 JS/TS 侧写代码。
+
+```
+安装时：库的 Native 代码自动 link 进你的 App（一次性，pod install / autolinking）
+使用时：你只写 JS/TS（useSharedValue / useAnimatedStyle / Gesture.Pan() 等）
+运行时：库的 Native 运行时自动把你的 worklet 调度到 UI 线程执行
+```
+
+Native 侧的代码是**库自带的**，安装时自动集成，你不需要写任何 Java/Kotlin/ObjC/Swift。
+
+唯一需要动 Native 的地方：App 根组件包一层 `GestureHandlerRootView`（一次性模板代码）：
+
+```tsx
+// App.tsx 根组件
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* 你的 App 内容 */}
+    </GestureHandlerRootView>
+  );
+}
+```
+
+本质：给 Gesture Handler 一个 Native 层的手势拦截根节点，所有子 View 的手势才能被 Native 识别器捕获。
+
+**类比**：就像用 `react-native-maps`，pod install 把 Native 地图 SDK 集成进来，但使用时你只写 `<MapView />` 的 JSX。
+
+### 手势监听怎么写？（声明式 API）
+
+```typescript
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+
+// 1. 声明手势：监听什么 + 每帧拿到什么
+const offsetX = useSharedValue(0);
+
+const panGesture = Gesture.Pan()
+  .onUpdate((e) => {
+    'worklet';
+    // e.translationX — 手指相对起点的偏移（每帧都给你最新值）
+    offsetX.value = e.translationX;
+  })
+  .onEnd(() => {
+    'worklet';
+    // 松手后弹回原位
+    offsetX.value = withSpring(0);
+  });
+
+// 2. 把手势值映射到 View style
+const animatedStyle = useAnimatedStyle(() => ({
+  transform: [{ translateX: offsetX.value }],
+}));
+
+// 3. 绑定到 View：用 GestureDetector 包裹目标 View
+<GestureDetector gesture={panGesture}>
+  <Animated.View style={animatedStyle} />
+</GestureDetector>
+```
+
+**模式**：`Gesture.XXX()` 声明手势类型 → `.onUpdate(callback)` 每帧回调拿坐标 → 赋值给 sharedValue → `useAnimatedStyle` 映射到 style → `GestureDetector` 绑定到 View。
+
+**常用手势类型**：
+
+| API | 监听什么 | 回调给你什么 |
+|-----|---------|------------|
+| `Gesture.Pan()` | 拖拽 | translationX/Y, velocityX/Y |
+| `Gesture.Pinch()` | 捏合 | scale, focalX/Y |
+| `Gesture.Rotation()` | 旋转 | rotation（弧度） |
+| `Gesture.Tap()` | 点击 | x/y 坐标 |
+| `Gesture.LongPress()` | 长按 | x/y 坐标, duration |
+
+**一句话**：声明你要监听什么手势 → 库在 Native 层识别 → 每帧把数值回调给你的 worklet → 你映射到 style → View 跟手。
 
 ---
 
@@ -114,3 +259,41 @@ IoT App 两个都用：Lottie 做配网成功动画，Reanimated 做设备控制
 ## 七、和已有经验的关联
 
 弹窗治理（多弹窗时机冲突 → 优先级队列调度）和手势冲突本质是同一个问题：**多个行为竞争同一个输入，需要调度策略**。弹窗是时间维度冲突，手势是空间维度冲突。
+
+---
+
+## 八、代码对比：优化前后
+
+```typescript
+// ❌ 优化前：PanResponder（每帧触摸事件都传到 JS 线程 → 卡）
+const pan = useRef(new Animated.ValueXY()).current;
+const panResponder = PanResponder.create({
+  onMoveShouldSetPanResponder: () => true,
+  // 每帧都在 JS 线程算新位置 → JS 忙了就掉帧
+  onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }]),
+  onPanResponderRelease: () => pan.flattenOffset(),
+});
+<Animated.View {...panResponder.panHandlers} style={pan.getLayout()} />
+```
+
+```typescript
+// ✅ 优化后：Gesture Handler + Reanimated（全程 UI 线程 → 流畅）
+const offset = useSharedValue({ x: 0, y: 0 });
+
+// 手势识别在 Native 层，不过 JS
+const gesture = Gesture.Pan().onUpdate((e) => {
+  'worklet'; // 标记：这段代码在 UI 线程执行，不在 JS 线程
+  offset.value = { x: e.translationX, y: e.translationY };
+});
+
+// 动画值变化直接驱动 View 属性，不过 JS
+const animatedStyle = useAnimatedStyle(() => ({
+  transform: [{ translateX: offset.value.x }, { translateY: offset.value.y }],
+}));
+
+<GestureDetector gesture={gesture}>
+  <Animated.View style={animatedStyle} />
+</GestureDetector>
+```
+
+**区别**：前者每帧在 JS 线程执行 `onPanResponderMove`；后者 `'worklet'` 标记的函数在 UI 线程执行，JS 线程完全不参与。

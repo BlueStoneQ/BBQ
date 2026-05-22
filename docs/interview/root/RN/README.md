@@ -18,12 +18,13 @@
 3. [rn-native-communication.md](./rn-native-communication.md) — RN ↔ Native 通信（JSI / TurboModule / BLE 场景）
 4. [performance.md](./performance.md) — 性能优化（启动/渲染/内存/列表/下沉策略）
 5. [performance-layers.md](./performance-layers.md) — 性能优化分层体系（React/RN框架/Native/工程化 + 场景）
+6. [performance-profiling.md](./performance-profiling.md) — 性能分析工具与排查方法（工具盘点/场景选型/排查 SOP）
 5. [gesture-animation.md](./gesture-animation.md) — 手势动画（Reanimated 3 / Gesture Handler）
 6. [conditional-compile.md](./conditional-compile.md) — 条件编译与包体裁剪
 
 ### 血肉：工程化与选型
 
-7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/分 Bundle/热更新/CLI）
+7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/分 Bundle/热更新/CLI/实例池）
 8. [rn-2026-stack.md](./rn-2026-stack.md) — 2026 选型 + 目录结构 + 状态管理
 9. [firebase-ops.md](./firebase-ops.md) — 运维监控（Firebase/Sentry/选型）
 10. [debugging-issues.md](./debugging-issues.md) — 调试与常见问题归因

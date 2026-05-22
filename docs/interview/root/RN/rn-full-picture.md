@@ -286,6 +286,27 @@ RN 新架构的**渲染系统**（C++ 实现）。职责：
 - 调 Yoga 算布局
 - 把最终 View 操作提交给 UI Thread
 
+### 线程间通信方案对比
+
+| 方案 | 原理 | 优点 | 缺点 | 用在哪 |
+|------|------|------|------|--------|
+| 消息队列（旧 Bridge） | 序列化 → 队列 → 反序列化 | 解耦 | 延迟（排队+序列化） | RN 旧架构 |
+| 共享内存（Fabric） | C++ Shadow Tree 作为共享状态 | 快、无序列化 | 需要同步机制 | RN 新架构渲染 |
+| Handler/Looper | post Runnable 到目标线程 | 简单、Android 原生 | 异步 | Fabric 提交 View 操作到 UI Thread |
+| 函数直调 | 同线程直接调 | 零开销 | 只能同线程 | worklet 在 UI Thread 内部 |
+
+### 新架构渲染的线程通信
+
+```
+JS Thread：React diff → 渲染指令
+  → JSI 调 C++ Fabric（JS Thread 上）
+  → Fabric 更新 Shadow Tree（C++ 共享内存）
+  → Fabric 把 View 操作 post 到 UI Thread（Handler）
+  → UI Thread 执行 View 操作
+```
+
+本质：用"共享内存 + Handler post"替代旧架构的"JSON 消息队列"。快在没有序列化，但仍异步提交到 UI Thread（Android 要求 View 操作必须在 UI Thread）。
+
 ### JS → C++（JSI）
 
 JS 通过 JSI 直接调 Fabric 的 C++ 方法（Host Object），传的是 C++ 对象引用。不是 JSON。
