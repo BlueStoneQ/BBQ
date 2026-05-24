@@ -29,7 +29,7 @@
 │  Native 层：                                                 │
 │    Android Studio Profiler → CPU/内存/线程/网络              │
 │    Xcode Instruments → Time Profiler/Allocations/Leaks      │
-│    systrace / Perfetto → 跨线程时间线（帧级分析）            │
+│    Perfetto → 跨线程时间线（帧级分析）                       │
 │    LeakCanary → Java 内存泄漏自动检测                        │
 │                                                              │
 │  跨层：                                                      │
@@ -51,14 +51,14 @@
 
 | 性能场景 | 首选工具 | 看什么 | 定位到什么 |
 |---------|---------|--------|-----------|
-| **启动慢** | 自定义分段打点 + systrace | 各阶段耗时（Native init / Bundle load / JS exec / 首屏渲染） | 哪个阶段最慢 |
+| **启动慢** | 自定义分段打点 + Perfetto | 各阶段耗时（Native init / Bundle load / JS exec / 首屏渲染） | 哪个阶段最慢 |
 | **列表卡顿** | Performance Monitor + React DevTools | JS 帧率 + 哪些 item 在重渲染 | JS 计算过重 or View 层级深 |
-| **动画掉帧** | Performance Monitor + systrace | UI 帧率 + UI Thread 耗时 | 动画是否在 JS 线程跑 |
+| **动画掉帧** | Performance Monitor + Perfetto | UI 帧率 + UI Thread 耗时 | 动画是否在 JS 线程跑 |
 | **手势不跟手** | Performance Monitor | 拖拽时 JS 帧率是否掉 | 手势事件是否走了 JS 线程 |
 | **内存泄漏** | Android Profiler / Xcode Allocations + LeakCanary | 内存趋势（持续增长 = 泄漏） | 哪个对象没释放 |
-| **ANR/卡死** | systrace / Perfetto | UI Thread 被什么阻塞 | 主线程做了什么耗时操作 |
+| **ANR/卡死** | Perfetto | UI Thread 被什么阻塞 | 主线程做了什么耗时操作 |
 | **包体大** | source-map-explorer + APK Analyzer | 各模块占比 | 哪个库/资源最大 |
-| **BLE 延迟** | 自定义打点 + systrace | 端到端延迟分段 | 延迟在硬件/通信/JS 哪一层 |
+| **BLE 延迟** | 自定义打点 + Perfetto | 端到端延迟分段 | 延迟在硬件/通信/JS 哪一层 |
 | **Crash** | Sentry + Crashlytics | 堆栈 + Source Map | 崩在 JS 还是 Native |
 | **首屏慢** | 自定义打点 | FCP / TTI | 首屏组件树是否太大 |
 
@@ -153,16 +153,13 @@
 
 ---
 
-### 3.5 systrace / Perfetto（帧级跨线程分析）
+### 3.5 Perfetto（帧级跨线程分析）
 
 **本质**：把所有线程的执行时间线画在一张图上，精确到每一帧。
 
 **打开方式**：
 ```bash
-# systrace（旧）
-python systrace.py --time=5 -o trace.html sched gfx view
-
-# Perfetto（新，推荐）
+# Perfetto（Google 推荐）
 # 直接在 https://ui.perfetto.dev 打开 trace 文件
 ```
 
@@ -283,7 +280,7 @@ npx source-map-explorer bundle.js bundle.js.map
    - Hermes Profiler → 看 renderItem 里哪个函数慢
    - 解决：memo + useCallback + FlashList
 3. UI 帧率低：
-   - systrace → 看 UI Thread 每帧在做什么
+   - Perfetto → 看 UI Thread 每帧在做什么
    - 可能：View 层级深 / 图片大 / 阴影/圆角触发离屏渲染
    - 解决：简化 item 布局 + FastImage + 避免复杂样式
 ```
@@ -315,7 +312,7 @@ npx source-map-explorer bundle.js bundle.js.map
 |------|--------|
 | Performance Monitor | RN 内置帧率监控，最快判断问题在 JS 还是 Native |
 | Hermes Profiler | JS 函数级火焰图，找到最慢的 JS 函数 |
-| systrace / Perfetto | 跨线程时间线，精确到每一帧每个线程在做什么 |
+| Perfetto | 跨线程时间线，精确到每一帧每个线程在做什么 |
 | LeakCanary | Android 内存泄漏自动检测，给出引用链 |
 | React DevTools Profiler | 组件级渲染耗时 + 重渲染检测 |
 | source-map-explorer | JS Bundle 各模块体积可视化 |
@@ -334,7 +331,7 @@ npx source-map-explorer bundle.js bundle.js.map
 |------|------|------|--------------|
 | **adb** | 命令行桥梁 | 所有 Android 调试的基础 | 见下方常用命令 |
 | Android Studio Profiler | GUI | CPU/内存/网络/能耗 | AS → Profiler → 选进程 |
-| systrace / Perfetto | 帧级分析 | 跨线程时间线 | `python systrace.py` 或 Perfetto UI |
+| Perfetto | 帧级分析 | 跨线程时间线 | Perfetto UI (ui.perfetto.dev) |
 | LeakCanary | 自动检测 | Java 内存泄漏 | 添加依赖即可，自动弹通知 |
 | APK Analyzer | 包体分析 | APK 各部分体积 | AS → Build → Analyze APK |
 | Logcat | 日志 | 实时日志流 | `adb logcat` 或 AS Logcat 面板 |
@@ -385,7 +382,7 @@ npx source-map-explorer bundle.js bundle.js.map
 | 启动时间 | `adb shell am start -W` | Instruments → Time Profiler |
 | 内存分析 | Android Profiler + `dumpsys meminfo` | Instruments → Allocations |
 | 内存泄漏 | LeakCanary（自动） | Instruments → Leaks / Memory Graph |
-| 帧率/卡顿 | `dumpsys gfxinfo` + systrace | Instruments → Core Animation |
+| 帧率/卡顿 | `dumpsys gfxinfo` + Perfetto | Instruments → Core Animation |
 | CPU 热点 | Android Profiler CPU | Instruments → Time Profiler |
 | 日志 | `adb logcat` | Console.app / Xcode Console |
 | 包体分析 | APK Analyzer | Xcode → App Thinning Size Report |

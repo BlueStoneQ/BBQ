@@ -30,7 +30,8 @@
 
 ### 血肉：工程化与选型
 
-7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/分 Bundle/热更新/CLI/实例池）
+7. [architecture-engineering.md](./architecture-engineering.md) — 架构和工程化治理（DDD/多 Bundle/热更新/CLI/实例池）
+8. [code-splitting.md](./code-splitting.md) — 分 Bundle 方案（构建拆分/运行时加载/路由配合/加载策略）
 8. [rn-2026-stack.md](./rn-2026-stack.md) — 2026 选型 + 目录结构 + 状态管理
 9. [firebase-ops.md](./firebase-ops.md) — 运维监控（Firebase/Sentry/选型）
 10. [debugging-issues.md](./debugging-issues.md) — 调试与常见问题归因

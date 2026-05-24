@@ -40,7 +40,7 @@
 - 跨端：React Native（CRN）、快应用框架（JS → Native View）、小程序
 - 桌面端：Electron（VS Code 二次开发 / 插件）
 - Android 原生：Java / C++、Gradle、NDK、V8 / J2V8、JNI、R8
-- 跨端工程化：分 bundle、版本管理、热更新、多端构建发布
+- 跨端工程化：多 Bundle、版本管理、热更新、多端构建发布
 - 核心：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型
 - 设计实践：设计模式、函数式、AOP、DDD、TDD
 
@@ -66,7 +66,7 @@
 
 ### XRN — React Native 企业级工程化方案
 
-分 Bundle + 热更新 + 灰度发布解决方案。CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
+多 Bundle + 热更新 + 灰度发布解决方案。CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
 
 ### 条件编译工具套件
 
@@ -119,7 +119,7 @@
 #### ① XC App 机酒频道 + 国际化 App（React Native）
 
 - CRN 框架（RN 企业级定制）工程化实践
-- 业务分频道、**分 bundle、分版本热更新**上线
+- 业务分频道、**多 Bundle、分版本热更新**上线
 - BFF 层 GraphQL 聚合裁剪接口
 - 国际化开发
 
