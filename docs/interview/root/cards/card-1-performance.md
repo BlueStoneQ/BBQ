@@ -20,45 +20,46 @@
 |--------|------|------|
 | RN App 启动（冷启动全链路） | [perf-splash.md](./card-1/perf-splash.md) | ✅ |
 | 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./card-1/perf-splash.md) | ✅ |
-| CLS 抖动（布局跳动） | [perf-cls.md](./card-1/perf-cls.md) | 待写 |
-| 页面路由切换 | [perf-navigation.md](./card-1/perf-navigation.md) | 待写 |
-| WebView 加载 | [perf-webview.md](./card-1/perf-webview.md) | 待写 |
+| CLS 抖动（布局跳动） | [perf-cls.md](./card-1/perf-cls.md) | ✅ |
+| 页面路由切换 | [perf-navigation.md](./card-1/perf-navigation.md) | ✅ |
+| WebView 加载 | [perf-webview.md](./card-1/perf-webview.md) | ✅ |
+| 白屏检测与治理 | [perf-whitescreen.md](./card-1/perf-whitescreen.md) | ✅ |
 
 ### 二、流畅度
 
 | 子场景 | 文档 | 状态 |
 |--------|------|------|
-| 列表滑动流畅度（60fps） | [perf-list.md](./card-1/perf-list.md) | 待写 |
-| 手势动画（跟手 + 不掉帧） | [perf-animation.md](./card-1/perf-animation.md) | ✅ 已有 gesture-animation.md |
+| 列表滑动流畅度（60fps） | [perf-list.md](./card-1/perf-list.md) | ✅ |
+| 手势动画（跟手 + 不掉帧） | [perf-animation.md](./card-1/perf-animation.md) | ✅ |
+| JS Bridge 通信阻塞 | [perf-bridge.md](./card-1/perf-bridge.md) | ✅ |
 
 ### 三、包体
 
 | 子场景 | 文档 | 状态 |
 |--------|------|------|
-| Bundle 优化（体积 + 加载） | [perf-bundle.md](./card-1/perf-bundle.md) | 待写 |
-| 多 Bundle 方案 | → 详见 XRN / [architecture-engineering.md](../RN/architecture-engineering.md) | ✅ |
+| Bundle 体积优化 | [perf-bundle.md](./card-1/perf-bundle.md) | ✅ |
+| 打包流程优化 | [perf-build.md](./card-1/perf-build.md) | ✅ |
+| 多 Bundle 方案 | → 详见 [architecture-engineering.md](../RN/architecture-engineering.md) / XRN | ✅ |
 
-### 四、内存
+### 四、内存与稳定性
 
 | 子场景 | 文档 | 状态 |
 |--------|------|------|
-| 内存泄漏 + 内存优化 | [perf-memory.md](./card-1/perf-memory.md) | 待写 |
+| 内存泄漏 + 内存优化 | [perf-memory.md](./card-1/perf-memory.md) | ✅ |
+| 闪退（Crash）治理 | [perf-crash.md](./card-1/perf-crash.md) | ✅ |
 
 ### 五、交互体验反馈
 
 | 子场景 | 文档 | 状态 |
 |--------|------|------|
-| 加载态（骨架屏/Shimmer） | [ux-loading.md](./card-1/ux-loading.md) | 待写 |
-| 按钮状态机 + Pressable 反馈 | [ux-feedback.md](./card-1/ux-feedback.md) | 待写 |
-| 乐观更新 | [ux-feedback.md](./card-1/ux-feedback.md) | 待写 |
+| 加载态（骨架屏/Shimmer） | [ux-loading.md](./card-1/ux-loading.md) | ✅ |
+| 按钮状态机 + Pressable 反馈 + 乐观更新 | [ux-feedback.md](./card-1/ux-feedback.md) | ✅ |
 
-### 六、自动化性能测试
+### 六、性能监控体系
 
-> 提一下思路，详细方案放在牌 3（工程化）中讲，结合 Python + uiautomator2 方案。
-
-自动化脚本操作 App → adb 采集性能数据（内存/帧率/启动时间）→ CI 定时跑 → 趋势监控 → 退化告警。
-
-→ 详见 [card-3-engineering.md](./card-3-engineering.md)
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| 监控指标 + 工具 + CI 卡点 + 自动化测试 | [perf-monitoring.md](./card-1/perf-monitoring.md) | ✅ |
 
 ---
 
