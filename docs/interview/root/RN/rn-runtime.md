@@ -190,3 +190,80 @@ UI 线程：
 | 多文件 | 多个 script / 动态 import | 单 Bundle 或多 Bundle（手动加载） |
 
 **本质区别**：浏览器加载 JS 后操作 DOM 渲染像素；RN 加载 Bundle 后通过 Fabric 操作 Native View 渲染像素。中间多了一层"JS → Native View"的映射。
+
+
+---
+
+## 线程模型对比（RN vs 快应用 vs 小程序）
+
+### RN 线程模型
+
+```
+JS Thread（Hermes，一个）：
+  - 业务逻辑 / React 渲染（Virtual DOM diff）/ 事件处理 / 状态管理
+  - 产出渲染指令
+
+UI Thread（Main Thread，一个）：
+  - 执行渲染指令（创建/更新 Native View）
+  - 布局计算（Yoga）/ 绘制 / 手势识别 / 动画（worklet）
+
+Native Module 执行：
+  - 旧架构：NativeModules Thread（一个固定线程，排队执行）
+  - 新架构：由 TurboModule 自己决定线程（线程池/协程）
+
+通信：JS → JSI（C++）→ Fabric → UI Thread
+```
+
+### 快应用线程模型
+
+```
+JS Thread（V8，一个）：
+  - 业务逻辑 / 虚拟 DOM diff / 产出渲染指令
+
+IO Thread Pool（多个）：
+  - 解析渲染指令 JSON / 异步 Feature 执行（网络/文件）/ 图片解码
+
+UI Thread（主线程，一个）：
+  - 创建/更新 Android View / 事件采集 / 动画执行
+
+通信：JS → J2V8 同步调用 → IO Thread 解析 → Handler post → UI Thread 渲染
+```
+
+### 小程序线程模型（微信）
+
+```
+逻辑层（JS Thread）：
+  - 业务逻辑 / setData / 事件处理
+  - 运行在独立的 JSCore/V8 中
+
+渲染层（WebView Thread，每个页面一个）：
+  - WXML 模板渲染 / WXSS 样式 / DOM 操作
+  - 运行在 WebView 中
+
+通信：逻辑层 → setData（JSON 序列化）→ Native 中转 → 渲染层
+```
+
+### 对比
+
+| 维度 | RN | 快应用 | 小程序 |
+|------|-----|--------|--------|
+| JS 线程 | 1 个（Hermes） | 1 个（V8） | 1 个（JSCore/V8） |
+| 渲染 | Native View（UI Thread） | Native View（UI Thread） | WebView（每页一个） |
+| 中间层 | JSI（C++ 直调） | J2V8（同步 Bridge） | Native 中转（JSON 序列化） |
+| 通信开销 | μs 级（JSI） | 低（同步调用） | 高（序列化 + 跨进程） |
+| 渲染性能 | 原生级 | 原生级 | WebView 级（较弱） |
+| 动画 | worklet 在 UI Thread | UI Thread 执行 | CSS 动画（渲染层） |
+
+### 共同本质
+
+三者都是**双线程/多线程模型**：JS 逻辑和 UI 渲染分离。
+
+```
+为什么要分离？
+  → JS 执行不阻塞 UI 渲染（JS 卡了界面不冻结）
+  → UI 渲染不阻塞 JS 执行（动画播放时 JS 可以继续算）
+
+代价：
+  → 需要跨线程通信（有开销）
+  → 通信方案决定了性能上限（Bridge < J2V8 < JSI）
+```

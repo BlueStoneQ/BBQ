@@ -7,9 +7,9 @@
 ## 准备相关
 
 - [三张核心牌](./interview/root/cards/README.md)
-  - [牌 1：性能体验优化](./interview/root/cards/card-1-performance.md)
-  - [牌 2：跨层通信架构](./interview/root/cards/card-2-cross-layer.md)
-  - [牌 3：工程化体系建设](./interview/root/cards/card-3-engineering.md)
+  - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
+  - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
+  - [牌 3：工程化体系建设](./interview/root/cards/card-3/README.md)
 - [路特 JD + 准备](./interview/root/jd.md)
 - [路特 prep](./interview/root/prep.md)
 - [路特笔记](./interview/root/note.md)
@@ -49,7 +49,6 @@
   - [CRN 企业级](./resume/explain/3.2-xc/rn-native-stack/crn-enterprise.md)
   - [快应用运行时](./resume/explain/3.2-xc/rn-native-stack/quickapp-runtime.md)
   - [Android 底层](./resume/explain/3.2-xc/rn-native-stack/android-native.md)
-- [Android 系统知识（17 主题）](./resume/explain/3.1-xm/quickapp-framework/android-note/README.md)
 - [Android 系统知识（17 主题）](./resume/explain/3.1-xm/quickapp-framework/android-note/README.md)
 
 ---

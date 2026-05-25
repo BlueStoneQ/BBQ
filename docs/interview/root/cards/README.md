@@ -9,9 +9,9 @@
 
 | # | 牌 | 命中 JD | 核心支撑 | 文档 |
 |---|---|---------|---------|------|
-| 1 | [性能体验优化](./card-1-performance.md) | JD1-3 性能与质量保障 | 数据 + 工具 + 自动化 + 体系 | → |
-| 2 | [跨层通信架构（TurboModule）](./card-2-cross-layer.md) | JD1-4 复杂问题 + JD2 原生对接 | J2V8 + JSI + BLE 全链路 | → |
-| 3 | [工程化体系建设](./card-3-engineering.md) | JD1-2 基础架构与工程化 | CRN + XRN + CLI + 热更新 | → |
+| 1 | [性能体验优化](./card-1/README.md) | JD1-3 性能与质量保障 | 数据 + 工具 + 自动化 + 体系 | → |
+| 2 | [跨层通信架构（TurboModule）](./card-2/README.md) | JD1-4 复杂问题 + JD2 原生对接 | J2V8 + JSI + BLE 全链路 | → |
+| 3 | [工程化体系建设](./card-3/README.md) | JD1-2 基础架构与工程化 | CRN + XRN + CLI + 热更新 | → |
 
 ---
 

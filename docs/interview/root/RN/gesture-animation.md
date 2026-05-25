@@ -85,23 +85,70 @@ Reanimated 3：驱动动画（worklet 在 UI 线程，不过 JS）
 
 ### Gesture Handler 是什么
 
-第三方手势库，把手势识别从 JS 线程移到 Native 层。支持声明式手势冲突解决。
+第三方手势库（Software Mansion），把手势识别从 JS 线程移到 Native 层。支持声明式手势冲突解决。
+
+**分层**：JS API + Native 运行时的混合库。
+- 你写代码的地方：JS/TS 层（`Gesture.Pan().onUpdate(...)` 是 JS 代码）
+- 手势识别执行的地方：Native 层（Android `MotionEvent` / iOS `UIGestureRecognizer`）
+- worklet 回调执行的地方：UI Thread（Native 层的独立 JS 运行时）
+
+= API 在 JS 写，执行在 Native 跑（和 native-stack 同一个模式）。
+
+### 手势类型
+
+| 手势 | 英文 | 动作 | 日常例子 |
+|------|------|------|---------|
+| **Pan** | 平移/拖拽 | 手指按住拖动 | 拖拽卡片/滑块 |
+| **Pinch** | 捏合 | 两指捏合/张开 | 缩放图片 |
+| **Rotate** | 旋转 | 两指旋转 | 旋转图片 |
+| **Tap** | 点击 | 手指点一下 | 按钮点击 |
+| **LongPress** | 长按 | 手指按住不动 | 长按弹菜单 |
+
+### 手势生命周期事件
+
+```typescript
+Gesture.Pan()
+  .onBegin((e) => {})     // 手指触碰屏幕（还没移动）
+  .onStart((e) => {})     // 手势被识别（开始移动了）
+  .onUpdate((e) => {})    // 每帧更新（移动中，最高频）
+  .onEnd((e) => {})       // 手指松开
+  .onFinalize((e) => {})  // 手势结束（无论成功还是失败）
+```
+
+### 每种手势回调传递的信息
+
+| 手势 | 回调参数 | 含义 |
+|------|---------|------|
+| Pan | `translationX/Y`（偏移）, `velocityX/Y`（速度）, `absoluteX/Y`（绝对坐标） | 移了多远、多快 |
+| Pinch | `scale`（缩放比）, `focalX/Y`（捏合中心点） | 放大了多少倍 |
+| Rotate | `rotation`（弧度） | 转了多少度 |
+| Tap | `x/y`（点击坐标） | 点在哪里 |
+| LongPress | `x/y`, `duration`（按了多久） | 按在哪里、按了多久 |
+
+### Pressable vs Gesture Handler
+
+| | Pressable（RN 内置） | Gesture Handler |
+|---|---|---|
+| 用途 | 按钮/卡片的点击反馈 | 复杂手势（拖拽/缩放/旋转） |
+| 事件 | onPressIn / onPress / onPressOut | onBegin / onStart / onUpdate / onEnd |
+| 线程 | JS 线程 | Native 层（UI Thread） |
+| 适合 | 简单点击/按下态 | 需要 60fps 跟手的交互 |
 
 ### 安装：为什么 Native 层必须安装？
 
 这两个库都是 **"JS API + Native 运行时"的混合库**，不是纯 JS 库，所以必须 rebuild Native。
 
 ```bash
-# Reanimated
-yarn add react-native-reanimated
+# 安装（两端通用）
+yarn add react-native-reanimated react-native-gesture-handler
+
+# iOS：pod install
 cd ios && pod install
+
+# Android：autolinking 自动处理，不需要额外 Native 配置
+
 # babel.config.js 必须加插件（构建时提取 worklet 函数）：
 plugins: ['react-native-reanimated/plugin']
-
-# Gesture Handler
-yarn add react-native-gesture-handler
-cd ios && pod install
-# Android: MainActivity 里包一层 GestureHandlerRootView
 ```
 
 **为什么不能纯 JS？**

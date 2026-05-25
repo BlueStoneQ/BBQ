@@ -1,8 +1,20 @@
 # Bundle 优化（包体 + 加载）
 
 > 问题：Bundle 太大 → 下载慢 + 解析慢 + 启动慢
+>
 > 本质：减少产物体积 + 运行时按需加载
+>
 > 多 Bundle 方案详见 [architecture-engineering.md](../../RN/architecture-engineering.md) 和 XRN
+
+---
+
+## 目录
+
+- [如何分析](#如何分析)
+- [如何优化](#如何优化)
+  - [RN/JS 层（Bundle 瘦身）](#rnjs-层bundle-瘦身)
+  - [Native 层（APK 瘦身）](#native-层apk-瘦身)
+  - [构建层](#构建层)
 
 ---
 

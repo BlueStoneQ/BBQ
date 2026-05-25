@@ -145,12 +145,37 @@ const animatedStyle = useAnimatedStyle(() => ({
 RN：JS Thread 和 UI Thread 是**分开的两个线程**，通过 Fabric 通信。
 
 ```
-JS Thread（Hermes）→ JSI → C++ Fabric（算布局）→ JNI → UI Thread（画界面）
+RN 线程模型：
+
+JS Thread（Hermes，一个）：
+  - 执行业务逻辑 / React 渲染（Virtual DOM diff）/ 事件处理 / 状态管理
+  - 产出渲染指令（"创建 View / 更新 Text"）
+  - 阻塞后果：掉帧/白屏/事件无响应/动画卡
+
+UI Thread（Main Thread，一个）：
+  - 执行渲染指令（创建/更新 Native View）
+  - 布局计算（Yoga）/ 绘制 / 手势识别（Gesture Handler）/ 动画（worklet）
+  - 阻塞后果：ANR（Android 5s 无响应）/ 界面冻结
+
+Native Module 执行：
+  - 旧架构：NativeModules Thread（一个固定线程，所有 Module 排队执行）
+  - 新架构（TurboModule）：由 Module 自己决定在哪个线程跑（线程池/协程/指定线程）
+  - 不阻塞 JS 也不阻塞 UI
+
+通信：
+  JS Thread → UI Thread：JSI → C++ Fabric（算布局）→ JNI → UI Thread（画界面）
+  UI Thread → JS Thread：事件回调（触摸/生命周期）
 ```
 
-Reanimated worklet 的本质：在 UI 线程上开一个独立的轻量 JS 运行时，动画计算直接在 UI 线程跑，完全不经过 JS Thread。JS Thread 卡死了动画照样流畅。
+**性能优化的本质**：把工作从忙的线程移到不忙的线程（或减少工作量）。
 
-**核心原则**：性能敏感的逻辑从 JS 线程下沉到 UI 线程或 Native 层。
+| 优化 | 从哪里移走 | 移到哪里 |
+|------|-----------|---------|
+| Reanimated worklet | JS Thread（动画计算） | UI Thread |
+| Gesture Handler | JS Thread（手势识别） | UI Thread（Native 层） |
+| TurboModule 异步 | JS Thread（IO/网络） | Native 线程池 |
+| FlashList | JS Thread（销毁重建 View） | 复用（减少工作量） |
+| Native 预请求 | JS Thread（发请求） | Native 线程池 |
 
 ---
 
