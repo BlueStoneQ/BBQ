@@ -106,10 +106,10 @@ TurboModule（RN）：
 
 ## 详细文档链接
 
-- [RN↔Native 通信](../RN/rn-native-communication.md)
-- [TurboModule Android 侧实现](../RN/turbomodule-android.md)
-- [J2V8 深入](../../resume/explain/3.1-xm/quickapp-framework/j2v8-deep.md)
-- [快应用框架追问清单](../../resume/explain/3.1-xm/quickapp-framework/traps.md)
-- [IoT BLE 性能方案](../RN/iot-ble-performance.md)
-- [RN 全景（Android 启动链路）](../RN/rn-full-picture.md)
-- [Android 线程模型](../../resume/explain/3.1-xm/quickapp-framework/android-note/02-process-thread/README.md)
+- [RN↔Native 通信](../../RN/rn-native-communication.md)
+- [TurboModule Android 侧实现](../../RN/turbomodule-android.md)
+- [J2V8 深入](../../../resume/explain/3.1-xm/quickapp-framework/j2v8-deep.md)
+- [快应用框架追问清单](../../../resume/explain/3.1-xm/quickapp-framework/traps.md)
+- [IoT BLE 性能方案](../../RN/iot-ble-performance.md)
+- [RN 全景（Android 启动链路）](../../RN/rn-full-picture.md)
+- [Android 线程模型](../../../resume/explain/3.1-xm/quickapp-framework/android-note/02-process-thread/README.md)

@@ -1,9 +1,22 @@
 # 手势动画性能
 
 > 问题：手势拖拽/动画不跟手、掉帧
+>
 > 本质：动画计算在 JS 线程，和业务逻辑抢 16ms 帧预算
+>
 > 方案：Gesture Handler + Reanimated，全程绕过 JS 线程
+>
 > 详细文档：[gesture-animation.md](../../RN/gesture-animation.md)
+
+---
+
+## 目录
+
+- [如何分析](#如何分析)
+- [如何优化](#如何优化)
+  - [RN/JS 层](#rnjs-层)
+  - [Native 层](#native-层)
+  - [C++ 层](#c-层)
 
 ---
 
