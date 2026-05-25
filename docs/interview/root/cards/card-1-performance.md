@@ -2,6 +2,78 @@
 
 > 命中：JD1-3（性能与质量保障）+ JD2（性能优化方法）
 > 定位：不是修一个 bug，是建一套"测量→定位→优化→验证→监控→防退化"的体系
+> 核心理念：不仅仅快，还要感知好（Google Core Web Vitals 理念）
+
+---
+
+## 结构化场景
+
+每个场景的分析框架：
+1. **如何分析**：用什么工具、看什么指标、怎么定位
+2. **如何优化**：从三层角度（RN/JS 层 → Android/iOS Native 层 → C++/Rust 底层）
+
+---
+
+### 一、启动
+
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| RN App 启动（冷启动全链路） | [perf-splash.md](./card-1/perf-splash.md) | ✅ |
+| 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./card-1/perf-splash.md) | ✅ |
+| CLS 抖动（布局跳动） | [perf-cls.md](./card-1/perf-cls.md) | 待写 |
+| 页面路由切换 | [perf-navigation.md](./card-1/perf-navigation.md) | 待写 |
+| WebView 加载 | [perf-webview.md](./card-1/perf-webview.md) | 待写 |
+
+### 二、流畅度
+
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| 列表滑动流畅度（60fps） | [perf-list.md](./card-1/perf-list.md) | 待写 |
+| 手势动画（跟手 + 不掉帧） | [perf-animation.md](./card-1/perf-animation.md) | ✅ 已有 gesture-animation.md |
+
+### 三、包体
+
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| Bundle 优化（体积 + 加载） | [perf-bundle.md](./card-1/perf-bundle.md) | 待写 |
+| 多 Bundle 方案 | → 详见 XRN / [architecture-engineering.md](../RN/architecture-engineering.md) | ✅ |
+
+### 四、内存
+
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| 内存泄漏 + 内存优化 | [perf-memory.md](./card-1/perf-memory.md) | 待写 |
+
+### 五、交互体验反馈
+
+| 子场景 | 文档 | 状态 |
+|--------|------|------|
+| 加载态（骨架屏/Shimmer） | [ux-loading.md](./card-1/ux-loading.md) | 待写 |
+| 按钮状态机 + Pressable 反馈 | [ux-feedback.md](./card-1/ux-feedback.md) | 待写 |
+| 乐观更新 | [ux-feedback.md](./card-1/ux-feedback.md) | 待写 |
+
+### 六、自动化性能测试
+
+> 提一下思路，详细方案放在牌 3（工程化）中讲，结合 Python + uiautomator2 方案。
+
+自动化脚本操作 App → adb 采集性能数据（内存/帧率/启动时间）→ CI 定时跑 → 趋势监控 → 退化告警。
+
+→ 详见 [card-3-engineering.md](./card-3-engineering.md)
+
+---
+
+## 方法论
+
+```
+任何性能体验问题的排查：
+1. 测量（工具量化，不靠感觉）
+2. 分层定位（RN/JS → Native → C++/底层）
+3. 针对性优化（一次只改一个变量）
+4. 数据验证（优化前后对比）
+5. 持续监控（上线后不退化）
+```
+
+详见 [性能分析工具与排查](../RN/performance-profiling.md)
 
 ---
 
@@ -14,107 +86,3 @@
 | 快应用框架 | 启动内存 | PSS MAX 41MB → 35.8MB |
 | MT 优选 | 秒开率 | 10% → 78% |
 | XM 平台 | 大文件上传 | 121s → 42s（提速 3 倍） |
-
----
-
-## 优化维度全景
-
-```
-性能体验优化
-├── 速度/体验
-│   ├── 启动速度（冷启动 < 2s）
-│   ├── 页面切换/跳转（native-stack + 骨架屏）
-│   └── WebView 加载（进度条/预加载/内容内置）
-├── 流畅度
-│   ├── 列表流畅度（FlashList / memo / 60fps）
-│   └── 动画/手势动画（Reanimated worklet / Gesture Handler）
-├── 包体（APK < 50MB）
-│   ├── abiFilters / R8 / 模块裁剪
-│   ├── 图片压缩 / WebP / 字体子集化
-│   └── 分 Bundle / Tree Shaking
-└── 内存（< 200MB / 不增长）
-    ├── useEffect cleanup / 导航栈控制
-    ├── FastImage 缓存策略
-    └── BLE 连接生命周期管理
-```
-
----
-
-## 方法论
-
-```
-1. 测量（用工具量化，不靠感觉）
-2. 分层定位（React / RN 框架 / Native / 工程化）
-3. 针对性优化（一次只改一个变量）
-4. 数据验证（优化前后对比）
-5. 持续监控（上线后不退化）
-6. 自动化（Python + uiautomator2 持续跑性能测试）
-```
-
----
-
-## 自动化性能测试（差异化能力）
-
-不是手动测一次就完了，是**自动化持续跑**：
-
-```python
-# Python + uiautomator2 + adb：自动化操作 App + 采集性能数据
-import uiautomator2 as u2
-import subprocess
-
-d = u2.connect()
-d.app_start('com.hubble.app')
-
-# 操作场景：启动 → 滑动列表 → 切换 Tab → 连接设备
-d.swipe(500, 1500, 500, 500)
-
-# 采集内存
-result = subprocess.run(['adb', 'shell', 'dumpsys', 'meminfo', 'com.hubble.app'], capture_output=True, text=True)
-
-# 采集帧率
-result = subprocess.run(['adb', 'shell', 'dumpsys', 'gfxinfo', 'com.hubble.app'], capture_output=True, text=True)
-```
-
-**体系**：自动化脚本 → 定时跑（CI）→ 数据上报 → 趋势监控 → 退化告警
-
----
-
-## 深入文档（按体验路径）
-
-### 一、启动性能
-
-用户点击图标 → 看到首屏可交互，这段时间的优化。
-
-- [启动性能与 Splash 优化](../RN/perf-splash.md) — Splash 方案/并行化/三段式过渡
-
-### 二、页面切换与视觉稳定
-
-首屏之后，页面跳转/Tab 切换的流畅度和稳定性。布局不跳、不闪、不抖（CLS = 0）。
-
-- [体验升级治理专项](../RN/ux-engineering.md) — 骨架屏/按下态/防抖动方案/从设计源头规范
-- [IoT App 性能方案 · 观察 2&3](../RN/iot-ble-performance.md) — 启动后抖动 + Tab 切换抖动的根因与方案
-
-### 三、列表流畅度
-
-长列表滚动 60fps，不掉帧不白屏。
-
-- [性能优化分层体系](../RN/performance-layers.md) — FlashList/memo/useCallback/场景题
-
-### 四、动画与手势
-
-手势跟手 + 动画不掉帧，全程绕过 JS 线程。
-
-- [手势动画](../RN/gesture-animation.md) — Reanimated worklet/Gesture Handler/代码对比
-
-### 五、包体与内存
-
-APK 瘦身 + 内存不泄漏。
-
-- [分 Bundle 方案](../RN/code-splitting.md) — 拆分策略（推荐多 Bundle）
-- [性能分析工具与排查](../RN/performance-profiling.md) — 工具选型/排查 SOP/指标阈值
-
-### 六、体验基础设施
-
-Dark Mode + 国际化 + 图片优化。
-
-- [Theme + 国际化](../RN/theme-i18n.md) — useColorScheme/i18next/RTL
