@@ -5,6 +5,21 @@
 
 ---
 
+## 文档索引
+
+- [CI/CD Quality Gate Design](./ci-quality-gate.md)
+- [Docker & K8s](./docker-k8s.md)
+- [架构和工程化治理](../../RN/architecture-engineering.md)
+- [分 Bundle 方案](../../RN/code-splitting.md)
+- [2026 技术栈 + 目录结构](../../RN/rn-2026-stack.md)
+- [构建系统](../../RN/build-system.md)
+- [XRN PRD](/home/mi/disk/qiaoyang/code/my-github/XRN/me-docs/PRD.md)
+- [条件编译工具](../../RN/conditional-compile.md)
+- [体验升级治理专项](../../RN/ux-engineering.md)
+- [Theme + 国际化](../../RN/theme-i18n.md)
+
+---
+
 ## 核心能力
 
 ```
@@ -107,13 +122,4 @@
 
 ---
 
-## 详细文档链接
 
-- [架构和工程化治理](../../RN/architecture-engineering.md)
-- [分 Bundle 方案](../../RN/code-splitting.md)
-- [2026 技术栈 + 目录结构](../../RN/rn-2026-stack.md)
-- [构建系统](../../RN/build-system.md)
-- [XRN PRD](/home/mi/disk/qiaoyang/code/my-github/XRN/me-docs/PRD.md)
-- [条件编译工具](../../RN/conditional-compile.md)
-- [体验升级治理专项](../../RN/ux-engineering.md)
-- [Theme + 国际化](../../RN/theme-i18n.md)
