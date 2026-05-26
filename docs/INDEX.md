@@ -71,6 +71,7 @@
 
 - [AI Agent 概念解释](./resume/explain/ai-agent.md)
 - [Mako 框架](./project/AI/mako/README.md)
+- [Mako Deep Dive](./project/AI/mako/mako-project-deep-dive.md)
 
 ---
 
