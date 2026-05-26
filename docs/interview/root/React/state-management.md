@@ -27,15 +27,28 @@
 ## Context
 
 ```tsx
+// 1. 创建 Context（提供默认值）
 const ThemeContext = createContext<'light' | 'dark'>('light');
 
-// Provider
-<ThemeContext.Provider value={theme}>
-  <App />
-</ThemeContext.Provider>
+// 2. Provider 提供值（theme 来自 useState）
+function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-// Consumer
-const theme = useContext(ThemeContext);
+  return (
+    <ThemeContext.Provider value={theme}>
+      <Page />
+      <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
+        切换主题
+      </button>
+    </ThemeContext.Provider>
+  );
+}
+
+// 3. Consumer 读取值
+function Button() {
+  const theme = useContext(ThemeContext);
+  return <button className={theme}>Click</button>;
+}
 ```
 
 **问题**：value 变化 → 所有 consumer 重渲染（无 selector）。

@@ -56,12 +56,44 @@ function Input() {
 
 ### Suspense 增强
 
+**Suspense 是什么**：一个组件，用来声明"子组件还没准备好时，显示什么"。
+
+**解决什么问题**：以前异步加载时你要手动管理 loading 状态（`if (loading) return <Spinner />`）。Suspense 让 React 自动帮你处理——子组件没准备好就显示 fallback，准备好了自动切换。
+
+**本质机制**：子组件 throw 一个 Promise → React 捕获 → 显示 fallback → Promise resolve → 重新渲染子组件。
+
 ```tsx
-// React 18：Suspense 支持任意异步操作（不只是 lazy）
-<Suspense fallback={<Skeleton />}>
-  <AsyncComponent />  {/* 内部 throw Promise → 显示 fallback */}
-</Suspense>
+// 不用 Suspense：手动管理 loading
+function Page() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData().then(d => { setData(d); setLoading(false); });
+  }, []);
+
+  if (loading) return <Spinner />;  // ← 每个组件都要写这个
+  return <Content data={data} />;
+}
+
+// 用 Suspense：声明式，loading 逻辑交给 React
+function Page() {
+  return (
+    <Suspense fallback={<Spinner />}>   {/* ← 统一声明 loading UI */}
+      <AsyncContent />                   {/* ← 内部 throw Promise，React 自动处理 */}
+    </Suspense>
+  );
+}
 ```
+
+**两个主要用途**：
+
+| 用途 | 触发方式 | 示例 |
+|------|---------|------|
+| 代码分割 | `React.lazy(() => import(...))` | 路由懒加载 |
+| 数据请求 | 组件内 throw Promise（配合 use() 或支持 Suspense 的库） | TanStack Query、Next.js |
+
+React 18 之前 Suspense 只支持 lazy，18+ 扩展到支持任意异步操作。
 
 ---
 

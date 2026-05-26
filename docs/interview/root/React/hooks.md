@@ -18,23 +18,51 @@
 
 **Hooks 本质**：让函数组件拥有状态和副作用能力。
 
-**底层实现**：每个组件实例维护一个 **hooks 链表**（fiber.memoizedState），按调用顺序存储每个 hook 的状态。
+**底层实现**：一个函数组件 = 一个 Fiber 节点 = 一条 Hooks 链表。
 
 ```
-组件第一次渲染：
-  useState(0)    → 链表节点 1: { state: 0 }
-  useEffect(fn)  → 链表节点 2: { effect: fn, deps: [...] }
-  useRef(null)   → 链表节点 3: { current: null }
-
-组件重渲染时：
-  按同样顺序读取链表 → 节点 1 拿到 state → 节点 2 对比 deps → ...
+Fiber 节点（对应 <TodoList /> 组件）
+  │
+  └── memoizedState ──→ Hook1(useState) → Hook2(useEffect) → Hook3(useRef) → null
+                         │                  │                  │
+                         state: 0           effect: fn         current: null
+                         queue: [...]       deps: [id]
 ```
 
-**这就是为什么 Hooks 不能放在条件语句里**——顺序必须固定，否则链表对不上。
+每次渲染时，React 内部有一个"当前 hook 指针"，从链表头开始，每调用一个 hook 就往后移一位：
+
+```tsx
+function TodoList() {
+  // 指针 → Hook1，读取 state
+  const [count, setCount] = useState(0);
+  
+  // 指针 → Hook2，对比 deps 决定是否重跑 effect
+  useEffect(() => { /* ... */ }, [count]);
+  
+  // 指针 → Hook3，读取 ref.current
+  const ref = useRef(null);
+}
+```
+
+**这就是为什么 Hooks 不能放在条件语句里**——如果 if 跳过了某个 hook，指针错位，Hook2 读到 Hook3 的数据，全乱了。
 
 ---
 
 ## useState
+
+### API 签名
+
+```tsx
+const [state, setState] = useState<T>(initialValue: T | (() => T));
+
+// setState 两种用法：
+setState(newValue);           // 直接设值
+setState(prev => newValue);   // 函数式更新（基于前一个状态）
+```
+
+**作用**：为函数组件添加可变状态，状态变化触发重渲染。
+
+**场景**：表单输入、开关状态、计数器、任何需要 UI 响应的数据。
 
 ### 基础
 
@@ -80,6 +108,19 @@ function Counter() {
 ---
 
 ## useEffect
+
+### API 签名
+
+```tsx
+useEffect(
+  setup: () => (void | (() => void)),  // 副作用函数，可选返回清理函数
+  deps?: any[]                          // 依赖数组
+): void;
+```
+
+**作用**：在渲染后执行副作用（数据请求、订阅、DOM 操作）。
+
+**场景**：API 请求、事件监听、定时器、WebSocket 连接、第三方库初始化。
 
 ### 基础
 
@@ -138,6 +179,16 @@ useEffect(() => {
 
 ## useRef
 
+### API 签名
+
+```tsx
+const ref = useRef<T>(initialValue: T): { current: T };
+```
+
+**作用**：持有一个可变值，变化不触发重渲染，组件整个生命周期内保持同一个引用。
+
+**场景**：DOM 引用（聚焦/滚动/测量）、定时器 ID、上一次的值、任何"需要跨渲染保持但不需要触发 UI 更新"的数据。
+
 ### 两个用途
 
 **1. 持有 DOM 引用**
@@ -183,6 +234,20 @@ function Timer() {
 
 ## useMemo / useCallback
 
+### API 签名
+
+```tsx
+const memoizedValue = useMemo<T>(factory: () => T, deps: any[]): T;
+const memoizedFn = useCallback<T>(fn: T, deps: any[]): T;
+// useCallback(fn, deps) === useMemo(() => fn, deps)
+```
+
+**作用**：缓存计算结果（useMemo）或函数引用（useCallback），依赖不变就返回缓存。
+
+**场景**：
+- useMemo：大数组排序/过滤、复杂对象创建、传给 memo 子组件的对象 props
+- useCallback：传给 memo 子组件的回调函数、作为 useEffect 依赖的函数
+
 ### useMemo — 缓存值
 
 ```tsx
@@ -220,6 +285,16 @@ useCallback 就是 useMemo 的语法糖，专门用于缓存函数。
 ---
 
 ## useContext
+
+### API 签名
+
+```tsx
+const value = useContext<T>(Context: React.Context<T>): T;
+```
+
+**作用**：读取最近的 Provider 提供的 Context 值，Provider value 变化时自动重渲染。
+
+**场景**：主题切换、语言国际化、当前用户信息等低频变化的全局状态。
 
 ### 基础
 
@@ -291,15 +366,195 @@ function Component() {
 }
 ```
 
-### 常见自定义 Hook
+### 常见自定义 Hook 实现
 
-| Hook | 用途 |
-|------|------|
-| `useDebounce(value, delay)` | 防抖 |
-| `usePrevious(value)` | 获取上一次的值 |
-| `useLocalStorage(key, initial)` | 持久化状态 |
-| `useAsync(asyncFn)` | 异步请求状态管理 |
-| `useInterval(callback, delay)` | 安全的 setInterval |
+**useDebounce — 防抖值**
+
+```tsx
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+// 使用：输入框搜索
+function Search() {
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    if (debouncedQuery) fetchResults(debouncedQuery);
+  }, [debouncedQuery]);
+}
+```
+
+**usePrevious — 获取上一次的值**
+
+```tsx
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>();
+
+  useEffect(() => {
+    ref.current = value;  // effect 在渲染后执行，所以 ref 存的是"上一次"的值
+  });
+
+  return ref.current;
+}
+
+// 使用：对比前后值
+function Counter({ count }: { count: number }) {
+  const prevCount = usePrevious(count);
+  return <span>从 {prevCount} 变到 {count}</span>;
+}
+```
+
+**useLocalStorage — 持久化状态**
+
+```tsx
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+
+// 使用
+const [theme, setTheme] = useLocalStorage('theme', 'light');
+```
+
+**useInterval — 安全的定时器**
+
+```tsx
+function useInterval(callback: () => void, delay: number | null) {
+  const savedCallback = useRef(callback);
+
+  // 每次渲染更新 ref（不重启定时器）
+  useEffect(() => {
+    savedCallback.current = callback;
+  });
+
+  useEffect(() => {
+    if (delay === null) return;  // delay 为 null 时暂停
+    const id = setInterval(() => savedCallback.current(), delay);
+    return () => clearInterval(id);
+  }, [delay]);
+}
+
+// 使用：不会有闭包陷阱
+function Timer() {
+  const [count, setCount] = useState(0);
+  useInterval(() => setCount(c => c + 1), 1000);
+}
+```
+
+**useAsync — 异步请求状态管理**
+
+```tsx
+function useAsync<T>(asyncFn: () => Promise<T>, deps: any[] = []) {
+  const [state, setState] = useState<{
+    loading: boolean;
+    data: T | null;
+    error: Error | null;
+  }>({ loading: true, data: null, error: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ loading: true, data: null, error: null });
+
+    asyncFn()
+      .then(data => { if (!cancelled) setState({ loading: false, data, error: null }); })
+      .catch(error => { if (!cancelled) setState({ loading: false, data: null, error }); });
+
+    return () => { cancelled = true; };
+  }, deps);
+
+  return state;
+}
+
+// 使用
+function UserProfile({ id }: { id: string }) {
+  const { loading, data, error } = useAsync(() => fetchUser(id), [id]);
+  if (loading) return <Spinner />;
+  if (error) return <Error message={error.message} />;
+  return <div>{data.name}</div>;
+}
+```
+
+---
+
+## Hooks 与生命周期的对应关系
+
+| 类组件生命周期 | Hooks 等价 | 常见用途 |
+|---------------|-----------|---------|
+| `constructor` | `useState(initialValue)` / `useRef(initial)` | 初始化状态 |
+| `componentDidMount` | `useEffect(fn, [])` | 请求数据、订阅事件、初始化第三方库 |
+| `componentDidUpdate` | `useEffect(fn, [deps])` | 依赖变化时重新请求、同步外部系统 |
+| `componentWillUnmount` | `useEffect` 的返回函数 | 取消订阅、清除定时器、断开连接 |
+| `shouldComponentUpdate` | `React.memo` | 跳过不必要的重渲染 |
+| `getDerivedStateFromProps` | 渲染期间直接计算 / `useMemo` | 从 props 派生 state |
+| `getSnapshotBeforeUpdate` | `useLayoutEffect` | DOM 更新前读取布局信息 |
+| `componentDidCatch` | 暂无 Hook 等价（仍需 class ErrorBoundary） | 错误边界 |
+
+### 常用生命周期场景
+
+```tsx
+function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  // ≈ componentDidMount + componentDidUpdate(userId 变化时)
+  useEffect(() => {
+    let cancelled = false;
+    fetchUser(userId).then(data => {
+      if (!cancelled) setUser(data);
+    });
+    // ≈ componentWillUnmount（或 userId 变化前的清理）
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // ≈ componentDidMount（只执行一次）
+  useEffect(() => {
+    analytics.trackPageView('profile');
+    const ws = new WebSocket(WS_URL);
+    // ≈ componentWillUnmount
+    return () => ws.close();
+  }, []);
+
+  // ≈ getSnapshotBeforeUpdate（DOM 更新后、绘制前同步执行）
+  useLayoutEffect(() => {
+    const height = ref.current?.getBoundingClientRect().height;
+    // 在浏览器绘制前读取/修改 DOM，避免闪烁
+  }, [user]);
+}
+```
+
+### 关键区别
+
+- 类组件：生命周期按**时间点**组织（mount/update/unmount 分开写）
+- Hooks：按**关注点**组织（一个 useEffect 包含 mount + update + cleanup，相关逻辑放一起）
+
+```tsx
+// 类组件：WebSocket 逻辑分散在三个生命周期
+componentDidMount() { this.ws = new WebSocket(url); }
+componentDidUpdate(prev) { if (prev.url !== this.props.url) { this.ws.close(); this.ws = new WebSocket(url); } }
+componentWillUnmount() { this.ws.close(); }
+
+// Hooks：WebSocket 逻辑集中在一个 useEffect
+useEffect(() => {
+  const ws = new WebSocket(url);
+  return () => ws.close();
+}, [url]);  // url 变了自动 close 旧的 + 建新的
+```
 
 ---
 

@@ -73,6 +73,92 @@ function Parent() {
 
 **什么时候不用**：不传给子组件的内部函数（加了反而多一次 hook 调用开销）。
 
+**核心配合关系**：useCallback/useMemo 保证 props 引用稳定 + 子组件用 React.memo 包裹。**两者缺一不可**——只用 memo 但传了不稳定的 props = memo 失效；只用 useCallback 但子组件没 memo = 白缓存。
+
+### 列表场景实践
+
+```tsx
+import { memo, useCallback, useMemo } from 'react';
+
+// ① 列表项组件：用 memo 包裹，props 不变就跳过渲染
+const TodoItem = memo(({ todo, onToggle, onDelete }: {
+  todo: Todo;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}) => {
+  console.log(`render: ${todo.id}`);  // 只有自己的 props 变了才打印
+  return (
+    <li>
+      <input
+        type="checkbox"
+        checked={todo.done}
+        onChange={() => onToggle(todo.id)}
+      />
+      <span>{todo.text}</span>
+      <button onClick={() => onDelete(todo.id)}>×</button>
+    </li>
+  );
+});
+
+// ② 父组件：用 useCallback 稳定回调，用 useMemo 稳定派生数据
+function TodoList() {
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
+
+  // useCallback：稳定函数引用，todos 变了函数才重建
+  const handleToggle = useCallback((id: string) => {
+    setTodos(prev => prev.map(t =>
+      t.id === id ? { ...t, done: !t.done } : t
+    ));
+  }, []);  // 用函数式更新，不依赖 todos → 空依赖 → 永远同一个引用
+
+  const handleDelete = useCallback((id: string) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // useMemo：稳定派生数据，filter/todos 不变就不重新计算
+  const filteredTodos = useMemo(() => {
+    switch (filter) {
+      case 'active': return todos.filter(t => !t.done);
+      case 'done': return todos.filter(t => t.done);
+      default: return todos;
+    }
+  }, [todos, filter]);
+
+  return (
+    <div>
+      <FilterBar current={filter} onChange={setFilter} />
+      <ul>
+        {filteredTodos.map(todo => (
+          // ③ 传给 memo 子组件的 props 全部是稳定引用
+          <TodoItem
+            key={todo.id}        // 唯一 key，Diff 正确识别
+            todo={todo}          // 对象引用：只有该 todo 被修改时才变
+            onToggle={handleToggle}  // useCallback 稳定
+            onDelete={handleDelete}  // useCallback 稳定
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// 效果：
+// - 切换 filter → 只有新增/移除的项渲染，其他项跳过
+// - toggle 某一项 → 只有该项重渲染，其他 999 项跳过
+// - 如果没有 memo + useCallback → 任何状态变化所有项都重渲染
+```
+
+**关键点总结**：
+
+| 做法 | 作用 |
+|------|------|
+| `TodoItem` 用 `memo` 包裹 | props 不变就跳过渲染 |
+| `handleToggle/handleDelete` 用 `useCallback` + 空依赖 | 函数引用永远不变 |
+| `useCallback` 内用函数式更新 `setTodos(prev => ...)` | 不依赖外部 todos → 依赖数组可以为空 |
+| `filteredTodos` 用 `useMemo` | 避免每次渲染都重新 filter |
+| `key={todo.id}` | Diff 正确识别节点，避免错误复用 |
+
 ### 3. 状态下沉 — 缩小渲染范围
 
 ```tsx
@@ -160,25 +246,85 @@ function Dashboard({ data }: { data: Item[] }) {
 
 只渲染可视区域内的元素，滚动时动态替换。
 
-```tsx
-// react-window / @tanstack/virtual
-import { FixedSizeList } from 'react-window';
+**核心原理**：
 
-function VirtualList({ items }: { items: Item[] }) {
+```
+容器（固定高度，overflow: auto）
+  └── 占位层（总高度 = itemCount × itemHeight，撑出滚动条）
+      └── 渲染层（只渲染可视区 + 缓冲区的几十个元素，absolute 定位）
+
+关键计算：
+  scrollTop → 当前滚动了多少
+  startIndex = Math.floor(scrollTop / itemHeight)
+  endIndex = startIndex + Math.ceil(containerHeight / itemHeight)
+  只渲染 [startIndex, endIndex] 范围内的元素
+```
+
+**核心实现（~40 行）**：
+
+```tsx
+function VirtualList({ items, itemHeight, containerHeight }: {
+  items: any[];
+  itemHeight: number;
+  containerHeight: number;
+}) {
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const totalHeight = items.length * itemHeight;
+  const startIndex = Math.floor(scrollTop / itemHeight);
+  const endIndex = Math.min(
+    startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+    items.length
+  );
+  const visibleItems = items.slice(startIndex, endIndex);
+
   return (
-    <FixedSizeList
-      height={600}        // 可视区高度
-      itemCount={items.length}  // 总数据量（可以 10 万条）
-      itemSize={50}       // 每项高度
-      width="100%"
+    <div
+      style={{ height: containerHeight, overflow: 'auto' }}
+      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
     >
-      {({ index, style }) => (
-        <div style={style}>{items[index].name}</div>
-      )}
-    </FixedSizeList>
+      {/* 占位层：撑出真实滚动高度 */}
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        {/* 只渲染可视区元素，absolute 定位 */}
+        {visibleItems.map((item, i) => (
+          <div
+            key={item.id}
+            style={{
+              position: 'absolute',
+              top: (startIndex + i) * itemHeight,
+              height: itemHeight,
+              width: '100%',
+            }}
+          >
+            {item.name}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 ```
+
+**超出可视区的 item 是复用还是销毁？**
+
+React 虚拟列表是**销毁重建**（声明式模型），不是 RecyclerView 那种 DOM 池复用：
+
+| | React 虚拟列表 | Android RecyclerView |
+|--|---|---|
+| 策略 | 不在 visibleItems 里 = unmount | View 回收到池子里复用 |
+| 复用机制 | 通过 key + Diff 复用同 key 的 Fiber/DOM | ViewHolder 池，零创建 |
+| 实际开销 | 很小（同时只有 ~20 个 DOM 节点） | 几乎零（只更新数据绑定） |
+| 为什么够用 | Web DOM 创建本身很快（微秒级） | Native View 创建相对昂贵 |
+
+**生产环境用库**：
+
+| 库 | 特点 |
+|---|------|
+| `react-window` | 轻量 ~6KB，固定/可变高度 |
+| `@tanstack/react-virtual` | 现代，headless，支持水平/网格/动态高度 |
+| `react-virtuoso` | 开箱即用，自动测量高度 |
+
+新项目推荐 `@tanstack/react-virtual`。
 
 **效果**：10 万条数据，DOM 中只有 ~20 个节点（可视区 + 缓冲区）。
 
@@ -214,6 +360,43 @@ function App() {
   );
 }
 ```
+
+**不需要额外构建配置**。`import()` 是 ES 标准动态导入语法，Webpack/Vite/Rollup 看到它会自动把目标模块拆成单独 chunk：
+
+```
+构建产物：
+  dist/
+  ├── index.js              ← 主 bundle（路由壳 + 公共代码）
+  ├── Dashboard-[hash].js   ← 自动拆出的 chunk
+  └── Settings-[hash].js    ← 自动拆出的 chunk
+
+运行时：
+  访问 /dashboard → 浏览器动态加载 Dashboard chunk → 渲染
+  没访问 /settings → Settings chunk 不加载
+```
+
+**Vite 完全支持**，且是零配置（底层用 Rollup 做 code splitting，自动按文件名命名 chunk）。Webpack 也支持，可选用 magic comment 自定义 chunk 名：
+
+```tsx
+// Webpack：magic comment 命名（可选，方便调试/预加载）
+const Dashboard = lazy(() => import(/* webpackChunkName: "dashboard" */ './pages/Dashboard'));
+// Vite：不需要，自动用文件路径命名
+```
+
+**React 当前推荐的构建工具**：
+
+| 工具 | 定位 | 说明 |
+|------|------|------|
+| **Vite** | 当前主流 | React 官方文档推荐，开发快（ESM 原生）、构建快（Rollup） |
+| **Next.js** | 全栈框架 | React 团队推荐的"框架级"方案（SSR/RSC/路由/部署一体） |
+| **Remix** | 全栈框架 | 类似 Next，侧重 Web 标准（form/loader） |
+| Webpack | 老项目 | 仍然广泛使用，但新项目不再首选 |
+| Turbopack | 实验性 | Vercel 开发，Webpack 继任者，Next.js 14+ 内置 |
+
+**2026 选型建议**：
+- 纯前端 SPA → **Vite**
+- 需要 SSR/SEO/全栈 → **Next.js**
+- 老项目迁移 → 保持 Webpack，逐步切 Vite
 
 **效果**：首屏只加载当前路由的代码，其他页面按需加载。
 

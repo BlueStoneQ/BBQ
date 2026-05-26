@@ -8,3 +8,4 @@
 - [虚拟 DOM 与 Diff 算法](./diff.md)
 - [状态管理](./state-management.md)
 - [React 18/19 新特性](./react-18-19.md)
+- [Theme & i18n](./theme-i18n.md)
