@@ -20,6 +20,8 @@
 
 - [memory-optimization.md](./memory-optimization.md) — 启动内存优化（DEX 布局/PSS）
 - [module-trimming.md](./module-trimming.md) — 模块裁剪方案
+- [framework-metrics.md](./framework-metrics.md) — 框架指标体系 + 治理方案
+- [additional-contributions.md](./additional-contributions.md) — 补充大活（自动化测试体系 + 渲染性能优化）
 
 ### Android 相关
 
@@ -32,3 +34,4 @@
 ### 深度追问
 
 - [traps.md](./traps.md) — 深度追问清单（角色/J2V8/DEX/反射/为什么不用RN）
+- [cross-platform-comparison.md](./cross-platform-comparison.md) — 跨端框架对比（快应用 vs RN vs 小程序 vs Flutter）

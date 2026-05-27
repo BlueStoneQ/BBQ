@@ -18,6 +18,9 @@
 3. [rn-native-communication.md](./rn-native-communication.md) — RN ↔ Native 通信（JSI / TurboModule / BLE 场景）
 4. [performance.md](./performance.md) — 性能优化（启动/渲染/内存/列表/下沉策略）
 5. [performance-layers.md](./performance-layers.md) — 性能优化分层体系（React/RN框架/Native/工程化 + 场景）
+6. [app-metrics.md](./app-metrics.md) — RN App 指标体系（启动/渲染/交互/稳定性/监控）
+7. [ios-for-rn.md](./ios-for-rn.md) — RN iOS 侧核心概念（ObjC Bridge/TurboModule/构建/性能）
+8. [native-prefetch.md](./native-prefetch.md) — Native 层预请求 & 预加载（Android 侧启动优化）
 6. [performance-profiling.md](./performance-profiling.md) — 性能分析工具与排查方法（工具盘点/场景选型/排查 SOP）
 5. [gesture-animation.md](./gesture-animation.md) — 手势动画（Reanimated 3 / Gesture Handler）
 6. [conditional-compile.md](./conditional-compile.md) — 条件编译与包体裁剪
