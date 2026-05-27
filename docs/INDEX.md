@@ -57,7 +57,7 @@
   - [CRN 企业级](./resume/explain/3.2-xc/rn-native-stack/crn-enterprise.md)
   - [快应用运行时](./resume/explain/3.2-xc/rn-native-stack/quickapp-runtime.md)
   - [Android 底层](./resume/explain/3.2-xc/rn-native-stack/android-native.md)
-- [Android 系统知识（17 主题）](./resume/explain/3.1-xm/quickapp-framework/android-note/README.md)
+- [Android 系统知识（17 主题）](./interview/root/android-note/README.md)
 
 ---
 
