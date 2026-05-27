@@ -10,6 +10,7 @@
 
 - [CI/CD Quality Gate Design](./ci-quality-gate.md)
 - [Docker & K8s](./docker-k8s.md)
+- [RN 工程化深度方案（多 Bundle 容器 + 热更新 + CI/CD）](./rn-engineering-deep.md)
 - [架构和工程化治理](../../RN/architecture-engineering.md)
 - [分 Bundle 方案](../../RN/code-splitting.md)
 - [2026 技术栈 + 目录结构](../../RN/rn-2026-stack.md)

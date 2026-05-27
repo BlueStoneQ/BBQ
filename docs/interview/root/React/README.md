@@ -10,3 +10,4 @@
 - [React 18/19 新特性](./react-18-19.md)
 - [Theme & i18n](./theme-i18n.md)
 - [SSR](./ssr.md)
+- [状态管理原理与选型深度](./state-management-deep.md)

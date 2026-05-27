@@ -7,6 +7,7 @@
 - [Step 2: Codegen 配置](#step-2-codegen-配置)
 - [Step 3: Android 侧实现](#step-3-android-侧实现)
 - [Step 4: iOS 侧实现](#step-4-ios-侧实现)
+- [Step 5: Pure C++ TurboModule](#step-5-pure-c-turbomodule)
 - [关键规则速查](#关键规则速查)
 
 ---
@@ -259,6 +260,47 @@ public abstract class NativeBLEModuleSpec extends ReactContextBaseJavaModule
 
 ## Step 3: Android 侧实现
 
+### 整体结构（3 个文件 + 1 行注册）
+
+```
+你需要写的：
+┌─────────────────────────────────────────────────────────────┐
+│  BLEModule.kt          ← 业务实现（继承 Codegen 基类）       │
+│  BLEPackage.kt         ← 注册容器（告诉 RN 有这个模块）      │
+│  MainApplication.kt    ← 加一行注册 Package                  │
+└─────────────────────────────────────────────────────────────┘
+
+Codegen 自动生成的（你不碰）：
+┌─────────────────────────────────────────────────────────────┐
+│  NativeBLEModuleSpec.java   ← Java 抽象基类（方法签名）       │
+│  NativeBLEModuleCxxSpecJSI  ← C++ 胶水（JSI 绑定 + JNI 调用）│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 协作关系
+
+```
+App 启动
+  │
+  ▼ MainApplication.getPackages()
+  │  返回 [系统Package, 三方Package, BLEPackage, ...]
+  │
+  ▼ TurboModuleManager 收集所有 Package 的模块元信息
+  │  内部 Map: { "BLEModule" → BLEPackage.getModule }
+  │
+  ▼ JS 首次调用 TurboModuleRegistry.get('BLEModule')
+  │
+  ▼ TurboModuleManager 在 Map 中查找 → 调用 BLEPackage.getModule("BLEModule")
+  │
+  ▼ BLEPackage 创建 BLEModule 实例
+  │
+  ▼ Codegen C++ 胶水把 BLEModule 实例包装为 JSI HostObject
+  │  （注册到 JS Runtime，JS 侧拿到代理对象）
+  │
+  ▼ JS 调用 BLEModule.connect('xxx')
+  │  → JSI(C++) → JNI → BLEModule.connect("xxx")（你写的业务代码）
+```
+
 ### 3.1 继承生成的基类，实现方法
 
 ```kotlin
@@ -290,6 +332,47 @@ class BLEModule(reactContext: ReactApplicationContext)
     gatt?.disconnect()
   }
 
+  // ─── 异步方法实现 ───
+  // Spec 中声明 Promise<T> 的方法，Native 侧签名多一个 Promise 参数
+  // 通过 promise.resolve() / promise.reject() 返回结果
+  //
+  // Promise 来源：
+  //   JS 调用 await scanDevices() 时，JS 引擎创建一个 JS Promise 对象
+  //   → C++ 胶水层拿到该 Promise 的 resolve/reject 回调引用
+  //   → 包装成 Java 的 com.facebook.react.bridge.Promise 接口传给你
+  //   → 你调 promise.resolve(x) → C++ 触发 JS Promise 的 resolve
+  //   本质：Java 侧的 Promise 是 JS Promise 的代理，持有其 resolve/reject 的引用
+  override fun scanDevices(timeout: Double, promise: Promise) {
+    // 开启扫描（异步操作）
+    bluetoothAdapter.startLeScan { device, rssi, _ ->
+      foundDevices.add(DeviceInfo(device.address, device.name, rssi))
+    }
+    // 超时后返回结果
+    Handler(Looper.getMainLooper()).postDelayed({
+      bluetoothAdapter.stopLeScan(null)
+      val result = Arguments.createArray()
+      foundDevices.forEach { info ->
+        result.pushMap(Arguments.createMap().apply {
+          putString("id", info.id)
+          putString("name", info.name)
+          putInt("rssi", info.rssi)
+        })
+      }
+      promise.resolve(result)  // ← 成功：resolve 返回数据给 JS
+    }, timeout.toLong())
+  }
+
+  // 异步方法失败时用 reject
+  override fun sendCommand(cmd: String, data: ReadableArray, promise: Promise) {
+    try {
+      val bytes = data.toByteArray()
+      gatt?.writeCharacteristic(buildPacket(cmd, bytes))
+      promise.resolve(null)  // void 类型 resolve null
+    } catch (e: Exception) {
+      promise.reject("SEND_FAILED", e.message, e)  // ← 失败：reject
+    }
+  }
+
   // 发送事件给 JS（emitOnStatusChange 是 Codegen 生成在基类中的方法）
   private fun onConnectionStateChanged(status: String, deviceId: String) {
     emitOnStatusChange(WritableNativeMap().apply {
@@ -316,21 +399,32 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
 
+// TurboReactPackage = RN 框架提供的基类，用于注册 TurboModule
+// 作用：告诉 RN "我这里有哪些模块，怎么创建它们"
 class BLEPackage : TurboReactPackage() {
 
+  // 核心方法 1：模块工厂
+  // 触发时机：JS 首次调用 TurboModuleRegistry.get('BLEModule') 时（懒加载）
+  //   - 不是 App 启动时（除非 needsEagerInit = true）
+  //   - 只调用一次，创建后 TurboModuleManager 缓存实例（单例）
+  //   - 后续 JS 再次 get 同名模块直接返回缓存，不会重复 new
+  //   - 实例生命周期 = RN 引擎生命周期（引擎销毁时才释放）
   override fun getModule(name: String, ctx: ReactApplicationContext): NativeModule? {
     return if (name == BLEModule.NAME) BLEModule(ctx) else null
   }
 
+  // 核心方法 2：模块元信息注册表
+  // 告诉 TurboModuleManager：有哪些模块、是不是 TurboModule、需不需要提前初始化
+  // 这样 RN 启动时不用实例化所有模块，只记录"有这个模块"，用到时再创建
   override fun getReactModuleInfoProvider() = ReactModuleInfoProvider {
     mapOf(
       BLEModule.NAME to ReactModuleInfo(
-        BLEModule.NAME,
-        BLEModule::class.java.name,
-        false, // canOverrideExistingModule
-        false, // needsEagerInit
-        false, // isCxxModule
-        true   // isTurboModule ← 标记为 TurboModule
+        BLEModule.NAME,                // 模块名（和 JS 侧注册名一致）
+        BLEModule::class.java.name,    // 类全名（反射用）
+        false, // canOverrideExistingModule — 是否允许覆盖同名模块
+        false, // needsEagerInit — false=懒加载（推荐），true=启动时就创建
+        false, // isCxxModule — 是否是纯 C++ 模块
+        true   // isTurboModule — ← 必须 true，否则走旧 Bridge
       )
     )
   }
@@ -341,11 +435,21 @@ class BLEPackage : TurboReactPackage() {
 
 ```kotlin
 // MainApplication.kt
+import com.facebook.react.PackageList   // RN CLI 自动生成的类
+import com.myapp.ble.BLEPackage         // 你自己写的 Package
+
 override fun getPackages(): List<ReactPackage> {
+  // PackageList 是 RN CLI 自动生成的类（在 build 时根据 node_modules 中的 RN 库自动收集）
+  // 它包含所有通过 react-native.config.js 或 autolinking 注册的三方库 Package
+  // 位置：android/app/build/generated/rncli/src/main/java/.../PackageList.java
   val packages = PackageList(this).packages.toMutableList()
-  packages.add(BLEPackage())  // ← 注册
+  
+  // 手动添加你自己的 Package（不在 node_modules 里的本地模块）
+  packages.add(BLEPackage())
+  
   return packages
 }
+// 最终 packages 列表 = 自动收集的三方库 + 你手动加的
 ```
 
 ---
@@ -420,7 +524,223 @@ RCT_EXPORT_MODULE()
 
 ---
 
+## Step 5: Pure C++ TurboModule
+
+### 和普通 TurboModule 的区别
+
+| | 普通 TurboModule | Pure C++ TurboModule |
+|--|---|---|
+| 实现语言 | Kotlin(Android) + ObjC(iOS)，两端各写一份 | C++ 一份，两端共用 |
+| 调用链 | JS → JSI(C++) → JNI → Kotlin / ObjC | JS → JSI(C++) → 你的 C++（最短路径） |
+| 注册方式 | Package + Application（Java 层） | Provider 函数（C++ 层） |
+| Codegen 产物 | Java 基类 + ObjC Protocol + C++ 胶水（全套） | **只用 C++ 接口**（其他生成了也不用，linker 自动忽略） |
+| 适用 | 需要平台 API（BLE、相机、文件系统） | 纯计算（加密、协议解析、数学、数据处理） |
+
+### 开发流程
+
+```
+① 写 JS Spec（和普通 TurboModule 完全一样）
+② Codegen 生成 C++ 抽象接口（NativeXxxCxxSpec.h）
+   - 也会生成 Java 基类/ObjC Protocol，但你不用它们
+   - 不需要手动删除，linker 自动忽略未引用的代码
+③ 写 C++ 实现类，继承 CxxSpec
+④ 写 Provider 函数（告诉 RN 怎么创建这个模块）
+⑤ 在两端 C++ 入口注册 Provider
+⑥ CMakeLists.txt 配置编译
+```
+
+### ③ C++ 实现
+
+```cpp
+// src/cpp/CryptoModule.h
+#pragma once
+#include <NativeCryptoModuleCxxSpec.h>  // Codegen 生成的 C++ 抽象接口
+
+class CryptoModule : public NativeCryptoModuleCxxSpec<CryptoModule> {
+public:
+  CryptoModule(std::shared_ptr<CallInvoker> jsInvoker)
+    : NativeCryptoModuleCxxSpec(jsInvoker) {}
+
+  // 实现 Spec 中声明的方法（直接操作 jsi::Value）
+  jsi::String sha256(jsi::Runtime& rt, jsi::String input) override {
+    std::string data = input.utf8(rt);
+    std::string hash = computeSha256(data);  // 你的 C++ 逻辑
+    return jsi::String::createFromUtf8(rt, hash);
+  }
+
+  jsi::Value encrypt(jsi::Runtime& rt, jsi::String data, jsi::String key) override {
+    // 异步：创建 JS Promise 并在后台线程 resolve
+    // ...
+  }
+};
+```
+
+### ④ Provider 函数
+
+```cpp
+// src/cpp/CryptoModuleProvider.cpp
+#include "CryptoModule.h"
+
+// Provider = 模块工厂函数（类比 Package.getModule，但在 C++ 层）
+std::shared_ptr<TurboModule> CryptoModuleProvider(
+    const std::string& name,
+    const std::shared_ptr<CallInvoker>& jsInvoker) {
+  if (name == "CryptoModule") {
+    return std::make_shared<CryptoModule>(jsInvoker);
+  }
+  return nullptr;  // 不是我的模块，返回 null
+}
+```
+
+### ⑤ 注册 Provider（两端各加几行代码）
+
+Provider 函数只写一份（上面的 `CryptoModuleProvider.cpp`），两端共用。
+但需要在两端的 C++ 入口文件里 include 并调用它（一次性，后续不用再动）。
+
+**Android 侧**：
+
+```cpp
+// android/app/src/main/jni/OnLoad.cpp
+// 这个文件是 RN 项目创建时自动生成的（npx react-native init 时就有）
+// 位置固定，是 Android 侧 C++ 层的入口（JNI_OnLoad 加载时执行）
+
+#include <DefaultTurboModuleManagerDelegate.h>
+#include "CryptoModuleProvider.h"  // ← 加这行：引入你的 Provider
+
+std::shared_ptr<TurboModule>
+MainApplicationTurboModuleManagerDelegate::getTurboModule(
+    const std::string& name,
+    const std::shared_ptr<CallInvoker>& jsInvoker) {
+  
+  // ← 加这段：先查你的 C++ 模块
+  auto module = CryptoModuleProvider(name, jsInvoker);
+  if (module) return module;
+
+  // 没找到 → 走默认路径（Java TurboModule via JNI）
+  return DefaultTurboModuleManagerDelegate::getTurboModule(name, jsInvoker);
+}
+```
+
+**iOS 侧**：
+
+```objc
+// ios/MyApp/AppDelegate.mm
+// 这个文件也是 RN 项目创建时自动生成的
+
+#include "CryptoModuleProvider.h"  // ← 加这行
+
+// 在 RCTAppDelegate 的 getTurboModule 方法中加入
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const std::string &)name
+                                                      jsInvoker:(std::shared_ptr<facebook::react::CallInvoker>)jsInvoker {
+  // ← 加这段：先查你的 C++ 模块
+  auto module = CryptoModuleProvider(name, jsInvoker);
+  if (module) return module;
+
+  // 没找到 → 走默认路径（ObjC TurboModule）
+  return [super getTurboModule:name jsInvoker:jsInvoker];
+}
+```
+
+**总结**：两端的入口文件（`OnLoad.cpp` / `AppDelegate.mm`）都是 RN 项目初始化时自动生成的，你只需要加 `#include` + 几行查找逻辑。Provider 本身是同一份 C++ 代码。
+
+### ⑥ 构建配置（两端都需要，告诉编译器编译你的 C++ 文件）
+
+**文件位置**：C++ 源码放在共享目录，两端构建系统各自引用同一份：
+
+```
+my-app/
+├── src/cpp/                         ← 共享 C++ 代码（不在 android/ 也不在 ios/ 里）
+│   ├── CryptoModule.h
+│   ├── CryptoModule.cpp
+│   └── CryptoModuleProvider.h/cpp
+├── android/app/src/main/jni/       ← Android 构建入口，CMakeLists 引用 ../../cpp/
+│   ├── CMakeLists.txt
+│   └── OnLoad.cpp
+└── ios/                             ← iOS 构建，Xcode 引用 ../src/cpp/
+    └── MyApp/AppDelegate.mm
+```
+
+**Android：CMakeLists.txt（手动追加）**
+
+```cmake
+# android/app/src/main/jni/CMakeLists.txt（已有文件，末尾追加）
+
+# 编译共享目录的 C++ 源文件
+add_library(crypto_module SHARED
+  ${CMAKE_SOURCE_DIR}/../../../../src/cpp/CryptoModule.cpp
+  ${CMAKE_SOURCE_DIR}/../../../../src/cpp/CryptoModuleProvider.cpp
+)
+
+# 链接 RN 核心库
+target_link_libraries(crypto_module
+  react_nativemodule_core   # TurboModule 核心（jsi::Runtime、CallInvoker）
+  react_codegen_rncore      # Codegen 生成的 C++ 接口
+)
+
+# 头文件搜索路径
+target_include_directories(crypto_module PRIVATE
+  ${CMAKE_SOURCE_DIR}/../../../../src/cpp
+)
+```
+
+**iOS：在 Podspec 或 Xcode 中声明源文件路径**
+
+```ruby
+# 如果是独立库（有 .podspec）：
+s.source_files = '../src/cpp/**/*.{h,cpp}'
+
+# 如果是 App 内模块：
+# Xcode → Build Phases → Compile Sources → 点 + → 添加 src/cpp/*.cpp
+# Xcode → Build Settings → Header Search Paths → 添加 $(SRCROOT)/../src/cpp
+```
+
+**总结**：C++ 文件只有一份在共享目录，Android 用 CMake 引用，iOS 用 Xcode/Podspec 引用。都是一次性配置。
+
+### 关键点
+
+| 点 | 说明 |
+|----|------|
+| 不写 Kotlin/ObjC | 没有 Package、没有 Application 注册、没有 RCT_EXPORT_MODULE |
+| 不走 JNI/ObjC Bridge | JS → C++ 直达，最短调用链 |
+| Codegen 多余产物 | 生成了 Java 基类等也不用管，没人引用 = linker 自动丢弃 |
+| 两端共用 | 同一份 C++ 代码，Android 和 iOS 都编译它 |
+| 注册在 C++ 层 | 通过 Provider 函数注册，不是 Java Package |
+
+---
+
 ## 关键规则速查
+
+### 底层原理：TurboModuleManager 统一调度
+
+**所有 TurboModule 的调度都收敛在 C++ 层**，不论最终实现是 Kotlin、ObjC 还是 C++：
+
+```
+JS: TurboModuleRegistry.get('BLEModule')
+  │
+  ▼ JSI（C++ 层）
+  │
+  ▼ TurboModuleManager（C++ 实现，统一入口）
+  │  职责：模块发现、创建、缓存（单例）、分发
+  │
+  │  查找逻辑：
+  │  1. 先查 C++ Provider（Pure C++ Module）
+  │  2. 没找到 → 通过 JNI/ObjC 调 Java/ObjC 的 Package.getModule()
+  │
+  ├─→ C++ 模块：Provider 直接返回 C++ 实例 → 注册为 JSI HostObject
+  │
+  └─→ Native 模块：JNI → Package.getModule() → 拿到 Java 实例
+                    → C++ 包装为 JSI HostObject → 返回给 JS
+```
+
+**关键点**：
+- TurboModuleManager 是 C++ 实现的单例，管理所有模块的生命周期
+- 不管模块用什么语言实现，JS 侧拿到的都是 JSI HostObject（统一接口）
+- 模块实例创建后缓存在 C++ 层的 Map 中（单例，不重复创建）
+- 这就是为什么 Pure C++ Module 的 Provider 注册在 `OnLoad.cpp`——直接注册到 C++ Manager，不绕道 Java/ObjC
+
+---
+
+### 规则表
 
 | 规则 | 说明 |
 |------|------|

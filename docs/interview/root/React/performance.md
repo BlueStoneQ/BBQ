@@ -105,7 +105,7 @@ function TodoList() {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [filter, setFilter] = useState<'all' | 'active' | 'done'>('all');
 
-  // useCallback：稳定函数引用，todos 变了函数才重建
+  // useCallback：稳定函数引用，依赖为空 → 永远同一个引用，永远不重建
   const handleToggle = useCallback((id: string) => {
     setTodos(prev => prev.map(t =>
       t.id === id ? { ...t, done: !t.done } : t

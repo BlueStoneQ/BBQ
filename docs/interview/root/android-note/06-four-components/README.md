@@ -50,6 +50,48 @@ onCreate → onStart → onResume → [用户可交互]
 - `onPause` ≈ 页面失去焦点
 - `onDestroy` ≈ 组件 unmounted
 
+### 四种状态
+
+| 状态 | 可见 | 可交互 | 在栈中 | 说明 |
+|------|------|--------|--------|------|
+| **Active (Resumed)** | ✅ | ✅ | ✅ 栈顶 | 用户正在操作的页面 |
+| **Paused** | ✅ 部分 | ❌ | ✅ | 被透明/半透明 Activity 遮挡（如弹窗） |
+| **Stopped** | ❌ | ❌ | ✅ | 完全不可见，但实例还在内存中 |
+| **Destroyed** | ❌ | ❌ | ❌ | 实例销毁，从栈中移除 |
+
+### Activity 栈（Back Stack）
+
+```
+栈结构（后进先出）：
+
+  ┌─────────────────┐
+  │ SettingsActivity │ ← 栈顶（Active，用户看到的）
+  ├─────────────────┤
+  │ DeviceActivity   │ ← Stopped（不可见，但还在内存中）
+  ├─────────────────┤
+  │ HomeActivity     │ ← Stopped
+  └─────────────────┘
+
+用户按返回键：
+  → SettingsActivity.onDestroy()（出栈销毁）
+  → DeviceActivity 回到栈顶 → onRestart → onStart → onResume（变为 Active）
+```
+
+**栈顶** = 当前用户看到的 Activity。系统只保证栈顶 Activity 不被回收，栈中其他 Activity 在内存紧张时可能被系统杀掉（会调 onSaveInstanceState 保存状态，恢复时通过 savedInstanceState 还原）。
+
+### 和 RN 多 Bundle 的关系
+
+```
+每个 Bundle 对应一个 RNContainerActivity：
+
+栈：[HomeActivity(home.bundle)] → [DeviceActivity(device.bundle)]
+                                        ↑ 栈顶，用户看到的
+
+- 栈顶 Activity = Active，RN 实例正在渲染
+- 栈中 Activity = Stopped，RN 实例在池中保活（不销毁引擎）
+- 按返回键 = 栈顶出栈销毁，下面的回到栈顶（引擎实例仍在池中）
+```
+
 ### 启动模式（LaunchMode）
 
 | 模式 | 行为 | 场景 |
