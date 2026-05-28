@@ -517,6 +517,10 @@ RCT_EXPORT_MODULE()
 |--|---------|-----|
 | 文件后缀 | `.kt` / `.java` | `.mm`（ObjC++，支持 C++） |
 | 继承/遵循 | `extends NativeBLEModuleSpec`（基类） | `<NativeBLEModuleSpec>`（Protocol） |
+
+> **ObjC Protocol = Java interface = TS interface**。遵循 Protocol = implements 接口。
+> Android 用抽象基类是因为基类里包含 emit 方法的实现（接口不能有实现）。
+> iOS 用 Protocol 更灵活——你的类可以继承任何基类（NSObject 等），同时遵循多个 Protocol。
 | 注册方式 | 手动写 Package + Application 注册 | `RCT_EXPORT_MODULE()` 宏（一行搞定） |
 | 额外方法 | 无 | 必须实现 `getTurboModule:`（返回 C++ 实例） |
 | 内存管理 | 手动管理（注意 JNI 引用） | ARC 自动管理 |

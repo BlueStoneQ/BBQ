@@ -63,6 +63,7 @@
 
 ## 快应用框架
 
+- [项目讲解（Deep Dive）](./resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md)
 - [架构与渲染流](./resume/explain/3.1-xm/quickapp-framework/quickapp-layout-and-architecture.md)
 - [J2V8 深入](./resume/explain/3.1-xm/quickapp-framework/j2v8-deep.md)
 - [深度追问清单](./resume/explain/3.1-xm/quickapp-framework/traps.md)

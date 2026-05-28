@@ -7,6 +7,8 @@
 | APK | IPA | 安装包格式 |
 | ABI Split（arm64/armv7） | App Thinning（自动） | 按设备架构裁剪 |
 | SO 库（.so） | 动态库（.dylib/.framework） | Native 共享库 |
+
+> **iOS 不用 .so**，用 `.framework`（Apple 的库格式）。本质一样——都是编译后的 Native 二进制，只是文件格式不同（Linux 用 ELF/.so，Apple 用 Mach-O/.framework）。`pod install` + Xcode Build 时，Xcode 用 clang 把 ObjC/C++/Swift 源码编译成 .framework 或直接链接进主二进制。和 Android 用 NDK 编译 .so 是同一件事。
 | DEX（Java 字节码） | Mach-O（编译后二进制） | 可执行代码 |
 | R8/ProGuard（混淆+缩减） | Dead Code Stripping + LTO | 代码优化 |
 | resources（res/） | Asset Catalog（xcassets） | 资源管理 |

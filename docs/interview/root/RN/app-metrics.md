@@ -1,240 +1,200 @@
 # RN App 指标体系
 
+> 每个指标的完整闭环：定义 → 正常值 → 检测方案 → 根因 → 优化 → 详细文档
+
 ## 目录
 
-- [指标分层](#指标分层)
-- [启动指标](#启动指标)
-- [渲染指标](#渲染指标)
-- [交互指标](#交互指标)
-- [网络指标](#网络指标)
-- [稳定性指标](#稳定性指标)
-- [包体指标](#包体指标)
-- [业务指标](#业务指标)
-- [监控方案](#监控方案)
-- [和快应用框架指标的区别](#和快应用框架指标的区别)
+- [一、启动指标](#一启动指标)
+- [二、渲染指标](#二渲染指标)
+- [三、交互指标](#三交互指标)
+- [四、稳定性指标](#四稳定性指标)
+- [五、包体指标](#五包体指标)
+- [六、内存指标](#六内存指标)
+- [七、网络指标](#七网络指标)
+- [八、监控架构](#八监控架构)
 
 ---
 
-## 指标分层
+## 一、启动指标
 
-```
-用户体验指标（用户直接感知）
-  ├── 启动：能不能快速打开
-  ├── 流畅：滑动/动画卡不卡
-  ├── 响应：点击后多久有反馈
-  └── 稳定：会不会闪退
+### 冷启动时间
 
-技术指标（支撑体验的底层数据）
-  ├── JS Bundle 加载时间
-  ├── Bridge/JSI 通信频率和耗时
-  ├── 内存占用和泄漏
-  ├── 网络请求耗时和成功率
-  └── 包体大小
-```
-
----
-
-## 启动指标
-
-| 指标 | 定义 | 目标 | 参考数据 |
-|------|------|------|---------|
-| **TTI（Time to Interactive）** | 用户点击 → 页面可交互 | < 2s | 1.5~2.5s |
-| **冷启动时间** | kill 进程 → 首屏渲染完成 | < 3s | 2~4s |
-| **热启动时间** | 后台切回 → 页面可见 | < 500ms | 200~500ms |
-| **JS Bundle 加载时间** | 开始加载 → JS 执行完成 | < 1s | 500ms~1.5s |
-| **首帧时间（FCP）** | 进程启动 → 第一个像素绘制 | < 1.5s | 1~2s |
-
-### 启动链路（RN 冷启动）
-
-```
-App 进程创建
-  → Native 初始化（Application.onCreate）         ~200ms
-  → RN 引擎初始化（Hermes/JSI/TurboModule 注册）  ~300ms
-  → JS Bundle 加载 + 解析                         ~500ms
-  → JS 执行（组件树渲染）                          ~300ms
-  → Native View 创建 + 布局                       ~200ms
-  → 首帧绘制                                      ~100ms
-  ─────────────────────────────────────────────
-  总计                                            ~1600ms
-```
-
-### 优化手段
-
-| 手段 | 优化环节 | 效果 |
-|------|---------|------|
-| Hermes 预编译（.hbc 字节码） | JS 解析 | 解析时间 -50~70% |
-| 分 Bundle（Common + Business） | JS 加载 | 首屏只加载必要代码 |
-| 数据预加载 | JS 执行 | 请求前置到 Native 层 |
-| 预热 RN 引擎 | 引擎初始化 | 用户进入前已初始化 |
-| 骨架屏 | 感知优化 | 用户感觉快（实际时间不变） |
-
----
-
-## 渲染指标
-
-| 指标 | 定义 | 目标 | 参考数据 |
-|------|------|------|---------|
-| **FPS（帧率）** | 每秒渲染帧数 | ≥ 55fps | 50~60fps |
-| **丢帧率** | 低于 16.6ms 的帧占比 | < 5% | 3~10% |
-| **长帧（Jank）** | 单帧耗时 > 32ms（连续丢 2 帧） | < 1次/s | — |
-| **JS 线程占用率** | JS 线程繁忙时间占比 | < 60% | 40~80% |
-| **UI 线程占用率** | 主线程繁忙时间占比 | < 70% | 50~80% |
-
-### 常见卡顿原因
-
-| 原因 | 表现 | 解决 |
-|------|------|------|
-| 列表未虚拟化 | 长列表滑动卡 | FlatList + getItemLayout |
-| 过度重渲染 | 任何状态变化全量渲染 | memo + useCallback + selector |
-| JS 长任务 | 动画期间 JS 计算阻塞 | InteractionManager / requestAnimationFrame |
-| 图片未优化 | 大图解码阻塞 UI 线程 | resizeMode + 缓存 + 渐进加载 |
-| Bridge 拥堵（旧架构） | 高频通信排队 | 批量更新 / 迁移 JSI |
-
----
-
-## 交互指标
-
-| 指标 | 定义 | 目标 |
-|------|------|------|
-| **点击响应时间** | 用户点击 → UI 反馈 | < 100ms |
-| **页面切换时间** | 点击导航 → 新页面首帧 | < 300ms |
-| **输入延迟** | 键盘输入 → 文字显示 | < 50ms |
-| **手势响应** | 触摸 → 动画开始 | < 16ms（1 帧内） |
-
----
-
-## 网络指标
-
-| 指标 | 定义 | 目标 |
-|------|------|------|
-| **API 请求成功率** | 成功请求 / 总请求 | > 99.5% |
-| **API 平均耗时** | 请求发出 → 响应完成 | < 500ms |
-| **超时率** | 超过阈值的请求占比 | < 1% |
-| **首屏数据就绪时间** | 页面加载 → 数据渲染完成 | < 1.5s |
-
----
-
-## 稳定性指标
-
-| 指标 | 定义 | 目标 | 参考数据 |
-|------|------|------|---------|
-| **Crash 率** | 崩溃会话 / 总会话 | < 0.1% | 0.05~0.2% |
-| **JS Error 率** | JS 异常 / 总 PV | < 0.5% | 0.1~1% |
-| **ANR 率** | 无响应次数 / 总会话 | < 0.05% | 0.02~0.1% |
-| **白屏率** | 首屏超时未渲染 / 总 PV | < 1% | 0.5~2% |
-
-### RN 特有的稳定性问题
-
-| 问题 | 原因 | 防治 |
-|------|------|------|
-| **Red Screen（JS 崩溃）** | JS 未捕获异常 | ErrorBoundary + 全局 handler |
-| **Native Crash** | TurboModule 空指针、内存越界 | Crashlytics + 符号化 |
-| **白屏** | JS Bundle 加载失败、网络超时 | 离线包 + 降级 H5 |
-| **热更新失败** | 包损坏、版本不兼容 | 校验 + 回滚机制 |
-
-### 白屏检测方案
-
-**什么是白屏**：页面加载后超过阈值时间（如 3s）仍未渲染出有效内容。
-
-**检测方式**：
-
-```tsx
-// 方式一：超时埋点（最常用）
-// 在页面组件中，mount 时启动计时器，首屏数据渲染后取消
-function Page() {
-  const rendered = useRef(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!rendered.current) {
-        // 超过 3s 未渲染 = 白屏，上报
-        reportWhiteScreen({ page: 'DeviceList', duration: 3000 });
-      }
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 数据到达后标记已渲染
-  useEffect(() => {
-    if (data) rendered.current = true;
-  }, [data]);
-}
-```
-
-```kotlin
-// 方式二：Native 侧截图检测（更准确）
-// 页面加载后延迟截图，检测像素是否全白/全黑
-fun detectWhiteScreen(rootView: View, delayMs: Long = 3000) {
-    Handler(Looper.getMainLooper()).postDelayed({
-        val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
-        Canvas(bitmap).also { rootView.draw(it) }
-        
-        // 采样检测：取若干像素点，判断是否全是同一颜色（白/黑）
-        val isBlank = samplePixels(bitmap).all { it == Color.WHITE || it == Color.BLACK }
-        if (isBlank) reportWhiteScreen()
-    }, delayMs)
-}
-```
-
-**常见白屏原因 + 防治**：
-
-| 原因 | 防治 |
+| 维度 | 内容 |
 |------|------|
-| JS Bundle 加载失败（网络/文件损坏） | 离线包兜底 + hash 校验 + 回退内置版本 |
-| JS 执行报错（未捕获异常） | ErrorBoundary + 降级 UI |
-| 首屏接口超时 | 数据预请求 + 骨架屏 + 超时降级 |
-| RN 引擎初始化失败 | Native 层 try-catch + 降级到 H5 |
+| **定义** | 用户点击 App 图标 → 首屏渲染完成可见（≈ FCP，RN 中首屏可见后即可交互） |
+| **正常值** | < 2s 好，2~3s 一般，> 3s 差 |
+| **检测方案** | Android: `adb shell am start -W`；iOS: Instruments → App Launch；线上: 自埋点（Application.onCreate → 首帧回调） |
+| **工具** | 自建埋点 SDK + Firebase Performance（线上）；Systrace/Instruments（线下） |
+| **常见根因** | 引擎初始化慢、Bundle 大、首屏接口慢、主线程阻塞 |
+| **优化方案** | Hermes 预编译、分 Bundle、容器池预热、Native 预请求、Splash 并行策略 |
+| **详细文档** | [perf-splash](../cards/card-1/perf-splash.md)、[native-prefetch](./native-prefetch.md)、[rn-engineering-deep](../cards/card-3/rn-engineering-deep.md) |
+
+### 白屏率
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 页面加载后超过 3s 仍未渲染出有效内容的比例 |
+| **正常值** | < 1% |
+| **检测方案** | ① JS 超时埋点（mount 后 3s 未标记渲染完成 = 白屏）；② Native 截图检测（延迟截图 → 采样像素判断是否全白/全黑） |
+| **工具** | 自建（超时埋点 + 截图检测），无成熟三方 SDK |
+| **常见根因** | Bundle 加载失败、JS 执行报错、首屏接口超时、组件 return null |
+| **优化方案** | 离线包兜底 + hash 校验 + ErrorBoundary + 骨架屏 + 预请求 + 降级 H5 |
+| **详细文档** | [perf-whitescreen](../cards/card-1/perf-whitescreen.md) |
 
 ---
 
-## 包体指标
+## 二、渲染指标
 
-| 指标 | 目标 | 参考数据 |
-|------|------|---------|
-| APK/IPA 总大小 | < 30MB | 15~50MB |
-| JS Bundle 大小 | < 5MB | 2~8MB |
-| Native SO 库 | < 10MB | 5~15MB |
-| 资源（图片/字体） | < 5MB | 2~10MB |
+### FPS（帧率）
 
-### 优化手段
-
-| 手段 | 效果 |
+| 维度 | 内容 |
 |------|------|
-| Hermes 字节码（.hbc 比 JS 小） | Bundle -30% |
-| 分 Bundle + 按需加载 | 首屏 Bundle -50% |
-| ProGuard/R8（Android） | DEX -20% |
-| App Thinning（iOS） | 按设备下发资源 |
-| 图片 WebP + CDN | 资源 -40% |
+| **定义** | 每秒渲染帧数，反映滑动/动画流畅度 |
+| **正常值** | ≥ 55fps 好，50~55 一般，< 50 卡顿 |
+| **检测方案** | Android: Choreographer 回调计算丢帧；iOS: CADisplayLink 回调；RN: Performance Monitor（Dev Menu） |
+| **工具** | Flipper Performance Plugin（开发）；自建 FPS 采集 SDK（线上） |
+| **常见根因** | JS 长任务阻塞、过度重渲染、大图解码、列表未虚拟化、离屏渲染 |
+| **优化方案** | memo/useCallback、FlashList、Reanimated 3、InteractionManager、图片降采样 |
+| **详细文档** | [perf-list](../cards/card-1/perf-list.md)、[perf-animation](../cards/card-1/perf-animation.md)、[perf-bridge](../cards/card-1/perf-bridge.md) |
+
+### JS 线程占用率
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | JS 线程繁忙时间 / 总时间 |
+| **正常值** | < 60% 好，> 80% 卡顿风险 |
+| **检测方案** | RN Performance Monitor（实时显示 JS FPS）；Flipper → Performance |
+| **工具** | RN 内置 Dev Menu → Show Perf Monitor |
+| **常见根因** | 复杂 Diff 计算、大数组排序/过滤、频繁 setState、未拆分长任务 |
+| **优化方案** | useTransition、InteractionManager、memo 减少 Diff、计算下沉 C++ |
+| **详细文档** | [perf-bridge](../cards/card-1/perf-bridge.md)（JS 线程阻塞通用方案） |
 
 ---
 
-## 业务指标
+## 三、交互指标
 
-| 指标 | 说明 |
+### 点击响应时间
+
+| 维度 | 内容 |
 |------|------|
-| **页面 PV/UV** | 页面访问量 |
-| **功能使用率** | 核心功能的点击/完成率 |
-| **转化率** | 关键路径完成率（注册/下单/支付） |
-| **留存率** | 次日/7日/30日留存 |
-| **BLE 连接成功率**（IoT 场景） | 蓝牙设备连接成功 / 尝试次数 |
+| **定义** | 用户点击 → UI 反馈（按钮变色/loading 出现） |
+| **正常值** | < 100ms |
+| **检测方案** | 自埋点（onPress 时间戳 → UI 更新时间戳） |
+| **常见根因** | JS 线程忙、setState 后重渲染慢 |
+| **优化方案** | Pressable 即时反馈（opacity/scale）、状态下沉、避免 onPress 中做重计算 |
+| **详细文档** | [ux-feedback](../cards/card-1/ux-feedback.md) |
+
+### 页面切换时间
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 点击导航 → 新页面首帧可见 |
+| **正常值** | < 300ms |
+| **检测方案** | React Navigation 的 `onTransitionEnd` 回调计时 |
+| **常见根因** | 新页面组件重、数据未预加载、动画期间 JS 阻塞 |
+| **优化方案** | 预加载数据、lazy 加载非首屏组件、InteractionManager 延迟重任务 |
+| **详细文档** | [perf-navigation](../cards/card-1/perf-navigation.md) |
 
 ---
 
-## 监控方案
+## 四、稳定性指标
 
-### 工具选型
+### Crash 率
 
-| 层面 | 工具 |
+| 维度 | 内容 |
 |------|------|
-| Crash + ANR | Firebase Crashlytics / Sentry |
-| 性能（启动/帧率） | Firebase Performance / 自建 SDK |
-| JS Error | Sentry / Bugsnag |
-| 网络 | Charles（调试）/ 自建网络监控 |
-| 内存 | Xcode Instruments / Android Profiler |
-| 线下分析 | Flipper / React DevTools / Systrace |
+| **定义** | 崩溃会话 / 总会话 |
+| **正常值** | < 0.1% |
+| **检测方案** | Firebase Crashlytics / Sentry（自动捕获 + 符号化） |
+| **工具** | Crashlytics（免费，Google 生态）；Sentry（JS + Native 统一） |
+| **常见根因** | Native 空指针、OOM/Jetsam、JNI 类型错误、未捕获 JS 异常导致 Native 层崩溃 |
+| **优化方案** | ErrorBoundary 兜底、内存监控主动释放、热更新回滚机制 |
+| **详细文档** | [perf-crash](../cards/card-1/perf-crash.md)、[ios-stability](../cards/card-1/ios/ios-stability.md) |
 
-### 监控架构
+### JS Error 率
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | JS 未捕获异常数 / 总 PV |
+| **正常值** | < 0.5% |
+| **检测方案** | Sentry JS SDK / `ErrorUtils.setGlobalHandler`（RN 全局错误捕获） |
+| **工具** | Sentry（推荐，JS + Native 统一看板）；Bugsnag |
+| **常见根因** | 接口返回异常数据、undefined 访问、三方库 bug、热更新包不兼容 |
+| **优化方案** | TypeScript 类型保护、ErrorBoundary、防御性编程、热更新 hash 校验 |
+
+### ANR 率（Android）/ Watchdog Kill（iOS）
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 主线程阻塞超时（Android > 5s 弹 ANR；iOS 直接杀进程） |
+| **正常值** | < 0.05% |
+| **检测方案** | Android: Google Play Console ANR 报告；iOS: MetricKit hang 报告 |
+| **工具** | Firebase Crashlytics（ANR 自动上报）；自建 Watchdog 线程检测 |
+| **常见根因** | 主线程 IO、锁竞争、大量 View 创建、同步 Bridge 调用（旧架构） |
+| **优化方案** | 异步化 IO、减少主线程工作、迁移 JSI（消除 Bridge 阻塞） |
+
+---
+
+## 五、包体指标
+
+### APK/IPA 大小
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 安装包文件大小 |
+| **正常值** | APK < 30MB，IPA < 50MB |
+| **检测方案** | CI 构建后自动检测（对比基线，超阈值告警） |
+| **工具** | 自建 CI 脚本；Android: `bundletool get-size`；iOS: App Store Connect Size Report |
+| **常见根因** | 未裁剪 ABI、图片未压缩、未用 Hermes、引入大 SDK |
+| **优化方案** | ABI Split/AAB、Hermes .hbc、WebP、分 Bundle、R8、App Thinning |
+| **详细文档** | [bundle-size](../cards/card-1/bundle-size.md)、[ios-bundle-size](../cards/card-1/ios/ios-bundle-size.md) |
+
+---
+
+## 六、内存指标
+
+### 内存峰值（PSS / Footprint）
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | App 运行时物理内存占用峰值 |
+| **正常值** | < 300MB（中端机）；低端机 < 200MB |
+| **检测方案** | Android: `adb shell dumpsys meminfo`；iOS: Xcode Memory Gauge / Instruments Allocations |
+| **工具** | Android Profiler（开发）；MetricKit（iOS 线上）；自建定时采样 SDK |
+| **常见根因** | 图片缓存过大、RN 实例过多、内存泄漏、大列表未虚拟化 |
+| **优化方案** | 实例池 LRU、图片降采样+释放、DEX 布局优化、onTrimMemory 响应 |
+| **详细文档** | [perf-memory](../cards/card-1/perf-memory.md)、[ios-memory](../cards/card-1/ios/ios-memory.md)、[perf-image](../cards/card-1/perf-image.md) |
+
+### 内存泄漏
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 对象不再使用但未被 GC/ARC 回收，内存持续增长 |
+| **正常值** | 内存趋势平稳，无持续增长 |
+| **检测方案** | Android: LeakCanary（自动检测 Activity/Fragment 泄漏）；iOS: Instruments → Leaks；JS: Hermes heap snapshot |
+| **工具** | LeakCanary（Android，开发时自动弹通知）；Instruments Leaks（iOS） |
+| **常见根因** | 未取消订阅（EventEmitter/定时器）、闭包持有大对象、循环引用（iOS） |
+| **优化方案** | useEffect return 清理、弱引用、页面卸载时释放资源 |
+| **详细文档** | [perf-memory](../cards/card-1/perf-memory.md) |
+
+---
+
+## 七、网络指标
+
+### API 请求成功率 / 耗时
+
+| 维度 | 内容 |
+|------|------|
+| **定义** | 成功请求 / 总请求；请求发出 → 响应完成的时间 |
+| **正常值** | 成功率 > 99.5%；P95 耗时 < 500ms |
+| **检测方案** | 网络拦截器埋点（Axios interceptor / fetch wrapper） |
+| **工具** | 自建网络监控 SDK；Charles/Flipper（开发调试） |
+| **常见根因** | 服务端慢、DNS 解析慢、弱网环境、未做缓存 |
+| **优化方案** | 预请求、接口聚合（BFF/GraphQL）、离线缓存、超时重试 |
+
+---
+
+## 八、监控架构
 
 ```
 App 端
@@ -242,26 +202,32 @@ App 端
   ├── Crash SDK（捕获 Native + JS 异常）
   └── 业务埋点 SDK
         │
-        ▼ 上报
+        ▼ 上报（批量 + 采样）
   数据平台（Kafka → Flink → ClickHouse）
         │
         ▼
-  看板 + 告警（Grafana / 自建）
-        │
-        ├── 实时告警：Crash 率突增 → 飞书/Slack 通知
+  看板 + 告警
+        ├── 实时告警：Crash 率突增 → 飞书/Slack
         ├── 趋势告警：启动时间连续 3 天劣化 → 邮件
-        └── 版本对比：新版本 vs 旧版本各指标对比
+        ├── 版本对比：新版本 vs 旧版本各指标
+        └── CI 卡点：包体/启动时间超阈值 → 构建失败
 ```
 
----
+### 工具选型
 
-## 和快应用框架指标的区别
+| 需求 | 推荐 | 说明 |
+|------|------|------|
+| Crash + ANR | Firebase Crashlytics | 免费、符号化、趋势、Google 生态 |
+| JS Error | Sentry | JS + Native 统一、Source Map 支持 |
+| 性能（启动/帧率） | Firebase Performance + 自建 | Firebase 基础指标免费，细粒度需自建 |
+| 内存 | 自建采样 SDK | 定时采集 PSS 上报，无成熟三方 |
+| 网络 | 自建拦截器 | Axios/fetch 层拦截，上报耗时/状态码 |
+| 线下分析 | Flipper + React DevTools + Systrace | 开发调试用 |
 
-| 维度 | 快应用框架 | RN App |
-|------|-----------|--------|
-| 关注角度 | 底座能力（所有快应用的下限） | 单个 App 的用户体验 |
-| 包体含义 | 系统预装包（影响所有用户） | App 安装包（用户选择下载） |
-| 启动含义 | 运行时初始化 + rpk 加载 | App 进程创建 → 首屏可交互 |
-| 稳定性影响 | 框架 crash = 所有快应用不可用 | App crash = 只影响自己 |
-| 优化主体 | 框架团队（你） | App 开发团队 |
-| 监控粒度 | 框架级（V8 初始化、Bridge 耗时） | 业务级（页面加载、接口耗时） |
+### 自建 vs 三方
+
+| | 三方（Firebase/Sentry） | 自建 |
+|--|---|---|
+| 优点 | 开箱即用、免运维、符号化自动 | 完全可控、细粒度、可定制告警规则 |
+| 缺点 | 数据在第三方、定制性有限 | 开发成本高、需要运维 |
+| 推荐 | Crash/Error 用三方（成熟度高） | 性能指标/业务指标自建（需要定制） |

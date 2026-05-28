@@ -174,10 +174,53 @@ lib/
 
 | 手段 | 效果 | 说明 |
 |------|------|------|
-| **R8/ProGuard** | DEX -20~30% | 代码缩减、混淆、优化 |
+| **R8/ProGuard** | DEX -20~40% | 代码缩减、混淆、优化（见下方详解） |
 | **strip debug symbols** | SO -30~50% | 移除调试符号（release 默认开启） |
+| **SO LTO（Link-Time Optimization）** | SO -5~15% | 跨编译单元优化，去除未调用函数 |
+| **SO -Oz 编译** | SO -10~20% | CMake: `set(CMAKE_CXX_FLAGS "-Oz")`，体积优先 |
 | **移除未用的 Native 模块** | 按需 | 不用的 TurboModule 不注册 |
 | **条件编译** | 按需 | 按平台/环境裁剪代码 |
+
+### R8 详解
+
+R8 不是按"等级"分的，是按功能维度叠加：
+
+| 功能 | 做什么 | 收益 |
+|------|--------|------|
+| **Shrinking（代码缩减）** | 移除未引用的类/方法/字段 | DEX -10~30% |
+| **Obfuscation（混淆）** | 类名/方法名缩短（`com.myapp.UserManager` → `a.b.c`） | DEX -5~10% |
+| **Optimization（优化）** | 方法内联、常量折叠、死代码消除 | DEX -5~10% |
+| **Resource Shrinking** | 移除未引用的资源文件 | 资源 -10~30% |
+
+**综合收益**：DEX -20~40%，资源 -10~30%。
+
+```groovy
+// build.gradle
+android {
+  buildTypes {
+    release {
+      minifyEnabled true        // 开启 Shrinking + Obfuscation + Optimization
+      shrinkResources true      // 开启 Resource Shrinking
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+}
+```
+
+**keep 规则**（`proguard-rules.pro`）— 决定哪些不能被缩减/混淆：
+
+```
+# 反射用到的类不能混淆（否则运行时找不到）
+-keep class com.myapp.ble.** { *; }
+
+# JNI 调用的方法不能混淆（C++ 通过名字找）
+-keepclassmembers class * { native <methods>; }
+
+# TurboModule 的类名不能混淆（RN 通过类名注册）
+-keep class * extends com.facebook.react.bridge.ReactContextBaseJavaModule { *; }
+```
+
+**keep 越多 → 收益越小**。精细化 keep 规则（只保留必须的）是提升 R8 收益的关键。
 
 ---
 

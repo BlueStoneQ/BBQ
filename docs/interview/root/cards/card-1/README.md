@@ -15,6 +15,9 @@
 - [性能分析工具与排查](../../RN/performance-profiling.md)
 - [Native 层预请求 & 预加载](../../RN/native-prefetch.md)
 - [图片优化](./perf-image.md)
+- [自动化测试体系（pytest + uiautomator2 三端）](../../../../resume/explain/3.1-xm/quickapp-framework/additional-contributions.md)
+- [快应用框架指标体系（预装包场景）](../../../../resume/explain/3.1-xm/quickapp-framework/framework-metrics.md)
+- [快应用模块裁剪方案](../../../../resume/explain/3.1-xm/quickapp-framework/module-trimming.md)
 - [iOS 性能优化专题](./ios/README.md)
 
 ---
