@@ -9,12 +9,178 @@
 ## 目录
 
 - [一、Theme 系统（Light/Dark）](#一theme-系统lightdark)
+  - [本质](#本质)
+  - [系统事件](#系统事件)
+  - [切换策略](#切换策略)
+  - [推荐实现（完整方案）](#推荐实现zustand--appearance-完整方案)
+  - [和 Web 的区别](#和-web-的区别)
 - [二、国际化方案（i18n）](#二国际化方案i18n)
 - [三、Theme + i18n 的统一架构](#三theme--i18n-的统一架构)
 
 ---
 
 ## 一、Theme 系统（Light/Dark）
+
+### 本质
+
+**用 Zustand/Context 存一组颜色变量，组件不硬编码任何颜色，都从 store 中取。切换主题 = 切换 store 中的颜色对象 → 订阅了该颜色的组件重渲染。**
+
+RN 没有 CSS 变量（不是 Web），样式全是 JS 对象，所以只能走 JS 状态方案。
+
+### 系统事件
+
+RN 提供 `Appearance` API 监听系统深色模式切换：
+
+```tsx
+import { Appearance, useColorScheme } from 'react-native';
+
+// 获取当前系统主题
+const colorScheme = Appearance.getColorScheme();  // 'light' | 'dark'
+
+// 监听系统切换（用户在系统设置里切深色模式时触发）
+Appearance.addChangeListener(({ colorScheme }) => {
+  useThemeStore.setState({ theme: colorScheme === 'dark' ? themes.dark : themes.light });
+});
+
+// Hook 方式（组件内用）
+function App() {
+  const systemTheme = useColorScheme();  // 系统切换时自动更新
+}
+```
+
+### 切换策略
+
+| 策略 | 做法 |
+|------|------|
+| 跟随系统 | 监听 Appearance 变化 → 自动切换 store 中的 theme |
+| 用户手动 | App 内切换按钮 → 覆盖系统设置 → 持久化到 AsyncStorage |
+| 混合（推荐） | 默认跟随系统，用户可手动覆盖，覆盖后不再跟随 |
+
+### 推荐实现（Zustand + Appearance 完整方案）
+
+```tsx
+// ─── 1. 定义主题变量 ───
+// src/theme/themes.ts
+export const themes = {
+  light: { bg: '#ffffff', text: '#1a1a1a', primary: '#3b82f6', card: '#f5f5f5' },
+  dark:  { bg: '#1a1a1a', text: '#f5f5f5', primary: '#60a5fa', card: '#2a2a2a' },
+};
+export type Theme = typeof themes.light;
+
+// ─── 2. Zustand Store 管理当前主题 ───
+// src/theme/store.ts
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appearance } from 'react-native';
+
+type ThemeMode = 'light' | 'dark' | 'system';  // system = 跟随系统
+
+interface ThemeStore {
+  mode: ThemeMode;
+  theme: Theme;
+  setMode: (mode: ThemeMode) => void;
+}
+
+export const useThemeStore = create<ThemeStore>()(
+  persist(
+    (set) => ({
+      mode: 'system',  // 默认跟随系统
+      theme: resolveTheme('system'),
+      setMode: (mode) => set({ mode, theme: resolveTheme(mode) }),
+    }),
+    {
+      name: 'theme-storage',
+      storage: createJSONStorage(() => AsyncStorage),  // 持久化用户选择
+    }
+  )
+);
+
+// 根据 mode 解析实际主题
+function resolveTheme(mode: ThemeMode): Theme {
+  if (mode === 'system') {
+    return Appearance.getColorScheme() === 'dark' ? themes.dark : themes.light;
+  }
+  return mode === 'dark' ? themes.dark : themes.light;
+}
+
+// ─── 3. App 根组件：监听系统主题变化 ───
+// App.tsx
+import { useEffect } from 'react';
+import { Appearance } from 'react-native';
+import { useThemeStore } from './theme/store';
+
+export default function App() {
+  const mode = useThemeStore(s => s.mode);
+
+  useEffect(() => {
+    // 只有 mode = 'system' 时才跟随系统变化
+    if (mode !== 'system') return;
+
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      useThemeStore.setState({
+        theme: colorScheme === 'dark' ? themes.dark : themes.light,
+      });
+    });
+    return () => subscription.remove();
+  }, [mode]);
+
+  return <Navigation />;
+}
+
+// ─── 4. 组件中使用（selector 精准订阅单个颜色） ───
+// src/components/Card.tsx
+import { View, Text, StyleSheet } from 'react-native';
+import { useThemeStore } from '../theme/store';
+
+export function Card({ title }: { title: string }) {
+  // 只订阅用到的颜色，其他颜色变了不重渲染
+  const bg = useThemeStore(s => s.theme.card);
+  const textColor = useThemeStore(s => s.theme.text);
+
+  return (
+    <View style={[styles.card, { backgroundColor: bg }]}>
+      <Text style={{ color: textColor }}>{title}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: { padding: 16, borderRadius: 8, marginBottom: 12 },
+});
+
+// ─── 5. 设置页：用户手动切换 ───
+// src/screens/Settings.tsx
+export function ThemeSettings() {
+  const mode = useThemeStore(s => s.mode);
+  const setMode = useThemeStore(s => s.setMode);
+
+  return (
+    <View>
+      <Button title="跟随系统" onPress={() => setMode('system')} selected={mode === 'system'} />
+      <Button title="浅色" onPress={() => setMode('light')} selected={mode === 'light'} />
+      <Button title="深色" onPress={() => setMode('dark')} selected={mode === 'dark'} />
+    </View>
+  );
+}
+```
+
+**完整链路**：
+```
+themes.ts（定义颜色变量）
+  → store.ts（Zustand 管理当前主题 + 持久化用户选择）
+  → App.tsx（监听系统 Appearance 变化 → 更新 store）
+  → 组件（selector 精准订阅颜色 → 自动响应切换）
+  → Settings（用户手动切换 → setMode → 持久化）
+```
+
+### 和 Web 的区别
+
+| | Web | RN |
+|--|-----|-----|
+| 方案 | CSS 变量 `var(--color-bg)` | JS 对象（Zustand/Context） |
+| 切换开销 | 零 JS 重渲染（纯 CSS 层） | 触发组件重渲染（JS 状态变了） |
+| 优化手段 | 不需要 | Zustand selector 精准订阅 |
 
 ### 为什么必须做？
 

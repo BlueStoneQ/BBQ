@@ -13,6 +13,75 @@
 4. **复杂问题攻关**：主导解决底层技术难题，如复杂手势动画、原生混合开发深度适配、动态化方案等。能够独立分析、解决和归纳复杂技术问题
 5. **规范与协作**：制定前端开发规范，主导技术方案评审，并指导和提升团队整体技术水平
 
+### JD1 复习索引
+
+#### 1. 技术架构与规划
+
+> 负责公司移动端及大前端的技术发展规划、系统架构设计，并主导实现。评估和引入前沿技术，为产品中长期发展进行技术储备
+
+| JD 子主题 | 文档（主题） |
+|-----------|-------------|
+| 技术发展规划 | [rn-2026-stack](./RN/rn-2026-stack.md)（2026 技术选型 + 目录结构 + 状态管理） |
+| 系统架构设计 | [card-2 README](./cards/card-2/README.md)（JSI/TurboModule 架构 + 调用链 + 内存模型） |
+| 主导实现 | [turbomodule-dev-guide](./RN/turbomodule-dev-guide.md)（TurboModule 全流程：Spec → Codegen → Android → iOS → Pure C++） |
+| 评估和引入前沿技术 | [cross-platform-comparison](../../resume/explain/3.1-xm/quickapp-framework/cross-platform-comparison.md)（RN vs Flutter vs 小程序 vs 快应用对比） |
+| 技术储备 | [rn-full-picture](./RN/rn-full-picture.md)（RN 全景：构建 → 启动 → 渲染 → 通信） |
+
+#### 2. 基础架构与工程化
+
+> 设计和推动 RN 基础架构升级与组件体系优化，搭建前端框架、制定通用组件方案，并推动前端工程化、自动化与工具化建设
+
+| JD 子主题 | 文档（主题） |
+|-----------|-------------|
+| RN 基础架构升级 | [rn-engineering-deep](./cards/card-3/rn-engineering-deep.md)（多 Bundle 容器 + 实例池 + 原生路由 + 热更新） |
+| 组件体系优化 | [architecture-engineering](./RN/architecture-engineering.md)（DDD 目录 + 组件分层 + Design System） |
+| 搭建前端框架 | [code-splitting](./RN/code-splitting.md)（分 Bundle 构建拆分 + 运行时加载 + 路由配合） |
+| 通用组件方案 | [theme-i18n](./RN/theme-i18n.md)（Theme 系统 + Design Token + 国际化） |
+| 前端工程化 | [ci-quality-gate](./cards/card-3/ci-quality-gate.md)（GitLab CI 五层卡点 + Pipeline） |
+| 自动化 | [docker-k8s](./cards/card-3/docker-k8s.md)（Docker 构建 + K8s 部署 + CI 集成） |
+| 工具化建设 | [card-3 README](./cards/card-3/README.md)（CLI 脚手架 + 物料调试中心 + 依赖分析引擎） |
+
+#### 3. 性能与质量保障
+
+> 持续改进移动应用的性能、安全性、稳定性和可扩展性。主导启动速度、渲染效率、内存管理等关键性能指标的优化
+
+| JD 子主题 | 文档（主题） |
+|-----------|-------------|
+| 性能 | [performance](./RN/performance.md)（启动/渲染/内存/列表/下沉策略）、[performance-layers](./RN/performance-layers.md)（分层优化体系） |
+| 安全性 | [ci-quality-gate](./cards/card-3/ci-quality-gate.md)（依赖漏洞扫描 + 签名校验 + Secret 检测） |
+| 稳定性 | [app-metrics](./RN/app-metrics.md)（Crash/ANR/JS Error/白屏检测 + 回滚机制） |
+| 可扩展性 | [rn-engineering-deep](./cards/card-3/rn-engineering-deep.md)（多 Bundle 模块化 + DDD + 实例池） |
+| 启动速度 | [native-prefetch](./RN/native-prefetch.md)（Native 预请求 + 引擎预热 + Hermes 预编译） |
+| 渲染效率 | [performance](./RN/performance.md)（FPS/列表优化/memo/动画下沉 Native）、[gesture-animation](./RN/gesture-animation.md)（Reanimated 3） |
+| 内存管理 | [performance-layers](./RN/performance-layers.md)（PSS 监控/泄漏检测/LRU 实例池） |
+| 关键性能指标 | [app-metrics](./RN/app-metrics.md)（指标定义 + 目标值 + 测量方式 + 监控架构） |
+| 包体 | [bundle-size](./cards/card-1/bundle-size.md)（ABI Split + Hermes .hbc + 分 Bundle + 资源优化） |
+| 性能分析工具 | [performance-profiling](./RN/performance-profiling.md)（Profiler/Systrace/Flipper/排查 SOP） |
+
+#### 4. 复杂问题攻关
+
+> 主导解决底层技术难题，如复杂手势动画、原生混合开发深度适配、动态化方案等。能够独立分析、解决和归纳复杂技术问题
+
+| JD 子主题 | 文档（主题） |
+|-----------|-------------|
+| 复杂手势动画 | [gesture-animation](./RN/gesture-animation.md)（Reanimated 3 + Gesture Handler + 动画下沉 Native） |
+| 原生混合开发深度适配 | [card-2 README](./cards/card-2/README.md)（JSI + JNI + ObjC Bridge 全链路）、[ios-for-rn](./RN/ios-for-rn.md)（iOS 侧开发 + 构建 + 性能） |
+| 动态化方案 | [rn-engineering-deep](./cards/card-3/rn-engineering-deep.md)（热更新 Native 端方案 + 版本管理 + 回滚） |
+| 底层技术难题 | [turbomodule-dev-guide](./RN/turbomodule-dev-guide.md)（TurboModule Android + iOS + Pure C++ 完整开发） |
+| IoT 设备通信 | [iot-ble-performance](./RN/iot-ble-performance.md)（BLE+WiFi 共存 + 流畅度 + ArrayBuffer 零拷贝） |
+| 快应用底层经验 | [j2v8-deep](../../resume/explain/3.1-xm/quickapp-framework/j2v8-deep.md)（V8 + J2V8 同步 Bridge） |
+
+#### 5. 规范与协作
+
+> 制定前端开发规范，主导技术方案评审，并指导和提升团队整体技术水平
+
+| JD 子主题 | 文档（主题） |
+|-----------|-------------|
+| 前端开发规范 | [ci-quality-gate](./cards/card-3/ci-quality-gate.md)（Lint → Hooks → CI 全链路卡控） |
+| 技术方案评审 | [card-3 README](./cards/card-3/README.md)（工程化体系全景 + 规划路径） |
+| 指导和提升团队技术水平 | [React 知识体系](./React/README.md)（Hooks/Fiber/Diff/性能/状态管理）、[debugging-issues](./RN/debugging-issues.md)（调试与问题归因） |
+| Theme + 国际化规范 | [theme-i18n](./RN/theme-i18n.md)（Zustand + Appearance + i18n + RTL） |
+
 ---
 
 ## JD2（补充参考）：RN 开发工程师（IoT）

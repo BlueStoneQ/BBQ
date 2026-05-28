@@ -132,6 +132,60 @@ App 进程创建
 | **白屏** | JS Bundle 加载失败、网络超时 | 离线包 + 降级 H5 |
 | **热更新失败** | 包损坏、版本不兼容 | 校验 + 回滚机制 |
 
+### 白屏检测方案
+
+**什么是白屏**：页面加载后超过阈值时间（如 3s）仍未渲染出有效内容。
+
+**检测方式**：
+
+```tsx
+// 方式一：超时埋点（最常用）
+// 在页面组件中，mount 时启动计时器，首屏数据渲染后取消
+function Page() {
+  const rendered = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!rendered.current) {
+        // 超过 3s 未渲染 = 白屏，上报
+        reportWhiteScreen({ page: 'DeviceList', duration: 3000 });
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 数据到达后标记已渲染
+  useEffect(() => {
+    if (data) rendered.current = true;
+  }, [data]);
+}
+```
+
+```kotlin
+// 方式二：Native 侧截图检测（更准确）
+// 页面加载后延迟截图，检测像素是否全白/全黑
+fun detectWhiteScreen(rootView: View, delayMs: Long = 3000) {
+    Handler(Looper.getMainLooper()).postDelayed({
+        val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
+        Canvas(bitmap).also { rootView.draw(it) }
+        
+        // 采样检测：取若干像素点，判断是否全是同一颜色（白/黑）
+        val isBlank = samplePixels(bitmap).all { it == Color.WHITE || it == Color.BLACK }
+        if (isBlank) reportWhiteScreen()
+    }, delayMs)
+}
+```
+
+**常见白屏原因 + 防治**：
+
+| 原因 | 防治 |
+|------|------|
+| JS Bundle 加载失败（网络/文件损坏） | 离线包兜底 + hash 校验 + 回退内置版本 |
+| JS 执行报错（未捕获异常） | ErrorBoundary + 降级 UI |
+| 首屏接口超时 | 数据预请求 + 骨架屏 + 超时降级 |
+| RN 引擎初始化失败 | Native 层 try-catch + 降级到 H5 |
+
 ---
 
 ## 包体指标

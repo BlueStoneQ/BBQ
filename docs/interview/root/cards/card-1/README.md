@@ -9,6 +9,12 @@
 ## 文档索引
 
 - [包体优化方案（ABI Split / JS Bundle / 资源）](./bundle-size.md)
+- [RN App 指标体系（启动/渲染/交互/稳定性/监控/白屏检测）](../../RN/app-metrics.md)
+- [性能优化](../../RN/performance.md)
+- [性能优化分层体系](../../RN/performance-layers.md)
+- [性能分析工具与排查](../../RN/performance-profiling.md)
+- [Native 层预请求 & 预加载](../../RN/native-prefetch.md)
+- [iOS 性能优化专题](./ios/README.md)
 
 ---
 
@@ -22,50 +28,50 @@
 
 ### 一、启动
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| RN App 启动（冷启动全链路） | [perf-splash.md](./perf-splash.md) | ✅ |
-| 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./perf-splash.md) | ✅ |
-| CLS 抖动（布局跳动） | [perf-cls.md](./perf-cls.md) | ✅ |
-| 页面路由切换 | [perf-navigation.md](./perf-navigation.md) | ✅ |
-| WebView 加载 | [perf-webview.md](./perf-webview.md) | ✅ |
-| 白屏检测与治理 | [perf-whitescreen.md](./perf-whitescreen.md) | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| RN App 启动（冷启动全链路） | [perf-splash.md](./perf-splash.md) | [ios-launch.md](./ios/ios-launch.md) |
+| 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./perf-splash.md) | [ios-launch.md](./ios/ios-launch.md) |
+| CLS 抖动（布局跳动） | [perf-cls.md](./perf-cls.md) | 同（JS 层，两端通用） |
+| 页面路由切换 | [perf-navigation.md](./perf-navigation.md) | 同（React Navigation 两端通用） |
+| WebView 加载 | [perf-webview.md](./perf-webview.md) | 同（WKWebView 对应 Android WebView） |
+| 白屏检测与治理 | [perf-whitescreen.md](./perf-whitescreen.md) | 同（JS 层检测两端通用） |
 
 ### 二、流畅度
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| 列表滑动流畅度（60fps） | [perf-list.md](./perf-list.md) | ✅ |
-| 手势动画（跟手 + 不掉帧） | [perf-animation.md](./perf-animation.md) | ✅ |
-| JS Bridge 通信阻塞 | [perf-bridge.md](./perf-bridge.md) | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 列表滑动流畅度（60fps） | [perf-list.md](./perf-list.md) | [ios-rendering.md](./ios/ios-rendering.md) |
+| 手势动画（跟手 + 不掉帧） | [perf-animation.md](./perf-animation.md) | [ios-rendering.md](./ios/ios-rendering.md) |
+| JS Bridge 通信阻塞 | [perf-bridge.md](./perf-bridge.md) | 同（JSI 两端通用） |
 
 ### 三、包体
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| Bundle 体积优化 | [perf-bundle.md](./perf-bundle.md) | ✅ |
-| 打包流程优化 | [perf-build.md](./perf-build.md) | ✅ |
-| 多 Bundle 方案 | → 详见 [architecture-engineering.md](../../RN/architecture-engineering.md) / XRN | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| Bundle 体积优化 | [perf-bundle.md](./perf-bundle.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
+| 打包流程优化 | [perf-build.md](./perf-build.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
+| 多 Bundle 方案 | → [architecture-engineering.md](../../RN/architecture-engineering.md) | 同（两端共用方案） |
 
 ### 四、内存与稳定性
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| 内存泄漏 + 内存优化 | [perf-memory.md](./perf-memory.md) | ✅ |
-| 闪退（Crash）治理 | [perf-crash.md](./perf-crash.md) | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 内存泄漏 + 内存优化 | [perf-memory.md](./perf-memory.md) | [ios-memory.md](./ios/ios-memory.md) |
+| 闪退（Crash）治理 | [perf-crash.md](./perf-crash.md) | [ios-stability.md](./ios/ios-stability.md) |
 
 ### 五、交互体验反馈
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| 加载态（骨架屏/Shimmer） | [ux-loading.md](./ux-loading.md) | ✅ |
-| 按钮状态机 + Pressable 反馈 + 乐观更新 | [ux-feedback.md](./ux-feedback.md) | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 加载态（骨架屏/Shimmer） | [ux-loading.md](./ux-loading.md) | 同（JS 层，两端通用） |
+| 按钮状态机 + Pressable 反馈 + 乐观更新 | [ux-feedback.md](./ux-feedback.md) | 同（JS 层，两端通用） |
 
 ### 六、性能监控体系
 
-| 子场景 | 文档 | 状态 |
-|--------|------|------|
-| 监控指标 + 工具 + CI 卡点 + 自动化测试 | [perf-monitoring.md](./perf-monitoring.md) | ✅ |
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 监控指标 + 工具 + CI 卡点 + 自动化测试 | [perf-monitoring.md](./perf-monitoring.md) | [ios-stability.md](./ios/ios-stability.md)（监控部分） |
 
 ---
 
