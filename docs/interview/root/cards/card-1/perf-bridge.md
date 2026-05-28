@@ -15,6 +15,10 @@
   - [根本方案：迁移 TurboModule（JSI）](#根本方案迁移-turbomodulejsi)
   - [辅助方案：Native 层事件聚合](#辅助方案native-层事件聚合)
   - [辅助方案：状态精准更新](#辅助方案状态精准更新)
+- [JS 线程阻塞的通用解决方案](#js-线程阻塞的通用解决方案)
+  - [InteractionManager.runAfterInteractions](#1-interactionmanagerrunafterinteractions)
+  - [useTransition / startTransition](#2-usetransition--starttransitionreact-18)
+  - [requestAnimationFrame 分帧执行](#3-requestanimationframe-分帧执行)
 - [和 card-2 的关系](#和-card-2-的关系)
 
 ---
@@ -92,3 +96,123 @@ const pressure = useDeviceStore(s => s.pressure);
 ## 和 card-2 的关系
 
 Bridge 阻塞的**根本解决方案**（TurboModule/JSI 架构）在 [card-2（跨层通信架构）](../card-2/README.md) 中详细展开。本文聚焦"性能视角下的分析和优化"。
+
+
+---
+
+## JS 线程阻塞的通用解决方案
+
+### 本质
+
+JS 线程被长任务占据 → 没时间做 Diff/布局计算 → UI 线程收不到新指令 → 画面不更新 = 卡顿。
+
+解决思路：**减少 JS 工作量、拆分 JS 工作、绕过 JS**。
+
+### 拆分工作（三种主流方案）
+
+#### 1. InteractionManager.runAfterInteractions
+
+**是什么**：RN 提供的 API，把任务延迟到当前动画/交互完成后再执行。
+
+**原理**：RN 内部维护一个"交互队列"，动画/手势进行时不执行你注册的回调，交互结束后才执行。
+
+**使用场景**：页面切换后的数据加载、进入页面后的非首屏初始化。
+
+```tsx
+// 页面切换动画完成后再加载重数据
+useEffect(() => {
+  const task = InteractionManager.runAfterInteractions(() => {
+    // 这里的代码不会在动画期间执行，不会导致动画卡顿
+    loadHeavyData();
+    initAnalytics();
+  });
+  return () => task.cancel();
+}, []);
+```
+
+**是否主流**：✅ RN 官方推荐，最常用的延迟执行方案。
+
+---
+
+#### 2. useTransition / startTransition（React 18+）
+
+**是什么**：React 18 的并发特性，把状态更新标记为"低优先级，可中断"。
+
+**原理**：标记为 transition 的更新，React 会在空闲时间片执行，如果中间有高优任务（用户输入）会暂停 transition 让出 JS 线程。
+
+**使用场景**：搜索过滤大列表、切换 Tab 加载大量数据。
+
+```tsx
+function Search() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  function handleChange(e) {
+    setQuery(e.target.value);  // 高优：输入框立即响应
+
+    startTransition(() => {
+      // 低优：过滤 10000 条数据，可被中断
+      setResults(filterHugeList(e.target.value));
+    });
+  }
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      {isPending ? <Spinner /> : <ResultList items={results} />}
+    </>
+  );
+}
+```
+
+**是否主流**：✅ React 18+ 官方推荐，RN 0.72+ 支持。适合"输入 + 大列表过滤"场景。
+
+---
+
+#### 3. requestAnimationFrame 分帧执行
+
+**是什么**：把大任务拆成多个小块，每帧只执行一块，不阻塞渲染。
+
+**原理**：每个 rAF 回调在下一帧开始前执行，执行完一块后让出线程，下一帧再执行下一块。
+
+**使用场景**：一次性渲染大量节点、批量数据处理。
+
+```tsx
+// 把 10000 条数据分批渲染，每帧渲染 100 条
+function useBatchRender(items: Item[], batchSize = 100) {
+  const [rendered, setRendered] = useState<Item[]>([]);
+
+  useEffect(() => {
+    let index = 0;
+
+    function renderBatch() {
+      const nextBatch = items.slice(index, index + batchSize);
+      setRendered(prev => [...prev, ...nextBatch]);
+      index += batchSize;
+
+      if (index < items.length) {
+        requestAnimationFrame(renderBatch);  // 下一帧继续
+      }
+    }
+
+    requestAnimationFrame(renderBatch);
+  }, [items]);
+
+  return rendered;
+}
+```
+
+**是否主流**：⚠️ 可用但不是首选。优先用 `useTransition`（React 自动调度），rAF 分帧是手动版本，适合 React 17 或需要精确控制的场景。
+
+---
+
+### 三种方案对比
+
+| 方案 | 适用场景 | 粒度 | React 版本 |
+|------|---------|------|-----------|
+| `InteractionManager` | 动画期间延迟执行 | 整个任务延后 | 任意 |
+| `useTransition` | 大状态更新可中断 | React 自动拆分 | 18+（RN 0.72+） |
+| `rAF 分帧` | 手动分批渲染/计算 | 你控制每批大小 | 任意 |
+
+**推荐优先级**：useTransition > InteractionManager > rAF 分帧

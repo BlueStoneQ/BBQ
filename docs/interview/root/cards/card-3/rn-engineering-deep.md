@@ -152,6 +152,17 @@ class ReactInstancePool(private val application: Application) {
      *   3. 热更新后：Bundle 版本变了 → 旧实例失效，移除并销毁
      *   4. App 退到后台超时：超过 5 分钟 → 清空非 common 实例
      *
+     * 【内存压力响应机制】
+     *   Android：Application.onTrimMemory(level) 回调
+     *     - TRIM_MEMORY_RUNNING_LOW → 清除非活跃实例
+     *     - TRIM_MEMORY_RUNNING_CRITICAL → 只保留 common，其他全部销毁
+     *     - TRIM_MEMORY_UI_HIDDEN → App 进入后台，释放 UI 资源
+     *   iOS：didReceiveMemoryWarning 回调
+     *     - 清除图片缓存 + 释放非当前页面实例
+     *   代码中主动查询：
+     *     - Android: ActivityManager.getMemoryInfo() → availMem
+     *     - iOS: os_proc_available_memory()（iOS 13+）
+     *
      * 【池中没有可用实例时怎么办】
      *   → 创建新实例（createFeatureInstance）
      *   → 加载对应 Bundle
@@ -482,6 +493,33 @@ class PrefetchManager(private val context: Context) {
   │
   ▼ 实例加载 Bundle → JS 执行 → 读取预请求数据 → 渲染首屏
 ```
+
+### Splash 阶段并行策略
+
+**核心思路**：App 启动的 Splash 阶段（用户看 logo 的 1~2s），后台同时做三件事，互不阻塞：
+
+```
+Splash 阶段（Application.onCreate / AppDelegate.didFinishLaunching）：
+
+  线程 1：检查热更新 + 下载新 Bundle 到本地磁盘
+           （后台静默，不阻塞启动，本次不生效，下次冷启动生效）
+
+  线程 2：容器池预热（createReactContextInBackground）
+           用本地已有的 Bundle（上次下载好的 / APK 内置的）初始化引擎
+           → 引擎就绪，用户进入 RN 页面时秒出
+
+  线程 3：预请求首屏数据（OkHttp / NSURLSession）
+           → 数据缓存到内存，JS 加载完直接读取
+
+三者完全解耦：
+  - 容器永远从本地读 Bundle（不等下载）
+  - 下载只是更新本地文件（不影响当前启动）
+  - 预请求和引擎初始化互不依赖
+```
+
+**效果**：
+- 本次启动：用本地 Bundle + 预热引擎 + 预请求数据 → 首屏秒出
+- 新 Bundle 下载完成 → 存到热更新目录 → 下次冷启动自动加载新版本
 
 ---
 

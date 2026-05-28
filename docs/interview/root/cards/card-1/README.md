@@ -14,6 +14,7 @@
 - [性能优化分层体系](../../RN/performance-layers.md)
 - [性能分析工具与排查](../../RN/performance-profiling.md)
 - [Native 层预请求 & 预加载](../../RN/native-prefetch.md)
+- [图片优化](./perf-image.md)
 - [iOS 性能优化专题](./ios/README.md)
 
 ---

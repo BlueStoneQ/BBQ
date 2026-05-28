@@ -92,6 +92,13 @@ android {
 
 **效果**：用户实际下载的包体减少 40~60%（只有一套 SO）。
 
+**AAB 你需要做什么**：
+1. `abiFilters` 配置支持的架构（`arm64-v8a` + 可选 `armeabi-v7a`）
+2. 签名配置（`signingConfigs` 中配好 keystore）
+3. 构建命令用 `./gradlew bundleRelease`（不是 `assembleRelease`）
+4. 上传 `.aab` 到 Google Play Console → Play 自动按设备裁剪下发
+5. 不需要其他额外配置，Play 自动处理 ABI/屏幕密度/语言的拆分
+
 ### 方案二：Split APK（国内商店 / 预装）
 
 ```groovy
