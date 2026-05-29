@@ -38,6 +38,7 @@
 - [架构和工程化治理](./architecture-engineering.md) — DDD / 多 Bundle / 热更新 / CLI / 实例池
 - [分 Bundle 方案](./code-splitting.md) — 构建拆分 / 运行时加载 / 路由配合
 - [RN 工程化深度方案](../cards/card-3/rn-engineering-deep.md) — 多 Bundle 容器 / 原生路由 / 两层路由设计 / 热更新
+- [签名与发布全流程](./signing-and-release.md) — Android keystore + iOS 证书 + CI 自动化 + Fastlane
 - [条件编译](./conditional-compile.md) — 包体裁剪
 - [2026 选型](./rn-2026-stack.md) — 技术栈 + 目录结构 + 状态管理
 

@@ -160,7 +160,7 @@ function Header() {
 
   return (
     <div>
-      <h1>{t('welcome', { name: '乔阳' })}</h1>  {/* 欢迎，乔阳 */}
+      <h1>{t('welcome', { name: 'Alex' })}</h1>  {/* 欢迎，Alex */}
       <p>{t('items_count', { count: 5 })}</p>     {/* 5 个项目 */}
 
       {/* 切换语言 */}

@@ -103,6 +103,8 @@ useEffect(() => {
 
 **DEX 布局优化 = 把启动时用到的类排在 DEX 文件前面**，让热代码集中在前几页 → 少读磁盘页 → page fault 减少 → PSS 降低。
 
+**底层逻辑**：操作系统通过 mmap 按**页（4KB）**这个粒度加载文件到内存。不是一次性加载整个 DEX，而是访问到哪一页才加载哪一页（触发 page fault → 内核从磁盘读该页到内存）。热代码集中在前几页 = 启动时只需加载少量页 = 内存占用低。冷代码在后面的页里，启动时没被访问 → 不触发 page fault → 不加载 → 不占内存。
+
 ```
 优化前：
   DEX 文件：[冷类A][热类B][冷类C][热类D][冷类E][热类F]...
@@ -189,7 +191,7 @@ HSPLcom/myapp/MainActivity;->onCreate(Landroid/os/Bundle;)V
 #### Step 3：构建时自动重排
 
 ```groovy
-// app/build.gradle（AGP 7.0+ 自动支持）
+// app/build.gradle（AGP（Android Gradle Plugin，Google 提供的 Android 构建插件）7.0+ 自动支持）
 android {
     buildTypes {
         release {

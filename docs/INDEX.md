@@ -6,6 +6,7 @@
 
 ## 准备相关
 
+- [速查手册（面试前 5 分钟）](./interview/root/cheatsheet.md)
 - [三张核心牌](./interview/root/cards/README.md)
   - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
   - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
@@ -47,6 +48,14 @@
 ## React
 
 - [React Quick Review](./interview/root/React/README.md)
+
+## Electron
+
+- [Electron 核心概念](./interview/root/Electron/README.md)
+
+## Flutter
+
+- [Flutter 核心概念](./interview/root/Flutter/README.md)
 
 ---
 
