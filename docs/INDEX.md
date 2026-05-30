@@ -7,6 +7,8 @@
 ## 准备相关
 
 - [速查手册（面试前 5 分钟）](./interview/root/cheatsheet.md)
+- [JS 手写题](./writeByHand/JavaScript-Coding-Questions.md)
+- [算法速查（🔥优先题 + 模式）](./writeByHand/algorithm-cheatsheet.md)
 - [三张核心牌](./interview/root/cards/README.md)
   - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
   - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
@@ -20,6 +22,8 @@
 - [GoodNotes JD](./interview/goodnotes/jd.md)
 - [DJI JD](./interview/dji/jd.md)
 - [Kimi JD](./interview/kimi/jd.md)
+- [KS JD](./interview/kuaishou/jd.md)
+- [BT JD](./interview/BT/jd.md)
 - [Anker JD](./interview/anker/jd.md)
 
 ---
@@ -88,7 +92,7 @@
 ## AI Agent
 
 - [AI Agent 概念解释](./resume/explain/ai-agent.md)
-- [Mako 框架](./project/AI/mako/README.md)
+- [Mako 框架（索引）](./project/AI/mako/README.md)
 - [Mako Deep Dive](./project/AI/mako/mako-project-deep-dive.md)
 
 ---
