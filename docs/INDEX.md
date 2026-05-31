@@ -7,9 +7,6 @@
 ## 准备相关
 
 - [速查手册（面试前 5 分钟）](./interview/root/cheatsheet.md)
-- [JS 手写题（索引）](./writeByHand/js-coding/README.md)
-- [算法速查（🔥优先题 + 模式）](./writeByHand/algorithm-cheatsheet.md)
-- [错题集](./writeByHand/mistakes.md)
 - [三张核心牌](./interview/root/cards/README.md)
   - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
   - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
@@ -17,7 +14,8 @@
 - [路特 JD + 准备](./interview/root/jd.md)
 - [路特 prep](./interview/root/prep.md)
 - [路特笔记](./interview/root/note.md)
-- [阶跃 JD](./interview/jieyue/jd.md)
+- [JY JD](./interview/jieyue/jd.md)
+- [JY prep](./interview/jieyue/prep.md)
 - [PD JD](./interview/pudu/jd.md)
 - [DD JD](./interview/DiDi/jd.md)
 - [GoodNotes JD](./interview/goodnotes/jd.md)
@@ -93,7 +91,12 @@
 ## AI Agent
 
 - [AI Agent 概念解释](./resume/explain/ai-agent.md)
+- [AI Agent 核心概念（通识）](./project/AI/ai-agent-core-concepts.md)
+- [LangChain 第一性原理理解](./project/AI/langchain-understanding.md)
+- [LangGraph 第一性原理理解](./project/AI/langgraph-understanding.md)
 - [Mako 框架（索引）](./project/AI/mako/README.md)
+- [Mako 速查手册](./project/AI/mako/mako-cheatsheet.md)
+- [Mako 5 层上下文管理](./project/AI/mako/mako-context-pipeline.md)
 - [Mako Deep Dive](./project/AI/mako/mako-project-deep-dive.md)
 
 ---
@@ -110,6 +113,24 @@
 - [resume v4](./resume/resume-draft-v4.md)
 - [resume explain 索引](./resume/explain/README.md)
 - [GitHub Profile README](./resume/github-profile-readme.md)
+
+
+## 手写专题
+
+- [JS 手写题（索引）](./writeByHand/js-coding/README.md)
+- [算法速查（🔥优先题 + 模式）](./writeByHand/algorithm-cheatsheet.md)
+- [错题集](./writeByHand/mistakes.md)
+
+---
+
+## 前端基础专题
+
+- [前端性能优化](./basic/前端性能优化面试知识梳理.md)
+- [Web 基础](./basic/Web基础面试知识梳理.md)
+- [React](./basic/React面试知识梳理.md)
+- [Vue](./basic/Vue面试知识梳理.md)
+- [React Native](./basic/ReactNative面试知识梳理.md)
+- [前端工程化](./basic/前端工程化面试知识梳理.md)
 
 ---
 

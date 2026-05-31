@@ -7,8 +7,9 @@
 - [零、第一性原理：Agent 的本质](#零第一性原理agent-的本质)
 - [一、基础概念层](#一基础概念层)
   - [1.1 LLM 基础](#11-llm-基础)
-  - [1.2 Prompt Engineering](#12-prompt-engineering)
-  - [1.3 Structured Output](#13-structured-output)
+  - [1.2 LLM 推理服务（模型怎么变成 API）](#12-llm-推理服务模型怎么变成-api)
+  - [1.3 Prompt Engineering](#13-prompt-engineering)
+  - [1.4 Structured Output](#14-structured-output)
 - [二、核心能力层](#二核心能力层)
   - [2.1 RAG（检索增强生成）](#21-rag检索增强生成)
   - [2.2 Function Calling / Tool Use](#22-function-calling--tool-use)
@@ -119,7 +120,62 @@ while (任务未完成) {
 - ❌ 不擅长：精确数学计算、实时信息、长期记忆、确定性输出
 - ⚠️ 核心问题：Hallucination（幻觉）— 一本正经地胡说八道
 
-### 1.2 Prompt Engineering
+### 1.2 LLM 推理服务（模型怎么变成 API）
+
+**问题**：LLM 模型本身只是一堆权重文件（几十 GB），怎么变成你能调用的 HTTP 接口？
+
+**本质**：模型文件 → 加载到 GPU 显存 → 推理进程逐 token 生成 → 推理框架包装成 HTTP API → 通过 SSE 流式输出。
+
+```
+模型权重文件（.safetensors）
+  ↓ 加载到 GPU 显存
+推理进程（GPU 上逐 token 采样生成）
+  ↓ 推理服务框架包装
+HTTP API 服务（监听端口，接收请求）
+  ↓ SSE 流式响应
+调用方（你的 BFF / Agent）
+```
+
+**推理服务框架**（把模型变成 API 的中间件）：
+
+| 框架 | 特点 |
+|------|------|
+| vLLM | 最流行的开源方案，PagedAttention 优化显存，高吞吐 |
+| TGI (Text Generation Inference) | HuggingFace 出品，生产级 |
+| TensorRT-LLM | NVIDIA 出品，极致性能优化 |
+| Ollama | 本地部署最简单，一行命令跑模型 |
+
+**完整链路（以 OpenAI API 为例）**：
+
+```
+你的代码: openai.chat.completions.create({ stream: true })
+  ↓ HTTPS 请求
+API 网关（api.openai.com）：鉴权、限流、计费、路由
+  ↓
+负载均衡：选一台有空闲 GPU 的推理节点
+  ↓
+推理节点（vLLM 进程）：
+  - 接收 prompt → Tokenize → 送入模型
+  - 模型在 GPU 上逐 token 采样（每个 token ~10-50ms）
+  - 每生成一个 token → 写入响应流
+  ↓ SSE（chunked transfer）
+API 网关 → 你的代码（逐 chunk 到达）
+```
+
+**关键认知**：
+
+| 问题 | 答案 |
+|------|------|
+| LLM 是一个进程吗？ | 对，从调用者视角就是一个服务进程。实际可能是多 GPU 分布式推理，但对外表现为一个 HTTP 服务 |
+| 为什么是逐 token 生成？ | 自回归模型的本质：每次只预测下一个 token，把它拼回输入再预测下一个。不能并行生成所有 token |
+| 为什么用 SSE 而不是等全部生成完？ | 生成 500 token 可能要 5-10 秒。SSE 让第一个 token ~200ms 就到达用户，体感延迟极低 |
+| 本地部署和云 API 的区别？ | 本地：`ollama run llama3` 起一个本地推理进程。云：调 OpenAI/阶跃的 API，他们帮你管 GPU 集群 |
+
+**面试话术**：
+
+> "LLM 本质上就是服务端的一个推理进程，跑在 GPU 上逐 token 采样生成。外面套一层推理服务框架（如 vLLM）包装成 HTTP API，通过 SSE 协议把每个生成的 token 流式推给调用方。从前端/Agent 开发者的视角，它就是一个支持流式响应的 HTTP 接口。"
+
+### 1.3 Prompt Engineering
 
 让模型按你的意图输出的技术。不是"会说话"，而是一种工程化的输入设计。
 
@@ -135,7 +191,7 @@ while (任务未完成) {
 
 **Prompt 工程的本质**：把你的意图、约束、上下文、示例，用结构化的方式喂给模型，让它在你划定的范围内输出。
 
-### 1.3 Structured Output
+### 1.4 Structured Output
 
 让模型输出 JSON、XML 等结构化格式，方便程序解析。
 
@@ -188,6 +244,43 @@ LLM 生成回答（基于检索到的内容）
 - RAG：不改模型，改输入。适合知识库问答、文档检索。成本低，实时更新。
 - Fine-tuning：改模型权重。适合风格/格式/领域适配。成本高，更新慢。
 - 大部分场景 RAG 就够了，Fine-tuning 是最后手段。
+
+#### 第一性原理：RAG 的本质
+
+**RAG 不是 LLM 提供的能力，是开发者在 LLM 外面搭的一套"先查后问"的流程。**
+
+LLM 的视角：它只是收到了一段更长的 prompt（里面恰好包含了相关资料），然后照着回答。它不知道这些资料是你从向量数据库里查出来的。本质就是**更聪明的 prompt 组装**。
+
+**RAG 跑在哪里？** 服务端。前端只发一个普通聊天请求，感知不到 RAG 的存在。
+
+**RAG 和向量数据库的关系？** 向量数据库是 RAG 的一个零件（负责"检索"这一步），不是 RAG 本身。你也可以用关键词搜索（BM25）代替向量检索，甚至文档够短时直接全文塞进 prompt。
+
+**RAG 需要调用的三个核心能力**：
+
+| 能力 | 解决什么 | 用什么 |
+|------|---------|--------|
+| Embedding API | 文本 → 向量 | OpenAI `text-embedding-3` |
+| 向量数据库 | 存向量 + 相似度检索 | Pinecone / Milvus / Chroma / pgvector |
+| LLM API | 基于检索结果生成回答 | GPT-4 / Claude |
+
+#### Coding Agent 为什么不用传统 RAG？
+
+Claude Code / Cursor / Mako 这类 Coding Agent 没有向量数据库，用的是 **Tool Use 代替向量检索**：
+
+| 对比 | 传统 RAG | Coding Agent |
+|------|---------|--------------|
+| 怎么让 LLM 知道你的数据 | 预先向量化 → 检索 → 塞进 prompt | 实时用工具读文件（`read_file` / `search`） |
+| 检索方式 | Embedding + 向量相似度 | `grep_search` / `read_file` / `list_directory` |
+| 预处理 | 需要（切分文档、建向量索引） | 不需要（直接读源文件） |
+| 数据库 | 向量数据库 | 文件系统本身 |
+
+**为什么？**
+1. 代码变化太快 — 每次改一行，向量索引就过期了
+2. 模型窗口够大 — 128K-1M token，直接读几个文件塞进去就行
+3. 工具更精确 — `grep "function login"` 比语义检索更准（代码是结构化的）
+4. Agent 自己会找 — ReAct 循环里 LLM 自己决定"我需要看哪个文件"，比预先检索更灵活
+
+**本质相同**：都是"帮 LLM 找到相关信息，塞进 prompt"。只是"找"的方式不同——传统 RAG 提前查好，Coding Agent 实时用工具去翻。
 
 ### 2.2 Function Calling / Tool Use
 

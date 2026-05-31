@@ -7,8 +7,8 @@
 ## 文档索引
 
 - [一、JavaScript 基础](./01-js-basics.md)
-- [二、函数式编程](./02-functional.md)
-- [三、数据处理](./03-data-handle.md)
+- [二、函数式编程](./02-functional.md) ✅
+- [三、数据处理](./03-data-handle.md)（3.3 ✅ 3.4 ✅）
 - [四、场景应用](./04-scenarios.md)
 - [五、CSS 布局](./05-css-layout.md)
 - [六、设计模式](./06-design-patterns.md)
@@ -30,18 +30,18 @@
   - [1.11 Promise 实现 ⭐⭐⭐](#111-promise-实现)
   - [1.12 typeof 实现 ⭐⭐](#112-typeof-实现)
   - [1.13 元编程（Proxy & Reflect）⭐⭐⭐](#113-元编程proxy--reflect)
-- [二、函数式编程](#二函数式编程)
-  - [2.1 函数柯里化（curry）⭐⭐⭐](#21-函数柯里化curry)
-  - [2.2 函数组合（compose）⭐⭐⭐](#22-函数组合compose)
-  - [2.3 偏函数（partial）⭐⭐](#23-偏函数partial)
-  - [2.4 AOP 面向切面编程 ⭐⭐](#24-aop-面向切面编程)
-  - [2.5 惰性函数（lazyCall）⭐⭐](#25-惰性函数lazycall)
-  - [2.6 记忆函数（memoize）⭐⭐⭐](#26-记忆函数memoize)
+- [二、函数式编程](#二函数式编程) ✅
+  - [2.1 函数柯里化（curry）⭐⭐⭐](#21-函数柯里化curry) ✅
+  - [2.2 函数组合（compose）⭐⭐⭐](#22-函数组合compose) ✅
+  - [2.3 偏函数（partial）⭐⭐](#23-偏函数partial) ✅
+  - [2.4 AOP 面向切面编程 ⭐⭐](#24-aop-面向切面编程) ✅
+  - [2.5 惰性函数（lazyCall）⭐⭐](#25-惰性函数lazycall) ✅
+  - [2.6 记忆函数（memoize）⭐⭐⭐](#26-记忆函数memoize) ✅
 - [三、数据处理](#三数据处理)
   - [3.1 数组扁平化（flat）⭐⭐⭐](#31-数组扁平化flat)
   - [3.2 数组去重（unique）⭐⭐⭐](#32-数组去重unique)
-  - [3.3 扁平对象转树（flatObj2Tree）⭐⭐⭐](#33-扁平对象转树flatobj2tree)
-  - [3.4 树转扁平对象（treeFlat）⭐⭐⭐](#34-树转扁平对象treeflat)
+  - [3.3 扁平对象转树（flatObj2Tree）⭐⭐⭐](#33-扁平对象转树flatobj2tree) ✅
+  - [3.4 树转扁平对象（treeFlat）⭐⭐⭐](#34-树转扁平对象treeflat) ✅
   - [3.5 lodash.get 实现 ⭐⭐](#35-lodashget-实现)
   - [3.6 数组 API 实现 ⭐⭐⭐](#36-数组-api-实现)
   - [3.7 日期格式化 ⭐⭐](#37-日期格式化)
