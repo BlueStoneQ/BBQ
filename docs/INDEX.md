@@ -7,8 +7,9 @@
 ## 准备相关
 
 - [速查手册（面试前 5 分钟）](./interview/root/cheatsheet.md)
-- [JS 手写题](./writeByHand/JavaScript-Coding-Questions.md)
+- [JS 手写题（索引）](./writeByHand/js-coding/README.md)
 - [算法速查（🔥优先题 + 模式）](./writeByHand/algorithm-cheatsheet.md)
+- [错题集](./writeByHand/mistakes.md)
 - [三张核心牌](./interview/root/cards/README.md)
   - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
   - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
