@@ -100,6 +100,7 @@
 - [Mako 速查手册](./project/AI/mako/mako-cheatsheet.md)
 - [Mako 5 层上下文管理](./project/AI/mako/mako-context-pipeline.md)
 - [Mako Deep Dive](./project/AI/mako/mako-project-deep-dive.md)
+- [Mako 源码拆解（子主题）](./project/AI/mako/deep-dive/README.md)
 
 ---
 

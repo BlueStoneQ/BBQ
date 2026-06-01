@@ -119,34 +119,6 @@
 > 硬性要求，不能丢分。快速过一遍高频点。
 > 📎 详细文档：[速查手册](../root/cheatsheet.md) | [JS 手写题](../../writeByHand/js-coding/README.md)
 
-### JS 核心（15min）
-
-- [ ] 闭包
-  > **本质**：函数 + 其词法环境的引用。内部函数持有外部变量的引用，外部函数执行完变量不被 GC。
-  > **关键词**：词法作用域、变量生命周期延长、循环+setTimeout 经典题
-- [ ] 原型链
-  > **本质**：对象通过 `__proto__` 链接形成链，属性查找沿链向上。`prototype` 是函数的属性，`__proto__` 是实例的属性。
-  > **关键词**：`Object.create`、`new` 做了什么、`instanceof` 原理
-- [ ] 事件循环
-  > **本质**：单线程 + 任务队列。同步代码 → 微任务（Promise.then/MutationObserver）→ 宏任务（setTimeout/setInterval）。每轮：执行栈清空 → 清空微任务队列 → 取一个宏任务。
-  > **关键词**：Call Stack、Microtask Queue、Macrotask Queue、requestAnimationFrame
-- [ ] Promise
-  > **本质**：异步操作的状态容器（pending/fulfilled/rejected），支持链式调用。
-  > **关键词**：then 链、catch 冒泡、Promise.all/race/allSettled、async/await 语法糖
-- [ ] ES6+
-  > **关键词**：解构、展开、可选链`?.`、空值合并`??`、Proxy/Reflect、WeakMap/WeakSet
-
-### CSS 布局（10min）
-
-- [ ] Flex
-  > **本质**：一维布局模型。容器设 `display:flex`，子项沿主轴排列。
-  > **关键词**：主轴/交叉轴、flex-grow/shrink/basis、align-items/justify-content、flex-wrap
-- [ ] 响应式
-  > **关键词**：媒体查询、rem+根字号、vw/vh、`meta viewport`、移动端 1px 问题
-- [ ] BFC
-  > **本质**：块级格式化上下文，独立渲染区域。内部布局不影响外部。
-  > **关键词**：触发条件（overflow:hidden/float/position:absolute/display:flex）、清除浮动、margin 合并
-
 ### 框架原理（10min）
 
 - [ ] 虚拟 DOM + Diff
@@ -161,20 +133,6 @@
 - [ ] Fiber 架构
   > **本质**：把递归渲染改为可中断的链表遍历。每个 Fiber 节点是一个工作单元，浏览器空闲时执行。
   > **关键词**：时间切片、优先级调度（Lane）、requestIdleCallback、concurrent mode
-
-### HTTP & 网络（5min）
-
-- [ ] 状态码
-  > **速记**：2xx 成功、3xx 重定向、4xx 客户端错误、5xx 服务端错误。重点：301永久/302临时、304协商缓存命中、403无权限、502网关错误。
-- [ ] 缓存
-  > **本质**：强缓存（不请求服务器）→ 协商缓存（问服务器是否过期）。
-  > **关键词**：Cache-Control:max-age / ETag+If-None-Match / Last-Modified+If-Modified-Since
-- [ ] CORS
-  > **本质**：浏览器同源策略限制跨域请求。简单请求直接发；非简单请求先发 OPTIONS 预检。
-  > **关键词**：Access-Control-Allow-Origin、预检请求、credentials
-- [ ] HTTPS
-  > **本质**：HTTP + TLS 加密层。非对称加密交换密钥 → 对称加密传输数据。
-  > **关键词**：CA 证书、TLS 握手、公钥/私钥、中间人攻击
 
 ---
 
