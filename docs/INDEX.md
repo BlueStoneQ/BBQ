@@ -16,6 +16,8 @@
 - [路特笔记](./interview/root/note.md)
 - [JY JD](./interview/jieyue/jd.md)
 - [JY prep](./interview/jieyue/prep.md)
+- [XZ JD](./interview/xz/jd.md)
+- [XZ prep](./interview/xz/prep.md)
 - [PD JD](./interview/pudu/jd.md)
 - [DD JD](./interview/DiDi/jd.md)
 - [GoodNotes JD](./interview/goodnotes/jd.md)

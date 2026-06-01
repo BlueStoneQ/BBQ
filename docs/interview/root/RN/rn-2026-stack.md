@@ -300,6 +300,8 @@ src/
 
 ### Zustand 使用范式
 
+> 📎 实现原理详解见 [状态管理原理与选型](../React/state-management-deep.md#zustand-实现原理)
+
 **1. 创建 store**（状态 + 操作，一个函数搞定）
 
 ```typescript

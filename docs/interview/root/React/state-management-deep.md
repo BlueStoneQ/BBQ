@@ -170,6 +170,35 @@ const bears = useStore(s => s.bears);
 // bears 没变 → Object.is(prev, next) === true → 跳过重渲染
 ```
 
+### 更新粒度：组件级（对比 Vue）
+
+Zustand 的精准更新粒度是**组件级别**。每个组件调用 `useStore(selector)` 时，`useSyncExternalStore` 为该组件实例创建独立订阅。state 变了 → React 对每个订阅组件调用它的 selector → `Object.is` 对比前后返回值 → 变了才重渲染该组件。
+
+粒度取决于 selector 怎么写：
+
+```tsx
+// 粗粒度：整个 state 变了都会重渲染
+const state = useStore(s => s);
+
+// 细粒度：只有 bears 变了才重渲染
+const bears = useStore(s => s.bears);
+```
+
+**与 Vue 响应式的区别**：
+
+| | Vue | Zustand |
+|---|---|---|
+| 依赖收集 | 自动（Proxy getter 拦截） | 手动（你写 selector） |
+| 更新触发 | 精确到属性级（谁读了谁被通知） | 组件级（selector 返回值变了才触发） |
+| 心智负担 | 低（写了就行，框架帮你追踪） | 中（selector 写不好会多渲染或少渲染） |
+
+- **Vue**：响应式系统（Proxy）自动追踪依赖。组件渲染时读了哪些 ref/reactive 属性，Vue 自动记录，属性变了精确通知用到它的组件。不需要写 selector。
+- **Zustand**：手动声明依赖。通过 selector 告诉它"我关心什么"，state 变了后用 Object.is 对比 selector 返回值，变了才重渲染。
+
+**结论**：粒度都是组件级重渲染，但 Vue 自动精确（Proxy 追踪），Zustand 靠手动 selector 来精确。selector 写得不好（如 `s => s`）就退化成全量更新。
+
+---
+
 ### 中间件机制
 
 ```typescript
