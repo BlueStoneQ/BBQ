@@ -361,3 +361,212 @@ class ContextPipeline {
 - [Mako 速查手册](./mako-cheatsheet.md)
 - [AI Agent 概念 - Memory](../ai-agent-core-concepts.md#24-memory记忆系统)
 - [LangChain 理解 - Memory 对比](../langchain-understanding.md#3-memory记忆)
+
+
+---
+
+## 业界方案对比
+
+| 方案 | 代表产品 | 做法 | 优点 | 缺点 |
+|------|---------|------|------|------|
+| 滑动窗口 | 早期 ChatGPT | 只保留最近 N 轮，超出丢弃 | 简单零成本 | 丢失早期关键信息 |
+| 摘要压缩 | LangChain SummaryMemory | LLM 把历史压缩成摘要 | 保留核心信息 | 有损、消耗 token、质量不稳定 |
+| RAG 检索 | LangChain VectorStoreMemory | 历史存入向量库，按相关性检索 | 理论无限记忆 | 丢失时序、需外部服务 |
+| 全量塞入 | Gemini（1M 窗口） | 窗口够大全塞进去 | 零信息损失 | 有上限、费用高、推理慢 |
+| 工具化检索 | Claude Code、Cursor | 需要时用工具重新读文件 | 信息永远最新 | 依赖 LLM 判断"该读什么" |
+| **分层管道** | **Mako** | 多层递进，每层解决一类问题 | 精细可控、渐进降级 | 实现复杂度高 |
+
+---
+
+## 为什么采用 5 层？
+
+### 推导逻辑：每一层都是被具体问题"逼"出来的
+
+```
+问题1：单条消息就能撑爆窗口（读 10MB 文件）→ L1 截断
+问题2：同一文件读 5 次内容没变，白占 5 份空间 → L2 去重
+问题3：第 3 轮读的文件到第 50 轮已不重要 → L3 微压缩
+问题4：对话太长整体接近上限 → L4 摘要压缩
+问题5：压缩后还不够但归档信息后续可能还要 → L5 归档+检索
+```
+
+### 为什么不用单一方案？
+
+| 如果只用一种 | 会怎样 |
+|------------|--------|
+| 只用滑动窗口 | 早期关键决策丢了，Agent 重复犯错 |
+| 只用摘要压缩 | 每次都调 LLM（贵+慢），很多情况 L1-L3 就解决了 |
+| 只用 RAG | 丢失时序、需外部服务、Client 端跑不了向量库 |
+| 只用全量塞入 | 128K 窗口 100 轮就满，越满推理越慢 |
+
+### 5 层的核心价值
+
+**80% 的情况被 L1-L3（零成本/低成本）解决，只有 20% 极端情况才需要 L4-L5（高成本）。成本最优。**
+
+### 设计原则
+
+1. **渐进式降级** — 先用便宜手段，不够再用贵的
+2. **每层职责单一** — 一层只解决一个问题，可独立开关
+3. **管道模式** — 层之间解耦，新增层不改已有代码
+4. **Client 端约束** — 不能依赖外部服务，所以 L5 用本地 BM25
+5. **保留时序** — 编码场景时序重要，不能用丢失时序的方案
+
+---
+
+## Q&A
+
+### Q: L1-L3 是内存层面的，不是本地存储？能有多大上下文？
+
+**A**：L1-L3 操作的 `messages` 数组确实在内存里（Node.js 堆内存）。但瓶颈不是内存大小，是**模型窗口（token 上限）**。
+
+```
+内存能装多少？→ 几个 GB，不是瓶颈
+模型窗口能装多少？→ 128K token（约 50-100K 中文字），这才是瓶颈
+```
+
+L1 截断不是因为"内存装不下"，而是因为"塞给 LLM 的 prompt 装不下"。10MB 文件内存里放着没问题，但不能把 10MB 全塞进 128K 窗口。
+
+### Q: L1 截断落盘——截断了什么？落盘是什么意思？
+
+**A**：
+- **截断了什么**：工具返回的超大结果。比如 `read_file` 读了一个 10MB 日志文件，返回几百万字符。截断 = 只保留前 2000 字符作为预览，剩下的不放进上下文。
+- **落盘**：把完整内容写到磁盘文件里（`.mako/overflow/xxx.txt`）。"落盘"= 写入磁盘。后续 LLM 如果需要完整内容，可以用 `read_file` 工具重新读取。
+
+### Q: L3 也是内存中压缩？
+
+**A**：对。L3 不涉及磁盘 IO。原始 messages 数组还在内存里没删，只是**给 LLM 看的版本**被精简了——旧的只读工具结果缩短为摘要，最近 N 轮保留完整。
+
+### Q: tokenCount 是什么？如何得到的？
+
+**A**：tokenCount = 当前上下文所有 messages 拼起来的 token 总数。
+
+用 `gpt-tokenizer` 库在本地计算（和 OpenAI 用的 tiktoken 算法一致）：
+
+```typescript
+import { encode } from 'gpt-tokenizer';
+
+const allText = messages.map(m => m.content).join('');
+const tokenCount = encode(allText).length;  // 比如 102400
+
+const maxTokens = 128000;
+const ratio = tokenCount / maxTokens;  // 0.80 → 触发 L4
+```
+
+为什么本地算？调 API 算太慢太贵，本地用相同算法，结果一致，零网络开销。
+
+### Q: 归档就是明文存储文件吗？BM25 就是用 minisearch 查找归档内容？
+
+**A**：对，就这么简单。
+
+```
+归档：messages[0..20] → JSON.stringify → 写入 .mako/archive/session_xxx.json（明文 JSON）
+检索：minisearch 对归档消息的 content 建 BM25 索引 → search("关键词") → 返回最相关的消息 → 恢复到上下文
+```
+
+没有加密、没有压缩、没有二进制格式。明文 JSON + 内存索引，简单粗暴但够用。
+
+### Q: 数据存储位置总结
+
+| 层 | 数据在哪 | 格式 |
+|----|---------|------|
+| L1-L3 | 内存（messages 数组） | JS 对象 |
+| L1 溢出 | 磁盘 `.mako/overflow/` | 明文原始内容 |
+| L4 摘要 | 内存（替换原消息） | 压缩后的文本 |
+| L5 归档 | 磁盘 `.mako/archive/` | 明文 JSON |
+| L5 索引 | 内存（minisearch 实例） | BM25 倒排索引 |
+
+---
+
+### Q: messages 数据结构长什么样？
+
+**A**：messages 是一个数组，每条消息有 `role` 和 `content`：
+
+```typescript
+const messages = [
+  // System Prompt（Agent 的"人设"+ 规则）
+  { role: "system", content: "你是一个 AI Coding Agent..." },
+
+  // 用户消息
+  { role: "user", content: "帮我修复 src/index.ts 里的 bug" },
+
+  // Agent 决定调工具（content 为 null，有 tool_calls）
+  { role: "assistant", content: null, tool_calls: [
+    { id: "call_1", name: "read_file", arguments: { path: "src/index.ts" } }
+  ]},
+
+  // 工具执行结果
+  { role: "tool", tool_call_id: "call_1", content: "export function add(a, b) {\n  return a - b;\n}" },
+
+  // Agent 修复
+  { role: "assistant", content: null, tool_calls: [
+    { id: "call_2", name: "write_file", arguments: { path: "src/index.ts", content: "..." } }
+  ]},
+
+  // 工具结果
+  { role: "tool", tool_call_id: "call_2", content: "文件已写入: src/index.ts" },
+
+  // Agent 最终回答（纯文本 → 退出 ReAct 循环）
+  { role: "assistant", content: "已修复 bug：add 函数的减号改为加号。" }
+]
+```
+
+**4 种 role**：
+- `system`：系统指令（Agent 人设 + Steering + Skills）
+- `user`：用户输入
+- `assistant`：LLM 输出（可能是文本，也可能是 tool_calls）
+- `tool`：工具执行结果（通过 tool_call_id 关联到对应的调用）
+
+---
+
+### Q: 整个 Agent 组装的上下文是怎样的？
+
+**A**：每次调 LLM 前，`context.assemble()` 组装出完整的请求：
+
+```typescript
+// 发给 LLM API 的请求
+{
+  model: "gpt-4o",
+  messages: [
+    // ① System Prompt（固定部分 + Steering + Skills）
+    {
+      role: "system",
+      content: `你是 Mako，一个 AI Coding Agent。
+你可以使用工具完成编码任务。
+规则：修改文件前先读取确认...
+[.mako/steering.md 的内容注入在这里]
+[当前激活的 Skill 指令注入在这里]`
+    },
+
+    // ② L4 摘要（如果有压缩历史）
+    { role: "system", content: "[会话摘要] 用户意图：修复bug。已完成：读取文件..." },
+
+    // ③ 对话历史（经 L3 微压缩）
+    { role: "user", content: "帮我修复 src/index.ts 里的 bug" },
+    { role: "assistant", tool_calls: [...] },
+    { role: "tool", content: "[read_file: src/index.ts, 150 lines]" },  // ← 旧的只读结果被 L3 缩短
+    // ... 更多历史 ...
+    { role: "tool", content: "export function add(a, b) {...}" },  // ← 最近的保留完整
+  ],
+
+  // ④ 工具定义（单独参数，不在 messages 里）
+  tools: [
+    { name: "read_file", description: "读取文件", parameters: { path: { type: "string" } } },
+    { name: "write_file", description: "写入文件", parameters: {...} },
+    { name: "bash", description: "执行命令", parameters: {...} },
+    { name: "mcp_gerrit_get_diff", description: "获取CR差异", parameters: {...} },
+    // ... MCP 动态发现的工具也在这里
+  ],
+
+  stream: true  // 流式返回
+}
+```
+
+**组装公式**：
+
+```
+发给 LLM 的 = System Prompt（含 Steering + Skills）
+            + [L4 摘要（如果有）]
+            + 对话历史（经 L3 微压缩）
+            + tools 定义（JSON Schema）
+            + stream: true
+```
