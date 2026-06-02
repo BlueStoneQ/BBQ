@@ -118,7 +118,7 @@
 
 | 故事 | 数据 | 详细文档 |
 |------|------|---------|
-| PSS 内存优化（DEX 布局优化） | 41MB → 35.8MB | [perf-memory.md #DEX 布局优化](./perf-memory.md#dex-布局优化baseline-profile) |
-| 包体优化（模块裁剪 + 条件编译） | 153MB → 60MB | [module-trimming.md](../../../resume/explain/3.1-xm/quickapp-framework/module-trimming.md) |
+| PSS 内存优化（DEX 布局优化） | 41MB → 35.8MB | [pss-dex-optimization.md](./resume/pss-dex-optimization.md) |
+| 包体优化（模块裁剪 + 条件编译） | 153MB → 60MB | [module-trimming.md](./resume/module-trimming.md) |
 | 快应用框架整体 | 框架级优化 | [quickapp-project-deep-dive.md](../../../resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md) |
 | 快应用框架指标体系 | 预装包场景 | [framework-metrics.md](../../../resume/explain/3.1-xm/quickapp-framework/framework-metrics.md) |

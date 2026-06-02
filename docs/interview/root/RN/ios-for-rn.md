@@ -49,14 +49,13 @@ ios/
 
 ```
 pnpm install
-  → npx pod-install（安装 iOS 原生依赖）
+  → npx pod-install（安装 iOS 原生依赖 + 触发 Codegen 生成 TurboModule/Fabric 胶水代码）
   → Xcode Build：
-      1. Codegen（生成 TurboModule/Fabric 胶水代码）
-      2. 编译 ObjC/Swift → .o 文件
-      3. 编译 C++ → .o 文件（JSI/Fabric/Hermes）
-      4. Link → Mach-O 可执行文件
-      5. 打包资源 + JS Bundle → .app
-      6. 签名 → .ipa
+      1. 编译 Codegen 产物 + ObjC/Swift → .o 文件
+      2. 编译 C++（JSI/Fabric/Hermes）→ .o 文件
+      3. Link → Mach-O 可执行文件
+      4. 打包资源 + JS Bundle → .app
+      5. 签名 → .ipa
 ```
 
 ### 依赖管理：CocoaPods（类似 Gradle）
