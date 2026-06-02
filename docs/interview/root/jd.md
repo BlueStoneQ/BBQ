@@ -119,8 +119,8 @@
 | RN 绘制机制 | Fabric 渲染流程？Virtual DOM → Native View？ |
 | 代码调试 | DevTools/Profiler/systrace 怎么用？ |
 | 性能优化 | 启动/渲染/内存/列表？ |
-| iOS/Android 差异 | 权限/推送/后台/键盘/状态栏？ |
-| 应用发布流程 | 打包/签名/上架/热更新？ |
+| iOS/Android 差异 | 权限/推送/后台/键盘/状态栏？→ [平台差异详解](./RN/rn-ios-android-diff.md) |
+| 应用发布流程 | 打包/签名/上架/热更新？→ [双端发布流程](./RN/app-release-flow.md) |
 | IoT 设备通信 | BLE 连接流程？数据传输？ |
 
 ---
