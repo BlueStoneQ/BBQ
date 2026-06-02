@@ -16,6 +16,7 @@
 | 5 | [LLM 适配层](./05-llm-adapter.md) | 多模型支持 | `packages/core/src/llm/` |
 | 6 | [架构设计决策](./06-design-decisions.md) | 为什么这样设计 | — |
 | 7 | [提示词工程与模板设计](./07-prompt-engineering.md) | System Prompt + Steering + Skills | `packages/cli/src/system-prompt.ts` + `steering.ts` + `spec-prompts.ts` |
+| 8 | [RAG 与 LangChain](./08-rag-and-langchain.md) | 业界方案理解 + 为什么不用 | — |
 
 ---
 
