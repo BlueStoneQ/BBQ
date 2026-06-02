@@ -49,11 +49,19 @@
 | 手势动画（跟手 + 不掉帧） | [perf-animation.md](./perf-animation.md) | [ios-rendering.md](./ios/ios-rendering.md) |
 | JS Bridge 通信阻塞 | [perf-bridge.md](./perf-bridge.md) | 同（JSI 两端通用） |
 
-### 三、包体
+### 三、包体（三层治理视角）
+
+> 大前端包体优化 = JS Bundle 层 + Android/iOS Native 层 + C++/SO 层，三层都要管。
+
+| 层 | 核心手段 | 文档 |
+|----|---------|------|
+| **JS Bundle 层** | 分 Bundle、Tree-shaking、条件编译、Hermes .hbc | [perf-bundle.md](./perf-bundle.md) |
+| **Native 层（Android/iOS）** | ABI Split、R8/ProGuard、模块裁剪、资源优化 | [bundle-size.md](./bundle-size.md) |
+| **C++/SO 层** | strip debug symbols、LTO、只保留 arm64-v8a | [bundle-size.md](./bundle-size.md) |
 
 | 子场景 | Android 文档 | iOS 文档 |
 |--------|-------------|---------|
-| Bundle 体积优化 | [perf-bundle.md](./perf-bundle.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
+| 包体优化全景（三层） | [bundle-size.md](./bundle-size.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
 | 打包流程优化 | [perf-build.md](./perf-build.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
 | 多 Bundle 方案 | → [architecture-engineering.md](../../RN/architecture-engineering.md) | 同（两端共用方案） |
 
@@ -103,3 +111,14 @@
 | 快应用框架 | 启动内存 | PSS MAX 41MB → 35.8MB |
 | MT 优选 | 秒开率 | 10% → 78% |
 | XM 平台 | 大文件上传 | 121s → 42s（提速 3 倍） |
+
+---
+
+## Resume 实践（深度文档链接）
+
+| 故事 | 数据 | 详细文档 |
+|------|------|---------|
+| PSS 内存优化（DEX 布局优化） | 41MB → 35.8MB | [perf-memory.md #DEX 布局优化](./perf-memory.md#dex-布局优化baseline-profile) |
+| 包体优化（模块裁剪 + 条件编译） | 153MB → 60MB | [module-trimming.md](../../../resume/explain/3.1-xm/quickapp-framework/module-trimming.md) |
+| 快应用框架整体 | 框架级优化 | [quickapp-project-deep-dive.md](../../../resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md) |
+| 快应用框架指标体系 | 预装包场景 | [framework-metrics.md](../../../resume/explain/3.1-xm/quickapp-framework/framework-metrics.md) |

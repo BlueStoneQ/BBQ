@@ -52,6 +52,46 @@
 | 性能场景 | 首选工具 | 看什么 | 定位到什么 |
 |---------|---------|--------|-----------|
 | **启动慢** | 自定义分段打点 + Perfetto | 各阶段耗时（Native init / Bundle load / JS exec / 首屏渲染） | 哪个阶段最慢 |
+
+### Perfetto 使用方法
+
+> Perfetto 录的是**整个系统**的事件（所有进程），不是按包名录。事后在 UI 中按进程名筛选你的 App。
+
+**真机录制流程**：
+```bash
+# 1. 开始录制（录 15 秒，记录 CPU 调度+渲染+自定义标记）
+adb shell perfetto -o /data/misc/perfetto-traces/trace.pb -t 15s \
+  sched freq idle am wm gfx view
+
+# 2. 立即冷启动 App（在录制窗口内操作）
+adb shell am force-stop com.myapp
+adb shell am start -n com.myapp/.MainActivity
+
+# 3. 录制自动停止后，拉到本地
+adb pull /data/misc/perfetto-traces/trace.pb ./trace.pb
+
+# 4. 打开 https://ui.perfetto.dev，拖入文件，按进程名筛选分析
+```
+
+**自定义打点（在 trace 中显示 RN 启动分段）**：
+```kotlin
+import android.os.Trace
+
+Trace.beginSection("RN_Engine_Init")
+// ... 引擎初始化
+Trace.endSection()
+
+Trace.beginSection("RN_Bundle_Load")
+// ... Bundle 加载
+Trace.endSection()
+```
+
+**也可以用 AS Profiler**：Profiler → CPU → Record → 选"System Trace"→ 底层就是 Perfetto，录完直接在 AS 里看。
+
+> 注意：Perfetto 需要主动开启录制，不会自动产生数据。`Trace.beginSection()` 这些打点只有在录制期间才被捕获，平时运行几乎零开销。
+
+---
+
 | **列表卡顿** | Performance Monitor + React DevTools | JS 帧率 + 哪些 item 在重渲染 | JS 计算过重 or View 层级深 |
 | **动画掉帧** | Performance Monitor + Perfetto | UI 帧率 + UI Thread 耗时 | 动画是否在 JS 线程跑 |
 | **手势不跟手** | Performance Monitor | 拖拽时 JS 帧率是否掉 | 手势事件是否走了 JS 线程 |
