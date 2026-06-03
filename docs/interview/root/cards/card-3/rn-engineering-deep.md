@@ -245,6 +245,20 @@ class ReactInstancePool(private val application: Application) {
 }
 ```
 
+#### 多 Bundle 通信方式
+
+**同实例内（CRN 模式：Common + Business 加载到同一个 JS Runtime）**：
+- 全局变量共享：Common Bundle 导出 API 到 `global.__COMMON_API__`，Business Bundle 直接用
+- 本质：同一个 JS 上下文，就像同一个 HTML 页面里的多个 `<script>`
+
+**跨实例（独立 ReactInstance）**：
+- Native 层中转：Bundle A → Native Module(EventBus/存数据) → Bundle B
+- 类似 Android 多 Activity 间通信
+
+**XRN 做法**：Common 和 Business 在同一实例内（共享全局），不同 Business Bundle 之间通过 Native 路由 + 参数传递。
+
+> **架构师视角**：好的 Bundle 拆分应该让跨 Bundle 通信最小化。公共能力下沉到 Common，Business Bundle 之间只通过路由 + 参数通信。如果发现两个 Bundle 频繁互调方法，说明边界划分有问题——要么提到 Common，要么合并。
+
 #### NativeRouter — 原生路由管理
 
 ```kotlin

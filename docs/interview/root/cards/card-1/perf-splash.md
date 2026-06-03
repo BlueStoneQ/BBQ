@@ -159,14 +159,41 @@ TTI：所有事件绑定完，用户可以交互
 
 ---
 
-## 三、Splash 期间做什么（并行化）
+## 三、Splash 期间做什么（并行化:三线程）
 
 **核心思想**：Splash 停留的时间不是浪费，是并行做前置任务的窗口。
 
-**并行不需要你手动开多线程**——RN 启动流程本身就是多线程的：
-- 主线程：Application.onCreate（SDK 初始化）
-- 后台线程：Bundle 加载（ReactInstanceManager 内部开线程）
-- JS Thread：Bundle 加载完后启动，执行 JS 代码
+### 时机：在 Application.onCreate() 中启动三线程
+
+`Application.onCreate()` 是 App 进程启动后第一个执行自定义代码的入口（早于 Activity）。三线程并行在这里启动：
+
+```kotlin
+class MyApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+    // 三线程并行，不互相等待，越早启动越好
+    thread { loadBundle() }          // 线程1：加载 JS Bundle
+    thread { prefetchData() }        // 线程2：预请求首屏数据（OkHttp，Native 层发）
+    thread { warmReactInstance() }   // 线程3：预热 RN 实例池（创建 ReactInstance）
+  }
+}
+```
+
+> 三者没有数据依赖关系，可以完全并行。首屏渲染需要三者都完成——哪个最慢就是瓶颈。
+
+### Android App 启动生命周期
+
+```
+进程创建
+  → Application.onCreate()     ← 最早的自定义代码入口（三线程在这里启动）
+  → Activity.onCreate()        ← 第一个 Activity 创建
+  → Activity.onStart()
+  → Activity.onResume()        ← 用户可见
+  → 首帧绘制                    ← Splash 显示
+  → RN Bundle 加载完成 + JS 就绪
+  → 首屏数据回来 + 渲染完成
+  → SplashScreen.hide()        ← Splash 消失，首屏展示
+```
 
 **"数据请求"= JS 就绪后立刻发起的预请求**（用户信息/设备列表/配置），不等 Splash 消失。最终消费数据的是 JS 层（存到 Zustand → React 渲染）。Splash 遮挡着这个过程，用户看不到"请求中"。
 
@@ -195,6 +222,31 @@ TTI：所有事件绑定完，用户可以交互
 ## 四、Splash 消失时机
 
 **不是"给固定时间"，是"前置任务做完就消失"**：
+
+> Splash 消失由 **JS 侧控制**——因为只有 JS 层知道"数据回来了 + UI 渲染完成了"。Native 侧只负责启动时显示 Splash，然后等 JS 调 hide()。
+
+```typescript
+// JS 侧控制消失时机
+import SplashScreen from 'react-native-splash-screen';
+
+function App() {
+  const { data, isLoading } = useQuery(['devices'], fetchDevices);
+
+  useEffect(() => {
+    if (!isLoading && data) {
+      SplashScreen.hide();  // ← JS 决定何时隐藏（数据就绪 + 渲染完成）
+    }
+  }, [isLoading, data]);
+
+  return <DeviceList data={data} />;
+}
+```
+
+```
+分工：
+  Native（Activity.onCreate）：显示 Splash（被动等）
+  JS（useEffect）：数据就绪 + 渲染完成 → SplashScreen.hide()（主动控制）
+```
 
 | 策略 | 做法 | 效果 |
 |------|------|------|
@@ -340,6 +392,10 @@ function App() {
 | **Splash 消失后** | 骨架屏过渡（如果数据还没来） | 不白屏不 loading |
 | **多个异步任务** | 统一初始化管理器收敛 | 不出现多个 loading 闪烁 |
 | **页面跳转** | 预请求（onPressIn 时 prefetch 下一页数据） | 进入新页面时数据已就绪 |
+
+多loading 我感觉可以用局部loadig 好比说按钮/状态栏的loading 不要用全局loading
+
+> **原则：能局部就不全局**。局部 loading（按钮 spinner / 骨架屏 / 区块 shimmer）让页面其他部分可交互，体验远好于全局遮罩。
 
 ---
 

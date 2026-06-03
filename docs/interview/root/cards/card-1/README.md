@@ -47,6 +47,7 @@
 |--------|-------------|---------|
 | 列表滑动流畅度（60fps） | [perf-list.md](./perf-list.md) | [ios-rendering.md](./ios/ios-rendering.md) |
 | 手势动画（跟手 + 不掉帧） | [perf-animation.md](./perf-animation.md) | [ios-rendering.md](./ios/ios-rendering.md) |
+| 转场流畅度 | 用 native-stack（原生转场）+ InteractionManager 延迟目标页重任务 + 骨架屏 | 同 |
 | JS Bridge 通信阻塞 | [perf-bridge.md](./perf-bridge.md) | 同（JSI 两端通用） |
 
 ### 三、包体（三层治理视角）

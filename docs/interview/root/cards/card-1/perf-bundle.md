@@ -22,9 +22,13 @@
 
 | 工具 | 看什么 |
 |------|--------|
-| `source-map-explorer` | JS Bundle 各模块占比（找最大的依赖） |
+| `source-map-explorer` | JS Bundle 各模块占比（npm 命令行工具，打开可视化页面显示每个包的体积占比，类似 webpack-bundle-analyzer） |
 | APK Analyzer（Android Studio） | APK 内部各部分体积（dex/lib/assets） |
 | `adb shell ls -la` | Bundle 文件实际大小 |
+
+---
+
+> **Bundle 缓存与预加载**：RN 本身不提供 Bundle 缓存/热更新机制，只提供"从哪里加载 Bundle"的接口。缓存、版本管理、预加载、灰度、回滚都在 XRN 的自定义 Native 壳子中实现。→ [rn-engineering-deep.md](../card-3/rn-engineering-deep.md)
 
 ---
 

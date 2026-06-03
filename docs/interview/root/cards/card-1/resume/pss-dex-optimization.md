@@ -23,7 +23,19 @@
 
 ## 原理
 
-操作系统通过 mmap 按**页（4KB）**加载 DEX 文件到内存。不是一次性加载整个 DEX，而是访问到哪一页才加载哪一页（触发 page fault）。
+### 分页（Page）— 操作系统内存管理的最小单位
+
+操作系统不是按字节管理内存的，而是按**页（Page）**为最小粒度：
+- 传统 Android：4KB 一页
+- Android 15+：支持 16KB 一页（提升 TLB 缓存命中率）
+
+不管你要读 1 字节还是 3000 字节，OS 都会加载整个页到物理内存。这是 CPU 硬件（MMU 内存管理单元）决定的——虚拟地址到物理地址的映射粒度就是页。
+
+> 页大小不是"CPU 最大寻址范围"（那是 64 位地址空间 = 16EB）。页大小是 OS 和硬件约定的"每次搬运数据的最小块"。
+
+### DEX 布局优化的原理
+
+操作系统通过 mmap 按页加载 DEX 文件到内存。不是一次性加载整个 DEX，而是访问到哪一页才加载哪一页（触发 page fault）。
 
 **DEX 布局优化 = 把启动时用到的类排在 DEX 文件前面**，热代码集中在前几页 → 启动时只需加载少量页 → page fault 减少 → PSS 降低。
 
@@ -70,6 +82,22 @@ adb pull /data/misc/profiles/cur/0/com.myapp/primary.prof ./baseline-prof.txt
 ```
 app/src/main/baseline-prof.txt
 ```
+
+**baseline-prof.txt 记录了什么**：启动期间被执行到的类和方法列表——一份"热代码清单"。
+
+```
+# 文件内容示例：
+Lcom/myapp/MainActivity;                          ← 启动时用到的类
+Lcom/facebook/react/ReactActivity;
+Lcom/facebook/hermes/HermesRuntime;
+HSPLcom/myapp/MainActivity;->onCreate(...)V       ← H=Hot, S=Startup, P=Post-startup
+```
+
+**怎么导致优化（两层收益）**：
+1. **构建时**：AGP 读到这份清单 → 把这些类在 DEX 文件中物理排到前面 → 启动时 page fault 减少 → PSS 降低
+2. **安装时**：ART 根据随 APK 分发的 .dm 文件（profile 元数据）对热方法做 AOT 编译 → 运行时直接跑机器码不解释执行 → 启动更快
+
+一句话：baseline-prof.txt = 热代码名单 → AGP 排到 DEX 前面 → 少加载页 → 内存低 + 启动快。
 
 ### Step 3：构建时自动重排
 
