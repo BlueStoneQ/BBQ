@@ -212,6 +212,10 @@ T4: 首屏数据渲染完成（JS 层打点 → 上浮 Native）
   总 TTI = T4 - T0
 
 白屏判定：T4 超过阈值（3s）未到达 → 白屏
+
+> **类比理解**：可以理解为 FMP > 3s 判定白屏。但 RN 里没有浏览器的标准 FMP——用自定义打点（首屏组件 onLayout 回调）标记 T4。T4 超时未到达 = 用户看了 3 秒还是白的。
+>
+> **上报机制**：不需要自己用 TurboModule 开线程上报。Sentry/Firebase 这些 SDK 内部已经在 Native 线程做了批量上报——JS 层调 `Sentry.captureException()` 只是把数据丢给 Native SDK，SDK 自己管线程、本地缓存、批量发送。只有自建埋点系统时才需要考虑 TurboModule → Native 子线程 → 批量上传。
 ```
 
 ### 架构

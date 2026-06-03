@@ -247,15 +247,46 @@ class ReactInstancePool(private val application: Application) {
 
 #### 多 Bundle 通信方式
 
-**同实例内（CRN 模式：Common + Business 加载到同一个 JS Runtime）**：
+**关键前提：多实例架构下，每个 Bundle 跑在独立的 Hermes Runtime 里，JS 层互不可见。**
+
+```
+ReactInstance 1（首页）：  独立 Hermes Runtime → common.hbc + home.hbc
+ReactInstance 2（设备页）：独立 Hermes Runtime → common.hbc + device.hbc
+ReactInstance 3（设置页）：独立 Hermes Runtime → common.hbc + settings.hbc
+
+三个 Runtime 完全隔离，就像三个独立的浏览器 tab。
+所以跨 Bundle 通信必须经过 Native 层。
+```
+
+**三种通信方式，各管各的场景**：
+
+| 方式 | 适合场景 | 特点 | 类比 |
+|------|---------|------|------|
+| **路由参数** | 页面跳转时传数据（最常见） | 单向、一次性、简单 | 信使（传一次） |
+| **MMKV 共享存储** | 持久化 + 多处读取的状态 | 持久化、同步读写、无推送能力 | 公告板（谁来都能看） |
+| **Native EventBus** | 实时通知（"数据变了，你要更新"） | 实时、双向、发布订阅 | 广播（实时通知） |
+
+**实际场景**：
+
+| 场景 | 方式 | 为什么 |
+|------|------|--------|
+| 首页跳到设备详情 | 路由参数 `{ deviceId: "123" }` | 一次性传参就够 |
+| 设备页改了名称，首页列表要同步更新 | Native EventBus | 首页需要"实时知道"变了 |
+| 用户登录态（多页面读、重启后还要有） | MMKV | 需要持久化 + 冷启动后能读到 |
+| 设备页断开 BLE，其他页面状态同步 | Native EventBus + MMKV | EventBus 实时通知 + MMKV 持久化状态 |
+
+**三者组合使用**：
+
+```
+跳转时：路由参数传当前数据
+回来时：EventBus 通知"数据变了，你刷新一下"
+持久化：MMKV 存持久状态（token / 配置 / 设备连接态）
+```
+
+**同实例内通信（Common + Business 在同一个 Runtime）**：
 - 全局变量共享：Common Bundle 导出 API 到 `global.__COMMON_API__`，Business Bundle 直接用
 - 本质：同一个 JS 上下文，就像同一个 HTML 页面里的多个 `<script>`
-
-**跨实例（独立 ReactInstance）**：
-- Native 层中转：Bundle A → Native Module(EventBus/存数据) → Bundle B
-- 类似 Android 多 Activity 间通信
-
-**XRN 做法**：Common 和 Business 在同一实例内（共享全局），不同 Business Bundle 之间通过 Native 路由 + 参数传递。
+- 这种方式只适用于同一个 ReactInstance 内的 Common ↔ Business 通信
 
 > **架构师视角**：好的 Bundle 拆分应该让跨 Bundle 通信最小化。公共能力下沉到 Common，Business Bundle 之间只通过路由 + 参数通信。如果发现两个 Bundle 频繁互调方法，说明边界划分有问题——要么提到 Common，要么合并。
 
@@ -579,6 +610,74 @@ Splash 阶段（Application.onCreate / AppDelegate.didFinishLaunching）：
   │
   ▼ 下次进入 device 页面 → BundleLoader 加载新版本
 ```
+
+### 为什么自研热更新 Server 而不用社区方案
+
+#### 社区方案对比
+
+| 方案 | 模型 | 现状 | 和多 Bundle 架构的兼容性 |
+|------|------|------|------------------------|
+| **CodePush** | 单 Bundle 整包更新 | ❌ App Center 已宣布退役，基本停止维护 | 不支持按模块灰度/回滚 |
+| **EAS Update（Expo）** | 单 Bundle | 绑定 Expo 生态，bare workflow 有限 | 不支持自定义分包 |
+| **Pushy（国内）** | 单 Bundle | 社区维护 | 灰度能力弱，无模块级版本管理 |
+
+#### 核心矛盾：社区方案假设「一个 App = 一个 JS Bundle」
+
+多 Bundle 架构下的版本管理是 **common + N 个 business module 的矩阵**：
+
+```
+社区方案的版本模型：
+  App v3.0.0 → Bundle v1.2.3（单一版本号）
+
+XRN 的版本模型：
+  App v3.0.0 → {
+    common: v2.1.0,
+    home: v1.3.2,
+    device: v1.0.5,
+    settings: v1.1.0
+  }
+```
+
+社区方案无法处理：
+1. **按模块粒度灰度**：只灰度 device bundle 到 10% 用户
+2. **按模块粒度回滚**：device crash → 只回滚 device，不影响 home
+3. **差量计算**：按 module 级别 bsdiff，用户只下载变更的模块（128KB vs 整包 2MB）
+4. **版本兼容矩阵**：common v2.1 要求 device ≥ v1.0.3，服务端需要管理依赖关系
+
+#### 自研 Server 的 Scope（工作量不大）
+
+核心就三个 API + 一个存储：
+
+```
+┌─────────────────────────────────────────────────────┐
+│  @x-rn/server（Fastify + PostgreSQL + S3/OSS）       │
+├─────────────────────────────────────────────────────┤
+│  POST /publish                                       │
+│    CLI 上传 bundle → 计算 bsdiff patch → 存 S3       │
+│    → 写版本记录 → 更新 manifest                       │
+│                                                      │
+│  POST /check-update                                  │
+│    客户端上报 { appVersion, moduleVersions }          │
+│    → 服务端对比 → 返回需更新的模块列表 + CDN 地址      │
+│    → 支持灰度策略（按 userId/比例/设备等级）           │
+│                                                      │
+│  POST /rollback                                      │
+│    标记某版本为黑名单 → 客户端下次检查时回退            │
+│                                                      │
+│  POST /report                                        │
+│    客户端上报更新结果（成功/失败/crash）               │
+│    → 触发自动回滚阈值（crash 率 > 1% 自动全量回滚）   │
+└─────────────────────────────────────────────────────┘
+```
+
+#### 面试话术
+
+> "社区方案如 CodePush 和 EAS Update 都是单 Bundle 模型，不支持按模块粒度的灰度、回滚和差量更新。我们采用多 Bundle 架构，版本管理是 common + N 个 business module 的矩阵，必须自研 server 来管理这个版本关系。server 本身逻辑不复杂——核心就是 check-update + publish + rollback 三个 API，加上 bsdiff 差量和 CDN 分发。比写客户端 Native SDK 简单得多。"
+
+> 追问"为什么不魔改 CodePush？"
+> "CodePush 的 Native SDK 和服务端都是按单 Bundle 设计的，改造成本比自建还高。而且 App Center 已经退役，继续依赖它是个风险。自研 server 500 行代码就能覆盖核心逻辑，反而是最小成本方案。"
+
+---
 
 ### 热更新 Native 端方案
 

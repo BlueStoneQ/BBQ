@@ -15,9 +15,9 @@
 - [性能分析工具与排查](../../RN/performance-profiling.md)
 - [Native 层预请求 & 预加载](../../RN/native-prefetch.md)
 - [图片优化](./perf-image.md)
-- [自动化测试体系（pytest + uiautomator2 三端）](../../../../resume/explain/3.1-xm/quickapp-framework/additional-contributions.md)
 - [快应用框架指标体系（预装包场景）](../../../../resume/explain/3.1-xm/quickapp-framework/framework-metrics.md)
 - [快应用模块裁剪方案](../../../../resume/explain/3.1-xm/quickapp-framework/module-trimming.md)
+- [Sentry 错误监控与性能监控](./sentry.md)
 - [iOS 性能优化专题](./ios/README.md)
 
 ---
@@ -123,3 +123,10 @@
 | 包体优化（模块裁剪 + 条件编译） | 153MB → 60MB | [module-trimming.md](./resume/module-trimming.md) |
 | 快应用框架整体 | 框架级优化 | [quickapp-project-deep-dive.md](../../../resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md) |
 | 快应用框架指标体系 | 预装包场景 | [framework-metrics.md](../../../resume/explain/3.1-xm/quickapp-framework/framework-metrics.md) |
+
+---
+
+### 自动化性能测试 & 实战案例
+
+- [自动化性能测试体系（pytest + uiautomator2 三端）](./perf-automation-test.md)
+- [PSS 内存优化实战（DEX 布局优化：41MB → 35.8MB）](./resume/pss-dex-optimization.md)

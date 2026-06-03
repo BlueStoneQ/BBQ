@@ -153,7 +153,9 @@ Xcode → 选择项目 → Signing & Capabilities
 Bundle Identifier: com.mycompany.myapp（必须唯一，全球不能重复）
 ```
 
-### Step 3：构建 Archive
+### Step 3：构建 Archive + 导出 IPA
+
+**3a. 构建 Archive**（产出 `.xcarchive`，中间产物，包含编译好的二进制 + dSYM 符号表）
 
 ```
 Xcode → Product → Archive（必须选 Generic iOS Device，不能选模拟器）
@@ -168,6 +170,40 @@ xcodebuild archive \
   -scheme MyApp \
   -archivePath build/MyApp.xcarchive
 ```
+
+**3b. 导出 IPA**（从 Archive 导出最终的 `.ipa` 安装包）
+
+```
+Xcode Organizer 里点 "Distribute App" 时会自动完成 export + upload。
+如果用命令行需要显式导出：
+```
+
+```bash
+xcodebuild -exportArchive \
+  -archivePath build/MyApp.xcarchive \
+  -exportPath build/ \
+  -exportOptionsPlist ExportOptions.plist
+# → 产出 build/MyApp.ipa
+```
+
+ExportOptions.plist 示例：
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store</string>  <!-- app-store / ad-hoc / enterprise / development -->
+  <key>teamID</key>
+  <string>YOUR_TEAM_ID</string>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>compileBitcode</key>
+  <false/>
+</dict>
+</plist>
+```
+
+> **面试要点**：Archive 是中间产物（.xcarchive），IPA 才是最终可分发的包。Xcode GUI 里 Distribute App 把 export + upload 合并了，但 CI/CD 命令行场景必须显式分两步。
 
 ### Step 4：上传到 App Store Connect
 

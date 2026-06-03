@@ -667,3 +667,72 @@ const result = global.nativeAdd(1, 2); // → 3（同步，C++ 直接返回）
 > | `Value(double) / String::createFromUtf8` | C++ 值 → JS 值 |
 >
 > **一句话**：`jsi::Runtime` 给了 C++ 完全操作 JS 引擎的能力——执行代码、读写变量、注册函数、创建对象。TurboModule 就是在此基础上封装的"规范化 Native Module 注册机制"。
+
+### JSI 是跨线程通信吗？TurboModule 方法在哪个线程执行？
+
+**JSI 本身不是跨线程的。JSI 是同一个线程内 JS ↔ C++ 的同步函数调用接口。**
+
+```
+JSI 的本质：
+  JS 代码 ←── 同线程同步调用 ──→ C++ 代码
+  没有消息队列，没有线程切换，就是函数指针直调。
+```
+
+**那 JS 线程和 UI 线程之间怎么通信？**
+
+跨线程不是 JSI 的事——是 C++ 层自己用平台 API 做的线程调度：
+
+```
+JS Thread 想让 UI Thread 做事：
+
+  JS → JSI → C++ 函数（同线程，同步，这一步是 JSI）
+                │
+                │  C++ 自己做线程调度（Android: Handler.post / iOS: dispatch_async）
+                ▼
+  UI Thread 执行（这一步不是 JSI，是平台 API）
+```
+
+**TurboModule 方法在哪个线程执行？**
+
+| 方法类型 | 执行线程 | 说明 |
+|---------|---------|------|
+| 同步方法（`isConnected(): boolean`） | **JS 线程** | JS 线程阻塞等 Native 执行完返回。C++ 入口 + JNI 调用都在 JS 线程。所以同步方法里不能做耗时操作 |
+| 异步方法（`connect(): Promise<T>`） | **Native 自己决定**（通常后台线程） | C++ 入口在 JS Thread（瞬间返回 Promise），实际工作 dispatch 到后台线程，完成后 resolve 回 JS Thread |
+
+```
+同步方法调用链（全在 JS Thread）：
+  JS → JSI(C++) → JNI → Kotlin 实现 → 返回值原路回来
+  JS Thread 一直阻塞到 Kotlin 方法 return
+
+异步方法调用链（跨线程）：
+  JS → JSI(C++) → JNI → Kotlin（瞬间返回 Promise 给 JS）
+                          └→ dispatch 到后台线程执行耗时操作
+                          └→ 完成后 dispatch 回 JS Thread
+                          └→ resolve Promise → JS 拿到结果
+```
+
+**为什么 Reanimated 不用 TurboModule 来跑动画？**
+
+因为不管同步还是异步，TurboModule 的**入口一定经过 JS Thread**。动画需要每帧 60 次更新：
+- 同步方法：每帧阻塞 JS 线程 → 业务逻辑被卡
+- 异步方法：每帧跨线程 → 延迟不可控
+
+所以 Reanimated 选择在 UI Thread 放一个独立 Hermes Runtime，直接在 UI Thread 执行 worklet，**彻底不经过 JS Thread**：
+
+```
+TurboModule 路径（每帧都跨线程）：
+  触摸 → UI Thread → 通知 JS Thread → JS 算 → 通知 UI Thread 更新 View
+  两次跨线程 = 不确定的延迟 = 掉帧
+
+Reanimated 路径（零跨线程）：
+  触摸 → UI Thread 的 Gesture Handler 识别
+       → UI Thread 的 Reanimated Runtime 执行 worklet
+       → UI Thread 直接更新 View
+  全在一个线程 = 确定性 = 60fps
+```
+
+**总结**：
+- JSI = 同线程 JS↔C++ 直调接口（不涉及跨线程）
+- 跨线程 = C++ 层用平台 API 调度（Handler.post / dispatch_async）
+- TurboModule 同步方法在 JS 线程执行，异步方法在后台线程执行
+- Reanimated 的创新：在 UI Thread 开辟独立 Runtime，避免一切跨线程开销
