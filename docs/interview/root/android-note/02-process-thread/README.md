@@ -5,10 +5,36 @@
 ## 目录
 
 - [一、进程模型](#一进程模型)
+  - [线程的本质](#线程的本质)
+  - [多线程调度](#多线程调度)
+  - [一个 App = 一个进程](#一个-app--一个进程默认)
+  - [多进程](#多进程)
+  - [进程优先级与回收](#进程优先级与回收)
 - [二、线程方案](#二线程方案)
+  - [Kotlin Coroutine vs JS async/await](#kotlin-coroutine-vs-js-asyncawait)
 - [三、线程间通信](#三线程间通信)
+  - [通信方案一览](#通信方案一览)
+  - [Android 里的具体实现](#android-里的具体实现)
+  - [线程安全问题：锁与原子操作](#线程安全问题锁与原子操作)
+  - [Handler + Looper + MessageQueue](#handler--looper--messagequeueanroid-核心通信机制)
+  - [主线程的 Looper](#主线程的-looper)
+  - [runOnUiThread 的本质](#runonuithread-的本质)
 - [四、进程间通信（IPC）](#四进程间通信ipc)
+  - [Binder](#binderandroid-核心-ipc)
+  - [AIDL](#aidlandroid-interface-definition-language)
 - [五、快应用框架的线程设计](#五快应用框架的线程设计)
+  - [三线程模型](#三线程模型)
+  - [线程间通信方式](#线程间通信方式)
+- [六、RN 的线程模型](#六rn-的线程模型)
+  - [3 个核心线程](#3-个核心线程)
+  - [RN 线程间通信（JSI vs Bridge）](#rn-线程间通信)
+- [七、线程通信方案选型（第一性原理）](#七线程通信方案选型第一性原理)
+- [八、Handler + Looper 深度理解](#八handler--looper-深度理解)
+  - [Looper 的本质](#looper-的本质)
+  - [线程的核心部件](#线程的核心部件消息驱动模型)
+  - [两种线程编程范式](#两种线程编程范式)
+  - [经典例子](#经典例子后台下载--回主线程更新-ui)
+  - [对应 iOS GCD](#对应-ios-的-gcd)
 
 ---
 
@@ -474,3 +500,123 @@ Bridge 本质：异步消息队列
 ```
 
 **一句话**：通信方案选型本质是在延迟、吞吐量、复杂度之间做 trade-off。RN 新架构用 JSI 统一解决——同步/异步都支持，无序列化开销。
+
+---
+
+## 八、Handler + Looper 深度理解
+
+> 补充文档：[handler-looper-deep.md](./handler-looper-deep.md)
+
+### Looper 的本质
+
+```
+Looper = while(true) { message = queue.next(); message.handle(); }
+```
+
+**就是前端的 Event Loop**——让一个线程从"一次性执行"变成"持续接收并处理任务"。
+
+| 状态 | 没有 Looper | 有 Looper |
+|------|------------|-----------|
+| 线程行为 | 执行完 run() → 线程结束（死了） | 永远不结束，一直等消息 → 执行 → 等 |
+| 类比 | 一次性 Worker | 前端 Event Loop / iOS RunLoop |
+| 用途 | 简单异步任务 | 主线程、后台消息线程 |
+
+### 一个线程最多一个 Looper
+
+通过 `ThreadLocal` 绑定，1:1 关系。但不是每个线程都有 Looper：
+
+| 线程 | 有 Looper 吗 |
+|------|-------------|
+| Main Thread | ✅ 系统自动创建 |
+| 普通子线程 | ❌ 默认没有 |
+| HandlerThread | ✅ 手动创建的带 Looper 子线程 |
+
+### 线程的核心部件（消息驱动模型）
+
+```
+┌─────────────────────────────────────────┐
+│              Thread                      │
+│                                         │
+│  ┌──────────┐    ┌───────────────────┐  │
+│  │  Looper  │───→│  MessageQueue     │  │
+│  │ (循环泵)  │    │ (按时间排序的队列) │  │
+│  └──────────┘    └───────────────────┘  │
+│       ↑                     ↑           │
+│       │ loop()取消息        │ 入队       │
+│       │                     │           │
+└───────│─────────────────────│───────────┘
+        │               ┌────┴────┐
+   执行 callback        │ Handler │ ← 其他线程通过 Handler 发消息
+                        └─────────┘
+```
+
+| 部件 | 职责 | 类比前端 | 类比 iOS |
+|------|------|---------|---------|
+| Thread | 执行环境 | — | — |
+| Looper | 无限循环取消息 | Event Loop | RunLoop |
+| MessageQueue | 消息队列 | Task Queue | RunLoop Source |
+| Handler | 发消息 + 处理消息 | postMessage + onmessage | GCD dispatch |
+| Message | 一条任务 | Task / Event | Block |
+
+### 两种线程编程范式
+
+| 范式 | 说明 | 代码 |
+|------|------|------|
+| 一次性线程 | 执行完就结束 | `Thread { doWork() }.start()` |
+| 消息驱动线程 | 带 Looper，长期存活 | `HandlerThread` / Main Thread |
+
+### 经典例子：后台下载 → 回主线程更新 UI
+
+```kotlin
+// 1. 创建带 Looper 的后台线程
+val bgThread = HandlerThread("ImageLoader")
+bgThread.start()
+
+// 2. 后台线程的 Handler
+val bgHandler = Handler(bgThread.looper)
+
+// 3. 主线程的 Handler
+val mainHandler = Handler(Looper.getMainLooper())
+
+// 4. 点击按钮 → 后台下载 → 回主线程更新
+button.setOnClickListener {
+    bgHandler.post {
+        // 在后台线程执行
+        val bitmap = downloadImage(url)
+
+        mainHandler.post {
+            // 回主线程更新 UI
+            imageView.setImageBitmap(bitmap)
+        }
+    }
+}
+```
+
+**数据流**：
+```
+Main Thread                    BG Thread (有 Looper)
+    │                               │
+    │ bgHandler.post(download)      │
+    │ ─────────────────────────────→│ queue 收到 → Looper 取出 → 执行 download
+    │                               │
+    │    mainHandler.post(updateUI) │
+    │←───────────────────────────── │
+    │ queue 收到 → Looper 取出      │
+    │ → 执行 updateUI              │
+```
+
+### 对应 iOS 的 GCD
+
+```
+Android HandlerThread = iOS DispatchQueue(label:)
+
+Android:
+  val bgThread = HandlerThread("bg"); bgThread.start()
+  Handler(bgThread.looper).post { work() }
+
+iOS（一行搞定）：
+  let bgQueue = DispatchQueue(label: "bg")
+  bgQueue.async { work() }
+```
+
+iOS 用 GCD 把"创建线程 + Looper + MessageQueue + Handler"4 步封装成 1 行。本质一样，API 简洁得多。
