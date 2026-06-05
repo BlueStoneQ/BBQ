@@ -129,7 +129,7 @@ useEffect(() => {
   // 副作用（订阅、请求、DOM 操作）
   const subscription = subscribe(id);
 
-  // 清理函数（组件卸载或依赖变化前执行）
+  // 清理函数（组件卸载时 或 依赖变化后下一次 effect 执行前 执行）
   return () => subscription.unsubscribe();
 }, [id]);  // 依赖数组：id 变化时重新执行
 ```
@@ -332,6 +332,82 @@ function Button() {
 ```
 
 **大型应用状态管理用 Zustand/Redux，不用 Context**——它们有 selector 机制，只在选中的字段变化时重渲染。
+
+---
+
+## useReducer
+
+### API 签名
+
+```tsx
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+**作用**：管理复杂的局部状态（多个相关字段 + 复杂更新逻辑）。是 useState 的加强版。
+
+**什么时候用**：当一个组件里 useState 写了 3-4 个且它们互相关联时（如 loading + data + error）。
+
+### 和 useState 的区别
+
+| | useState | useReducer |
+|---|---|---|
+| 适合 | 简单独立值（一两个） | 多字段联动 + 复杂更新 |
+| 更新方式 | `setState(newValue)` | `dispatch({ type, payload })` |
+| 逻辑位置 | 散落在事件处理函数里 | 集中在 reducer 纯函数里 |
+| 可测试性 | 一般 | 好（reducer 是纯函数，可单独测试） |
+
+### 完整示例
+
+```tsx
+// 1. 定义状态和 Action 类型
+interface FetchState<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+}
+
+type FetchAction<T> =
+  | { type: 'START' }
+  | { type: 'SUCCESS'; payload: T }
+  | { type: 'ERROR'; error: string };
+
+// 2. Reducer 纯函数（旧状态 + action → 新状态）
+function fetchReducer<T>(state: FetchState<T>, action: FetchAction<T>): FetchState<T> {
+  switch (action.type) {
+    case 'START':
+      return { ...state, loading: true, error: null };
+    case 'SUCCESS':
+      return { data: action.payload, loading: false, error: null };
+    case 'ERROR':
+      return { ...state, loading: false, error: action.error };
+  }
+}
+
+// 3. 组件中使用
+function TaskList() {
+  const [state, dispatch] = useReducer(fetchReducer<Task[]>, {
+    data: null, loading: false, error: null,
+  });
+
+  useEffect(() => {
+    dispatch({ type: 'START' });
+    fetchTasks()
+      .then(data => dispatch({ type: 'SUCCESS', payload: data }))
+      .catch(e => dispatch({ type: 'ERROR', error: e.message }));
+  }, []);
+
+  if (state.loading) return <Spinner />;
+  if (state.error) return <Error message={state.error} />;
+  return <List items={state.data} />;
+}
+```
+
+### 要点
+
+- **仍然是组件内局部状态**（不跨组件，跨组件用 Zustand）
+- reducer 是纯函数：给相同输入永远返回相同输出 → 容易测试
+- 和 Redux 的 reducer 语法一样，只是作用域是组件级而不是全局
+- 可以和 useContext 组合成"穷人版 Redux"（详见 [状态管理实战](./state-management-patterns.md)）
 
 ---
 

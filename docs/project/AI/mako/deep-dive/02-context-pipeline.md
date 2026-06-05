@@ -154,7 +154,9 @@ ContextPipeline 类
 
 ---
 
-### L3 微压缩（MicroCompressionLayer — 旧工具素材占位淘汰）
+### L3 微压缩（MicroCompressionLayer）
+
+> 旧工具素材占位淘汰
 
 **问题**：旧的工具结果占空间，但 LLM 已经看过了、做过决策了
 
