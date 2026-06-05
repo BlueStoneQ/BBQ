@@ -9,8 +9,17 @@
 - [useMemo / useCallback](#usememo--usecallback)
 - [useContext](#usecontext)
 - [自定义 Hooks](#自定义-hooks)
+  - [本质](#本质)
+  - [常见自定义 Hook 实现](#常见自定义-hook-实现)
+  - [常用生命周期场景](#常用生命周期场景)
+  - [关键区别](#关键区别)
 - [Hooks 规则与原理](#hooks-规则与原理)
+  - [两条规则](#两条规则)
+  - [为什么？](#为什么)
 - [常见陷阱](#常见陷阱)
+  - [1. 闭包陷阱（Stale Closure）](#1-闭包陷阱stale-closure)
+  - [2. useEffect 无限循环](#2-useeffect-无限循环)
+  - [3. 忘记清理](#3-忘记清理)
 
 ---
 
@@ -179,6 +188,50 @@ useEffect(() => {
 
 ## useRef
 
+### 本质
+
+**useRef = 一个跨 render 持久存在、修改不触发 re-render 的"容器"。**
+
+```
+普通变量：每次 render 重新创建 → 值丢了
+useState：值持久，但改了触发 re-render
+useRef：  值持久 + 改了不触发 re-render → 适合存"不影响 UI 的东西"
+```
+
+`.current` 是这个容器的"抽屉"——你往里存什么 React 都不关心，也不会因为你改了它而重新渲染。
+
+**作用域**：组件实例级（不是全局）。每个组件实例有自己独立的 ref，组件卸载时 ref 也跟着销毁。
+
+### 为什么不用普通变量？
+
+```tsx
+function Timer() {
+  // ❌ 普通变量：每次 render 组件函数重新执行 → 变量重新声明 → 上次存的值丢了
+  let intervalId = null;
+
+  function start() {
+    intervalId = setInterval(() => {}, 1000);  // 存了
+  }
+  function stop() {
+    clearInterval(intervalId);  // 下次 render 后 intervalId 又是 null → 清不掉！
+  }
+}
+
+function Timer() {
+  // ✅ useRef：值存在 React 内部，不随函数重新执行而丢失
+  const intervalRef = useRef<number | null>(null);
+
+  function start() {
+    intervalRef.current = setInterval(() => {}, 1000);  // 存了
+  }
+  function stop() {
+    clearInterval(intervalRef.current!);  // 任何时候都能拿到 → 清得掉
+  }
+}
+```
+
+**根本原因**：函数组件 = 每次 render 重新调用整个函数体 → `let` 变量每次都重新声明。useRef 的值存在 React 内部的 fiber 节点上，跨 render 持久存在。
+
 ### API 签名
 
 ```tsx
@@ -282,6 +335,62 @@ useCallback 就是 useMemo 的语法糖，专门用于缓存函数。
 | 组件内部简单计算 | | ✅（缓存本身有开销） |
 | 不传给子组件的回调 | | ✅ |
 
+### 完整示例：memo + useCallback + useMemo 配合
+
+```tsx
+import { memo, useCallback, useMemo } from 'react';
+
+// 子组件：用 memo 包裹 → props 不变就跳过 re-render
+const TaskCard = memo(function TaskCard({ task, onComplete }: {
+  task: Task;
+  onComplete: (id: string) => void;
+}) {
+  return (
+    <div>
+      <span>{task.title}</span>
+      <button onClick={() => onComplete(task.id)}>完成</button>
+    </div>
+  );
+});
+
+// 父组件
+function TaskList({ tasks }: { tasks: Task[] }) {
+  // useCallback → 函数引用稳定 → TaskCard 的 memo 才能生效
+  const handleComplete = useCallback((id: string) => {
+    completeTask(id);
+  }, []);
+
+  // useMemo → 计算结果缓存 → tasks 没变不重新过滤
+  const pendingTasks = useMemo(
+    () => tasks.filter(t => t.status === 'pending'),
+    [tasks]
+  );
+
+  return (
+    <div>
+      {pendingTasks.map(task => (
+        <TaskCard
+          key={task.id}
+          task={task}
+          onComplete={handleComplete}  // ← 稳定引用，memo 生效
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+**三者配合关系**：
+```
+memo(组件)      → 浅比较 props，没变就跳过 re-render
+useCallback(fn) → 让传给子组件的函数引用稳定 → memo 判定"没变"
+useMemo(value)  → 让传给子组件的对象/数组引用稳定 → memo 判定"没变"
+
+缺任何一个 → memo 形同虚设：
+  只有 memo 没有 useCallback → 函数每次新引用 → memo 无效
+  只有 useCallback 没有 memo → 子组件不做浅比较 → 稳定引用没意义
+```
+
 ---
 
 ## useContext
@@ -317,6 +426,85 @@ function Button() {
   return <button className={theme}>Click</button>;
 }
 ```
+
+### 常用实践（value 传对象 + useMemo 优化）
+
+```tsx
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
+
+// 1. 定义 Context 类型
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  fontSize: number;
+  toggleTheme: () => void;
+  setFontSize: (size: number) => void;
+}
+
+// 2. 创建 Context（给一个默认值方便类型推断）
+const ThemeContext = createContext<ThemeContextType | null>(null);
+
+// 3. 封装 Provider 组件
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [fontSize, setFontSize] = useState(14);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  }, []);
+
+  // ⚠️ 重点：useMemo 包裹 value，避免 Provider 父组件重渲染时
+  // 创建新对象引用 → 导致所有消费者无意义重渲染
+  const ctxValue = useMemo(
+    () => ({ theme, fontSize, toggleTheme, setFontSize }),
+    [theme, fontSize, toggleTheme]
+  );
+
+  return (
+    <ThemeContext.Provider value={ctxValue}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// 4. 封装 useTheme hook（加 null 检查，忘记包 Provider 时给出明确报错）
+function useTheme() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
+}
+
+// 5. 消费
+function Toolbar() {
+  const { theme, fontSize, toggleTheme, setFontSize } = useTheme();
+
+  return (
+    <div style={{ background: theme === 'dark' ? '#333' : '#fff', fontSize }}>
+      <button onClick={toggleTheme}>
+        当前主题: {theme}
+      </button>
+      <button onClick={() => setFontSize(fontSize + 2)}>
+        放大字体 (当前: {fontSize}px)
+      </button>
+    </div>
+  );
+}
+
+// 6. 顶层使用
+function App() {
+  return (
+    <ThemeProvider>
+      <Toolbar />
+      <Page />
+    </ThemeProvider>
+  );
+}
+```
+
+**要点总结：**
+- `value` 传对象即可共享多个状态 + 操作方法
+- 用 `useMemo` 缓存 value 对象，依赖项不变时引用不变，消费者不会无意义重渲染
+- 用 `useCallback` 缓存函数引用，配合 `useMemo` 的依赖数组
+- 封装自定义 hook（`useTheme`）加 null 检查，调用方更安全、更简洁
 
 ### 性能问题
 
@@ -583,6 +771,15 @@ function UserProfile({ id }: { id: string }) {
 | `componentDidCatch` | 暂无 Hook 等价（仍需 class ErrorBoundary） | 错误边界 |
 
 ### 常用生命周期场景
+
+**数据请求放在什么时机？**
+
+放在 `componentDidMount`（对应 `useEffect(..., [])`），依赖变化时也会重新请求（对应 `componentDidUpdate`）。
+
+为什么不放 render 之前（`componentWillMount`）？
+- 请求是异步的，放 render 前也不可能等到结果再渲染，没有意义
+- `componentWillMount` 在 React 17 已废弃，Concurrent Mode 下可能被多次调用，导致重复请求
+- 放 `didMount` 保证 DOM 已挂载，可以安全 setState 更新 UI
 
 ```tsx
 function UserProfile({ userId }: { userId: string }) {
