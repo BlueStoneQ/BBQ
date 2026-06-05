@@ -78,6 +78,65 @@ interface FiberNode {
 
 **为什么用链表不用树？** 链表可以用 while 循环遍历（可中断），树只能用递归（不可中断）。
 
+### 时间切片的本质
+
+**解决什么问题？** React 需要 diff 整棵组件树（可能 1000+ 节点），如果一口气跑完会阻塞主线程 → 用户交互无响应 → 卡顿。
+
+**本质：把 reconciliation（diff）这个纯计算过程，拆成多个宏任务，分散注册到一轮轮的 event loop 中执行。**
+
+```
+时间切片 = break workLoop + MessageChannel 注册下一轮宏任务
+
+时间线：
+  宏任务1: workLoop() 处理 fiber 1~10 → 时间到 → break → return
+  ── 浏览器：处理用户输入、跑动画、layout、paint ──
+  宏任务2: workLoop() 继续处理 fiber 11~20 → 时间到 → break → return
+  ── 浏览器：处理用户输入、跑动画、layout、paint ──
+  宏任务3: workLoop() 处理 fiber 21~30 → 全部完成 → 进入 commit
+```
+
+**"让出线程"怎么实现？没有黑魔法，就是函数 return 了：**
+
+```js
+// React Scheduler 核心逻辑（伪代码）
+function workLoop() {
+  while (有下一个 fiber 要处理) {
+    处理当前 fiber（执行组件函数、diff children）;
+
+    if (当前时间切片用完了) {  // performance.now() 检查是否超过 5ms
+      break;  // ← 就这么简单，break 出去
+    }
+  }
+
+  if (还有剩余工作) {
+    port.postMessage(null);  // ← 用 MessageChannel 安排下一个宏任务
+  }
+}
+
+// MessageChannel 回调（下一轮宏任务触发）
+channel.port1.onmessage = () => {
+  workLoop();  // 继续从上次 break 的位置干活
+};
+```
+
+**为什么 break 了还能继续？** 因为 Fiber 是链表，"当前处理到哪个节点"保存在变量里（`workInProgress`），break 只是暂停循环，下次进来从这个变量继续。递归做不到这一点——调用栈是引擎管的，你没法"暂停一半的递归"。
+
+**为什么用 MessageChannel 不用 setTimeout / requestIdleCallback？**
+- `setTimeout(fn, 0)` — 最少延迟 4ms，太慢
+- `requestIdleCallback` — 触发不稳定，低优先级，一帧可能不触发
+- `MessageChannel` — 宏任务，事件处理完后尽快执行，延迟最小
+
+**注意：只有 reconciliation 可切片，commit 不切片：**
+
+```
+Reconciliation（可切片，纯计算，不操作 DOM）：
+  多个宏任务分批完成 diff
+
+Commit（不可切片，同步执行）：
+  一口气把所有 mutation 提交到 DOM
+  原因：DOM 操作必须原子化，不能"改了一半"让用户看到撕裂的界面
+```
+
 遍历顺序：深度优先
 ```
       A

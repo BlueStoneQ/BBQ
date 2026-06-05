@@ -108,6 +108,39 @@ Commit 阶段遍历 Fiber 树，看到有 flags 的节点就执行对应 DOM 操
 
 **本质**：Render 阶段（Diff）只做计算和标记，不碰 DOM；Commit 阶段一次性把所有标记转化为真实 DOM 操作，保证 UI 一致性。
 
+### 双缓冲（Double Buffering）
+
+React 同时维护 **2 棵 Fiber 树**，通过 `alternate` 引用互相关联：
+
+```
+current 树：当前屏幕上显示的（对应真实 DOM/Native View）
+workInProgress (wip) 树：正在构建的新树（reconciliation 在这上面工作）
+```
+
+**流程（注意顺序）：**
+
+```
+1. 更新触发 → 基于 current 树克隆出 wip 树
+   （不是完全新建，复用没变化的节点，只克隆变化路径）
+
+2. Reconciliation → 在 wip 树上 diff + 打 flag
+   current 树不动，屏幕显示不受影响（可中断、不影响用户）
+
+3. Commit 阶段（同步）：
+   a. Mutation：遍历 wip 树上有 flag 的节点 → 执行真实 DOM 操作 ← 真正的渲染
+   b. fiberRoot.current = wip   ← 切换引用（只是更新"账本"，此时 DOM 已经改完了）
+   c. Layout：执行 useLayoutEffect / componentDidMount
+
+4. 旧 current 变成下次更新的 wip（复用内存，减少 GC）
+```
+
+**关键纠正**：
+- "切换引用"不是渲染动作，是在 DOM 已经更新之后做的，只是告诉 React "下次更新基于这棵树"
+- JS 没有指针，这里说的"指针切换"实际上是 `fiberRoot.current = wip` 这个赋值（变量重新引向另一个对象）
+- 渲染（DOM 操作）发生在 Mutation 子阶段，是遍历有 flag 的节点逐个执行的
+
+**为什么双缓冲？** 和显卡双缓冲一个道理——在后台构建完整新帧（wip 树），构建完成后一口气提交到屏幕（commit），避免用户看到"构建了一半"的中间状态。
+
 ---
 
 ## Renderer 可替换架构

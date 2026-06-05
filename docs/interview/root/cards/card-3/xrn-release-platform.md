@@ -1,23 +1,48 @@
-# CICD
+# XRN Release Platform（自建移动端发布平台）
 
-## XRN Release Platform（自建发布平台）
+> 定位：移动端的 GitLab CI —— 自部署、有 UI、基于 Fastlane、专为移动端 CD 设计。
 
-> 定位：移动端的 GitLab CI —— 自部署、有 UI、基于 Fastlane、专为移动端打包发版设计。
+---
 
-### 产品定位
+## 目录
 
-```
-GitLab = 代码托管 + CI/CD（自部署）
-XRN Release Platform = 移动端发布平台 + CD（自部署、Docker 一键部署）
-```
+- [解决什么问题](#解决什么问题)
+- [产品定位](#产品定位)
+- [架构设计](#架构设计)
+- [核心功能](#核心功能)
+- [用户使用流程](#用户使用流程)
+- [与 XRN 生态的关系](#与-xrn-生态的关系)
+- [优先级](#优先级)
+- [竞品对比](#竞品对比)
+- [技术选型](#技术选型)
+
+---
+
+## 解决什么问题
 
 现有方案的痛点：
 - Bitrise — SaaS 不能自部署，贵
-- Fastlane — 纯 CLI 无界面
+- Fastlane — 纯 CLI 无界面，非技术人员用不了
 - Jenkins — 通用 CI，移动端配置复杂
-- **XRN Release Platform** — 专为移动端、自部署、开箱即用、有 UI
+- GitLab CI — 需要学习成本，macOS runner 贵
 
-### 架构设计
+**XRN Release Platform** = 专为移动端、自部署、开箱即用、有 UI、Docker 一键部署。
+
+---
+
+## 产品定位
+
+```
+GitLab = 代码托管 + CI/CD（自部署）
+XRN Release Platform = 移动端发布平台 + CD（自部署、Docker 部署）
+
+用户：10 人以内的移动端团队
+场景：产品/测试也能点按钮发版，不用找开发
+```
+
+---
+
+## 架构设计
 
 ```
 Docker Container (XRN Release Platform)
@@ -34,9 +59,11 @@ Agent（类似 GitLab Runner，注册到平台）
 └── Linux Agent: Android 打包（Gradle + Fastlane）
 ```
 
-**关键限制**：iOS 打包无法 Docker 化（Apple 限制 macOS 只能跑在 Apple 硬件上），所以必须用 Agent 机制。
+**关键限制**：iOS 打包无法 Docker 化（Apple 限制 macOS 只能跑在 Apple 硬件上），必须用 Agent 机制。
 
-### 核心功能
+---
+
+## 核心功能
 
 | 功能 | 说明 |
 |---|---|
@@ -51,7 +78,9 @@ Agent（类似 GitLab Runner，注册到平台）
 | 权限管理 | 开发/测试/产品不同角色权限 |
 | 灰度发布 | 配置灰度比例，配合商店 API |
 
-### 用户使用流程
+---
+
+## 用户使用流程
 
 ```bash
 # 1. 部署平台（任意 Linux 服务器）
@@ -66,7 +95,9 @@ xrn-agent register --server http://your-server:3000 --token xxx
 # 4. Web UI 上：关联 Git 仓库 → 配置打包参数 → 点击发版
 ```
 
-### 与 XRN 生态的关系
+---
+
+## 与 XRN 生态的关系
 
 ```
 XRN 完整生态：
@@ -77,15 +108,19 @@ XRN 完整生态：
   xrn-monitor      → 监控平台（v3 规划）
 ```
 
-### 优先级
+---
 
-放在 version0.0.8 ~ 0.0.9 阶段，和 bundle-manage-platform 一起做：
+## 优先级
+
+放在 version 0.0.8 ~ 0.0.9 阶段，和 bundle-manage-platform 一起做：
 - bundle-manage-platform 管 bundle 的注册/版本/增量
 - xrn-release 管 App 的打包/签名/上架
 
 两者可以合并为一个平台的不同模块。
 
-### 竞品对比
+---
+
+## 竞品对比
 
 | | XRN Release | Bitrise | Fastlane | Jenkins |
 |---|---|---|---|---|
@@ -98,11 +133,19 @@ XRN 完整生态：
 
 ---
 
-# 增量包分发机制
-# 调试
-# 监控
-# 排障
-## 异常监控平台
-## 流量回放
-- 在web端流量回放？不可取，能力不完全
-- 客户端扫码，获取录制的流量，在客户端进行回放
+## 技术选型
+
+```
+Platform (Docker):
+  React + Vite（前端）
+  Node.js + Fastify（后端）
+  BullMQ + Redis（任务队列）
+  SQLite / PostgreSQL（存储）
+  WebSocket（实时日志）
+  pm2（进程守护）
+
+Agent (Mac Mini / Linux):
+  xrn-agent CLI（注册到平台，接收任务）
+  Fastlane（执行 build lane）
+  Xcode / Android SDK（打包工具链）
+```

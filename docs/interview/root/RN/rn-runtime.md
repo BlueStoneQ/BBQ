@@ -7,12 +7,17 @@
 ## 目录
 
 - [一、全景：从点击图标到看到页面](#一全景从点击图标到看到页面)
+  - [渲染指令的传递方式](#渲染指令的传递方式)
 - [二、Bundle 加载过程](#二bundle-加载过程)
+  - [多 Bundle 场景](#多-bundle-场景)
 - [三、RN 容器初始化后做了什么](#三rn-容器初始化后做了什么)
 - [四、渲染过程](#四渲染过程)
 - [五、逻辑执行过程](#五逻辑执行过程)
+  - [线程模型总结](#线程模型总结)
 - [六、图片等静态资源怎么处理](#六图片等静态资源怎么处理)
 - [七、和加载普通 JS 的区别](#七和加载普通-js-的区别)
+- [线程模型对比（RN vs 快应用 vs 小程序）](#线程模型对比rn-vs-快应用-vs-小程序)
+- **[Fabric 渲染模型深度解析（独立文档）](./fabric-rendering.md)**
 
 ---
 
@@ -25,11 +30,18 @@
   → 启动 MainActivity → 创建 ReactRootView
   → 加载 Bundle（.hbc 字节码）
   → Hermes 执行 Bundle → 执行 AppRegistry.registerComponent
-  → React 组件树渲染 → Virtual DOM diff
-  → 渲染指令通过 Fabric 传到 Native
+  → React 组件树渲染 → Virtual DOM diff（纯 JS 线程中完成）
+  → 渲染指令通过 Fabric（基于 JSI）传到 Native
   → Android 创建真实 View → 测量/布局/绘制
   → 用户看到页面
 ```
+
+### 渲染指令的传递方式
+
+**旧架构（Bridge）**：批量 JSON 指令，异步传递。
+**新架构（Fabric + JSI）**：JS 通过 JSI 同步操作 C++ Shadow Tree，Fabric diff 后一次性 commit。
+
+> 详细渲染模型、两次 diff 的原因、各阶段数据结构详解 → [Fabric 渲染模型深度解析](./fabric-rendering.md)
 
 ---
 
@@ -142,6 +154,64 @@ UI 线程：
 | JS Thread（Hermes） | 业务逻辑、React 渲染计算、事件处理 |
 | UI Thread（Main） | Native View 操作、手势事件分发、动画（worklet） |
 | Background Thread | 网络请求、文件 IO、TurboModule 异步操作 |
+
+### Android 线程底层实现
+
+**RN 的 JS 线程本质是一个 `HandlerThread`**（带 Looper 消息循环的常驻线程）：
+
+```java
+// 创建常驻线程（RN 内部实现）
+HandlerThread jsThread = new HandlerThread("mqt_js");
+jsThread.start();  // Looper.loop() 死循环 → 线程永远不退出
+
+// 往 JS 线程投递任务
+Handler jsHandler = new Handler(jsThread.getLooper());
+jsHandler.post(() -> hermesRuntime.evaluateScript(bundle));
+jsHandler.post(() -> hermesRuntime.callFunction("onPress", args));
+```
+
+**为什么线程能常驻？**
+
+```java
+// HandlerThread.run() 源码本质：
+public void run() {
+    Looper.prepare();
+    Looper.loop();  // 死循环：不断从 MessageQueue 取消息执行，没消息就阻塞等待
+    // 永远不会到这里，除非调用 quit()
+}
+```
+
+**销毁：**
+
+```java
+// ReactInstance 销毁时
+jsThread.quitSafely();  // Looper 退出循环 → run() 返回 → 线程死亡
+```
+
+**跨线程拿返回值：**
+
+Handler.post() 本身没有返回值机制，RN 中用这几种方式：
+
+```java
+// 方式 1：回调 — 执行完后 post 回调用方线程（RN 最常用）
+jsHandler.post(() -> {
+    String result = doWork();
+    mainHandler.post(() -> updateUI(result));  // 结果 post 回主线程
+});
+
+// 方式 2：JSI 同步调用 — 新架构直接返回（不跨线程，同一调用栈）
+// JS → JSI → C++ 方法直接 return → JS 立刻拿到值
+
+// 方式 3：Future — 阻塞等待（别在主线程用）
+Future<String> future = pool.submit(() -> doWork());
+String result = future.get();  // 阻塞直到完成
+```
+
+| 方式 | 创建 | 常驻 | 销毁 | RN 中使用 |
+|---|---|---|---|---|
+| `new Thread()` | `thread.start()` | ❌ run 完就死 | 自动 | 不用 |
+| `HandlerThread` | `ht.start()` | ✅ Looper 循环 | `quit()` / `quitSafely()` | JS 线程、NativeModules 线程 |
+| 线程池 | `Executors.newXxx()` | ✅ 核心线程常驻 | `shutdown()` | 网络、图片加载 |
 
 ---
 

@@ -12,6 +12,7 @@
 - [全景](./rn-full-picture.md) — 目录结构 → 构建 → 启动 → 渲染 → JS 调 Native
 - [构建系统](./build-system.md) — Metro + Hermes + APK 组装 + Link 机制
 - [运行时](./rn-runtime.md) — Bundle 加载 → 容器初始化 → 渲染 → 逻辑执行
+- [Fabric 渲染模型](./fabric-rendering.md) — Shadow Tree / Yoga 布局 / Mutation List / 两次 diff 原理
 
 ### 二、通信与 Native 集成
 
@@ -39,10 +40,15 @@
 - [分 Bundle 方案](./code-splitting.md) — 构建拆分 / 运行时加载 / 路由配合
 - [RN 工程化深度方案](../cards/card-3/rn-engineering-deep.md) — 多 Bundle 容器 / 原生路由 / 两层路由设计 / 热更新
 - [签名与发布全流程](./signing-and-release.md) — Android keystore + iOS 证书 + CI 自动化 + Fastlane
+- [Fastlane + CI/CD 自动化发版](./fastlane-ci-cd.md) — Fastlane 核心能力 / match 证书管理 / GitHub Actions 配合
 - [条件编译](./conditional-compile.md) — 包体裁剪
 - [2026 选型](./rn-2026-stack.md) — 技术栈 + 目录结构 + 状态管理
 
-### 六、场景专题
+### 六、网络层
+
+- [网络层最佳实践](./networking.md) — TanStack Query + axios + 分层封装 + 企业级增强
+
+### 七、场景专题
 
 - [IoT BLE 性能](./iot-ble-performance.md) — BLE+WiFi 共存 / 流畅度 / 优化方案
 - [调试与问题归因](./debugging-issues.md) — 常见问题排查

@@ -521,6 +521,48 @@ function App() {
 
 **大型应用状态管理用 Zustand/Redux，不用 Context**——它们有 selector 机制，只在选中的字段变化时重渲染。
 
+### Context 变化的渲染范围（精确理解）
+
+**Context 穿透 memo**：消费了 Context 的组件，memo 拦不住，强制重渲染。
+
+**但不是整棵子树都渲染**——只有直接 `useContext` 的组件会被强制更新，中间路径上没消费的组件会被跳过：
+
+```tsx
+<ThemeProvider>
+  <Header>              {/* ← 没消费 Context，不重渲染 ✅ */}
+    <Logo />            {/* ← 父没渲染，它也不会 ✅ */}
+    <ThemeToggle />     {/* ← useContext(ThemeContext)，强制重渲染 ❌ */}
+      <Icon />          {/* ← 跟着 ThemeToggle 渲染（父渲染了子默认跟） */}
+      <Label />         {/* ← memo 包裹 + props 没变 → 可以拦住 ✅ */}
+  </Header>
+  <Content />           {/* ← 没消费 Context，不重渲染 ✅ */}
+</ThemeProvider>
+```
+
+**传播规则**：
+```
+Context 变化
+  → React 找到所有 useContext(ThemeContext) 的 Fiber 节点（精准定位）
+  → 只标记这些节点为"需要更新"（中间层跳过，不需要参与渲染）
+  → 这些消费者重渲染
+  → 消费者的子组件按正常规则：没 memo 跟着渲染，有 memo + props 没变则跳过
+```
+
+**children 模式的性能优势**：
+
+```tsx
+// Provider setState 时，没消费 Context 的 children 不会重渲染
+// 因为 children 的 JSX 是在更上层创建的，引用没变
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={theme}>
+      {children}  {/* ← 引用没变，不重渲染 */}
+    </ThemeContext.Provider>
+  );
+}
+```
+
 ---
 
 ## useReducer

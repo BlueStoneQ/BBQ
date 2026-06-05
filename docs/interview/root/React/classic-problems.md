@@ -31,6 +31,43 @@ React 默认行为：父组件渲染 → 子组件无条件渲染。不会自动
 | 状态下沉 | 把频繁变化的状态移到更小的组件里 |
 | Zustand selector | 只订阅用到的字段，其他字段变了不重渲染 |
 
+**Zustand selector 示例**：
+
+```tsx
+// Store 有很多字段
+const useStore = create((set) => ({
+  user: { name: 'Tom', avatar: '...' },
+  theme: 'dark',
+  notifications: [],
+  setTheme: (t) => set({ theme: t }),
+}));
+
+// ❌ 订阅整个 store：任何字段变了，这个组件都重渲染
+function Header() {
+  const store = useStore();  // theme 变了 → 重渲染，notifications 变了 → 也重渲染
+  return <span>{store.user.name}</span>;
+}
+
+// ✅ selector 只取 user.name：只有 name 变了才重渲染
+function Header() {
+  const name = useStore((state) => state.user.name);  // notifications/theme 变了 → 不重渲染
+  return <span>{name}</span>;
+}
+
+// ✅ 多个字段用 shallow 比较
+import { shallow } from 'zustand/shallow';
+
+function Profile() {
+  const { name, avatar } = useStore(
+    (state) => ({ name: state.user.name, avatar: state.user.avatar }),
+    shallow  // 浅比较对象字段，避免每次返回新对象引用导致重渲染
+  );
+  return <img src={avatar} alt={name} />;
+}
+```
+
+**原理**：Zustand 内部对每个 selector 的返回值做 `Object.is` 比较（或 shallow 比较），值没变就不触发组件重渲染。这比 Context 精准得多——Context 是 value 引用变了所有消费者都重渲染。
+
 ```tsx
 // ❌ 每次 Parent 渲染，Child 都跟着渲染
 function Parent() {
@@ -250,7 +287,7 @@ const handleAdd = () => {
 
 ### 问题
 
-Context value 变了 → 所有 consumer 全量重渲染（即使只用了其中一个字段）。
+Context value 变了 → 所有 consumer 全量重渲染（即使只用了其中一个字段, 强制渲染）。
 
 ### 原因
 

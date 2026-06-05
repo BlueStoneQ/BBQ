@@ -1,7 +1,9 @@
 # LN — App 前端开发（AR 眼镜 + 技能编排）
 
 > 产品：AR 智能眼镜的技能编排系统（手机 App + 眼镜端渲染）
+>
 > 定位：前端主力，手机 App 开发为主战场 + 眼镜端前端渲染
+>
 > 技术栈：Flutter（跨端）+ Android/iOS 原生 + Server-Driven UI
 
 ---

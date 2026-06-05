@@ -101,12 +101,16 @@ export async function fetchTasks(filters?: TaskFilters): Promise<Task[]> {
   if (filters?.status) params.set('status', filters.status);
   if (filters?.keyword) params.set('keyword', filters.keyword);
 
+  // fetch 默认是 GET，参数拼在 URL query string 里
   const res = await fetch(`${API_BASE}/tasks?${params}`);
+  // res.ok = HTTP 状态码 200-299 时为 true
+  // 注意：fetch 对 404/500 不会 reject（只有网络错误才 reject），必须手动检查
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return res.json();  // 解析 response body 为 JSON
 }
 
 export async function completeTask(taskId: string): Promise<Task> {
+  // POST 请求需要指定 method
   const res = await fetch(`${API_BASE}/tasks/${taskId}/complete`, {
     method: 'POST',
   });
@@ -485,6 +489,39 @@ import { FixedSizeList } from 'react-window';
 | **可复用** | 不耦合具体业务数据结构（通过 Props 注入） |
 | **默认值** | 可选 Props 给默认值（`onPress?: () => void`） |
 | **组合优于继承** | 用 children / render props，不用继承 |
+
+**纯展示（Presentational）vs 容器（Container）示例**：
+
+```tsx
+// ❌ 组件又获取数据又渲染（职责混合）
+function TaskCard({ taskId }) {
+  const [task, setTask] = useState(null);
+  useEffect(() => { fetchTask(taskId).then(setTask); }, [taskId]);
+  const dispatch = useStore(s => s.dispatch);
+  return <div onClick={() => dispatch(complete(taskId))}>{task?.title}</div>;
+}
+
+// ✅ 纯展示组件（Presentational）：只管 props → UI
+function TaskCard({ task, onComplete }: { task: Task; onComplete: () => void }) {
+  return <div onClick={onComplete}>{task.title}</div>;
+}
+
+// ✅ 逻辑交给自定义 Hook
+function useTask(taskId: string) {
+  const { data: task } = useQuery({ queryKey: ['task', taskId], queryFn: () => fetchTask(taskId) });
+  const { mutate: completeTask } = useMutation({ mutationFn: () => completeTaskApi(taskId) });
+  return { task, completeTask };
+}
+
+// ✅ 容器组件（Container）：Hook 管逻辑 + 组合展示组件
+function TaskDetailScreen({ taskId }: { taskId: string }) {
+  const { task, completeTask } = useTask(taskId);
+  if (!task) return <Skeleton />;
+  return <TaskCard task={task} onComplete={completeTask} />;
+}
+```
+
+好处：纯展示组件容易测试（传 props 就能测）、容易复用（不绑定数据源）、方便 memo 优化。
 
 ---
 
