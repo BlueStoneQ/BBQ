@@ -8,3 +8,4 @@
 ## 目录
 
 - [技术 Leader 四维体系](./tech-leader.md) — 方向 / 质量 / 效率 / 人才
+- [入职展开工作方法论](./onboarding-plan.md) — 收集问题 / 分优先级 / AI 加速执行

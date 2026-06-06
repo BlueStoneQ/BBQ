@@ -16,3 +16,5 @@
 - [响应式原理](./reactivity.md) — Proxy / 依赖收集 / 派发更新 / ref vs reactive / 和 React 的根本区别
 
 ### 三、工程化
+
+- [微前端](./micro-frontend.md) — qiankun / Module Federation / 沙箱 / 通信 / 部署 / 和 RN 多 Bundle 类比
