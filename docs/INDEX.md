@@ -26,6 +26,8 @@
 - [KS JD](./interview/kuaishou/jd.md)
 - [BT JD](./interview/BT/jd.md)
 - [Anker JD](./interview/anker/jd.md)
+- [Vast JD](./interview/vast/jd.md)
+- [LN JD](./interview/LN/jd.md)
 
 ---
 
@@ -53,6 +55,26 @@
 ## React
 
 - [React Quick Review](./interview/root/React/README.md)
+
+## Vue
+
+- [Vue 知识体系](./interview/root/Vue/README.md)
+
+## Node.js
+
+- [Node.js 知识体系](./interview/root/Node/README.md)
+
+## TypeScript
+
+- [TS 实战知识体系](./interview/root/TS/README.md)
+
+## 技术管理
+
+- [技术 Leader 四维体系](./interview/root/manage/README.md)
+
+## 3D Web
+
+- [Three.js 核心概念](./interview/root/3D/README.md)
 
 ## Electron
 
@@ -128,6 +150,7 @@
 
 ## 前端基础专题
 
+- [基础八股速查（总入口）](./basic/README.md)
 - [前端性能优化](./basic/frontend_performance_interview_basic.md)
 - [Web 基础](./basic/web_fundamentals_interview_basic.md)
 - [React](./basic/react_interview_basic.md)

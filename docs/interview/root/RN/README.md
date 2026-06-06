@@ -27,6 +27,7 @@
 - [性能优化分层体系](./performance-layers.md) — React / RN 框架 / Native / 工程化 + 场景
 - [性能分析工具](./performance-profiling.md) — 工具盘点 / 场景选型 / 排查 SOP
 - [App 指标体系](./app-metrics.md) — 启动 / 渲染 / 交互 / 稳定性 / 监控
+- [首屏测速方案（无侵入）](./first-screen-detection.md) — View Tree 监听 / 稳定判定 / 秒开率计算
 
 ### 四、UI 与交互
 
@@ -50,6 +51,7 @@
 
 ### 七、场景专题
 
+- [线上稳定性保障](./stability.md) — 白屏检测 / 分级恢复 / 热更新回滚 / Expo 方案
 - [IoT BLE 性能](./iot-ble-performance.md) — BLE+WiFi 共存 / 流畅度 / 优化方案
 - [调试与问题归因](./debugging-issues.md) — 常见问题排查
 - [运维监控](./firebase-ops.md) — Firebase / Sentry / 选型

@@ -1,4 +1,4 @@
-# 前端性能优化面试知识梳理
+# 前端性能优化知识梳理
 
 > 基于 BBQ 项目中的性能优化学习笔记整理，从面试角度系统梳理前端性能优化核心知识点
 >
@@ -16,7 +16,36 @@
 
 ---
 
-## ⚡ 速查地图（按阶段分）
+## 目录
+
+- [一、性能指标体系](#一性能指标体系)
+  - [核心性能指标（LCP/FCP/CLS/INP）](#11-核心性能指标)
+  - [Performance API](#12-performance-api)
+  - [SPA 下的首屏时间](#13-spa-下的首屏时间)
+- [二、网络层优化](#二网络层优化)
+  - [资源加载优化](#21-资源加载优化)
+  - [HTTP 缓存策略](#22-http-缓存策略)
+  - [CDN 加速](#24-cdn-加速)
+- [三、渲染层优化](#三渲染层优化)
+  - [虚拟列表](#31-虚拟列表)
+  - [回流与重绘](#33-回流与重绘)
+  - [动画性能优化](#34-动画性能优化)
+  - [SSR](#35-ssr-服务端渲染)
+  - [节流与防抖](#36-节流与防抖)
+- [四、构建优化](#四构建优化)
+  - [代码分割](#41-代码分割)
+  - [Tree Shaking](#42-tree-shaking)
+- [五、用户体验优化](#五用户体验优化)
+  - [骨架屏](#51-骨架屏)
+  - [白屏优化](#52-白屏优化)
+- [六、性能监控](#六性能监控)
+  - [监控 SDK 设计](#61-性能监控-sdk-设计)
+  - [异常捕获](#62-异常捕获)
+- [七、高频面试题](#七高频面试题)
+
+---
+
+## 速查地图（按阶段分）
 
 ### 1. 加载性能（用户等待时间 — 资源到达浏览器前）
 
@@ -64,22 +93,10 @@
 
 ---
 
-## 目录
-
-- [一、性能指标体系](#一性能指标体系)
-- [二、网络层优化](#二网络层优化)
-- [三、渲染层优化](#三渲染层优化)
-- [四、构建优化](#四构建优化)
-- [五、用户体验优化](#五用户体验优化)
-- [六、性能监控](#六性能监控)
-- [七、高频面试题](#七高频面试题)
-
 ---
 
-## 一、性能指标体系 ⭐⭐⭐ 🔥🔥🔥
-
-### 1.1 核心性能指标 ⭐⭐⭐ 🔥🔥🔥
-
+## 一、性能指标体系
+### 1.1 核心性能指标
 **考点**：前端性能的关键指标
 
 **渲染流程与指标**：
@@ -98,24 +115,24 @@ Composite（合成）
 
 **核心指标详解**：
 
-#### 1. FP（First Paint）⭐⭐⭐ 🔥
+#### 1. FP（First Paint）
 - **定义**：白屏时间，从页面开始加载到浏览器首次渲染
 - **计算**：`FP = firstPaint - pageStartTime`
 - **意义**：用户看到页面有反应的时间
 
-#### 2. FCP（First Contentful Paint）⭐⭐⭐ 🔥🔥
+#### 2. FCP（First Contentful Paint）
 - **定义**：首次内容绘制，页面内容首次呈现在屏幕上
 - **标准**：1.8s 以内为优秀
 - **计算**：`FCP = firstContentTime - pageStartTime`
 - **区别**：FP 是任何渲染，FCP 是有意义的内容（文本、图像）
 
-#### 3. FMP（First Meaningful Paint）⭐⭐⭐ 🔥🔥
+#### 3. FMP（First Meaningful Paint）
 - **定义**：首次有效绘制，页面主要内容开始出现
 - **标准**：< 100ms
 - **特点**：因页面而异，没有统一规范
 - **上报**：一般在页面主接口的 setData 回调中手动上报
 
-#### 4. LCP（Largest Contentful Paint）⭐⭐⭐ 🔥🔥
+#### 4. LCP（Largest Contentful Paint）
 - **定义**：最大内容绘制，视窗最大可见元素的渲染时间
 - **标准**：2.5s 以内为优秀
 - **测量**：使用 `web-vitals` 库
@@ -125,17 +142,16 @@ import { getLCP } from 'web-vitals';
 getLCP(console.log);
 ```
 
-#### 5. TTI（Time To Interactive）⭐⭐⭐ 🔥🔥
+#### 5. TTI（Time To Interactive）
 - **定义**：首次可交互时间，页面可以快速响应用户输入
 - **计算**：`TTI = domInteractive - fetchStart`
 - **测量**：使用 `tti-polyfill`
 
-#### 6. FST（First Screen Time）⭐⭐⭐ 🔥
+#### 6. FST（First Screen Time）
 - **定义**：秒开率，首屏加载时间
 - **计算**：`首屏时间 = 页面完全加载时间 - 开始响应 URL 时间`
 
-### 1.2 Performance API ⭐⭐⭐ 🔥🔥
-
+### 1.2 Performance API
 **考点**：如何获取性能数据
 
 **Navigation Timing API**：
@@ -176,8 +192,7 @@ const observer = new PerformanceObserver((list) => {
 observer.observe({ entryTypes: ['paint'] });
 ```
 
-### 1.3 SPA 下的首屏时间 ⭐⭐⭐ 🔥🔥
-
+### 1.3 SPA 下的首屏时间
 **考点**：单页应用的性能监控
 
 **问题**：
@@ -203,10 +218,8 @@ fetchMainData().then(data => {
 
 ---
 
-## 二、网络层优化 ⭐⭐⭐ 🔥🔥🔥
-
-### 2.1 资源加载优化 ⭐⭐⭐ 🔥🔥
-
+## 二、网络层优化
+### 2.1 资源加载优化
 **考点**：如何优化资源加载
 
 **优化策略**：
@@ -223,8 +236,7 @@ HTTP 请求
     ↓ 解析渲染
 ```
 
-#### 2.1.1 懒加载（Lazy Load）⭐⭐⭐ 🔥🔥
-
+#### 2.1.1 懒加载（Lazy Load）
 **考点**：图片懒加载的实现原理
 
 **核心思想**：
@@ -286,8 +298,7 @@ const observer = new IntersectionObserver((entries) => {
 imgs.forEach(img => observer.observe(img));
 ```
 
-#### 2.1.2 预加载（Preload）⭐⭐⭐ 🔥
-
+#### 2.1.2 预加载（Preload）
 **考点**：资源预加载的方式
 
 **1. Link 标签预加载**：
@@ -315,8 +326,7 @@ imgs.forEach(img => observer.observe(img));
 <link rel="preconnect" href="//cdn.example.com">
 ```
 
-#### 2.1.3 接口聚合 ⭐⭐ 🔥
-
+#### 2.1.3 接口聚合
 **考点**：减少请求次数
 
 **问题**：
@@ -332,8 +342,7 @@ GET /api/aggregate?apis=user,config,menu
 const { user, config, menu } = await fetchAggregate();
 ```
 
-### 2.2 HTTP 缓存策略 ⭐⭐⭐ 🔥🔥🔥
-
+### 2.2 HTTP 缓存策略
 **考点**：HTTP 缓存的工作原理
 
 **缓存流程**：
@@ -348,8 +357,7 @@ const { user, config, menu } = await fetchAggregate();
     └─ 200 → 下载新资源
 ```
 
-#### 2.2.1 强缓存 ⭐⭐⭐ 🔥🔥
-
+#### 2.2.1 强缓存
 **特点**：不需要向服务器确认，直接使用缓存
 
 **1. Expires（HTTP/1.0）**：
@@ -374,8 +382,7 @@ Cache-Control: max-age=31536000
 - `public`：可被任何缓存
 - `private`：只能被浏览器缓存
 
-#### 2.2.2 协商缓存 ⭐⭐⭐ 🔥🔥
-
+#### 2.2.2 协商缓存
 **特点**：需要向服务器确认资源是否更新
 
 **1. Last-Modified / If-Modified-Since（基于时间）**：
@@ -420,12 +427,10 @@ If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
 - ETag 优先级高于 Last-Modified
 - 两者同时存在时，以 ETag 为准
 
-### 2.3 文件压缩 ⭐⭐⭐ 🔥
-
+### 2.3 文件压缩
 **考点**：如何减小文件体积
 
-#### 2.3.1 Gzip 压缩 ⭐⭐⭐ 🔥
-
+#### 2.3.1 Gzip 压缩
 **开启方式**：
 ```javascript
 // 客户端请求头
@@ -447,8 +452,7 @@ gzip_comp_level 6;
 - 文本文件压缩率 70%+
 - JS/CSS 文件压缩率 60%+
 
-#### 2.3.2 图片压缩 ⭐⭐ 🔥
-
+#### 2.3.2 图片压缩
 **策略**：
 1. **选择合适的格式**：
    - JPEG：照片、复杂图像
@@ -470,8 +474,7 @@ gzip_comp_level 6;
 </picture>
 ```
 
-### 2.4 CDN 加速 ⭐⭐⭐ 🔥
-
+### 2.4 CDN 加速
 **考点**：CDN 的作用和原理
 
 **作用**：
@@ -496,10 +499,8 @@ output: {
 
 ---
 
-## 三、渲染层优化 ⭐⭐⭐ 🔥🔥🔥
-
-### 3.1 虚拟列表 ⭐⭐⭐ 🔥🔥🔥
-
+## 三、渲染层优化
+### 3.1 虚拟列表
 **考点**：长列表性能优化方案
 
 **核心思想**：
@@ -597,12 +598,10 @@ class VirtualList {
 - React：`react-window`、`react-virtualized`
 - Vue：`vue-virtual-scroller`
 
-### 3.2 CSS 性能优化 ⭐⭐⭐ 🔥🔥
-
+### 3.2 CSS 性能优化
 **考点**：CSS 对性能的影响
 
-#### 3.2.1 选择器优化 ⭐⭐⭐ 🔥
-
+#### 3.2.1 选择器优化
 **CSS 匹配顺序**：从右到左
 
 ```css
@@ -628,8 +627,7 @@ div * {
 3. 优先使用类选择器
 4. 避免使用标签选择器（如果可以用类代替）
 
-#### 3.2.2 GPU 加速 ⭐⭐⭐ 🔥🔥
-
+#### 3.2.2 GPU 加速
 **触发 GPU 加速的属性**：
 ```css
 /* 使用 transform */
@@ -659,8 +657,7 @@ el.addEventListener('animationend', () => {
 });
 ```
 
-### 3.3 回流与重绘 ⭐⭐⭐ 🔥🔥🔥
-
+### 3.3 回流与重绘
 **考点**：如何减少回流和重绘
 
 **回流（Reflow）**：
@@ -678,7 +675,7 @@ el.addEventListener('animationend', () => {
 
 **优化策略**：
 
-#### 1. 批量修改样式 ⭐⭐⭐ 🔥
+#### 1. 批量修改样式
 ```javascript
 // ❌ 逐条修改，触发多次回流
 el.style.width = '100px';
@@ -692,7 +689,7 @@ el.className = 'new-style';
 el.style.cssText = 'width: 100px; height: 100px; margin: 10px;';
 ```
 
-#### 2. DOM 离线操作 ⭐⭐⭐ 🔥
+#### 2. DOM 离线操作
 ```javascript
 // ❌ 直接操作 DOM
 for (let i = 0; i < 1000; i++) {
@@ -715,7 +712,7 @@ const html = Array.from({ length: 1000 }, (_, i) => `<li>${i}</li>`).join('');
 ul.innerHTML = html;
 ```
 
-#### 3. 避免频繁读取布局信息 ⭐⭐⭐ 🔥
+#### 3. 避免频繁读取布局信息
 ```javascript
 // ❌ 读写交替，触发多次回流
 el.style.width = el.offsetWidth + 10 + 'px';
@@ -728,7 +725,7 @@ el.style.width = width + 10 + 'px';
 el.style.height = height + 10 + 'px';
 ```
 
-#### 4. 使用 transform 代替 top/left ⭐⭐⭐ 🔥🔥
+#### 4. 使用 transform 代替 top/left
 ```css
 /* ❌ 触发回流 */
 .element {
@@ -743,12 +740,10 @@ el.style.height = height + 10 + 'px';
 }
 ```
 
-### 3.4 动画性能优化 ⭐⭐⭐ 🔥🔥
-
+### 3.4 动画性能优化
 **考点**：如何实现高性能动画
 
-#### 3.4.1 CSS 动画优化 ⭐⭐⭐ 🔥
-
+#### 3.4.1 CSS 动画优化
 **优化原则**：
 1. 使用 `transform` 和 `opacity`（只触发合成）
 2. 避免使用 `width`、`height`、`left`、`top`（触发回流）
@@ -782,8 +777,7 @@ el.style.height = height + 10 + 'px';
 }
 ```
 
-#### 3.4.2 JS 动画优化 ⭐⭐⭐ 🔥
-
+#### 3.4.2 JS 动画优化
 **使用 requestAnimationFrame**：
 ```javascript
 // ❌ 使用 setInterval
@@ -804,8 +798,7 @@ requestAnimationFrame(animate);
 - 页面不可见时自动暂停
 - 性能更好
 
-### 3.5 SSR 服务端渲染 ⭐⭐⭐ 🔥🔥
-
+### 3.5 SSR 服务端渲染
 **考点**：SSR 的优势和实现
 
 **CSR vs SSR**：
@@ -865,12 +858,10 @@ server.get('*', (req, res) => {
 });
 ```
 
-### 3.6 节流与防抖 ⭐⭐⭐ 🔥🔥
-
+### 3.6 节流与防抖
 **考点**：高频事件的性能优化
 
-#### 3.6.1 防抖（Debounce）⭐⭐⭐ 🔥
-
+#### 3.6.1 防抖（Debounce）
 **定义**：事件触发后延迟执行，如果在延迟期间再次触发，则重新计时
 
 **应用场景**：
@@ -902,8 +893,7 @@ const handleInput = debounce((e) => {
 input.addEventListener('input', handleInput);
 ```
 
-#### 3.6.2 节流（Throttle）⭐⭐⭐ 🔥
-
+#### 3.6.2 节流（Throttle）
 **定义**：固定时间内只执行一次
 
 **应用场景**：
@@ -934,8 +924,7 @@ const handleScroll = throttle(() => {
 window.addEventListener('scroll', handleScroll);
 ```
 
-#### 3.6.3 有底线的防抖 ⭐⭐ 🔥🔥
-
+#### 3.6.3 有底线的防抖
 **需求**：结合防抖和节流，既要延迟执行，又要保证最长等待时间
 
 ```javascript
@@ -968,14 +957,11 @@ function debounceWithMaxWait(fn, delay, maxWait) {
 
 ---
 
-## 四、构建优化 ⭐⭐⭐ 🔥🔥
-
-### 4.1 代码分割 ⭐⭐⭐ 🔥🔥
-
+## 四、构建优化
+### 4.1 代码分割
 **考点**：如何实现代码分割
 
-#### 4.1.1 SplitChunks 配置 ⭐⭐⭐ 🔥
-
+#### 4.1.1 SplitChunks 配置
 ```javascript
 // webpack.config.js
 optimization: {
@@ -1002,8 +988,7 @@ optimization: {
 }
 ```
 
-#### 4.1.2 动态导入（懒加载）⭐⭐⭐ 🔥
-
+#### 4.1.2 动态导入（懒加载）
 **路由懒加载**：
 ```javascript
 // Vue Router
@@ -1042,8 +1027,7 @@ export default {
 const AsyncComponent = React.lazy(() => import('./AsyncComponent'));
 ```
 
-### 4.2 Tree Shaking ⭐⭐⭐ 🔥
-
+### 4.2 Tree Shaking
 **考点**：如何删除未使用的代码
 
 **原理**：
@@ -1075,12 +1059,10 @@ mode: 'production',  // 生产模式自动开启
 - 必须使用 ES6 模块（import/export）
 - CommonJS 模块（require/module.exports）无法 tree-shake
 
-### 4.3 压缩优化 ⭐⭐⭐ 🔥
-
+### 4.3 压缩优化
 **考点**：如何压缩代码
 
-#### 4.3.1 JS 压缩 ⭐⭐⭐ 🔥
-
+#### 4.3.1 JS 压缩
 ```javascript
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -1105,8 +1087,7 @@ optimization: {
 }
 ```
 
-#### 4.3.2 CSS 压缩 ⭐⭐ 🔥
-
+#### 4.3.2 CSS 压缩
 ```javascript
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
@@ -1117,12 +1098,10 @@ optimization: {
 }
 ```
 
-### 4.4 构建速度优化 ⭐⭐⭐ 🔥
-
+### 4.4 构建速度优化
 **考点**：如何提升构建速度
 
-#### 4.4.1 缩小搜索范围 ⭐⭐⭐ 🔥
-
+#### 4.4.1 缩小搜索范围
 ```javascript
 module: {
   rules: [{
@@ -1141,8 +1120,7 @@ resolve: {
 }
 ```
 
-#### 4.4.2 使用缓存 ⭐⭐⭐ 🔥
-
+#### 4.4.2 使用缓存
 ```javascript
 // Webpack 5 持久化缓存
 cache: {
@@ -1171,8 +1149,7 @@ cache: {
 }
 ```
 
-#### 4.4.3 多进程构建 ⭐⭐ 🔥
-
+#### 4.4.3 多进程构建
 ```javascript
 // thread-loader
 {
@@ -1188,10 +1165,8 @@ cache: {
 
 ---
 
-## 五、用户体验优化 ⭐⭐⭐ 🔥
-
-### 5.1 骨架屏 ⭐⭐⭐ 🔥
-
+## 五、用户体验优化
+### 5.1 骨架屏
 **考点**：如何实现骨架屏
 
 **作用**：
@@ -1201,7 +1176,7 @@ cache: {
 
 **实现方式**：
 
-#### 1. 手写 HTML/CSS ⭐⭐ 🔥
+#### 1. 手写 HTML/CSS
 ```html
 <div class="skeleton">
   <div class="skeleton-header"></div>
@@ -1233,12 +1208,12 @@ cache: {
 </style>
 ```
 
-#### 2. 使用图片 ⭐ 🔥
+#### 2. 使用图片
 ```html
 <img src="skeleton.png" alt="加载中" class="skeleton-image">
 ```
 
-#### 3. 自动生成（Webpack 插件）⭐⭐⭐ 🔥
+#### 3. 自动生成（Webpack 插件）
 ```javascript
 // 使用 page-skeleton-webpack-plugin
 const SkeletonWebpackPlugin = require('page-skeleton-webpack-plugin');
@@ -1252,8 +1227,7 @@ plugins: [
 ]
 ```
 
-### 5.2 白屏优化 ⭐⭐⭐ 🔥🔥
-
+### 5.2 白屏优化
 **考点**：白屏问题的原因和解决方案
 
 **原因**：
@@ -1263,23 +1237,23 @@ plugins: [
 
 **解决方案**：
 
-#### 1. 资源优化 ⭐⭐⭐ 🔥
+#### 1. 资源优化
 - 代码分割，减小首屏 JS 体积
 - 使用 CDN 加速
 - 开启 Gzip 压缩
 
-#### 2. 渲染优化 ⭐⭐⭐ 🔥
+#### 2. 渲染优化
 - SSR 服务端渲染
 - 骨架屏
 - Loading 动画
 
-#### 3. 预加载 ⭐⭐ 🔥
+#### 3. 预加载
 ```html
 <link rel="preload" href="main.js" as="script">
 <link rel="preload" href="style.css" as="style">
 ```
 
-#### 4. 内联关键 CSS ⭐⭐ 🔥
+#### 4. 内联关键 CSS
 ```html
 <head>
   <style>
@@ -1292,10 +1266,8 @@ plugins: [
 
 ---
 
-## 六、性能监控 ⭐⭐⭐ 🔥🔥
-
-### 6.1 性能监控 SDK 设计 ⭐⭐⭐ 🔥🔥
-
+## 六、性能监控
+### 6.1 性能监控 SDK 设计
 **考点**：如何设计性能监控系统
 
 **核心功能**：
@@ -1329,12 +1301,10 @@ plugins: [
 └─────────────────────────────────────┘
 ```
 
-### 6.2 异常捕获 ⭐⭐⭐ 🔥🔥
-
+### 6.2 异常捕获
 **考点**：如何捕获前端异常
 
-#### 6.2.1 try-catch ⭐⭐⭐ 🔥
-
+#### 6.2.1 try-catch
 ```javascript
 try {
   // 可能出错的代码
@@ -1348,8 +1318,7 @@ try {
 **优点**：可以捕获同步错误
 **缺点**：无法捕获异步错误
 
-#### 6.2.2 window.onerror ⭐⭐⭐ 🔥
-
+#### 6.2.2 window.onerror
 ```javascript
 window.onerror = function(message, source, lineno, colno, error) {
   reportError({
@@ -1367,8 +1336,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 **优点**：可以捕获全局错误
 **缺点**：无法捕获 Promise 错误
 
-#### 6.2.3 unhandledrejection ⭐⭐⭐ 🔥
-
+#### 6.2.3 unhandledrejection
 ```javascript
 window.addEventListener('unhandledrejection', (event) => {
   reportError({
@@ -1381,8 +1349,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 **作用**：捕获未处理的 Promise 错误
 
-#### 6.2.4 综合方案 ⭐⭐⭐ 🔥🔥
-
+#### 6.2.4 综合方案
 ```javascript
 class ErrorMonitor {
   constructor() {
@@ -1429,13 +1396,12 @@ class ErrorMonitor {
 }
 ```
 
-### 6.3 Lighthouse 性能审计 ⭐⭐ 🔥
-
+### 6.3 Lighthouse 性能审计
 **考点**：如何使用 Lighthouse
 
 **使用方式**：
 
-#### 1. Chrome DevTools ⭐⭐ 🔥
+#### 1. Chrome DevTools
 ```
 1. 打开 Chrome DevTools
 2. 切换到 Lighthouse 面板
@@ -1443,7 +1409,7 @@ class ErrorMonitor {
 4. 点击 "Generate report"
 ```
 
-#### 2. 命令行 ⭐⭐ 🔥
+#### 2. 命令行
 ```bash
 # 安装
 npm install -g lighthouse
@@ -1455,7 +1421,7 @@ lighthouse https://example.com
 lighthouse https://example.com --output html --output-path ./report.html
 ```
 
-#### 3. CI/CD 集成 ⭐⭐ 🔥
+#### 3. CI/CD 集成
 ```yaml
 # .gitlab-ci.yml
 lighthouse:
@@ -1475,10 +1441,8 @@ lighthouse:
 
 ---
 
-## 七、高频面试题 ⭐⭐⭐
-
-### Q1: 说说前端性能优化的手段？🔥🔥🔥
-
+## 七、高频面试题
+### Q1: 说说前端性能优化的手段？
 **答**：
 性能优化可以从以下几个方面入手：
 
@@ -1507,8 +1471,7 @@ lighthouse:
 - Loading 动画：给用户反馈
 - 渐进式加载：先显示主要内容
 
-### Q2: 什么是 FCP、LCP、TTI？🔥🔥🔥
-
+### Q2: 什么是 FCP、LCP、TTI？
 **答**：
 - **FCP（First Contentful Paint）**：首次内容绘制
   - 页面内容首次呈现在屏幕上的时间
@@ -1524,8 +1487,7 @@ lighthouse:
 
 这些是 Web Vitals 的核心指标，用于衡量用户体验。
 
-### Q3: 如何实现图片懒加载？🔥🔥🔥
-
+### Q3: 如何实现图片懒加载？
 **答**：
 **原理**：
 1. 图片 src 先设置为占位图
@@ -1553,8 +1515,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 
 **现代方案**：使用 Intersection Observer API。
 
-### Q4: 什么是回流和重绘？如何优化？🔥🔥🔥
-
+### Q4: 什么是回流和重绘？如何优化？
 **答**：
 **回流（Reflow）**：
 - 元素的几何属性（位置、尺寸）改变
@@ -1574,8 +1535,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 4. 避免频繁读取布局信息
 5. 使用 will-change 提前告知浏览器
 
-### Q5: 如何实现虚拟列表？🔥🔥🔥
-
+### Q5: 如何实现虚拟列表？
 **答**：
 **核心思想**：只渲染可见区域的元素
 
@@ -1593,8 +1553,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 - 监听滚动事件（更新渲染内容）
 - 使用 transform 设置偏移
 
-### Q6: HTTP 缓存策略有哪些？🔥🔥🔥
-
+### Q6: HTTP 缓存策略有哪些？
 **答**：
 **强缓存**（不需要向服务器确认）：
 - **Expires**：绝对时间点（HTTP/1.0）
@@ -1609,8 +1568,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 2. 未命中，检查协商缓存
 3. 服务器返回 304（使用缓存）或 200（下载新资源）
 
-### Q7: 什么是防抖和节流？🔥🔥
-
+### Q7: 什么是防抖和节流？
 **答**：
 **防抖（Debounce）**：
 - 事件触发后延迟执行
@@ -1625,8 +1583,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 - 防抖：只执行最后一次
 - 节流：固定频率执行
 
-### Q8: 如何优化首屏加载速度？🔥🔥🔥
-
+### Q8: 如何优化首屏加载速度？
 **答**：
 **1. 资源优化**：
 - 代码分割，减小首屏 JS 体积
@@ -1650,8 +1607,7 @@ window.addEventListener('scroll', throttle(lazyLoad, 200));
 - 按需加载
 - 懒加载
 
-### Q9: 什么是 Tree Shaking？🔥🔥
-
+### Q9: 什么是 Tree Shaking？
 **答**：
 Tree Shaking 是删除未使用代码的优化技术。
 
@@ -1667,8 +1623,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 
 **注意**：CommonJS 模块无法 tree-shake。
 
-### Q10: 如何监控前端性能？🔥🔥
-
+### Q10: 如何监控前端性能？
 **答**：
 **1. 性能指标采集**：
 - Performance API：获取性能时间点
@@ -1690,8 +1645,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 - 告警系统：异常及时通知
 - 报表分析：趋势分析、对比分析
 
-### Q11: SSR 的优缺点是什么？🔥🔥
-
+### Q11: SSR 的优缺点是什么？
 **答**：
 **优点**：
 1. SEO 友好：搜索引擎可以抓取完整内容
@@ -1708,8 +1662,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 - 需要 SEO 的页面
 - 首屏性能要求高的应用
 
-### Q12: 如何优化动画性能？🔥🔥
-
+### Q12: 如何优化动画性能？
 **答**：
 **CSS 动画优化**：
 1. 使用 transform 和 opacity（只触发合成）
@@ -1727,8 +1680,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 - 降低动画复杂度
 - 使用 CSS 动画代替 JS 动画
 
-### Q13: 什么是骨架屏？如何实现？🔥🔥
-
+### Q13: 什么是骨架屏？如何实现？
 **答**：
 **作用**：
 - 减少白屏时间的感知
@@ -1745,8 +1697,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 - 使用动画效果（如渐变）
 - 加载完成后平滑过渡
 
-### Q14: 如何减少白屏时间？🔥🔥
-
+### Q14: 如何减少白屏时间？
 **答**：
 **原因**：
 - JS 文件过大，下载和执行时间长
@@ -1759,8 +1710,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 3. **预加载**：preload 关键资源
 4. **内联关键 CSS**：首屏 CSS 内联到 HTML
 
-### Q15: 如何优化长列表性能？🔥🔥
-
+### Q15: 如何优化长列表性能？
 **答**：
 **问题**：
 - 渲染大量 DOM 元素
@@ -1779,8 +1729,7 @@ Tree Shaking 是删除未使用代码的优化技术。
 
 ---
 
-## 八、性能优化最佳实践 ⭐⭐
-
+## 八、性能优化最佳实践
 ### 8.1 性能优化清单
 
 **网络层**：
