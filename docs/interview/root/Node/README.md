@@ -1,6 +1,7 @@
 # Node.js 知识体系
 
 > 定位：前端 Leader 视角的 Node.js——不是后端工程师深度，是"能用 Node 解决前端工程化 + BFF + 工具链问题"的水平。
+>
 > 场景：DD（Node.js 微前端/BFF）、KS（后端语言加分项）、负载分析平台（全栈）。
 
 ---
@@ -17,5 +18,8 @@
 
 ### 三、工程实践
 
-- [BFF 与中间层](./bff.md) — 为什么前端要 BFF / GraphQL / API 聚合 / 鉴权
+- [BFF 与中间层](./bff.md) — 为什么前端要 BFF / API 聚合 / 鉴权 / 架构模式
+- [GraphQL](./graphql.md) — 查询语言本质 / Schema + Resolver / N+1 问题 / 与 REST 对比 / 在 BFF 中的定位
+- [NestJS](./nestjs.md) — 企业级 Node 框架 / DI + 模块 + 装饰器 / 做 BFF 中间层 / GraphQL 集成
 - [进程管理与部署](./process-deploy.md) — cluster / PM2 / Docker / 优雅重启
+- [Node 服务稳定性与可用性](./node-service-reliability.md) — 并发能力 / 事件循环不阻塞 / 容错降级 / 监控体系

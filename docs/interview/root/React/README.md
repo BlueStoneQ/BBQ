@@ -21,6 +21,7 @@
 
 - [性能优化](./performance.md)
 - [经典问题（重复渲染/重复请求/闭包陷阱/无限循环）](./classic-problems.md)
+- [表单（受控/非受控/React Hook Form/复杂场景）](./forms.md)
 
 ### 其他
 
