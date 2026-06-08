@@ -11,6 +11,8 @@
 - [多进程架构总览](./process-model.md) — 进程全景图 / 各进程职责 / 为什么这么设计
 - [Extension Host（插件宿主）](./extension-host.md) — 独立进程 / 插件加载 / API 暴露 / 隔离与通信
 - [LSP（Language Server Protocol）](./lsp.md) — 语言服务独立进程 / 协议设计 / 为什么不跑在 Extension Host 里
+- [子进程通信（adb / CDP）](./child-process-communication.md) — spawn/fork / 设备管理 / 调试协议 / 进程生命周期
+- [构建工具链](./build-toolchain.md) — 多入口编译 / 内置插件构建 / 平台打包 / 二次开发定制点
 
 ---
 

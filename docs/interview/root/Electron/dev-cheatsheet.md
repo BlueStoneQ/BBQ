@@ -26,7 +26,9 @@
 | 对象/模块 | 做什么 | 关键方法 |
 |-----------|--------|---------|
 | `app` | 应用生命周期 | `app.whenReady()` / `app.quit()` / `app.on('activate')` |
-| `BrowserWindow` | 创建/管理窗口 | `new BrowserWindow(options)` / `win.loadURL()` / `win.close()` |
+| `BrowserWindow` | 创建/管理窗口（自带 webContents） | `new BrowserWindow(options)` / `win.loadURL()` / `win.close()` |
+| `BaseWindow` | 创建空窗口（不带 webContents，Electron 30+） | 配合 WebContentsView 使用，多视图拼接场景 |
+| `WebContentsView` | 嵌入窗口的子视图（替代已废弃的 BrowserView） | `win.contentView.addChildView(view)` / `view.setBounds()` |
 | `ipcMain` | 接收渲染进程消息 | `ipcMain.handle(channel, handler)` / `ipcMain.on(channel, listener)` |
 | `Menu` | 系统菜单 | `Menu.buildFromTemplate(template)` / `Menu.setApplicationMenu(menu)` |
 | `Tray` | 系统托盘图标 | `new Tray(icon)` / `tray.setContextMenu(menu)` |
