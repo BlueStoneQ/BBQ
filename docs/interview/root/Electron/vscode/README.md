@@ -1,26 +1,38 @@
-# VS Code 架构
+# VSCode 架构深度拆解
 
-> VS Code 不是普通的 Electron 三层架构（Main/Preload/Renderer），而是"Main + Renderer + N 个功能进程"的多进程架构。核心创新是 Extension Host——让第三方插件在隔离进程中运行。
->
-> 场景：快应用 IDE 基于 VS Code 二次开发，这是你的直接经验。
-
----
-
-## 目录
-
-- [多进程架构总览](./process-model.md) — 进程全景图 / 各进程职责 / 为什么这么设计
-- [Extension Host（插件宿主）](./extension-host.md) — 独立进程 / 插件加载 / API 暴露 / 隔离与通信
-- [LSP（Language Server Protocol）](./lsp.md) — 语言服务独立进程 / 协议设计 / 为什么不跑在 Extension Host 里
-- [子进程通信（adb / CDP）](./child-process-communication.md) — spawn/fork / 设备管理 / 调试协议 / 进程生命周期
-- [构建工具链](./build-toolchain.md) — 多入口编译 / 内置插件构建 / 平台打包 / 二次开发定制点
+> 目标: 通过拆解 VSCode，掌握高阶 Electron 开发与 IDE 架构设计能力
+> 方法论: 第一性原理 + 结构化 + 问题驱动
 
 ---
 
-## 一句话
+## 索引
 
+| # | 文件 | 主题 |
+|---|------|------|
+| 0 | [00-overview.md](./00-overview.md) | **架构总览** — 全景图 (进程模型 / 源码分层 / 数据流 / 横切关注点) |
+| 1 | [01-源码分层与模块化.md](./01-源码分层与模块化.md) | VSCode 如何用分层 + 分环境策略管理 60 万行代码？ |
+| 2 | [02-依赖注入与服务化.md](./02-依赖注入与服务化.md) | 如何用 DI 容器解耦上百个服务？为什么不用 Redux？ |
+| 3 | [03-进程模型与启动流程.md](./03-进程模型与启动流程.md) | 多进程架构如何设计？从双击图标到编辑器就绪经历了什么？ |
+| 4 | [04-IPC通信机制.md](./04-IPC通信机制.md) | 进程间如何高效通信？RPC 协议怎么设计？ |
+| 5 | [05-插件系统架构.md](./05-插件系统架构.md) | 如何设计一个安全、高性能、可扩展的插件体系？ |
+| 6 | [06-Monaco编辑器内核.md](./06-Monaco编辑器内核.md) | 编辑器如何处理百万行文件？语法高亮怎么做到毫秒级？ |
+| 7 | [07-Language-Server-Protocol.md](./07-Language-Server-Protocol.md) | LSP 如何统一了语言智能？为什么是 C/S 架构？ |
+| 8 | [08-构建系统与产物.md](./08-构建系统与产物.md) | 如何从源码构建一个可分发的桌面 IDE？ |
+| 9 | [09-定制化IDE实践.md](./09-定制化IDE实践.md) | 基于 VSCode 做二次开发的架构决策与实践 |
+| 10 | [10-Electron高阶开发实践.md](./10-Electron高阶开发实践.md) | VSCode 怎么把 Electron 用到极致？有哪些可复用的高阶模式？ |
+| QA | [QA.md](./QA.md) | **高频追问** — 进程会爆炸吗？插件共享进程？LSP 生命周期？Electron 版本差异？ |
+
+---
+
+## 阅读建议
+
+**快速浏览**: 先看 `00-overview` 建立全局认知，再按兴趣跳读
+
+**系统学习路径**:
 ```
-普通 Electron 应用：Main + Renderer（两三个进程）
-VS Code：Main + Renderer + Extension Host + N 个 Language Server + Terminal + FileWatcher + Search
-= 每种"可能卡住"或"可能崩溃"的能力都隔离到独立进程
-= 任何子进程崩溃都可以重启，不影响编辑器 UI
+overview → 01 分层 → 02 DI → 03 进程 → 04 IPC → 05 插件 → 06 编辑器 → 07 LSP → 10 Electron
 ```
+
+**面试突击**: overview + 03 进程 + 05 插件 + 10 Electron + QA
+
+**做二次开发**: 01 分层 + 08 构建 + 09 定制化

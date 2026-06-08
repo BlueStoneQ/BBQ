@@ -26,6 +26,7 @@
 | 16 | [游戏引擎集成](./16-game-engine/README.md) | Unity/Unreal 在 Android 中的集成方式？目录结构？通信方案？ | [→](./16-game-engine/README.md) |
 | 17 | [直播与 IM](./17-live-im/README.md) | 直播推拉流方案？IM 长连接？协议选型？在 Android 中的集成？ | [→](./17-live-im/README.md) |
 | 18 | [WebView 容器定制](./webview-container.md) | 预创建/复用池、离线包、接口预请求、JSBridge 设计、请求拦截 | [→](./webview-container.md) |
+| 19 | [NDK 与 JNI](./18-ndk-jni/README.md) | JNI 双向通信、NDK 工具链、C++ ↔ Java 桥接、快应用中的角色 | [→](./18-ndk-jni/README.md) |
 
 ## 优先级
 

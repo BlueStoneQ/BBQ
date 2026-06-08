@@ -121,6 +121,8 @@ win.on('ready-to-show', () => win.show());
 
 ### electron-builder.yml 关键配置
 
+> **和 package.json 的区别**：package.json 管"开发时的项目配置"（依赖 / scripts / 入口 / 版本），electron-builder.yml 管"怎么把项目变成安装包"（平台配置 / 签名证书 / 安装行为 / 更新源 / 图标）。两者有少量字段看起来重复（如 productName），但 electron-builder 默认读 package.json 的 version/name，不需要重复写。
+
 ```yaml
 appId: com.company.app          # 应用唯一标识
 productName: MyApp              # 显示名称

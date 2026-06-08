@@ -34,6 +34,13 @@
 - [VS Code 架构分析（旧）](./vscode-architecture.md)
 - [IDE 插件系统（旧）](./ide-plugin-system.md)
 
+### 项目叙事
+
+- [快应用 IDE（目录）](./ide/README.md) — 二开全景 / 暴露 API / LSP / 构建打包
+  - [项目总览](./ide/overview.md)
+  - [二开全景与改造清单](./ide/customization-checklist.md)
+  - [暴露 API：Header WebView](./ide/custom-api-header-webview.md)
+
 ### Q&A
 
 - [Electron Q&A](./qa.md) — 架构本质 / IPC 底层 / Preload / 窗口进程 / 开发实践

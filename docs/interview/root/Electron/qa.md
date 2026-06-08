@@ -19,6 +19,9 @@
 - [应用图标/名称/Splash 在哪定义？](#应用图标名称splash-在哪定义)
 - [网络请求模型：Renderer 的请求经过 Main 转发吗？](#网络请求模型renderer-的请求经过-main-转发吗)
 - [autoUpdater 主要用来做什么？](#autoupdater-主要用来做什么)
+- [protocol 模块有什么用？三种场景](#protocol-模块有什么用三种场景)
+- [Electron 有路由系统吗？](#electron-有路由系统吗)
+- [nativeTheme 使用范式](#nativetheme-使用范式)
 
 ---
 
@@ -550,3 +553,166 @@ autoUpdater.on('update-downloaded', () => {
 ```
 
 和 build-config 的关系：`electron-builder.yml` 里配的 `publish: { provider: github }` 就是给 autoUpdater 指定更新源——构建时自动上传安装包到 GitHub Releases，autoUpdater 去那里检查新版本。
+
+
+---
+
+## protocol 模块有什么用？三种场景
+
+**Q：protocol 模块有什么作用？给个范例说下三种用法。**
+
+A：注册自定义 URL 协议，让应用能拦截特定 scheme 的请求。本质 = 让 Electron 拥有自己的 URL scheme（类似 Android intent-filter / iOS URL Types）。
+
+三种核心场景：
+
+```
+场景 1：加载本地资源（替代 file:// 协议）
+  问题：file:// 有 CSP / 同源策略限制，且路径暴露本地目录结构
+  解法：注册 app:// → 拦截请求 → 返回本地文件
+
+场景 2：深度链接（Deep Link）
+  用户在浏览器点 myapp://settings/account → OS 唤起 Electron 应用并传路径
+  配合 app.setAsDefaultProtocolClient('myapp')
+
+场景 3：拦截/代理 Web 请求
+  拦截 https:// 请求 → 做本地缓存 / mock / 离线化
+```
+
+```typescript
+// ===== 场景 1：自定义协议加载本地资源 =====
+import { protocol } from 'electron';
+
+// 注册 app:// 协议
+protocol.registerFileProtocol('app', (request, callback) => {
+  // app://assets/logo.png → /path/to/resources/assets/logo.png
+  const relativePath = request.url.replace('app://', '');
+  callback({ path: path.join(__dirname, '../resources', relativePath) });
+});
+
+// 页面中使用（不暴露本地路径，更安全）
+// <img src="app://assets/logo.png" />
+// <link href="app://styles/theme.css" />
+
+
+// ===== 场景 2：深度链接 =====
+// 注册为系统默认处理程序（安装时生效）
+app.setAsDefaultProtocolClient('myapp');
+
+// macOS：通过 open-url 事件接收
+app.on('open-url', (event, url) => {
+  // url = 'myapp://settings/account'
+  handleDeepLink(url);
+});
+
+// Windows/Linux：通过 second-instance 事件接收（进程已存在时）
+app.on('second-instance', (event, argv) => {
+  const url = argv.find(arg => arg.startsWith('myapp://'));
+  if (url) handleDeepLink(url);
+});
+
+function handleDeepLink(url: string) {
+  // myapp://settings/account → 导航到设置页面
+  const route = new URL(url).pathname;  // '/settings/account'
+  mainWindow.webContents.send('navigate', route);
+}
+
+
+// ===== 场景 3：拦截 HTTPS 请求（本地缓存/离线化）=====
+protocol.interceptBufferProtocol('https', (request, callback) => {
+  const cached = localCache.get(request.url);
+  if (cached) {
+    // 有本地缓存 → 直接返回
+    callback({ mimeType: 'text/html', data: Buffer.from(cached) });
+  } else {
+    // 无缓存 → 放行原始请求（不拦截）
+    callback({ url: request.url });  // 透传
+  }
+});
+```
+
+快应用 IDE 里的实际用途：如果有 `hap://` 协议拦截加载本地预览资源，就是场景 1 的用法。
+
+
+---
+
+## Electron 有路由系统吗？
+
+**Q：Electron 有没有路由系统？**
+
+A：**没有。** Electron 不提供任何路由机制。
+
+```
+路由完全由渲染进程的前端框架处理：
+  React → React Router
+  Vue → Vue Router
+  和开发 SPA 完全一样
+
+Electron 只做一件事：加载一个 HTML 入口
+  mainWindow.loadFile('dist/index.html')
+  → 后面的页面内跳转、路由切换 = 前端框架的事
+
+多窗口场景：
+  不同窗口加载不同 HTML（或同一 HTML 不同 hash）
+  每个窗口内部各自有自己的路由实例
+  窗口之间没有"路由跳转"概念——要通信走 IPC
+
+类比：
+  Electron 窗口 = Android Activity
+  窗口内路由 = Activity 内的 Fragment 切换
+  窗口间切换 = Activity 跳转（通过 Intent = IPC）
+```
+
+
+---
+
+## nativeTheme 使用范式
+
+**Q：nativeTheme 的使用范式是什么？**
+
+A：核心模式 = **监听系统主题变化 + 同步到渲染进程 + 允许用户手动覆盖**。
+
+三个关键 API：
+- `nativeTheme.shouldUseDarkColors` — 读当前是暗还是亮
+- `nativeTheme.on('updated')` — 系统主题切换时触发
+- `nativeTheme.themeSource` — 强制设置 `'dark'` / `'light'` / `'system'`
+
+```typescript
+// ===== Main 进程 =====
+import { nativeTheme, ipcMain } from 'electron';
+
+// 1. 读取当前主题
+const isDark = nativeTheme.shouldUseDarkColors;  // true = 暗色
+
+// 2. 监听系统主题切换（用户在系统设置里切了暗色/亮色）
+nativeTheme.on('updated', () => {
+  mainWindow.webContents.send('theme-changed', nativeTheme.shouldUseDarkColors);
+});
+
+// 3. 允许渲染进程主动切换（覆盖系统设置）
+ipcMain.handle('set-theme', (_, mode: 'dark' | 'light' | 'system') => {
+  nativeTheme.themeSource = mode;  // 'system' = 跟随系统
+});
+
+
+// ===== Preload =====
+contextBridge.exposeInMainWorld('api', {
+  onThemeChanged: (cb: (isDark: boolean) => void) => {
+    ipcRenderer.on('theme-changed', (_, isDark) => cb(isDark));
+  },
+  setTheme: (mode: 'dark' | 'light' | 'system') => ipcRenderer.invoke('set-theme', mode),
+});
+
+
+// ===== Renderer（React）=====
+useEffect(() => {
+  window.api.onThemeChanged((isDark) => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  });
+}, []);
+
+// 用户手动切换
+<button onClick={() => window.api.setTheme('dark')}>暗色</button>
+<button onClick={() => window.api.setTheme('system')}>跟随系统</button>
+```
+
+这是一个典型的"主进程主动推送"模式的应用——系统事件在 Main 进程触发，通过 `webContents.send` 推给渲染进程。

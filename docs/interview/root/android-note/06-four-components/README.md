@@ -5,13 +5,14 @@
 ## 目录
 
 - [一、四大组件概览](#一四大组件概览)
-- [二、Activity](#二activity)
-- [三、Service](#三service)
-- [四、BroadcastReceiver](#四broadcastreceiver)
-- [五、ContentProvider](#五contentprovider)
-- [六、Fragment](#六fragment)
-- [七、Notification](#七notification)
-- [八、在快应用框架中的应用](#八在快应用框架中的应用)
+- [二、AndroidManifest.xml](#二androidmanifestxml)
+- [三、Activity](#三activity)
+- [四、Service](#四service)
+- [五、BroadcastReceiver](#五broadcastreceiver)
+- [六、ContentProvider](#六contentprovider)
+- [七、Fragment](#七fragment)
+- [八、Notification](#八notification)
+- [九、在快应用框架中的应用](#九在快应用框架中的应用)
 
 ---
 
@@ -28,7 +29,38 @@
 
 ---
 
-## 二、Activity
+## 二、AndroidManifest.xml
+
+### 本质
+
+App 的**身份证 + 注册表**。告诉操作系统"这个 App 有什么、需要什么、能做什么"。
+
+安装时系统扫描这个文件，建立"这个 App 能做什么"的索引。运行时系统根据这个索引决定 Intent 匹配、权限检查、组件调度。
+
+### 核心职责
+
+| 职责 | 说明 | 示例 |
+|------|------|------|
+| 声明所有组件 | 四大组件必须注册，否则系统不认 | `<activity>` / `<service>` / `<receiver>` / `<provider>` |
+| 声明权限 | 不声明就用不了对应能力 | `<uses-permission android:name="android.permission.CAMERA" />` |
+| 声明应用元信息 | 包名、版本号、SDK 版本、图标、名称、主题 | `<application android:icon="..." android:label="...">` |
+| 声明入口 | 哪个 Activity 是启动页 | intent-filter: `action=MAIN` + `category=LAUNCHER` |
+| 声明 intent-filter | Deep Link、隐式 Intent 匹配 | `<data android:scheme="myapp" android:host="settings" />` |
+| 声明硬件/特性需求 | Google Play 根据这个过滤不兼容设备 | `<uses-feature android:name="android.hardware.camera" />` |
+
+### 类比
+
+| Android | Web/前端 | Electron |
+|---------|---------|----------|
+| AndroidManifest.xml | package.json + index.html + 权限声明 | package.json + electron-builder.yml + entitlements.plist |
+
+### 快应用框架中的 Manifest
+
+快应用的 `manifest.json` 就是对标 Android 的 `AndroidManifest.xml`——声明页面（路由）、权限、入口、元信息。本质相同，只是格式从 XML 变成了 JSON。
+
+---
+
+## 三、Activity
 
 ### 本质
 
@@ -112,9 +144,67 @@ startActivity(intent);
 
 类比前端：`router.push({ path: '/second', query: { key: 'value' } })`
 
+**Intent 的能力范围**：Intent 不只是页面跳转，是 Android 的"统一消息信封"：
+
+| 场景 | 用法 | 是否跨应用 |
+|------|------|:---:|
+| 应用内跳 Activity | 显式 Intent（指定目标类名） | ❌ |
+| 启动 Service | `startService(intent)` | ❌ |
+| 发送 Broadcast | `sendBroadcast(intent)` | ✅ |
+| 分享内容到其他 App | 隐式 Intent（ACTION_SEND） | ✅ |
+| **Deep Link（通过 URL 打开指定页面）** | 隐式 Intent（ACTION_VIEW + Uri） | ✅ |
+
+### Intent vs Deep Link
+
+```
+关系：
+  Intent = 底层通信机制（Android 四大组件都通过它通信）
+  Deep Link = Intent 的一种应用场景（通过 URL 唤起 App 指定页面）
+
+  Deep Link 是通过 Intent 实现的，不是并列的两套东西。
+```
+
+**Deep Link 实现**：
+
+```xml
+<!-- App B 的 AndroidManifest.xml：声明能处理 myapp://settings/* -->
+<activity android:name=".SettingsActivity">
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" android:host="settings" />
+  </intent-filter>
+</activity>
+```
+
+```kotlin
+// App A 打开 App B 的设置页面
+val intent = Intent(Intent.ACTION_VIEW, Uri.parse("myapp://settings/account?tab=privacy"))
+startActivity(intent)
+// → 系统匹配 intent-filter → 启动 App B 的 SettingsActivity
+
+// App B 的 SettingsActivity 里解析路径
+val uri = intent.data  // myapp://settings/account?tab=privacy
+val path = uri?.path   // /account
+val tab = uri?.getQueryParameter("tab")  // privacy
+// → 根据 path 决定跳到哪个子页面
+```
+
+**跨平台 Deep Link 对比**：
+
+| 平台 | 机制 | 注册方式 |
+|------|------|---------|
+| Android | Intent + intent-filter | Manifest 声明 |
+| iOS | URL Scheme / Universal Links | Info.plist / apple-app-site-association |
+| Electron | Custom Protocol | `app.setAsDefaultProtocolClient('myapp')` |
+| Web → App | 同上，`<a href="myapp://...">` 触发 | 同上 |
+
+**共同本质**：都是 URL Scheme 路由——通过 `scheme://host/path?query` 标识目标页面，OS 负责匹配和分发。
+
 ---
 
-## 三、Service
+## 四、Service
 
 ### 本质
 
@@ -137,27 +227,78 @@ startActivity(intent);
 
 ---
 
-## 四、BroadcastReceiver
+## 五、BroadcastReceiver
 
 ### 本质
 
 全局事件监听器。系统或 App 发出广播，注册了对应 IntentFilter 的 Receiver 会被触发。
 
-```java
-// 注册监听网络变化
-IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-registerReceiver(networkReceiver, filter);
+**广播是系统级的发布/订阅模式**，天然支持跨应用、跨进程。由 AMS（ActivityManagerService）中转分发。
 
-// 接收广播
-public class NetworkReceiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        // 网络状态变了
+### 约定机制
+
+发送方和接收方通过 **action 字符串** 匹配（类似事件名/key）：
+
+```kotlin
+// ===== App A：发送广播 =====
+val intent = Intent("com.example.ACTION_DATA_UPDATED")  // action = 约定的 key
+intent.putExtra("count", 42)
+sendBroadcast(intent)
+
+// ===== App B：接收广播（需要注册相同的 action）=====
+val filter = IntentFilter("com.example.ACTION_DATA_UPDATED")
+registerReceiver(myReceiver, filter)
+
+class MyReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val count = intent.getIntExtra("count", 0)  // 拿到数据
     }
 }
 ```
 
-类比前端：`window.addEventListener('online', handler)` 的系统级版本。
+> 两个应用要通信：约定同一个 action 字符串即可。类比前端的 `window.addEventListener('my-event')` + `window.dispatchEvent(new CustomEvent('my-event'))`。
+
+### 广播的作用域
+
+| 场景 | 能否收到 | 说明 |
+|------|:---:|------|
+| 同进程同线程 | ✅ | 最简单 |
+| 同进程不同线程 | ✅ | onReceive 回到主线程执行 |
+| 同应用不同进程 | ✅ | 走系统 AMS |
+| 不同应用 | ✅ | 但 Android 8.0+ 隐式广播受限 |
+| 系统广播（电量/网络） | ✅ | 系统发出，所有注册的 App 收到 |
+
+### 注册方式：动态 vs 静态
+
+| 注册方式 | 是否需要 Manifest | App 未启动时能收到 | Android 8.0+ 限制 |
+|---------|:---:|:---:|:---:|
+| 动态注册 `registerReceiver()` | ❌ 不需要 | ❌ | 无限制 |
+| 静态注册 `<receiver>` | ✅ 需要 | ✅（系统唤醒 App） | 隐式广播被禁 |
+
+```kotlin
+// 动态注册（代码中，App 运行时生效，App 被杀就收不到）
+val filter = IntentFilter("com.example.ACTION_DATA_UPDATED")
+registerReceiver(myReceiver, filter)
+// → 不需要 Manifest 声明，现在主流用法
+
+// 静态注册（Manifest 中，App 没启动也能被唤醒接收）
+// <receiver android:name=".MyReceiver" android:exported="true">
+//     <intent-filter>
+//         <action android:name="com.example.ACTION_DATA_UPDATED" />
+//     </intent-filter>
+// </receiver>
+// → Android 8.0+ 大部分隐式广播禁止静态注册（省电策略）
+```
+
+> 现在基本都用动态注册。静态注册的场景只剩少数系统广播（如 `BOOT_COMPLETED`）。
+
+### Android 8.0+ 限制
+
+隐式广播不能在 Manifest 静态注册了（省电）。跨应用广播需要：
+- 动态注册（`registerReceiver`）
+- 或指定目标包名（显式广播）
+
+应用内广播替代方案：EventBus / Kotlin Flow / LiveData（不走系统 AMS，性能更好）。
 
 ### 常见系统广播
 
@@ -169,7 +310,7 @@ public class NetworkReceiver extends BroadcastReceiver {
 
 ---
 
-## 五、ContentProvider
+## 六、ContentProvider
 
 ### 本质
 
@@ -194,9 +335,45 @@ content://com.example.provider/users/123
 
 类比 URL：`https://api.example.com/users/123`
 
+### 最小示例
+
+```kotlin
+// ===== App A（数据提供者）：定义 ContentProvider =====
+// ContentProvider 是抽象基类（abstract class），以下 6 个方法必须全部实现（标准 CRUD 接口）
+class UserProvider : ContentProvider() {
+    override fun query(uri: Uri, ...): Cursor {
+        // 根据 URI 查询数据，返回 Cursor
+        val id = uri.lastPathSegment  // "123"
+        return db.query("users", selection = "id = ?", selectionArgs = arrayOf(id))
+    }
+    override fun insert(uri: Uri, values: ContentValues?): Uri { ... }
+    override fun update(...): Int { ... }
+    override fun delete(...): Int { ... }
+    override fun getType(uri: Uri): String = "vnd.android.cursor.item/user"
+    override fun onCreate(): Boolean = true
+}
+
+// Manifest 中注册（必须）
+// <provider android:name=".UserProvider"
+//           android:authorities="com.example.provider"
+//           android:exported="true" />
+
+
+// ===== App B（数据消费者）：通过 ContentResolver 查询 =====
+val uri = Uri.parse("content://com.example.provider/users/123")
+val cursor = contentResolver.query(uri, null, null, null, null)
+cursor?.use {
+    if (it.moveToFirst()) {  // Cursor 移动到第一行（有数据则返回 true）
+        val name = it.getString(it.getColumnIndex("name"))  // 按列名取值
+    }
+}
+```
+
+本质就是 CRUD 接口——Provider 提供增删改查，Resolver 通过 URI 调用。底层走 Binder IPC 跨进程。
+
 ---
 
-## 六、Fragment
+## 七、Fragment
 
 ### 本质
 
@@ -234,7 +411,7 @@ Activity.onResume
 
 ---
 
-## 七、Notification
+## 八、Notification
 
 ### 本质
 
@@ -257,7 +434,7 @@ Activity.onResume
 
 ---
 
-## 八、在快应用框架中的应用
+## 九、在快应用框架中的应用
 
 | 组件 | 在框架中的角色 |
 |------|-------------|
