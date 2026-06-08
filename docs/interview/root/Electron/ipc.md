@@ -1,5 +1,15 @@
 # Electron IPC 通信
 
+## 目录
+
+- [本质](#本质)
+- [三种通信模式](#三种通信模式)
+  - [1. 渲染 → 主（请求-响应，最常用）](#1-渲染--主请求-响应最常用)
+  - [2. 渲染 → 主（单向通知，不需要响应）](#2-渲染--主单向通知不需要响应)
+  - [3. 主 → 渲染（主动推送）](#3-主--渲染主动推送)
+- [通信原理](#通信原理)
+- [和 RN 通信的对比](#和-rn-通信的对比)
+
 ## 本质
 
 **IPC = 进程间通信**。和 RN 的 JSI/Bridge、Android 的 Binder 是同一类问题：两个隔离的运行环境需要交换数据。
@@ -100,4 +110,4 @@ ipcRenderer.invoke('channel', data)
 | 安全模型 | contextBridge 白名单 | Codegen 类型约束 |
 | 大数据 | SharedArrayBuffer / MessagePort | ArrayBuffer 零拷贝 |
 
-**Electron IPC 比 RN Bridge 慢但比旧 RN Bridge 快**——因为是本机进程间通信（不跨网络），序列化用结构化克隆（比 JSON 快）。
+**性能定位**：Electron IPC 是本机进程间通信（~0.1ms），比 RN 新架构 JSI（同进程同步直调 ~0.001ms）慢，但对桌面应用场景完全够用（不需要 60fps 帧同步）。

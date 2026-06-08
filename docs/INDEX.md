@@ -82,6 +82,7 @@
 ## Electron
 
 - [Electron 核心概念](./interview/root/Electron/README.md)
+  - [VS Code 架构](./interview/root/Electron/vscode/README.md)
 
 ## Flutter
 

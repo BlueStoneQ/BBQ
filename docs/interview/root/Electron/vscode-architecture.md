@@ -1,5 +1,20 @@
 # VS Code 架构拆解
 
+## 目录
+
+- [本质](#本质)
+- [多进程架构](#多进程架构)
+- [微内核 + 插件化](#微内核--插件化)
+- [进程间通信](#进程间通信)
+- [插件系统设计](#插件系统设计)
+  - [激活机制（Lazy Activation）](#激活机制lazy-activation)
+  - [贡献点系统（Contribution Points）](#贡献点系统contribution-points)
+  - [Extension Host 隔离](#extension-host-隔离)
+- [性能设计](#性能设计)
+- [工程实践](#工程实践)
+- [你的快应用 IDE 和 VS Code 的关系](#你的快应用-ide-和-vs-code-的关系)
+- [面试话术](#面试话术)
+
 ## 本质
 
 VS Code 是 Electron 应用的标杆设计——**多进程隔离 + 微内核 + 插件化**。核心编辑器极小，所有功能通过插件扩展。
