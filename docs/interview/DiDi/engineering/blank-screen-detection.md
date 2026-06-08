@@ -12,6 +12,11 @@
 
 - [为什么会白屏](#为什么会白屏)
 - [检测方案](#检测方案)
+  - [DOM 节点检测](#方案-1dom-节点检测最常用)
+  - [MutationObserver](#方案-2mutationobserver更精确)
+  - [检测时机设计](#检测时机设计)
+  - [采样点检测](#方案-3采样点检测更准确)
+  - [截图对比](#方案-4截图对比重型方案)
 - [恢复策略](#恢复策略)
 - [上报与告警](#上报与告警)
 - [Q&A](#qa)
@@ -41,37 +46,181 @@
 ### 方案 1：DOM 节点检测（最常用）
 
 ```javascript
-// 页面加载完成后检测根节点是否有子元素
+// 2s 后怎么检测？—— 检查根节点是否有子元素
 function checkBlankScreen() {
   const root = document.querySelector('#root') || document.querySelector('#app');
   
   if (!root || root.children.length === 0) {
-    // 白屏！
+    // 根节点空的 = 框架没渲染出任何组件 = 白屏
+    reportBlankScreen();
+  }
+  // 可以进一步检查：root 有子元素但高度为 0（CSS 隐藏导致的"视觉白屏"）
+  if (root && root.getBoundingClientRect().height === 0) {
     reportBlankScreen();
   }
 }
 
-// 在合适的时机触发检测
-// 方式 A：DOMContentLoaded + 延迟（等框架渲染完）
+// 触发时机 → 见下方"检测时机设计"章节
 window.addEventListener('load', () => {
-  setTimeout(checkBlankScreen, 2000);  // 给框架 2s 渲染时间
+  setTimeout(checkBlankScreen, 2000);
 });
-
-// 方式 B：MutationObserver 超时（更精确）
-let hasContent = false;
-const observer = new MutationObserver(() => { hasContent = true; });
-observer.observe(document.querySelector('#root'), { childList: true, subtree: true });
-
-setTimeout(() => {
-  if (!hasContent) reportBlankScreen();  // 2s 内没有 DOM 变化 → 白屏
-}, 2000);
 ```
 
-### 方案 2：采样点检测（更准确）
+### 方案 2：MutationObserver（更精确）
+
+```
+MutationObserver 是什么：
+  浏览器原生 API，异步监听 DOM 树的变化（增/删/改节点）。
+  每当目标节点或其子树发生 DOM 变更，回调被触发。
+
+为什么能检测白屏：
+  正常页面：框架渲染组件 → 往 #root 里插入 DOM 节点 → MutationObserver 回调触发
+  白屏页面：框架没渲染 → #root 没有任何 DOM 变化 → 回调一直没触发
+  
+  = 如果一段时间内 MutationObserver 没有被触发过 → 说明没有内容渲染 → 判定白屏
+
+底层逻辑：
+  1. 在页面加载初期，对 #root 注册 MutationObserver
+  2. 设置一个超时定时器（如 3s）
+  3. 如果 3s 内回调被触发了 → 有 DOM 变化 → 不是白屏
+  4. 如果 3s 超时回调一直没触发 → 没有 DOM 变化 → 白屏
+```
+
+```javascript
+// MutationObserver 白屏检测完整实现
+// Q: 要配合节流吗？不需要。原因：
+//   1. MutationObserver 本身是微任务批量回调
+//      同一微任务周期内所有 DOM 变化 → 合并为一次回调（mutations 数组）
+//      React 同步渲染 100 个节点 → 只触发 1 次回调，不是 100 次
+//   2. 白屏检测只关心"有没有发生过变化"（布尔判定）
+//      第一次回调就 disconnect 了 → 最多触发一次 → 没有频率问题
+// Q: 需要 disconnect 吗？必须。
+//   检测完成后断开监听释放资源（代码里两处 disconnect：回调里 + 超时后）
+function detectBlankWithMutationObserver(timeout = 3000) {
+  const root = document.querySelector('#root');
+  if (!root) { reportBlankScreen(); return; }
+
+  let hasContent = false;
+
+  // 监听根节点的子树变化
+  const observer = new MutationObserver((mutations) => {
+    // 只要有任何 DOM 插入操作 → 说明框架在渲染
+    hasContent = true;
+    observer.disconnect();  // 检测到内容了，停止监听（省资源）
+  });
+
+  observer.observe(root, {
+    childList: true,   // 监听直接子节点增删
+    subtree: true,     // 监听整棵子树（深层组件渲染也能捕获）
+  });
+
+  // 超时判定
+  setTimeout(() => {
+    observer.disconnect();
+    if (!hasContent) {
+      // 3s 内 #root 没有任何 DOM 变化 → 白屏
+      reportBlankScreen();
+    }
+  }, timeout);
+}
+
+// 页面加载后立即开始监听
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', detectBlankWithMutationObserver);
+} else {
+  detectBlankWithMutationObserver();
+}
+```
+
+**MutationObserver vs setTimeout + 检查节点数**：
+
+| | setTimeout + 检查 | MutationObserver |
+|---|---|---|
+| 原理 | 到点检查一次"有没有内容" | 持续监听"有没有变化发生" |
+| 精确度 | 可能误判（刚好在检查前一刻渲染了） | 更精确（只要发生过变化就知道） |
+| 时机 | 依赖你设的延迟时间 | 自适应（渲染快就早结束，渲染慢就多等） |
+
+---
+
+### 检测时机设计
+
+> 不同场景触发检测的时机不同。核心原则：**等框架有机会渲染后再检测，但不能等太久**。
+
+```
+场景 1：首次加载（最常见）
+  时机：window.onload + 延迟 2-3s
+  为什么：load 事件 = 资源加载完毕，再等几秒给框架 JS 执行 + 异步数据请求 + 渲染
+  
+场景 2：SPA 前端路由跳转
+  问题：路由切换时不会触发 load 事件（页面没刷新）
+  时机：监听路由变化 → 等待新页面渲染 → 检测
+  
+  // React Router / Vue Router 路由变化后检测
+  router.afterEach(() => {
+    // 路由切换后，给新页面组件渲染时间
+    setTimeout(checkBlankScreen, 2000);
+    // 或者用 MutationObserver 监听新页面容器
+  });
+
+场景 3：微前端子应用加载
+  时机：子应用 mount 完成后 + 延迟
+  // qiankun afterMount 钩子
+  afterMount: () => { setTimeout(checkBlankScreen, 2000); }
+
+场景 4：Tab 切换（visibilitychange）
+  时机：页面从后台切回前台时重新检测一次
+  // 可能在后台时资源失效了
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      setTimeout(checkBlankScreen, 1000);
+    }
+  });
+```
+
+**SPA 路由跳转的完整方案**：
+
+```javascript
+// 方案：路由变化 → 重置 MutationObserver → 超时判定
+let currentObserver = null;
+
+function onRouteChange() {
+  // 断开上一次的监听
+  if (currentObserver) currentObserver.disconnect();
+
+  const root = document.querySelector('#root');
+  let rendered = false;
+
+  currentObserver = new MutationObserver(() => {
+    rendered = true;
+    currentObserver.disconnect();
+  });
+  currentObserver.observe(root, { childList: true, subtree: true });
+
+  // 路由切换后 3s 内没有新内容渲染 → 白屏
+  setTimeout(() => {
+    currentObserver.disconnect();
+    if (!rendered) reportBlankScreen();
+  }, 3000);
+}
+
+// 监听 history 变化（适用于 history 模式路由）
+window.addEventListener('popstate', onRouteChange);
+
+// 劫持 pushState / replaceState（SPA 路由跳转不触发 popstate）
+const originalPush = history.pushState;
+history.pushState = function (...args) {
+  originalPush.apply(this, args);
+  onRouteChange();
+};
+```
+
+---
+
+### 方案 3：采样点检测（更准确）
 
 ```javascript
 // 在页面中选取多个采样点，检测这些位置是否有实际内容
-function checkBysampling() {
+function checkBySampling() {
   const points = [
     [window.innerWidth / 2, window.innerHeight / 2],  // 屏幕中心
     [window.innerWidth / 2, window.innerHeight / 4],  // 上半部分
@@ -93,7 +242,7 @@ function checkBysampling() {
 }
 ```
 
-### 方案 3：截图对比（重型方案）
+### 方案 4：截图对比（重型方案）
 
 ```
 原理：对页面截图 → 分析像素颜色分布 → 全白/全黑判定为白屏

@@ -94,8 +94,23 @@ new PerformanceObserver((list) => {
 探针 SDK 核心逻辑：
   PerformanceObserver 监听 paint/lcp/fid/cls
   → 聚合为结构化数据
-  → navigator.sendBeacon 上报（页面卸载时不丢）
+  → 按策略上报（不是逐条发，是攒批 + 定时 + 紧急立即发）
   → 后端存储 + 看板展示 + 告警
+
+上报策略（三层）：
+  1. 批量上报（主策略）：数据先存内存队列 → 队列满（10条）或定时器到（5s）→ 批量 POST 一次
+  2. 立即上报（紧急数据）：JS 错误 / 白屏 → 不等，立刻发（Image beacon 或 fetch）
+  3. 页面卸载时（临终遗言）：visibilitychange:hidden → navigator.sendBeacon 把队列余量全发出（保证不丢）
+
+为什么不逐条上报：
+  - 请求太多打爆后端 + 占用浏览器连接池
+  - 影响页面正常功能性能
+  - 监控数据不需要毫秒级实时，5s 延迟完全可接受
+
+上报通道选择：
+  正常批量：fetch POST（能带 body、支持大数据量）
+  紧急单条：new Image().src = url（简单不跨域、不阻塞）
+  页面关闭：navigator.sendBeacon（浏览器保证发出，不阻塞卸载）
 ```
 
 ---

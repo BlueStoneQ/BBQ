@@ -91,8 +91,15 @@ H5 ↔ Native 通信方式：
     evaluateJavaScript('callbackFn(data)')
     → Native 直接在 WebView 中执行 JS 代码
 
-  现代方案：
-    WebView.postMessage / onMessage（双向消息通道）
+  现代方案（RN WebView 组件）：
+    window.ReactNativeWebView.postMessage / onMessage（双向消息通道）
+    注：这是 RN WebView 组件的 API，不是浏览器原生 API
+    原生 Android/iOS 有类似机制（addJavascriptInterface / WKScriptMessageHandler）
+
+  所有 WebView 通信方式的本质 = 序列化：
+    数据必须 JSON.stringify → 传递字符串 → 对面 JSON.parse
+    因为 H5 的 JS 引擎和 Native 是两个独立环境，不共享内存
+    （不同于 JSI/J2V8 这种同进程直接调用）
 
 典型使用场景：
   - 获取用户登录态（token）
@@ -144,6 +151,8 @@ H5 页面常见稳定性问题：
 ---
 
 ## 低代码搭建（活动页生产方式）
+
+> 深入阅读：[低代码搭建体系（专题）](../lowcode/README.md)（DSL / 渲染引擎 / 事件系统 / 物料 / 编辑器）
 
 ```
 运营活动页的生产方式演进：

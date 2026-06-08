@@ -25,6 +25,7 @@
 | 15 | [权限系统](./15-permissions/README.md) | 运行时权限模型？权限分组？危险权限 vs 普通权限？动态申请流程？ | [→](./15-permissions/README.md) |
 | 16 | [游戏引擎集成](./16-game-engine/README.md) | Unity/Unreal 在 Android 中的集成方式？目录结构？通信方案？ | [→](./16-game-engine/README.md) |
 | 17 | [直播与 IM](./17-live-im/README.md) | 直播推拉流方案？IM 长连接？协议选型？在 Android 中的集成？ | [→](./17-live-im/README.md) |
+| 18 | [WebView 容器定制](./webview-container.md) | 预创建/复用池、离线包、接口预请求、JSBridge 设计、请求拦截 | [→](./webview-container.md) |
 
 ## 优先级
 

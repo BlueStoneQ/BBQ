@@ -224,3 +224,5 @@ A：
 **Q：Rolldown 是什么？什么时候能用？**
 
 A：Vite 团队用 Rust 重写 Rollup，目标是统一 Dev/Prod 引擎（消除不一致问题）+ 构建速度提升 10x。2026 年处于积极开发中，预计集成到 Vite 6.x。届时 Vite 将不再有 Dev/Prod 两套引擎的问题。
+
+// ? vite打包结果啥样? 还是用ESM吗 
