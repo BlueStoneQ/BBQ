@@ -40,7 +40,10 @@
   - [项目总览](./ide/overview.md)
   - [二开全景与改造清单](./ide/customization-checklist.md)
   - [暴露 API：Header WebView](./ide/custom-api-header-webview.md)
+- [桌面端豆包技术拆解](./doubao/README.md) — AI 桌面客户端架构 / 流式渲染 / 全局唤起 / 截图 / 系统能力
 
 ### Q&A
 
 - [Electron Q&A](./qa.md) — 架构本质 / IPC 底层 / Preload / 窗口进程 / 开发实践
+- [Electron Q&A (2)](./qa2.md) — IDE + Doubao / VS Code / Electron 进阶
+- [⚡ 速查表（JY prep）](./quick-lookup.md) — 一句话本质 + 关键词 + 跳转链接
