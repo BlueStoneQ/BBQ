@@ -477,6 +477,50 @@ AI 模型 ←→ MCP Client ←→ MCP Server（工具/数据源）
 - Resources：让模型读取数据源（文件、数据库）
 - Prompts：预定义的 prompt 模板
 
+**时序图**：
+
+```
+Agent 启动时：
+  Agent（MCP Client）→ MCP Server：tools/list（"你有什么工具？"）
+  MCP Server → Agent：返回工具列表 + 每个工具的 JSON Schema
+
+Agent 运行时（LLM 决定要调工具）：
+  Agent → MCP Server：tools/call { name: "gerrit_get_change", arguments: { change_id: "123456" } }
+  MCP Server → Agent：{ content: [{ type: "text", text: "Change 123456: MERGED, fix login bug" }] }
+  Agent 把结果塞进 messages → 继续 ReAct 循环
+```
+
+**最小例子**（Gerrit MCP Server 暴露的工具）：
+
+```jsonc
+// Agent 启动时收到的工具列表（tools/list 响应）
+{
+  "tools": [
+    {
+      "name": "gerrit_get_change",
+      "description": "Get Gerrit change details including subject, status, owner",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "change_id": { "type": "string", "description": "Gerrit change ID or URL" }
+        },
+        "required": ["change_id"]
+      }
+    }
+  ]
+}
+```
+
+```jsonc
+// Agent 调用工具（tools/call 请求）
+{ "method": "tools/call", "params": { "name": "gerrit_get_change", "arguments": { "change_id": "123456" } } }
+
+// MCP Server 返回结果
+{ "content": [{ "type": "text", "text": "Change 123456: status=MERGED, subject='fix: login bug'" }] }
+```
+
+**通信方式**：JSON-RPC 2.0 协议，传输层可以是 stdio（本地进程）或 HTTP+SSE（远程服务）。
+
 ### 4.2 A2A（Agent-to-Agent Protocol）
 
 Google 提出的 Agent 间通信协议，让不同厂商的 Agent 能互相发现、协商、协作。

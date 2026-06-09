@@ -46,4 +46,5 @@
 
 - [Electron Q&A](./qa.md) — 架构本质 / IPC 底层 / Preload / 窗口进程 / 开发实践
 - [Electron Q&A (2)](./qa2.md) — IDE + Doubao / VS Code / Electron 进阶
+- [Electron Q&A (3) ⭐](./qa3.md) — qa2 整理版（目录与内容对齐）
 - [⚡ 速查表（JY prep）](./quick-lookup.md) — 一句话本质 + 关键词 + 跳转链接
