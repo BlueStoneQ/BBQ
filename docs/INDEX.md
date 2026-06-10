@@ -27,6 +27,7 @@
 - [DJI JD](./interview/dji/jd.md)
 - [Kimi JD](./interview/kimi/jd.md)
 - [KS JD](./interview/KS/jd.md)
+- [KS Q&A](./interview/KS/qa.md)
 - [BT JD](./interview/BT/jd.md)
 - [Anker JD](./interview/anker/jd.md)
 - [Vast JD](./interview/vast/jd.md)

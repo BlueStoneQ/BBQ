@@ -163,7 +163,7 @@ lib/
 | 手段 | 效果 | 说明 |
 |------|------|------|
 | **Hermes 字节码（.hbc）** | Bundle -30% | 预编译为字节码，比 JS 源码小且加载快 |
-| **分 Bundle** | 首屏 Bundle -50% | Common + Business 分离，按需加载 |
+| **分 Bundle（多 Bundle 架构）** | 首屏 Bundle -50% | Common + Business 分离，按需加载。⚠️ 这是**框架层**的能力（如 CRN 拆包方案），不是业务开发者手动做的；个人只需配置路由级 lazy import，框架负责拆分和按需下发 |
 | **Tree Shaking** | -10~20% | Metro 配置 + 避免 barrel exports |
 | **代码分割（lazy）** | 首屏 -30% | React.lazy + 路由级拆分 |
 | **移除 console/debug** | -5% | babel-plugin-transform-remove-console |

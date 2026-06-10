@@ -121,9 +121,9 @@ function greet(name: string): string {
 // 箭头函数
 const add = (a: number, b: number): number => a + b;
 
-// rest参数
-const sub = <T>(...args: T[]) => {
-  add(...args)
+// rest参数 + 泛型箭头函数
+const merge = <T>(...items: T[]): T[] => {
+  return items.flat() as T[];
 }
 
 // 函数类型声明
