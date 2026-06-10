@@ -26,7 +26,7 @@
 - [GoodNotes JD](./interview/goodnotes/jd.md)
 - [DJI JD](./interview/dji/jd.md)
 - [Kimi JD](./interview/kimi/jd.md)
-- [KS JD](./interview/kuaishou/jd.md)
+- [KS JD](./interview/KS/jd.md)
 - [BT JD](./interview/BT/jd.md)
 - [Anker JD](./interview/anker/jd.md)
 - [Vast JD](./interview/vast/jd.md)
@@ -66,10 +66,6 @@
 ## Node.js
 
 - [Node.js 知识体系](./interview/root/Node/README.md)
-
-## TypeScript
-
-- [TS 实战知识体系](./interview/root/TS/README.md)
 
 ## 技术管理
 
@@ -144,12 +140,16 @@
 - [GitHub Profile README](./resume/github-profile-readme.md)
 
 
+
 ## 手写专题
 
 - [JS 手写题（索引）](./writeByHand/js-coding/README.md)
 - [算法速查（🔥优先题 + 模式）](./writeByHand/algorithm-cheatsheet.md)
 - [错题集](./writeByHand/mistakes.md)
 
+## TypeScript
+
+- [TS 实战知识体系](./interview/root/TS/README.md)
 ---
 
 ## 前端基础专题

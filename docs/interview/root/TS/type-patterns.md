@@ -1,7 +1,9 @@
 # TS 常见数据类型处理
 
 > 解决什么问题：日常开发中 90% 的 TS 场景怎么写？不做体操，只做实战。
+>
 > 本质：TS 的价值 = 编译时发现错误 + IDE 自动补全 + 代码即文档。
+>
 > 原则：类型服务于业务，不是业务服务于类型。
 
 ---
@@ -118,6 +120,11 @@ function greet(name: string): string {
 
 // 箭头函数
 const add = (a: number, b: number): number => a + b;
+
+// rest参数
+const sub = <T>(...args: T[]) => {
+  add(...args)
+}
 
 // 函数类型声明
 type Comparator<T> = (a: T, b: T) => number;
@@ -412,3 +419,43 @@ const users: User[] = results.filter((u): u is User => u !== null);
 | 去 null | `NonNullable<T>` 或 filter 类型守卫 |
 | 泛型请求 | `request<User>('/api/user')` |
 | 事件类型 | `React.ChangeEvent<HTMLInputElement>` |
+
+
+---
+
+## 内置工具类型（Utility Types）速查
+
+> TS 内置的类型"函数"，对已有类型做变换。面试常问能不能手写等价实现。
+
+| 工具类型 | 作用 | 等价实现 | 示例 |
+|---------|------|---------|------|
+| `Partial<T>` | 所有属性变可选 | `{ [P in keyof T]?: T[P] }` | `Partial<User>` → id?/name?/age? |
+| `Required<T>` | 所有属性变必填 | `{ [P in keyof T]-?: T[P] }` | `Required<Partial<User>>` → 恢复必填 |
+| `Readonly<T>` | 所有属性变只读 | `{ readonly [P in keyof T]: T[P] }` | 防止意外修改 |
+| `Record<K, V>` | key 为 K、value 为 V 的对象 | `{ [key in K]: V }` | `Record<string, number>` = 数字字典 |
+| `Pick<T, K>` | 从 T 中挑选部分属性 | `{ [P in K]: T[P] }` | `Pick<User, 'id' | 'name'>` |
+| `Omit<T, K>` | 从 T 中排除部分属性 | `Pick<T, Exclude<keyof T, K>>` | `Omit<User, 'password'>` |
+| `Exclude<T, U>` | 从联合类型中排除 | `T extends U ? never : T` | `Exclude<'a'|'b'|'c', 'a'>` → 'b'|'c' |
+| `Extract<T, U>` | 从联合类型中提取 | `T extends U ? T : never` | `Extract<'a'|'b', 'a'|'d'>` → 'a' |
+| `NonNullable<T>` | 排除 null/undefined | `Exclude<T, null | undefined>` | `NonNullable<string | null>` → string |
+| `ReturnType<F>` | 提取函数返回值类型 | `F extends (...) => infer R ? R : never` | `ReturnType<typeof fetch>` → Promise<Response> |
+| `Parameters<F>` | 提取函数参数类型（元组） | `F extends (...args: infer P) => any ? P : never` | `Parameters<typeof setTimeout>` |
+
+**面试高频**：`Partial` / `Pick` / `Omit` / `Record` / `ReturnType`。能说出等价实现 = 证明你理解原理，不只是会用。
+
+**使用场景举例**：
+
+```typescript
+// Partial：表单编辑（只传修改的字段）
+function updateUser(id: string, data: Partial<User>) { ... }
+
+// Pick：API 响应只需要部分字段
+type UserSummary = Pick<User, 'id' | 'name' | 'avatar'>;
+
+// Omit：创建时不需要 id（服务端生成）
+type CreateUserDTO = Omit<User, 'id' | 'createdAt'>;
+
+// Record：状态映射
+type StatusText = Record<'active' | 'inactive' | 'banned', string>;
+const texts: StatusText = { active: '正常', inactive: '未激活', banned: '已封禁' };
+```
