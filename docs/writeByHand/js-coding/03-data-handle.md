@@ -209,6 +209,7 @@ const flatObj2Tree = (data) => {
 **实现思路**：递归遍历树，删除 children 属性
 
 **方法一：递归实现**：
+// 核心就是对于children部分需要递归 + 结果需要展开返回给上层, 自底向上展开
 
 ```javascript
 const flatTree = (tree) => {
@@ -454,8 +455,28 @@ splitWithDot(12345678); // 12,345,678
 ```
 
 **关键点**：
-- 使用正则的正向预查 `(?=pattern)`
+- 使用正则的正向前瞻 `(?=pattern)`
 - 区分整数和小数的处理
+
+**正则拆解** — `/(?!^)(?=(\d{3})+$)/g`：
+
+| 部分 | 含义 |
+|------|------|
+| `(?!^)` | 负向前瞻：不在字符串开头（避免 `123` → `,123`） |
+| `(?=...)` | 正向前瞻（零宽断言）：只判断位置，不消费字符。匹配的是"位置"不是"字符" |
+| `(\d{3})+` | 3 个数字为一组，重复 1 次或多次（3/6/9/...位） |
+| `$` 或 `\.` | 锚点：无小数用 `$`（末尾），有小数用 `\.`（小数点）— 保证从右往左数 |
+| `g` | 全局匹配所有满足条件的位置 |
+
+**为什么能"插入"逗号**：`(?=...)` 是零宽断言，匹配的是两个字符之间的位置（宽度=0），replace 在这个位置插入 `,` 不会替换任何字符。
+
+**示例推演**（`12345678`）：
+```
+位置0: ^开头 → (?!^) 排除 → ❌
+位置2: 往后看 345678（6位 = 3×2）+ $ → ✅ 插逗号
+位置5: 往后看 678（3位 = 3×1）+ $ → ✅ 插逗号
+→ 结果: 12,345,678
+```
 
 ---
 
@@ -467,34 +488,27 @@ splitWithDot(12345678); // 12,345,678
 **实现**：
 
 ```javascript
-function bigNumSum(numStr1, numStr2) {
-  if (typeof numStr1 !== 'string' || typeof numStr2 !== 'string') {
-    throw new TypeError('入参必须是字符串');
+function bigNumSum(num1, num2) {
+  let i = num1.length - 1
+  let j = num2.length - 1
+  let carry = 0
+  const result = []
+
+  while (i >= 0 || j >= 0) {
+    const n1 = i >= 0 ? +num1[i] : 0
+    const n2 = j >= 0 ? +num2[j] : 0
+    const sum = n1 + n2 + carry
+
+    carry = sum > 9 ? 1 : 0
+    result.push(sum % 10)
+
+    i--
+    j--
   }
 
-  // 逆序，从个位开始加
-  const num1Arr = numStr1.split('').reverse();
-  const num2Arr = numStr2.split('').reverse();
+  if (carry) result.push(carry)
 
-  const result = [];
-  const maxLen = Math.max(num1Arr.length, num2Arr.length);
-  let carry = 0; // 进位
-
-  for (let i = 0; i < maxLen; i++) {
-    const n1 = num1Arr[i] ? +num1Arr[i] : 0;
-    const n2 = num2Arr[i] ? +num2Arr[i] : 0;
-    const sum = n1 + n2 + carry;
-
-    result[i] = sum % 10;
-    carry = sum > 9 ? 1 : 0;
-  }
-
-  // 最高位还有进位
-  if (carry) {
-    result.push(carry);
-  }
-
-  return result.reverse().join('');
+  return result.reverse().join('')
 }
 ```
 

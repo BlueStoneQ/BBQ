@@ -7,6 +7,7 @@
 - [2.2 函数组合（compose）](#22-函数组合compose)
 - [2.4 AOP 面向切面编程](#24-aop-面向切面编程)
 - [2.6 记忆函数（memoize）](#26-记忆函数memoize)
+- [3.9 大数相加（bigNumSum）](#39-大数相加bignumsum)
 
 ---
 
@@ -161,3 +162,59 @@ const obj2flat = (tree) => {
   1. 递归参数：函数接收数组，应传 `node.children`（数组），不是 `subNode`（单个节点）
   2. 结果合并：`push(数组)` 会嵌套，用 `push(...数组)` 展开
   3. 去掉 children：解构 `{ children, ...rest }` 分离
+
+
+---
+
+## 3.9 大数相加（bigNumSum）
+
+```javascript
+// 我的实现：
+const bigNumSum = (num1, num2) => {
+  const _num1List = (num1 > num2 ? num1 : num2).split('').reverse()
+  //                 ↑ ❌ 字符串比较是字典序！'9' > '13132132132199' = true
+  const _num2List = (num1 > num2 ? num2 : num1).split('').reverse()
+
+  for (let i = 0; i < _num1List.length; i++) {
+    const _num2 = +_num2List[i] || 0
+    if (!_num2) {        // ❌ 当 _num2 = 0 时跳过了，但 0 + 进位 ≠ 0
+      sumRes[i] = _num1
+      continue           // ← 跳过了 preSum 的累加
+    }
+    // ...
+  }
+}
+```
+
+**错误点**：
+
+1. **字符串字典序比较** — `num1 > num2` 比的是字典序不是数值大小。`'9' > '13...'` = true（字符 '9' > '1'）→ 短的被当成长的。
+   - 修正：不需要排序谁长谁短，用 `Math.max(len1, len2)` 或双下标。
+
+2. **`!_num2` 跳过 0 值** — 某位是 `0` 时，`!0` = true → 跳过了加法。但 `0 + 进位` 可能 = 1。
+   - 修正：去掉 `if (!_num2) continue`，统一走加法逻辑。
+
+**推荐写法（双下标，不 reverse）**：
+
+```javascript
+const bigNumSum = (num1, num2) => {
+  let i = num1.length - 1
+  let j = num2.length - 1
+  let carry = 0
+  let result = ''
+
+  while (i >= 0 || j >= 0 || carry) {
+    const n1 = i >= 0 ? +num1[i--] : 0
+    const n2 = j >= 0 ? +num2[j--] : 0
+    const sum = n1 + n2 + carry
+    result = (sum % 10) + result
+    carry = Math.floor(sum / 10)
+  }
+
+  return result
+}
+```
+
+- 从末尾往前走，不需要 split/reverse
+- while 条件包含 `carry` → 自动处理最高位进位
+- 不需要判断谁长谁短
