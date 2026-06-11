@@ -16,7 +16,7 @@
 - [1.10 继承（extends）](#110-继承extends)
 - [1.11 Promise 实现](#111-promise-实现)
 - [1.12 typeof 实现](#112-typeof-实现)
-- [1.13 元编程（Proxy & Reflect）](#113-元编程proxy-reflect)
+- [1.13 元编程（Proxy & Reflect）](#113-元编程proxy--reflect)
 
 ---
 

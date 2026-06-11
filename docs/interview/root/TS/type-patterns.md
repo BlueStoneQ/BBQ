@@ -19,7 +19,9 @@
 - [工具类型实战（Partial/Pick/Omit/Record）](#工具类型实战)
 - [泛型实战](#泛型实战)
 - [类型断言与类型守卫](#类型断言与类型守卫)
+- [Class 类型定义](#class-类型定义)
 - [常用模式速查表](#常用模式速查表)
+- [Q&A](#qa)
 
 ---
 
@@ -430,6 +432,74 @@ const users: User[] = results.filter((u): u is User => u !== null);
 
 ---
 
+---
+
+## Class 类型定义
+
+```ts
+// 属性定义：修饰符 + 类型声明
+class Scheduler {
+  private limit: number              // private：外部不可访问
+  private queue: QueueItem[] = []    // 可以直接赋初始值
+  private running = 0                // 类型从初始值推导（number）
+  public name: string                // public：外部可访问（默认）
+  readonly id: string                // readonly：只能在构造函数中赋值
+
+  constructor(limit: number) {
+    this.limit = limit
+    this.id = crypto.randomUUID()
+  }
+}
+
+// 简写：constructor 参数加修饰符 = 自动声明 + 赋值
+class Scheduler {
+  constructor(
+    private limit: number,           // 等价于上面的 this.limit = limit
+    public name: string = 'default'  // 可以带默认值
+  ) {}
+}
+```
+
+**修饰符速查**：
+
+| 修饰符 | 外部可访问 | 子类可访问 | 场景 |
+|--------|-----------|-----------|------|
+| `public`（默认） | ✅ | ✅ | 对外暴露的 API |
+| `private` | ❌ | ❌ | 内部实现细节 |
+| `protected` | ❌ | ✅ | 让子类继承但不对外暴露 |
+| `readonly` | ✅（只读） | ✅（只读） | 初始化后不可变 |
+
+**implements（实现接口）**：
+
+```ts
+interface IScheduler {
+  add(creator: () => Promise<unknown>): Promise<unknown>
+}
+
+class Scheduler implements IScheduler {
+  // 必须实现 add 方法，否则编译报错
+  add(creator: () => Promise<unknown>): Promise<unknown> {
+    // ...
+  }
+}
+```
+
+**abstract（抽象类）**：
+
+```ts
+abstract class BaseService {
+  abstract fetch(): Promise<unknown>   // 子类必须实现
+  
+  log(msg: string) { console.log(msg) }  // 公共方法子类直接用
+}
+
+class UserService extends BaseService {
+  async fetch() { return api.get('/users') }  // 必须实现 fetch
+}
+```
+
+---
+
 ## 常用模式速查表
 
 | 场景 | 写法 |
@@ -485,3 +555,64 @@ type CreateUserDTO = Omit<User, 'id' | 'createdAt'>;
 type StatusText = Record<'active' | 'inactive' | 'banned', string>;
 const texts: StatusText = { active: '正常', inactive: '未激活', banned: '已封禁' };
 ```
+
+---
+
+## Q&A
+
+### unknown vs any 区别？
+
+**一句话**：`any` = 关闭类型检查，`unknown` = 不知道是什么但必须先检查才能用。
+
+```ts
+// any — 什么都能做，TS 不管
+let a: any = '123'
+a.toFixed()  // ✅ 不报错（但运行时炸）
+
+// unknown — 什么都不能做，必须先收窄
+let b: unknown = '123'
+b.toFixed()  // ❌ 报错
+
+if (typeof b === 'string') {
+  b.toUpperCase()  // ✅ 收窄后才能用
+}
+```
+
+| | `any` | `unknown` |
+|---|---|---|
+| 赋值给它 | ✅ 任何值都行 | ✅ 任何值都行 |
+| 对它操作 | ✅ 不检查 | ❌ 必须先收窄 |
+| 赋值给别人 | ✅ 能赋给任何类型 | ❌ 只能赋给 any/unknown |
+
+**最佳实践**：能用 `unknown` 就不用 `any`。`unknown` 用于外部输入（API 响应 / 第三方库返回值），强制你做类型检查。`any` 只用于临时绕过（迁移旧代码）。
+
+---
+
+### 为什么空数组 `[]` 合法，空对象 `{}` 不合法？
+
+```ts
+interface User { name: string; age: number }
+
+// 数组：✅ 空数组合法（0 个元素的数组）
+const users: User[] = []  // 类型定义的是"元素是什么类型"，不是"必须有几个"
+
+// 对象：❌ 空对象缺少必填属性
+const user: User = {}  // 报错：缺少 name 和 age
+```
+
+**解决空对象初始化**：
+
+```ts
+// 1. Partial（所有属性变可选）
+const user: Partial<User> = {}  // ✅
+
+// 2. 类型断言（你确定后面会赋值，不安全）
+const user = {} as User  // ✅ 但访问 user.name 是 undefined
+
+// 3. 给完整初始值
+const user: User = { name: '', age: 0 }  // ✅
+```
+
+**本质区别**：数组类型约束的是"元素类型"，对象类型约束的是"必须有哪些属性"。空数组满足"0 个正确类型元素"，空对象不满足"必须有 name + age"。
+
+---

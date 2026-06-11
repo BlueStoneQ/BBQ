@@ -16,6 +16,49 @@
 
 ---
 
+## 核心 API / 数据结构 / TS 手法速查
+
+> 手写题高频用到的"武器库"，练题前扫一眼。
+
+### JS 核心 API
+
+| API | 用在哪 | 作用 |
+|-----|--------|------|
+| `Array.prototype.reduce` | flat / compose / pipe | 累积器，万能循环替代 |
+| `Array.prototype.shift` | Scheduler 队列 | 从头取一个元素 |
+| `String.prototype.split` / `join` | 大数相加 / 千分位 | 字符串 ↔ 数组 |
+| `String.prototype.replace(regex, str)` | 千分位 / 模板替换 | 正则替换（含位置匹配） |
+| `Math.floor` / `% 10` | 大数相加 | 取整 / 取个位 |
+| `setTimeout` / `clearTimeout` | 防抖节流 / sleep | 延迟执行 / 取消 |
+| `Promise` + `resolve/reject` | Scheduler / retry / 并发控制 | 延迟兑现（存 resolve 后面再调） |
+| `crypto.randomUUID()` | 幂等 key | 生成唯一 ID |
+| `Map` / `Set` | 去重 / flat2tree / memoize | O(1) 查找的键值存储 |
+| `Object.prototype.toString.call(x)` | 类型判断 / 深拷贝 | 精确判断类型 `[object Array]` |
+| `Reflect.ownKeys` | 深拷贝 | 获取所有属性（含 Symbol） |
+
+### 核心数据结构
+
+| 结构 | 手写题场景 | 关键操作 |
+|------|-----------|---------|
+| **队列（FIFO）** | Scheduler / 异步任务队列 | `push` 入队 + `shift` 出队 |
+| **栈（LIFO）** | HTML 标签校验 / 括号匹配 | `push` 入栈 + `pop` 出栈 |
+| **Map** | flat2tree / memoize / 去重 | `set` / `get` / `has` |
+| **链表思维** | 大数相加（逐位进位） | 双指针从尾到头 |
+
+### TS 手法速查
+
+| 手法 | 场景 | 示例 |
+|------|------|------|
+| `type Fn = () => Promise<T>` | 定义"返回 Promise 的函数" | Scheduler 的 promiseCreator |
+| `interface + 存 resolve/reject` | 延迟兑现 Promise | QueueItem { creator, resolve, reject } |
+| `private` / `public` | class 内部 vs 暴露 API | `private queue` vs `public add()` |
+| `<T>` 泛型方法 | 保留调用方的类型信息 | `add<T>(creator): Promise<T>` |
+| `as` 类型断言 | 你比 TS 更了解实际类型 | `resolve as (value: unknown) => void` |
+| `!` 非空断言 | 已知不为空（逻辑保证） | `this.queue.shift()!` |
+| `unknown` > `any` | 外部输入类型未知 | `Promise<unknown>` 而非 `Promise<any>` |
+
+---
+
 - [一、JavaScript 基础](#一javascript-基础)
   - [1.1 Object.create 实现 ⭐⭐⭐](#11-objectcreate-实现)
   - [1.2 new 操作符实现 ⭐⭐⭐](#12-new-操作符实现)

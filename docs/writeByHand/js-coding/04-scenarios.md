@@ -311,6 +311,89 @@ addTask(400, '4');
 // 输出顺序：2 3 1 4
 ```
 
+#### 4.5.1b TypeScript 版本
+
+```typescript
+// 1. 定义任务类型：一个返回 Promise 的函数（不是 Promise 本身！）
+//    为什么是函数？因为 Promise 一创建就执行，我们需要延迟执行的能力
+type PromiseCreator<T = unknown> = () => Promise<T>
+
+// 2. 队列中存储的项：任务 + 外层 Promise 的 resolve/reject
+//    为什么要存 resolve/reject？因为 add() 返回的 Promise 要等任务真正完成才 resolve
+interface QueueItem {
+  creator: PromiseCreator
+  resolve: (value: unknown) => void
+  reject: (reason?: unknown) => void
+}
+
+class Scheduler {
+  private limit: number                // 最大并发数
+  private queue: QueueItem[] = []      // 等待队列
+  private running: number = 0          // 当前正在执行的任务数
+
+  constructor(limit: number) {
+    this.limit = limit
+  }
+
+  // 3. add 返回 Promise<T>：调用方可以 .then() 拿到任务结果
+  //    核心技巧：new Promise 把 resolve/reject 存起来，等任务执行完再兑现
+  add<T>(creator: PromiseCreator<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      // 存入队列（不立即执行）
+      this.queue.push({
+        creator,
+        resolve: resolve as (value: unknown) => void,  // 类型收窄
+        reject
+      })
+      // 尝试消费队列
+      this.run()
+    })
+  }
+
+  // 4. run：有空位就从队列取任务执行
+  private run(): void {
+    while (this.running < this.limit && this.queue.length > 0) {
+      const item = this.queue.shift()!  // ! 断言非空（while 条件已保证）
+      this.running++
+
+      item.creator()
+        .then(item.resolve)   // 任务成功 → 兑现外层 Promise
+        .catch(item.reject)   // 任务失败 → 拒绝外层 Promise
+        .finally(() => {
+          this.running--      // 腾出空位
+          this.run()          // 继续消费队列
+        })
+    }
+  }
+}
+
+// 使用
+const scheduler = new Scheduler(2)
+
+const timeout = (ms: number): Promise<void> =>
+  new Promise(resolve => setTimeout(resolve, ms))
+
+const addTask = (time: number, order: string): void => {
+  scheduler.add(() => timeout(time)).then(() => console.log(order))
+}
+
+addTask(1000, '1')
+addTask(500, '2')
+addTask(300, '3')
+addTask(400, '4')
+// 输出顺序：2 3 1 4
+```
+
+**TS 关键点总结**：
+
+| 模式 | 说明 |
+|------|------|
+| `type PromiseCreator<T> = () => Promise<T>` | 任务是"返回 Promise 的函数"，不是 Promise 本身 |
+| `interface QueueItem` | 队列项 = 任务 + resolve/reject（延迟兑现） |
+| `add<T>(creator): Promise<T>` | 泛型方法：返回值类型跟着任务走 |
+| `private` 修饰符 | `run` / `queue` / `running` 不暴露给外部 |
+| `this.queue.shift()!` | 非空断言（while 条件已保证 length > 0） |
+
 #### 4.5.2 高级版本（带状态机和结果收集）
 
 ```javascript
@@ -658,8 +741,8 @@ function cancelablePromise(promiseCreator) {
     };
 
     promiseCreator()
-      .then(resolve)
-      .catch(reject);
+      .then(res => resolve(res))
+      .catch(err => reject(err));
   });
 
   return {
