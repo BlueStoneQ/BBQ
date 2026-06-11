@@ -24,6 +24,7 @@
   - [原理类](#原理类)
   - [场景类](#场景类)
   - [对比类](#对比类)
+- [数据共享最佳实践](#数据共享最佳实践登录态用户信息通知)
 
 ---
 
@@ -709,3 +710,64 @@ A：
 - `eval`/`new Function` 内的代码不走 `with` 作用域
 - 某些库直接操作原生 DOM API（如 `document.createElement('style')`）绕过沙箱
 - 本质问题：JS 没有原生沙箱，所有 Proxy 方案都是"尽力而为"的模拟
+
+---
+
+## 数据共享最佳实践（登录态/用户信息/通知）
+
+**Q：主应用的登录态、用户信息、全局通知怎么共享给子应用？**
+
+### 三种方式
+
+**1. Props 传递（最常用 — 主→子）**
+
+```js
+// 主应用注册时传
+registerMicroApps([{
+  name: 'sub-app',
+  entry: '//sub.example.com',
+  container: '#container',
+  props: {
+    token: getToken(),
+    userInfo: getUserInfo(),
+    globalUtils: { request, eventBus, router }  // 公共方法也可以传
+  }
+}])
+
+// 子应用 mount 里拿
+export function mount(props) {
+  const { token, userInfo, globalUtils } = props
+  store.setUser(userInfo)  // 存到子应用自己的 store
+}
+```
+
+**2. initGlobalState（双向实时通信）**
+
+```js
+// 主应用
+const actions = initGlobalState({ user: null, notifications: [] })
+actions.onGlobalStateChange((state) => { /* 监听 */ })
+
+// 子应用
+export function mount(props) {
+  props.onGlobalStateChange((state) => {
+    // 监听全局状态变化（如用户登出、通知更新）
+  })
+  props.setGlobalState({ notifications: [...] })  // 子应用也能改
+}
+```
+
+**3. Cookie / localStorage（登录态最简单）**
+
+同域下 cookie 和 localStorage 天然共享（浏览器同源策略）。主应用登录后种 cookie，子应用自动能读到 — 不需要框架层传递。
+
+### 实际选型
+
+| 数据类型 | 共享方式 | 原因 |
+|---------|---------|------|
+| Token / 登录态 | Cookie（httpOnly） | 同域自动共享，零成本 |
+| 用户信息 | Props（mount 时传） | 一次性数据，不需实时更新 |
+| 全局通知 / 状态变化 | initGlobalState | 需要双向实时通信 |
+| 公共方法（request/路由跳转） | Props 传工具函数 | 子应用复用主应用封装 |
+
+---
