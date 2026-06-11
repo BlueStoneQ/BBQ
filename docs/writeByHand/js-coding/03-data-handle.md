@@ -8,7 +8,7 @@
 - [3.2 数组去重（unique）](#32-数组去重unique)
 - [3.3 扁平对象转树（flatObj2Tree）](#33-扁平对象转树flatobj2tree)
 - [3.4 树转扁平对象（treeFlat）](#34-树转扁平对象treeflat)
-- [3.5 lodash.get 实现](#35-lodash.get-实现)
+- [3.5 lodash.get 实现](#35-lodashget-实现)
 - [3.6 数组 API 实现](#36-数组-api-实现)
 - [3.7 日期格式化](#37-日期格式化)
 - [3.8 数字千分位分隔](#38-数字千分位分隔)
@@ -542,7 +542,7 @@ function parseParam(url) {
 
   for (let item of queryList) {
     const [key, val] = item.split('=');
-    let value = val ? decodeURIComponent(val) : true;
+    let value = val ? decodeURIComponent(val) : true; // 没有 =value 的参数（如 &enabled）视为 true
 
     // 转换数字类型
     if (/^\d+$/.test(value)) {

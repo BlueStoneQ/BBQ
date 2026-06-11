@@ -176,6 +176,32 @@ async function fetchUser(id: string): Promise<User> {
   return res.json();
 }
 
+// new Promise 的泛型 — 指定 resolve 的类型
+function delay(ms: number): Promise<void> {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function loadData(): Promise<User> {
+  return new Promise<User>((resolve, reject) => {
+    //                 ↑ 泛型约束 resolve 只能传 User 类型
+    api.get('/user', (err, data) => {
+      if (err) return reject(err);  // reject 接受 any
+      resolve(data);                // data 必须是 User
+    });
+  });
+}
+
+// Scheduler.add 场景：resolve 延迟兑现
+add(promiseCreator: () => Promise<unknown>): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    this.queue.push(() => {
+      promiseCreator().then(resolve).catch(reject);
+      //                    ↑ 这里 resolve 是外层 Promise 的
+    });
+    this.run();
+  });
+}
+
 // Promise.all 类型自动推导
 const [user, tasks] = await Promise.all([
   fetchUser('1'),        // Promise<User>
