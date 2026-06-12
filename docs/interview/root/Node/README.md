@@ -23,4 +23,5 @@
 - [NestJS](./nestjs.md) — 企业级 Node 框架 / DI + 模块 + 装饰器 / 做 BFF 中间层 / GraphQL 集成
 - [进程管理与部署](./process-deploy.md) — cluster / PM2 / Docker / 优雅重启
 - [Node 服务稳定性与可用性](./node-service-reliability.md) — 并发能力 / 事件循环不阻塞 / 容错降级 / 监控体系
+- [可观测体系](./observability.md) — 指标详解 / 探针原理 / 选型 / 后端分析平台
 - [场景实战](./scenarios.md) — 文件上传 / 具体业务场景核心代码
