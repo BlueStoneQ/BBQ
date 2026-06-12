@@ -13,7 +13,7 @@
 - [第一性原理：我们在解决什么问题？](#第一性原理我们在解决什么问题)
 - [拆解到原子层面：Webpack 构建只产出什么？](#拆解到原子层面webpack-构建只产出什么)
 - [模块联邦的核心机制（第一性视角）](#模块联邦的核心机制第一性视角)
-- [构建 → 部署 → 加载全流程](#构建--部署--加载全流程)
+- [构建-部署-加载全流程](#构建-部署-加载全流程)
 - [模块联邦的架构全景](#模块联邦的架构全景第一性总结)
 - [模块联邦 vs 乾坤：第一性对比](#模块联邦-vs-乾坤第一性对比)
 - [组合使用的架构](#组合使用的架构)
@@ -23,6 +23,9 @@
 - [MF 2.0 现状（2026）](#mf-20-现状2026)
 - [同构场景下 MF 比 qiankun 好在哪](#同构场景下-mf-比-qiankun-好在哪)
 - [为什么要技术栈统一 + 没有隔离能力？](#为什么要技术栈统一--没有隔离能力)
+- [业界现状与选型（2026）](#业界现状与选型2026)
+- [MF 微前端最佳实践（2026）](#mf-微前端最佳实践2026)
+- [Monorepo + MF（业界最佳实践）](#monorepo--mf业界最佳实践)
 
 ---
 
@@ -181,6 +184,27 @@ function loadRemoteModule(remoteName, moduleName) {
 ```
 
 **本质**：模块联邦不是扩展了 ES Module 规范，而是**在 Webpack 的模块系统内部，增加了一层"远程容器"的寻址协议**。
+
+**执行机制：不依赖浏览器原生 ESM**
+
+```
+整个加载链路：
+  __webpack_require__.l(url)
+    → document.createElement('script')
+    → script.src = remoteEntry.js 的 CDN 地址
+    → document.head.appendChild(script)
+    → 等 onload
+    → remoteEntry.js 执行后把容器挂到 window['remote_app']
+    → Host 从全局变量拿到容器 → 调 get/init
+
+= <script> 标签加载 + 全局变量传递 + Webpack runtime 调度
+≠ 浏览器原生 ESM / import map / <script type="module">
+```
+
+**为什么不用原生 ESM？**
+- MF 需要运行时版本协商（shared）— 原生 ESM 没有这层能力
+- MF 需要"容器协议"（get/init）— 原生 ESM 没有这层抽象
+- Webpack 模块系统本身自洽，不依赖浏览器模块规范
 
 ---
 
@@ -600,7 +624,7 @@ shared: {
 
 ---
 
-## 构建 → 部署 → 加载全流程
+## 构建-部署-加载全流程
 
 **Q：MF 的构建、部署、加载过程是怎样的？**
 
@@ -666,5 +690,502 @@ shared: { react: { singleton: true } }
 | 类比 | 多租户公寓（各自隔离） | 一栋别墅的多个房间（共享水电） |
 | 信任级别 | 不信任子应用 | 信任远程模块（同团队/同框架） |
 | 适合 | 接入不可控的第三方 | 同公司同框架互信的多团队 |
+
+---
+
+## 业界现状与选型（2026）
+
+### 微前端方案格局
+
+```
+国内：
+  qiankun — 存量最大（阿里/美团/滴滴后台），但 2023 后基本停止维护
+  Wujie — 腾讯，iframe 级隔离，新项目强隔离首选
+  Garfish — 字节，内部生态绑定
+  MF 2.0 — 新项目同构场景主流
+
+海外：
+  Module Federation — 主流（Shopify/Spotify 等大量采用）
+  single-spa — 热度下降
+  import maps + ESM — 简单场景兴起
+
+趋势：
+  qiankun 像 jQuery — 存量巨大，新项目不选，也不急着迁
+  MF 2.0 是新项目首选（同构场景）
+  需要强隔离 → Wujie
+```
+
+### 选型结论
+
+| 场景 | 推荐 | 原因 |
+|------|------|------|
+| 存量 qiankun 项目 | 继续 qiankun | 迁移成本高，能跑就行 |
+| 新项目 + 同构技术栈 | **MF 2.0** | 最轻、性能最好、生态活跃 |
+| 新项目 + 异构/强隔离 | Wujie | iframe 级隔离、接入简单 |
+| 字节系 | Garfish | 内部生态 |
+
+---
+
+## MF 微前端最佳实践（2026）
+
+> MF 没有隔离能力，怎么在生产中用它做微前端？答案：**约定 + 工具链卡控 + 架构规范**替代机制隔离。
+
+### 核心原则
+
+```
+MF 微前端 = MF（模块共享） + 团队规范（隔离约定） + CI 卡控（保障约定落地）
+```
+
+### 隔离问题怎么解决
+
+| qiankun 靠机制解决的 | MF 靠什么替代 |
+|---------------------|-------------|
+| JS 沙箱（Proxy） | 不需要 — 同构信任场景，靠规范 + CI 卡控替代运行时隔离 |
+
+> **如果 Remote 写了 `window.xxx = ...` 怎么办？**
+>
+> MF 不提供运行时沙箱，靠约定 + 工具链防御：
+> - ESLint：`no-restricted-globals` / `no-global-assign` → CI 阻断
+> - Code Review：合入时检查全局副作用
+> - 团队约定：Remote 只用 React 数据流，不碰 window/document
+> - 第三方库（GA/Sentry 等需要 window 的）：由 Host 统一接入，Remote 不自己装
+>
+> **本质取舍**：qiankun 不信任 → Proxy 隔离（有开销有逃逸）；MF 信任 → 约定卡控（零开销靠纪律）。不信任就别用 MF，用 qiankun/Wujie。
+
+**ESLint 约束清单（MF 场景的唯一硬卡控）**：
+
+```js
+// .eslintrc.cjs — Monorepo 根目录统一配置
+module.exports = {
+  rules: {
+    // 1. 禁止写全局变量（防 JS 污染）
+    'no-restricted-globals': ['error', 'event', 'name', 'length'],
+    'no-global-assign': 'error',
+    // 自定义规则：禁止 window.xxx = 赋值
+    'no-restricted-syntax': ['error', {
+      selector: "AssignmentExpression[left.object.name='window']",
+      message: 'Remote 禁止写 window 全局变量'
+    }],
+
+    // 2. 禁止直接操作 document.body（防 DOM 逃逸）
+    'no-restricted-properties': ['error', {
+      object: 'document', property: 'body', message: '用框架 Portal 代替'
+    }],
+
+    // 3. 禁止 eval（防不可控代码注入）
+    'no-eval': 'error',
+    'no-implied-eval': 'error',
+  }
+}
+
+// 配合 Stylelint / 构建检查：
+// 4. 禁止全局 CSS — 只允许 .module.css / .module.scss / Tailwind
+//    构建时检查：发现非模块化 CSS 文件 → 阻断
+```
+| 样式隔离（前缀/Shadow DOM） | **CSS Modules / Tailwind** — 类名 hash 唯一，天然不冲突 |
+| 生命周期管理（mount/unmount） | **React Router 懒加载** — React.lazy(() => import('remote/Page')) |
+| 子应用通信 | **共享状态库**（Zustand/Redux 同一个 store 实例） |
+
+### 样式隔离：约定替代机制
+
+```
+为什么 MF 不需要 Proxy/Shadow DOM 级别的样式隔离？
+  → 前提：同构技术栈（全 React），团队互信
+  → CSS Modules：每个组件的类名编译后带 hash（.btn_a3f2x），全局唯一
+  → Tailwind：utility class 本身不会冲突
+  → 结果：不用框架级隔离，开发规范就解决了
+
+CI 卡控：
+  - ESLint 禁止全局 CSS（no-global-styles 规则）
+  - 构建时检查是否有非 Modules 的 .css 文件
+  - MR 门禁：新增全局样式必须 approve
+```
+
+### 路由与页面级集成
+
+```tsx
+// 主应用（Host）— 路由配置
+const routes = [
+  { path: '/', element: <Layout /> },
+  { path: '/dashboard/*', element: lazy(() => import('dashboardRemote/App')) },
+  { path: '/activity/*', element: lazy(() => import('activityRemote/App')) },
+  { path: '/settings/*', element: lazy(() => import('settingsRemote/App')) },
+]
+
+// 每个 Remote 暴露一个 App 组件（带自己的子路由）
+// Host 只管一级路由分发，Remote 内部自己管二级路由
+```
+
+**本质**：MF 微前端 = 主应用是路由壳 + 每个"子应用"就是一个远程懒加载的路由模块。
+
+### 依赖共享
+
+```js
+// Host 和所有 Remote 统一配置
+shared: {
+  react: { singleton: true, requiredVersion: '^18.0.0' },
+  'react-dom': { singleton: true },
+  'react-router-dom': { singleton: true },
+  zustand: { singleton: true },  // 状态库也共享 → 同一个 store 实例
+}
+```
+
+**Host 和 Remote 都要配这个字段。**
+
+**不是远程动态加载公共依赖，而是各自都打包了，运行时协商只用一份**：
+
+```
+构建时：
+  Host 打包了 React → vendors-react.chunk.js（Host CDN）
+  Remote A 也打包了 React → vendors-react.chunk.js（Remote A CDN）
+  Remote B 也打包了 React → vendors-react.chunk.js（Remote B CDN）
+  
+  每份产物都有 React，但被包装成"懒加载工厂"（不是立即执行）
+
+运行时：
+  Host 先加载 → 把自己的 React 18.2.0 注册到 share scope
+  Remote A 加载 → 协商：scope 里有满足 ^18.0.0 的 React？→ 有 → 用 Host 的
+  Remote B 加载 → 同上 → 也用 Host 的
+
+  结果：Remote A/B 的 vendors-react.chunk.js 永远不会被请求下载
+```
+
+**协商的底层机制**：
+
+```js
+// 每个应用启动时，把自己的 shared 依赖注册到全局 share scope
+__webpack_share_scopes__.default = {
+  'react': {
+    '18.2.0': { get: () => import('./vendors-react.chunk.js'), from: 'host' },
+    '18.3.0': { get: () => import('./vendors-react.chunk.js'), from: 'remoteA' },
+  }
+}
+
+// Remote 需要 React 时的协商逻辑（简化）：
+function resolveShared(packageName, requiredVersion) {
+  const versions = __webpack_share_scopes__.default[packageName]
+  
+  // 1. singleton: true → 全局只能有一个实例
+  //    找 scope 里已经被加载的那个版本 → 直接用（不管版本号）
+  //    如果没加载过 → 找满足 requiredVersion 的最高版本
+  
+  // 2. 找到满足 semver 范围的版本
+  for (const [version, entry] of Object.entries(versions)) {
+    if (semver.satisfies(version, requiredVersion)) {
+      return entry.get()  // 加载那份（可能是 Host 的 chunk URL）
+    }
+  }
+  
+  // 3. 都不满足 → fallback 加载自己打包的那份
+  return import('./my-own-vendors-react.chunk.js')
+}
+```
+
+**协商规则速记**：
+
+| 配置 | 含义 |
+|------|------|
+| `singleton: true` | 全局只允许一个实例（先到先得，后来的复用已有的） |
+| `requiredVersion: '^18.0.0'` | 版本约束（scope 里的版本必须满足这个范围才用） |
+| `eager: true` | 不懒加载，打进主 bundle（少用，会失去按需加载优势） |
+| `strictVersion: true` | 版本不满足直接报错（而不是 fallback 用自己的） |
+
+**vs externals + CDN**：
+
+| | externals + CDN | MF shared |
+|--|--|--|
+| 决策时机 | 编译时写死 | 运行时协商 |
+| 版本灵活性 | 全局锁死一个版本 | 版本不兼容时可 fallback 自己的 |
+| 独立运行 | CDN 挂了就完了 | 没有 Host 时用自己打包的（自愈） |
+
+**效果**：所有 Remote 共用一份 React + Router + 状态库 → 包体极小（Remote 只含业务代码）。
+
+### 通信方案
+
+```
+MF 场景下不需要 EventBus / postMessage：
+  → 所有 Remote 共享同一个 React 实例 + 同一个状态库实例
+  → 通信 = 正常的 React 数据流（Context / Zustand / Props）
+  → 就像同一个应用内的组件通信，零额外成本
+```
+
+| 通信需求 | 做法 |
+|---------|------|
+| 全局状态（用户信息/主题） | Zustand store（shared singleton） |
+| 路由跳转 | 共享的 react-router 实例 navigate() |
+| 事件通知 | Zustand subscribe / React Context |
+
+### 独立开发与部署
+
+**一次构建，双模式运行（底层原理）**：
+
+```
+webpack build（配了 MF 插件）一次构建产出：
+
+dist/
+├── index.html            ← 独立运行入口
+├── main.js               ← 应用自身 bundle（含 React 等依赖的 chunk）
+├── remoteEntry.js        ← MF 容器入口（暴露模块 + shared 协商逻辑）
+├── src_App_js.chunk.js   ← 按 expose 拆分的业务 chunk
+└── vendors-react.chunk.js ← React 依赖（独立 chunk）
+
+独立运行时（浏览器访问 index.html）：
+  → 加载 main.js → 需要 React → shared 协商：有没有外部提供？
+  → 没有（没人 init 过 share scope）→ 加载自己的 vendors-react.chunk.js
+  → 正常 SPA 运行
+
+被 Host 消费时（Host import('remote/App')）：
+  → Host 加载 remoteEntry.js → 调 container.init(hostShareScope)
+  → Remote 的 shared 协商：Host 已经提供了 React 18？满足我的 requiredVersion？
+  → 满足 → 跳过自己的 vendors-react.chunk.js，用 Host 的
+  → 只加载业务 chunk（src_App_js.chunk.js）
+```
+
+**shared 协商的底层实现**：
+
+```js
+// 简化版：每个 shared 依赖都被包装成一个"懒加载工厂"
+__webpack_modules__['react'] = async () => {
+  // 1. 先看 share scope 里有没有别人提供的 React
+  const provided = __webpack_share_scopes__.default['react'];
+  if (provided && satisfies(provided.version, '^18.0.0')) {
+    return provided.get();  // 用别人的（Host 提供的）
+  }
+  // 2. 没有 → 加载自己打包的那份
+  return import('./vendors-react.chunk.js');
+}
+
+// 效果：同一份代码，运行时根据环境自动决定用谁的依赖
+// 独立运行 → 没人 init share scope → 永远走 fallback（自己的）
+// 被 Host 消费 → Host init 了 share scope → 优先用 Host 的
+```
+
+**一句话**：不是构建两份，是一次构建把依赖包装成"有则复用、无则自带"的懒加载工厂。运行时 shared 协商决定加载谁的。
+
+```
+开发时：
+  每个 Remote 独立 dev server（可独立运行完整页面）
+  Host 的 remotes 配置指向各 Remote 的 dev server
+
+部署时：
+  每个 Remote 独立 CI/CD → 产物推 CDN
+  Host 的 remotes 配置指向 CDN 地址
+  Remote 更新 → Host 不用重新构建（运行时加载最新 remoteEntry.js）
+
+版本管理：
+  remoteEntry.js 不带 hash（永远最新）
+  chunk 文件带 hash（长缓存）
+  = Remote 发布后用户刷新页面即生效
+```
+
+### 错误隔离（降级）
+
+```tsx
+// 每个远程模块用 ErrorBoundary + Suspense 包裹
+// ErrorBoundary 是 React 概念，需自己实现（class 组件）或用 react-error-boundary 库
+// 目前 Hooks 没有对应 API，这是少数还必须用 class 的场景
+function RemoteWrapper({ children }) {
+  return (
+    <ErrorBoundary fallback={<FallbackUI />}>
+      <Suspense fallback={<Skeleton />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
+
+// 路由里
+{ path: '/dashboard/*', element: <RemoteWrapper><DashboardApp /></RemoteWrapper> }
+
+// 效果：某个 Remote CDN 挂了 → 只有那个模块降级，其他正常
+```
+
+### 完整架构图
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Host（主应用）                         │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Layout（Header + Sidebar + Container）             │ │
+│  │                                                     │ │
+│  │  React Router:                                      │ │
+│  │    /dashboard/* → lazy(import('dashboardRemote'))   │ │
+│  │    /activity/*  → lazy(import('activityRemote'))    │ │
+│  │    /settings/*  → lazy(import('settingsRemote'))    │ │
+│  │                                                     │ │
+│  │  Shared: React + Router + Zustand（singleton）      │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                          │
+│  各 Remote 独立部署在 CDN：                              │
+│    dashboardRemote → cdn.example.com/dashboard/          │
+│    activityRemote  → cdn.example.com/activity/           │
+│    settingsRemote  → cdn.example.com/settings/           │
+└─────────────────────────────────────────────────────────┘
+
+隔离保障：
+  JS：不需要（同一个 React 实例，无全局变量冲突）
+  CSS：CSS Modules（hash 类名） + CI 禁止全局样式
+  错误：ErrorBoundary per Remote（局部降级）
+  部署：各自独立 CI/CD，互不阻塞
+```
+
+### 面试一句话
+
+> "MF 做微前端不靠沙箱隔离，靠的是同构信任 + 约定卡控。CSS Modules 解决样式冲突，shared singleton 解决依赖共享，ErrorBoundary 解决错误隔离，React Router 管路由分发。本质是把'多个独立部署的应用'在运行时合并成'一个 React 应用的多个懒加载路由'。"
+
+---
+
+## Monorepo + MF（业界最佳实践）
+
+> Monorepo 管开发时统一治理，MF 管运行时独立部署 + 模块共享。
+
+### 为什么这个组合好
+
+```
+Monorepo 解决：
+  - 统一 Lint/TS/构建配置 → ESLint 规则一处配所有 Remote 共享（硬卡控统一）
+  - 共享代码直接 import（types/utils/components）→ 不用发 npm 包
+  - 原子提交（改 shared 组件 + 改消费方 → 一个 PR）
+  - 统一 CI pipeline → 所有 Remote 必须过同一套门禁
+
+MF 解决：
+  - 独立部署（各 app 各自构建/各自推 CDN）
+  - 运行时共享依赖（不重复打包 React）
+  - Remote 更新不需要重新构建 Host
+```
+
+### vs 多 Repo + MF
+
+| | Monorepo + MF | 多 Repo + MF |
+|--|--|--|
+| Lint 规则统一 | ✅ 一处配置所有 app 共享 | ❌ 各 repo 各配，容易漂移 |
+| 类型共享 | ✅ 直接 `import type` from workspace | ❌ 需发 @types 包或 MF 2.0 类型同步 |
+| CI 门禁 | ✅ 统一 pipeline | ❌ 各 repo 各自维护 |
+| 代码复用 | ✅ packages/shared 直接引 | ❌ 发 npm 包，升级痛苦 |
+| 独立部署 | ✅ 各 app 各自 build + deploy | ✅ 同 |
+
+### 项目结构
+
+```
+monorepo/
+├── packages/
+│   ├── host/          # 主应用（路由壳 + Layout）
+│   ├── dashboard/     # Remote：数据大盘
+│   ├── activity/      # Remote：活动管理
+│   └── settings/      # Remote：系统设置
+├── shared/
+│   ├── ui/            # 共享组件（Button/Table/Modal）
+│   ├── utils/         # 工具函数
+│   └── types/         # TS 类型定义
+├── .eslintrc.cjs      # 统一 Lint（全 repo 共享 = 唯一硬卡控）
+├── pnpm-workspace.yaml
+└── turbo.json         # Turborepo 构建编排
+```
+
+### 为什么 Monorepo 是 MF 隔离问题的答案
+
+```
+MF 唯一的硬检查 = ESLint 静态分析
+Monorepo 保证 = 所有 Remote 共享同一份 ESLint 配置
+
+多 Repo 的风险：
+  Remote A 配了 no-restricted-globals ✅
+  Remote B 忘了配 / 关了规则 ❌ → 全局变量污染
+  
+Monorepo 没有这个风险：
+  根目录 .eslintrc.cjs 一份配置 → 所有 apps/* 强制继承 → 不可能漂移
+```
+
+### 面试一句话
+
+> "Monorepo + MF = 开发时统一治理（Lint/Types/CI 一份配置），运行时独立部署（各 Remote 各自 CDN）。Monorepo 保证规范不漂移，MF 保证部署不耦合。"
+
+### MF 使用快速指南（Host + Remote 怎么配）
+
+**1. Remote（子应用）— 暴露模块**
+
+```js
+// apps/dashboard/webpack.config.js
+new ModuleFederationPlugin({
+  name: 'dashboard',                    // 容器名（全局唯一）
+  filename: 'remoteEntry.js',           // 产出的 MF 入口文件名
+  exposes: {
+    './App': './src/App',               // 暴露给 Host 的模块
+    './Chart': './src/components/Chart',
+  },
+  shared: {
+    react: { singleton: true, requiredVersion: '^18.0.0' },
+    'react-dom': { singleton: true },
+  },
+})
+```
+
+**构建产物（一次 build 产出）**：
+
+```
+dist/
+├── index.html              ← 独立运行入口（浏览器直接访问用）
+├── main.[hash].js          ← 应用启动代码（路由/挂载 #app）
+├── remoteEntry.js          ← MF 入口（给 Host 用，无 hash，永远最新）
+├── src_App.[hash].js       ← 业务 chunk（按 exposes 拆分）
+├── src_Chart.[hash].js     ← 业务 chunk
+├── vendors-react.[hash].js ← 依赖 chunk（shared fallback）
+└── assets/                 ← 静态资源
+
+两种模式用不同入口，同一份产物：
+  独立运行：index.html → main.js → 加载所有 chunk（含 vendors）
+  被 Host 消费：remoteEntry.js → shared 协商 → 只加载业务 chunk（依赖用 Host 的）
+```
+
+```
+部署到：https://cdn.example.com/dashboard/
+```
+
+**2. Host（主应用）— 声明远程地址**
+
+```js
+// apps/host/webpack.config.js
+new ModuleFederationPlugin({
+  name: 'host',
+  remotes: {
+    dashboard: 'dashboard@https://cdn.example.com/dashboard/remoteEntry.js',
+    activity: 'activity@https://cdn.example.com/activity/remoteEntry.js',
+  },
+  shared: {
+    react: { singleton: true, requiredVersion: '^18.0.0' },
+    'react-dom': { singleton: true },
+  },
+})
+```
+
+**3. Host 代码使用 — 和本地 import 一样**
+
+```tsx
+// apps/host/src/routes.tsx
+// MF 本身和框架无关，只是让 import() 能加载远程模块
+// 下面用 React 举例，Vue 用 defineAsyncComponent 同理
+const DashboardApp = lazy(() => import('dashboard/App'))
+
+<ErrorBoundary fallback={<Fallback />}>
+  <Suspense fallback={<Skeleton />}>
+    <DashboardApp />
+  </Suspense>
+</ErrorBoundary>
+
+// 本质：import('dashboard/App') 返回 Promise<模块>
+// MF 负责让这个 import 路由到远程 CDN 的 chunk
+// 拿到模块后怎么渲染 = 框架的事（React.lazy / Vue defineAsyncComponent / 原生 await）
+```
+
+**4. 开发 / 部署**
+
+```bash
+# 开发：Remote 独立跑 dev server，Host 的 remotes 指向 localhost
+# 部署：各自 build + 推 CDN，互不阻塞
+# Remote 更新：Host 不用重新构建，用户刷新即加载最新版
+```
+
+**总结**：Remote 配 `exposes`（暴露什么），Host 配 `remotes`（从哪加载），两边都配 `shared`（共享什么）。代码里 `import('remote/Module')` 和本地懒加载无区别。
 
 ---

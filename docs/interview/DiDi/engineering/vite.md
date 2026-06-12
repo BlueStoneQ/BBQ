@@ -2,7 +2,7 @@
 
 > 解决什么问题：Webpack 开发体验差（冷启动慢、HMR 慢），Vite 利用浏览器原生 ESM 实现秒启动 + 毫秒级 HMR。
 >
-> 本质：开发时不打包（浏览器直接加载 ESM，Vite 按需编译）；生产时用 Rollup 打包。两套引擎，各取所长。
+> 本质：开发时不打包（浏览器直接加载 ESM，Vite 按需编译）；生产时打包优化。Vite 8 起统一使用 Rolldown（Rust）作为底层引擎。
 >
 > 场景：2026 年新项目标配，Vue/React 官方脚手架默认使用。
 
@@ -16,8 +16,8 @@
   - [生产构建（Build）](#生产构建build)
   - [依赖预构建](#依赖预构建)
   - [HMR 原理](#hmr-原理)
-- [Dev / Prod 不一致问题](#dev--prod-不一致问题)
 - [插件系统](#插件系统)
+- [实际项目配置](#实际项目配置)
 - [和 Webpack 的本质区别](#和-webpack-的本质区别)
 - [Vite 生态现状（2026）](#vite-生态现状2026)
 - [Q&A](#qa)
@@ -47,14 +47,14 @@ Vite 的快：
 ```
 浏览器请求 main.tsx
   → Vite Dev Server 收到请求
-  → 实时编译 main.tsx（esbuild，TS→JS，几毫秒）
+  → Rolldown 实时编译 main.tsx（Rust，TS→JS，毫秒级）
   → 返回编译后的 JS（里面的 import 路径保持原样）
   → 浏览器解析 import → 再发请求加载依赖模块
   → 按需加载，用到才编译
 
 关键点：
   - 不构建依赖图（浏览器自己按 import 发请求 = 浏览器就是模块加载器）
-  - 编译用 esbuild（Go 写的，比 Babel 快 10-100x）
+  - 编译用 Rolldown（Rust 写的，比 Babel 快 10-30x）
   - 只编译请求到的文件（未访问的页面/组件不编译）
 ```
 
@@ -66,11 +66,17 @@ Vite 的快：
   - 需要 Tree Shaking / Code Splitting / 压缩 / hash 命名
   - 需要兼容性处理（babel polyfill）
 
-所以生产构建用 Rollup：
-  vite build → Rollup 全量打包 → 产出优化后的 bundle
+为什么开发阶段不打包也没问题？
+  - localhost 网络延迟 ≈ 0ms（本地 loopback，不走公网）
+  - 不存在带宽瓶颈、TCP/TLS 握手开销
+  - 用户就你一个人，无并发压力
+  - 所以 1000 个小请求也秒完，体感无差别
+  → 本质：dev 走 localhost（0 RTT），prod 走公网（每请求都有 RTT 代价）
+
+所以生产构建用 Rollup（Vite 8 已统一为 Rolldown）：
+  vite build → Rolldown 全量打包 → 产出优化后的 bundle
   
-= 开发用 esbuild（快），生产用 Rollup（优化好）
-= 两套引擎，这也是 Dev/Prod 不一致问题的根源
+= Vite 8 统一用 Rolldown（Rust），Dev/Prod 同一引擎
 ```
 
 ### 依赖预构建
@@ -79,7 +85,7 @@ Vite 的快：
 问题：node_modules 里的包很多是 CommonJS 格式（非 ESM），浏览器不认。
       且一个包可能有几百个内部模块（lodash-es 有 600+ 文件），每个发一次请求太慢。
 
-Vite 的解法：启动时用 esbuild 对 node_modules 做一次预构建
+Vite 的解法：启动时用 Rolldown 对 node_modules 做一次预构建
   1. CommonJS → ESM 转换（让浏览器能加载）
   2. 多个内部文件合并为一个文件（减少请求数）
   3. 结果缓存到 node_modules/.vite/（下次启动直接用）
@@ -95,7 +101,7 @@ Webpack HMR：
   文件变更 → 重新编译受影响的 chunk → WebSocket 推送新 chunk → 浏览器替换
 
 Vite HMR：
-  文件变更 → 只编译这一个模块（esbuild，毫秒级）
+  文件变更 → 只编译这一个模块（Rolldown，毫秒级）
   → WebSocket 通知浏览器"这个模块变了"
   → 浏览器重新 import 这个模块（URL 加时间戳使缓存失效）
   → 模块自身的 import.meta.hot.accept() 处理热更新
@@ -103,29 +109,7 @@ Vite HMR：
 为什么 Vite HMR 快：
   - 不需要重新构建 chunk（没有 chunk 的概念）
   - 只处理一个文件（不追溯依赖图）
-  - 编译用 esbuild（毫秒级）
-```
-
----
-
-## Dev / Prod 不一致问题
-
-> 这是 Vite 的核心痛点：Dev 用 esbuild + ESM，Prod 用 Rollup 打包，两套引擎可能行为不同。
-
-| 问题 | 原因 | 表现 |
-|------|------|------|
-| CSS 顺序不一致 | Dev 按请求顺序，Prod 按 Rollup chunk 合并顺序 | 样式覆盖关系变化 |
-| 模块解析差异 | esbuild 和 Rollup 的解析规则不完全相同 | Dev 能跑的 import 写法 Prod 报错 |
-| 环境变量差异 | 某些库在 Dev/Prod 模式行为不同 | 功能异常 |
-| Polyfill 缺失 | Dev 浏览器原生支持，Prod 目标浏览器不支持 | 低版本白屏 |
-
-**解决 / 规避**：
-
-```
-1. CI 必跑 vite build → 不能只跑 dev 就部署
-2. 本地 vite build + vite preview 验证
-3. 用 vitest 做测试（和 Vite 共享配置，减少环境差异）
-4. 未来方向：Rolldown（Rust 重写 Rollup）统一 Dev/Prod 引擎 → 彻底解决
+  - 编译用 Rolldown（Rust，毫秒级）
 ```
 
 ---
@@ -172,18 +156,40 @@ function myPlugin(): Plugin {
 
 ## 和 Webpack 的本质区别
 
-| | Webpack | Vite |
+| | Webpack | Vite（8+） |
 |---|---|---|
 | **思维模型** | 打包器（所有文件→bundle） | 原生模块服务器（按需编译） |
 | **Dev 启动** | 全量构建后才能访问 | 直接启动，请求时才编译 |
 | **HMR** | 重新构建 chunk | 重新编译单个模块 |
-| **编译器** | Babel（JS，慢） | esbuild（Go，快 100x） |
-| **生产构建** | Webpack 自身 | Rollup（另一个工具） |
+| **底层引擎** | Babel/SWC（JS/Rust） | Rolldown（Rust） |
+| **生产构建** | Webpack 自身 | Rolldown（Rust，统一引擎） |
 | **配置** | 复杂（loader/plugin 链） | 简洁（约定优于配置） |
-| **Module Federation** | 原生支持 | 需要插件 / MF 2.0 |
-| **生态成熟度** | 最大（历史最长） | 快速追赶，主流场景已覆盖 |
+| **Module Federation** | 原生支持 | MF 2.0 插件支持 |
+| **生态成熟度** | 最大（历史最长） | 主流场景已全覆盖 |
 
-**一句话**：Webpack 是"编译时做所有事"，Vite 是"能推迟的都推迟到运行时/请求时"。
+### Trade-off 选型
+
+| 维度 | Vite 优势 | Webpack 优势 |
+|------|----------|-------------|
+| **开发速度** | 秒启动 + ms 级 HMR | 大项目冷启动 30s+ |
+| **构建速度** | Rolldown 10-30x 快 | — |
+| **配置复杂度** | 约定优于配置，开箱即用 | 细粒度控制（loader 链精确调优） |
+| **MF 微前端** | 插件支持（MF 2.0） | 原生一等公民 |
+| **存量项目** | 迁移有成本 | 不用动，稳定 |
+| **SSR** | Nuxt/Astro/Remix 原生 | Next.js（Turbopack） |
+| **生态插件数** | 追赶中，主流够用 | 最大（历史积累） |
+| **产物控制** | 够用 | 更精细（splitChunks 高级配置） |
+
+### 选型结论
+
+```
+新项目 → Vite（无脑选，2026 主流）
+老项目已有 Webpack → 不迁移（收益不值得风险）
+强依赖 MF 1.0 / Webpack 特定 loader → 继续 Webpack
+追求极致速度 + Webpack 兼容 → Rspack（字节，Rust 实现的 Webpack）
+```
+
+**一句话**：Webpack 是"编译时做所有事"，Vite 是"能推迟的都推迟到运行时/请求时"。新项目选 Vite，老项目不折腾。
 
 ---
 
@@ -196,7 +202,7 @@ function myPlugin(): Plugin {
 | **测试** | Vitest（和 Vite 配置复用，替代 Jest） |
 | **Module Federation** | MF 2.0 的 `@module-federation/vite` 插件支持 |
 | **替代品** | Rspack（Webpack 兼容 + Rust 速度）、Turbopack（Vercel，Next.js 专用） |
-| **未来** | Rolldown（Rust 重写 Rollup，统一 Vite 的 Dev/Prod 引擎） |
+| **引擎** | Rolldown（Rust 统一 Dev/Prod，Vite 8 默认） |
 
 ---
 
@@ -221,8 +227,93 @@ A：
 - 团队 Webpack 配置已经调好且稳定（迁移有风险无明显收益）
 - 需要极致的构建产物控制（Webpack 的细粒度配置更多）
 
-**Q：Rolldown 是什么？什么时候能用？**
+**Q：Rolldown 是什么？**
 
-A：Vite 团队用 Rust 重写 Rollup，目标是统一 Dev/Prod 引擎（消除不一致问题）+ 构建速度提升 10x。2026 年处于积极开发中，预计集成到 Vite 6.x。届时 Vite 将不再有 Dev/Prod 两套引擎的问题。
+A：Vite 团队用 Rust 重写的 bundler，已在 Vite 8（2026.2）成为默认引擎，统一了 Dev/Prod 构建，速度比 Rollup 快 10-30x。
 
 // ? vite打包结果啥样? 还是用ESM吗 
+
+---
+
+## 实际项目配置
+
+### React 项目（vite.config.ts）
+
+```ts
+// 一个正常的 React 项目，配置很薄，大部分开箱即用
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],          // JSX 编译 + Fast Refresh（HMR）
+  resolve: {
+    alias: { '@': '/src' }     // 路径别名
+  },
+  server: {
+    port: 3000,
+    proxy: {                   // 开发代理（解决跨域）
+      '/api': 'http://localhost:8080'
+    }
+  },
+  build: {
+    target: 'es2020',          // 兼容性目标
+    sourcemap: true,           // 调试用
+    rollupOptions: {
+      output: {
+        manualChunks: {        // 手动分包（vendor 拆出来长缓存）
+          vendor: ['react', 'react-dom']
+        }
+      }
+    }
+  }
+})
+```
+
+**配置哲学**：Vite 约定大于配置，大部分场景 `plugins: [react()]` 就够了。
+
+### Nuxt 3 项目（nuxt.config.ts）
+
+```
+Nuxt 3 架构：
+  nuxt.config.ts → Nuxt 自己的配置文件（不是 vite.config.ts）
+  客户端构建 → 底层用 Vite（自动生成 Vite 配置，你不用手写）
+  服务端引擎 → Nitro（Nuxt 自研）
+  
+= 你不写 vite.config.ts，如需定制 Vite 在 nuxt.config.ts 的 vite 字段透传
+```
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  // Nuxt 级配置
+  ssr: true,
+  modules: ['@nuxt/ui'],
+
+  // 透传给底层 Vite
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: { additionalData: '@use "@/styles/vars" as *;' }
+      }
+    },
+    plugins: [/* 额外 Vite 插件 */]
+  },
+
+  // Nitro（服务端引擎）
+  nitro: {
+    preset: 'node-server'  // 部署目标：node / vercel / cloudflare 等
+  }
+})
+```
+
+### 各框架配置文件对比
+
+| 框架 | 配置文件 | 底层构建工具 |
+|------|---------|-----------|
+| 纯 React/Vue | `vite.config.ts` | Vite（直接配） |
+| Nuxt 3 | `nuxt.config.ts` | Vite（透传 `vite` 字段） |
+| Next.js | `next.config.js` | Webpack / Turbopack（不是 Vite） |
+| Astro | `astro.config.mjs` | Vite（透传 `vite` 字段） |
+| Remix | `vite.config.ts` | Vite（直接配） |
+
+---

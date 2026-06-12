@@ -25,6 +25,7 @@
   - [场景类](#场景类)
   - [对比类](#对比类)
 - [数据共享最佳实践](#数据共享最佳实践登录态用户信息通知)
+- [实战高频 QA（面试重点）](#实战高频-qa面试重点)
 
 ---
 
@@ -769,5 +770,270 @@ export function mount(props) {
 | 用户信息 | Props（mount 时传） | 一次性数据，不需实时更新 |
 | 全局通知 / 状态变化 | initGlobalState | 需要双向实时通信 |
 | 公共方法（request/路由跳转） | Props 传工具函数 | 子应用复用主应用封装 |
+
+---
+
+## 实战高频 QA
+
+### Q1：依赖共享问题 — React/Vue 重复加载怎么解？
+
+**问题**：主应用用 React 18，子应用也用 React 18 → 两份 React 都下载执行 → 浪费带宽 + 内存。
+
+**qiankun 本身不解决这个问题**。解法：
+
+| 方案 | 做法 | 优劣 |
+|------|------|------|
+| **externals + CDN** | 公共依赖抽到 CDN（`<script src="react.cdn.js">`），各应用 externals 排除 | 简单粗暴，但版本锁死全局一份 |
+| **主应用挂载到 window** | 主应用加载后 `window.React = React`，子应用判断存在就不 import | 侵入性强，不推荐 |
+| **配合 MF 共享** | 用 Module Federation 的 `shared` 运行时版本协商 | 最优雅，但需要 Webpack/Rspack 构建 |
+
+**面试怎么说**：qiankun 关注隔离不关注共享，依赖去重用 MF 的 shared 机制配合实现，或者 externals + CDN 兜底。
+
+---
+
+### Q2：鉴权/登录信息怎么传给子应用？
+
+**核心原则**：同域 → Cookie 自动共享（零成本）；需要主动传 → Props。
+
+```
+场景：用户在主应用登录后，子应用需要拿到 token 和用户信息
+
+方案（按优先级）：
+1. Cookie（推荐）
+   - 主应用登录 → 后端种 httpOnly cookie
+   - 子应用同域下自动带 cookie → 请求后端自动鉴权
+   - 零代码，零配置
+
+2. Props 传递
+   - 主应用 registerMicroApps 时把 token/userInfo 通过 props 传入
+   - 子应用 mount(props) 拿到后存入自己的 store
+   - 适合需要前端拿到 token 做请求头的场景
+
+3. localStorage
+   - 同域共享，主应用写入，子应用读取
+   - 缺点：子应用需要自己处理过期/刷新逻辑
+```
+
+**登出同步**：用 `initGlobalState` 广播登出事件，所有子应用监听到后清状态 + 跳登录页。
+
+---
+
+### Q3：应用之间通信 — 主子/子子怎么通信？
+
+| 通信方向 | 推荐方案 | 原理 |
+|---------|---------|------|
+| 主 → 子 | **Props** | mount 时传入，简单直接 |
+| 子 → 主 | **initGlobalState** | setGlobalState 触发主应用回调 |
+| 子 ↔ 子 | **initGlobalState** | 全局状态变更所有订阅者广播 |
+| 松耦合事件 | **CustomEvent** | `window.dispatchEvent(new CustomEvent('xxx'))` |
+
+**实际案例**：
+
+```js
+// 主应用：注册全局状态
+const actions = initGlobalState({
+  user: { name: 'Tom', role: 'admin' },
+  notifications: [],
+  locale: 'zh-CN'
+})
+
+// 子应用 A：修改通知（子→主，子→子）
+props.setGlobalState({
+  notifications: [...props.getGlobalState().notifications, newNotification]
+})
+
+// 子应用 B：监听通知变化
+props.onGlobalStateChange((state, prev) => {
+  if (state.notifications !== prev.notifications) {
+    showToast(state.notifications.at(-1))
+  }
+})
+```
+
+**注意事项**：
+- `initGlobalState` 是浅合并（`Object.assign`），不是深合并
+- 避免在 globalState 里放大对象（序列化开销）
+- 高频通信（如实时数据推送）不适合 globalState → 用 CustomEvent 或 BroadcastChannel
+
+---
+
+### Q4：样式污染 — 实际怎么解决？
+
+**我们的方案**：`experimentalStyleIsolation`（需手动开启，自动加选择器前缀）+ 子应用全部用 CSS Modules。
+
+> 注意：这不是 qiankun 默认行为。默认只做 mount 插入 / unmount 移除 style 标签（防残留，不防并存冲突）。需要手动配置 `start({ sandbox: { experimentalStyleIsolation: true } })` 才开启前缀隔离。
+
+```
+为什么不用 Shadow DOM：
+  - Ant Design 弹窗 Teleport 到 body → 脱离 Shadow Root → 样式丢失
+  - 主题变量（CSS Variables）无法穿透 Shadow Boundary
+  
+为什么前缀 + CSS Modules 够用：
+  - 前缀防子应用泄漏到主应用
+  - CSS Modules 防子应用之间互相污染（类名 hash 唯一）
+  - 双重保障，实际生产零样式冲突
+```
+
+---
+
+### Q5：子应用首次加载慢 — 怎么优化？
+
+| 手段 | 做法 | 效果 |
+|------|------|------|
+| **预加载** | `prefetchApps([...])` 空闲时提前 fetch | 用户切换时资源已在缓存 |
+| **资源缓存** | CDN + 强缓存（hash 文件名） | 二次访问 0 网络请求 |
+| **按需加载** | 子应用内部用 React.lazy / 路由懒加载 | 首屏只加载当前页 |
+| **Skeleton** | 主应用切换时显示骨架屏 | 感知上"没有白屏" |
+
+---
+
+### Q6：子应用独立开发/调试怎么做？
+
+**子应用改造（< 20 行代码）**：
+
+```
+改造 1: 导出三个生命周期（bootstrap / mount / unmount）
+改造 2: 环境判断（__POWERED_BY_QIANKUN__ ? 等主应用调 mount : 自己 mount）
+改造 3: 路由 base 动态化（qiankun 中用 activeRule 作为 base）
+改造 4: 构建配置（导出格式让主应用能拿到生命周期）
+```
+
+**为什么 Webpack 要配 UMD？**
+
+```
+问题：qiankun 执行子应用 JS 后，需要拿到 bootstrap/mount/unmount 三个函数。
+      怎么拿？→ 子应用必须把这三个函数"暴露出来"。
+
+UMD 格式做的事：
+  把子应用的 exports 挂到 window['activity-app'] 上（全局变量）
+  qiankun 执行完子应用 JS 后，通过 window['activity-app'] 拿到生命周期
+
+为什么不用 ESM export？
+  因为 qiankun 不是通过 <script type="module"> 加载子应用的
+  它是 fetch HTML → 解析出 <script> → 用 eval/new Function 执行
+  这种执行方式拿不到 ES Module 的 export（ESM export 只在模块系统内可见）
+  UMD 把 export 挂到 window 上 → eval 执行后全局可访问 → qiankun 能拿到
+
+Vite 场景：
+  vite-plugin-qiankun 帮你处理了这个问题（内部做了兼容）
+  所以 Vite 项目不用手动配 UMD
+```
+
+```
+开发时：
+  子应用独立 npm run dev → 完全不依赖主应用
+  通过 __POWERED_BY_QIANKUN__ 判断环境，独立运行时自己 mount
+
+联调时：
+  主应用 entry 指向子应用 dev server（如 //localhost:8081）
+  子应用开 cors: true → 主应用能 fetch 到
+
+部署后：
+  entry 指向子应用 CDN / Nginx 路径
+```
+
+**面试一句话**：子应用改造量极小（< 20 行），核心就是导出生命周期 + 环境判断。Webpack 用 UMD 是因为 qiankun 用 new Function 执行 JS 文本拿不到 ESM export，只能通过全局变量传递。Vite 用插件一行搞定。
+
+---
+
+### Q7：为什么子应用要配 UMD？
+
+**不是"主应用不识别 ESM"，是 qiankun 的执行方式决定的**：
+
+```
+qiankun 执行子应用 JS 的方式：
+  fetch(js文件) → 拿到 JS 文本字符串 → new Function(文本) 执行
+  = "字符串执行"，不是模块加载
+
+ES Module 的 export：
+  只在模块系统内可见（浏览器 <script type="module"> 或 bundler 解析）
+  字符串执行后，外部拿不到 export（没有模块上下文）
+
+UMD 做的事：
+  执行后把 exports 挂到 window['app-name'] 上
+  → new Function 执行完 → qiankun 从 fakeWindow['app-name'] 拿到生命周期
+```
+
+---
+
+### Q8：qiankun 是怎么监听路由的？和主应用 Router 冲突吗？
+
+```
+qiankun 不依赖主应用的 vue-router / react-router
+
+它自己独立监听浏览器原生事件：
+  → 劫持 history.pushState / replaceState（Monkey Patch）
+  → 监听 window.addEventListener('popstate')
+
+URL 变化 → qiankun 比对所有 activeRule → 匹配的 mount，不匹配的 unmount
+
+和主应用 Router 的关系：
+  → 两者并行监听同一个 URL，互不干扰
+  → 主应用 Router 管主应用自己的页面（/login、/about）
+  → qiankun 管子应用的加载卸载（/activity → 加载 activity-app）
+  → 不冲突
+```
+
+---
+
+### Q9：三个生命周期各做什么？
+
+| 生命周期 | 调用时机 | 做什么 |
+|---------|---------|--------|
+| **bootstrap** | 首次加载，只调一次 | 全局初始化（axios 配置、错误监控 SDK、埋点） |
+| **mount** | 每次进入子应用 | 创建 app 实例 + 路由 → 从 props 拿 token → 挂载到容器 DOM |
+| **unmount** | 每次离开子应用 | 销毁 app 实例 + 清理定时器/事件监听/WebSocket |
+
+```ts
+export async function bootstrap() {
+  // 初始化 SDK（只一次）
+  initSentry()
+  initAnalytics()
+}
+
+export async function mount(props) {
+  // 每次进入
+  const app = createApp(App)
+  app.use(createRouter({ history: createWebHistory('/activity'), routes }))
+  
+  // 从 props 拿登录信息
+  store.setToken(props.token)
+  store.setUser(props.userInfo)
+  
+  // 挂载到 qiankun 给的容器
+  app.mount(props.container?.querySelector('#app') || '#app')
+}
+
+export async function unmount() {
+  // 离开时清理（不清理 = 内存泄漏）
+  app.unmount()
+  clearInterval(pollingTimer)
+  ws?.close()
+}
+```
+
+---
+
+### Q10：登录态怎么安全地给子应用？
+
+| token 存储方式 | 安全性 | 子应用怎么拿 |
+|---|---|---|
+| **httpOnly Cookie** | ⭐⭐⭐ 最安全（JS 读不到） | 不用传，浏览器自动带 Cookie |
+| **Props 传（主应用内存里）** | ⭐⭐⭐ 安全（XSS 偷不走内存） | mount(props) 时拿 |
+| **localStorage** | ⭐⭐ 一般（XSS 可读） | 同域直接读 |
+
+**推荐方案**：
+
+```
+鉴权走 Cookie（后端自动验证）：
+  → httpOnly Cookie，零配置，最安全
+
+需要前端拿 token 放 Authorization header：
+  → 主应用存内存 → Props 传给子应用
+  → 不碰 localStorage → XSS 偷不走
+
+token 刷新：
+  → 主应用负责刷新 → initGlobalState 广播新 token 给所有子应用
+```
 
 ---

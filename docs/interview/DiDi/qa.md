@@ -2,7 +2,21 @@
 
 > 实际被问到的问题 + 准备记录。按方向分组，每个方向 top5 精选问题。
 >
-> 一定要有指标体系, 监控运维
+> 一定要有可观测体系: 指标体系, 监控运维
+>
+> 问点答面答体系, 抓住每一次回答的机会, 都是证明自己价值的机会, 用体系的线去串起来自己知识和经验叙事 
+>
+```
+叙事线:
+1. 质量/性能 - 全链路治理线
+   → 可观测体系、Node 监控、告警策略、测试体系、Code Review
+   
+2. 人效 - 全链路治理线
+   → 工程化（Vite/CLI/搭建系统）、微前端选型、LowCode、调试提效
+
+3. AI Native 开发 - 开发全链路
+   → SDD/Spec 模式、MCP Agent、AI 测试生成、TDD、Harness 质量保障
+```
 
 ---
 
@@ -36,7 +50,9 @@
   - [7.1 ReAct Loop 危险命令确认机制](#71-react-loop-危险命令确认机制)
   - [7.2 SDD（Spec-Driven Development）](#72-sddspec-driven-development)
   - [7.3 Harness 质量保障体系](#73-harness-质量保障体系)
+  - [7.4 如何确保 AI 开发不偏移？](#74-如何确保-ai-开发不偏移)
 - [8. React + TS](#8-react--ts)
+- [9. 管理叙事](#9-管理叙事)
 
 ---
 
@@ -44,7 +60,7 @@
 
 > 高阶视角：任何系统上线都必须回答"它跑得好不好"。没有指标 = 盲人开车。
 >
-> → **详见 [Node.js 可观测体系](../root/Node/observability.md)**（完整指标 + 探针原理 + 选型 + 落地方案）
+> → **详见 [可观测性体系（索引）](./observability/README.md)** / [Node.js 可观测](../root/Node/observability.md)
 >
 > → 详见 [性能优化](./engineering/performance.md) / [稳定性](./engineering/stability.md) / [白屏检测](./engineering/blank-screen-detection.md)
 
@@ -55,7 +71,7 @@
 | 级别 | 触发条件 | 动作 |
 |------|---------|------|
 | P0 | 服务不可用 / Crash 率 > 1% / 白屏率 > 5% | 电话 + 自动回滚 |
-| P1 | P99 > 3s / 错误率 > 0.5% / 内存持续上涨 | 飞书告警 + 值班处理 |
+| P1 | P95 > 3s / 错误率 > 0.5% / 内存持续上涨 | 飞书告警 + 值班处理 |
 | P2 | FCP > 2s / CLS > 0.25 / Event Loop Lag > 100ms | 工单 + 排期优化 |
 
 ### 1.2 Node.js + Nuxt
@@ -458,14 +474,111 @@ while (!done) {
 
 → 详见 [DD prep § AI 研发体系](./prep.md#1-ai-研发体系最重要)
 
+### 7.4 如何确保 AI 开发不偏移？
+
+**Q：AI 生成的代码怎么保证不出问题、不偏离需求？**
+
+**第一性原理**：AI = 概率模型，会"幻觉"。不偏移的本质 = **用确定性机制约束概率输出**。
+
+**三层防偏机制**：
+
+```
+Layer 1: Spec 约束（输入端）
+  → 需求文档 + 设计文档 + Task 拆解 = AI 的"地图"
+  → 没有 Spec 的 AI 编码 = 无目标的随机游走
+
+Layer 2: TDD 验证（输出端）
+  → 先写测试 → AI 生成代码 → 测试通过才接受
+  → 测试 = 需求的形式化表达，AI 无法绕过
+
+Layer 3: Harness 卡控（过程中）
+  → 每一步 Tool Call 都可审计/拦截
+  → 危险操作确认门 + 代码 Lint + 类型检查
+  → AI 的"自由度"被工程机制框死
+```
+
+**实际流程（SDD + TDD + Harness）**：
+
+```
+1. Spec：需求 → 设计 → 拆解 Tasks（人定义"做什么"）
+2. TDD：每个 Task 先写测试用例（人定义"怎么算对"）
+3. AI 编码：Agent 根据 Spec + Test 生成代码
+4. 自动验证：跑测试 → 不过则 Agent 自行修复（循环）
+5. 人工 Review：最终合入前人看一眼（兜底）
+```
+
+**为什么这样不会偏移**：
+
+| 传统 AI 编码 | SDD + TDD + Harness |
+|------------|---------------------|
+| 给个 prompt 就写 | Spec 限定范围，不会超纲 |
+| 写完没人验 | TDD 自动验证，错了自动修 |
+| 过程不可控 | 每步 Tool Call 可审计/拦截 |
+| 全靠 prompt 质量 | 工程机制兜底，prompt 差也不会炸 |
+
+**面试一句话**：我用 SDD 约束"做什么"，TDD 约束"怎么算对"，Harness 约束"过程中不越界"。三层叠加，AI 的输出就是确定性的——不依赖 prompt 质量，靠工程机制保障。
+
 ---
 
 ## 8. React + TS
 
-- [TS 类型模式](../root/TS/type-patterns.md) 
-- [TS 目录](../root/TS/README.md)
-- [React 基础](../../basic/react_interview_basic.md)
+→ [React 完整笔记索引](../root/React/README.md) / [TS 类型模式](../root/TS/type-patterns.md) / [TS 目录](../root/TS/README.md)
 
-（待补充 top5 问题）
+### React 面试速查卡
+
+| 主题 | 核心答法 |
+|------|---------|
+| **Hooks 原理** | Fiber 节点挂一条 Hook 链表，每次渲染指针从头遍历。不能放 if 里 = 防止指针错位 |
+| **useState** | 状态变化 → 标记 Fiber dirty → 调度更新 → 重新执行函数组件 → Diff → 更新 DOM |
+| **useEffect** | render 后异步执行（不阻塞绘制）。deps 浅比较决定是否重跑。返回函数 = cleanup |
+| **memo + useCallback** | memo 浅比较 props 跳过渲染 + useCallback 稳定函数引用。**两者缺一不可** |
+| **useMemo** | 缓存昂贵计算结果。deps 不变 → 直接返回缓存值 |
+| **Fiber** | 链表结构（child/sibling/return），可中断渲染。时间切片 = 每 5ms yield 给浏览器 |
+| **Diff** | 同层比较 + key 识别移动。O(n) 而非 O(n³) |
+| **性能优化三板斧** | ① memo 跳过无变化子组件 ② 状态下沉（只在需要的组件里 useState）③ 懒加载（React.lazy） |
+| **闭包陷阱** | useEffect/useCallback 捕获的是创建时的 state 快照。解：用 ref 或函数式更新 |
+| **并发特性(18)** | useTransition（低优先级更新）、useDeferredValue（延迟值） |
+
+### TS 高频速查
+
+| 主题 | 要点 |
+|------|------|
+| **泛型** | `<T>` = 类型参数，调用时推断。`<T extends X>` = 约束 |
+| **unknown vs any** | unknown 安全（必须收窄才能用），any 危险（跳过检查） |
+| **Record<K,V>** | 键值映射类型。`Record<string, number>` = `{ [k: string]: number }` |
+| **Utility Types** | Partial / Required / Pick / Omit / ReturnType / Parameters |
+| **type vs interface** | interface 可 extends/merge，type 可联合/交叉。组件 props 用 interface |
 
 ---
+
+## 9. 管理叙事
+
+me: 管理叙事: DDD + 质量 + 人效 : 全链路治理 + 推动团队AI native化 + 推动业务AI化
+> 三层递进：全链路治理 → AI Native 化 → 业务 AI 化
+
+### 核心叙事
+
+```
+Layer 1: 全链路质量人效治理 — "建体系"
+  - Lint → Hooks → CI 卡控（质量从人治到制度）
+  - CLI / 搭建系统 / 调试工具 10x（消除重复劳动）
+  - DDD 领域划分 + 依赖守卫（改动收敛）
+  - OTel 可观测体系（数据驱动，不靠感觉）
+
+Layer 2: 推动团队 AI Native 化 — "引领变革"
+  - 选定 MCP 协议 + Agent 工具链（标准化）
+  - AI Code Review / AI Test Gen / AI Doc 融入 CI
+  - Prompt 模板 + 培训 → 团队从"问 ChatGPT"→ 系统化使用
+  - 度量：AI 辅助代码占比 / 缺陷率对比
+
+Layer 3: 推动业务 AI 化 — "创造价值"
+  - LowCode + AI 自动生成页面（运营自助率↑）
+  - RAG 知识库（人工介入率↓）
+  - AI 驱动实验平台（转化率可量化）
+```
+
+### 一句话
+
+> "先建全链路质量人效体系（守），再推 AI Native 化（变），最终推业务 AI 化（攻）。三层递进，从守到攻。"
+
+→ 详见 [技术 Leader 四维体系](../root/manage/tech-leader.md) / [新人 Onboarding](../root/manage/onboarding-plan.md)
