@@ -69,6 +69,13 @@
 
 - [Node.js 知识体系](./interview/root/Node/README.md)
 
+## 可观测性体系
+
+- [可观测性体系（索引）](./interview/DiDi/observability/README.md)
+  - [Node.js + Nuxt 可观测](./interview/DiDi/observability/node.md)
+  - [Web 前端可观测](./interview/DiDi/observability/web.md)
+  - [搭建页面可观测](./interview/DiDi/observability/lowcode.md)
+
 ## 技术管理
 
 - [技术 Leader 四维体系](./interview/root/manage/README.md)
