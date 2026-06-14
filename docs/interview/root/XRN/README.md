@@ -1,8 +1,8 @@
 # XRN — RN 大前端工程化体系
 
-> 开源 React Native 企业级工程化方案：分 Bundle + 热更新 + 灰度 + CLI + 可观测 + 全链路。
+> 开源 React Native 企业级工程化方案：分 Bundle + 热更新 + 灰度 + CLI + 内置可观测体系（开箱即用）。
 >
-> 代码仓库：`/home/mi/disk/qiaoyang/code/my-github/XRN`
+> 代码仓库：https://github.com/BlueStoneQ/XRN
 
 ---
 
@@ -11,6 +11,7 @@
 ### 核心
 
 - [Q&A（深度问题：分 Bundle / 热更新 / Native / 性能）](./qa.md)
+- [热更新子系统](./hot-update.md)
 - [RN + APK 可观测体系](./observability.md)
 - [RN 工程化深度方案（多 Bundle 容器 + 热更新 + CI/CD）](./rn-engineering-deep.md)
 - [XRN Release Platform（自建移动端发布平台）](./xrn-release-platform.md)

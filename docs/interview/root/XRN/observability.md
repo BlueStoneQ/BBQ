@@ -174,3 +174,61 @@
 ```
 
 ---
+
+## @x-rn/monitor 可观测体系: 设计方案
+
+### 理念
+
+```
+可观测 = 热更新的安全网。没有它，推了坏包不知道。
+设计原则：
+  1. 最少接入成本（3 行代码）
+  2. 和热更新闭环（crash → 自动回滚，不是独立监控）
+  3. JS + Native 双层采集，统一出口
+```
+
+### 核心指标怎么采集
+
+| 指标 | 层 | 怎么采集 |
+|------|-----|---------|
+| **Crash** | Native | Android: `UncaughtExceptionHandler` + Signal Handler; iOS: PLCrashReporter |
+| **ANR** | Native | Android: 主线程 post 延迟消息 5s 超时; iOS: RunLoop Observer |
+| **FPS** | Native | Android: `Choreographer.FrameCallback`; iOS: `CADisplayLink` |
+| **JS Error** | JS | `ErrorUtils.setGlobalHandler` + `onunhandledrejection` |
+| **Bundle 加载时间** | JS/Native | `loadScriptFromFile` 前后打点 |
+| **首屏渲染** | Native | `ReactMarker(CONTENT_APPEARED)` 事件 |
+| **内存** | Native | Android: `Debug.getMemoryInfo()`; iOS: `task_info` |
+
+### 怎么上报
+
+```
+采集 → 本地队列 → 批量上报
+
+具体流程：
+  1. 各采集器产出事件 → 写入内存队列
+  2. 队列策略：每 30s 或满 20 条 → 触发上报
+  3. 上报前：gzip 压缩 → HTTPS POST
+  4. 失败处理：指数退避重试（最多 3 次）→ 仍失败写本地 SQLite
+  5. 下次启动 → 检查本地缓存 → 补传
+
+数据格式（每条事件）：
+  {
+    type: 'crash' | 'anr' | 'js_error' | 'performance' | 'custom',
+    timestamp: 1718000000,
+    bundleId: 'home',
+    bundleVersion: 'v2.3.1',  ← 关键：带版本号，Server 聚合用
+    deviceInfo: { os, model, memory },
+    payload: { ... }           ← 具体数据（stack trace / 耗时 / 内存值）
+  }
+```
+
+### 上报到哪儿
+
+```
+结论：全部上报到 Sentry，不需要自建监控后端。
+- 自定义的指标 sentry 也支持
+```
+
+### 后续自建可观测后台怎么办？
+
+SDK Transport 层留有接口，迁移时只需替换 Transport 实现，业务代码不动。
