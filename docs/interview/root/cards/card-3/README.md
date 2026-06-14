@@ -8,16 +8,22 @@
 
 ## 文档索引
 
-- [Q&A（二面深度问题）](./qa.md)
+### XRN 大前端工程化体系
+
+→ **[XRN README（核心入口）](../../XRN/README.md)**
+
+### 通用工程化
+
 - [CI/CD Quality Gate Design](./ci-quality-gate.md)
 - [Docker & K8s](./docker-k8s.md)
-- [RN 工程化深度方案（多 Bundle 容器 + 热更新 + CI/CD）](./rn-engineering-deep.md)
-- [XRN Release Platform（自建移动端发布平台）](./xrn-release-platform.md)
-- [架构和工程化治理](../../RN/architecture-engineering.md)
+
+### RN 知识体系
+
+- [RN 总入口](../../RN/README.md)
 - [分 Bundle 方案](../../RN/code-splitting.md)
-- [2026 技术栈 + 目录结构](../../RN/rn-2026-stack.md)
 - [构建系统](../../RN/build-system.md)
-- [XRN PRD](/home/mi/disk/qiaoyang/code/my-github/XRN/me-docs/PRD.md)
+- [架构和工程化治理](../../RN/architecture-engineering.md)
+- [2026 技术栈 + 目录结构](../../RN/rn-2026-stack.md)
 - [条件编译工具](../../RN/conditional-compile.md)
 - [体验升级治理专项](../../RN/ux-engineering.md)
 - [Theme + 国际化](../../RN/theme-i18n.md)
@@ -30,7 +36,7 @@
 工程化体系 = 让团队"做正确的事"变得简单
 
 我建过的体系：
-  分 Bundle → 业务独立开发/独立发布
+  多 Bundle → 业务独立开发/独立发布
   热更新 → 不发版修 bug
   CLI 脚手架 → 新项目 10 秒初始化
   组件体系 → 统一 UI 规范
