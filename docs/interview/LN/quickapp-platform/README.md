@@ -8,9 +8,9 @@
 
 | 仓库 | 地址 | 对应本地目录 |
 |------|------|------------|
+| hapjs-platform 组织 | [github.com/hapjs-platform](https://github.com/hapjs-platform/) |- 框架: https://github.com/hapjs-platform/hapjs - 构建工具: https://github.com/hapjs-platform/hap-toolkit|
 | hapjs-platform 主框架 | [github.com/nicetea/nicetea](https://github.com/nicetea) / [gitee.com/nicetea/nicetea](https://gitee.com/nicetea/nicetea) | `packages/quickapp/` |
 | hap-toolkit 编译工具链 | [github.com/nicetea/nicetea-hap-toolkit](https://github.com/nicetea/nicetea-hap-toolkit) | `extra/hap-toolkit/` |
-| hapjs-platform 组织 | [github.com/hapjs-platform](https://github.com/hapjs-platform/) | — |
 | Gitee 镜像 | [gitee.com/mirrors/hapjs](https://gitee.com/mirrors/hapjs) | — |
 
 > 本地代码是小米内部 fork（加了 vendor 定制模块），核心 runtime/framework/toolkit 与开源版一致。

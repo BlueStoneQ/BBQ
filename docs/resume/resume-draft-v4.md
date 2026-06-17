@@ -38,9 +38,10 @@
 
 ### 2. 跨端开发与框架设计
 
-- 跨端：React Native（CRN）、快应用框架（JS → Native View）、小程序
+- 跨端：React Native（CRN）、快应用框架（JS → Native View）、Flutter动态渲染框架、小程序
 - 桌面端：Electron（VS Code 二次开发 / 插件）
 - Android 原生：Java / C++、Gradle、NDK、V8 / J2V8、JNI、R8
+- iOS：Swift / Objective-C、RN Native Shell（RCTHost + TurboModule）、Flutter 渲染端
 - 跨端工程化：多 Bundle、版本管理、热更新、多端构建发布
 - 核心：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型
 - 设计实践：设计模式、函数式、AOP、DDD、TDD
@@ -51,6 +52,7 @@
 - 工程化：脚手架 CLI、CI/CD 流水线、发布体系、插件机制、依赖分析引擎（遍历者+访问者模式）
 - 质量：ESLint、Git Hooks、CI/CD 全链路卡控、自动化测试
 - 性能：性能探针 SDK、包体优化（R8 / 条件编译）、秒开率优化
+- 可观测体系：监控上报全链路、性能/内存/稳定性监控、CrashGuard/ANR/WatchDog、白屏治理、实时告警与自动回滚
 
 ### 4. AI Agent 开发与 AI 融入开发实践
 - AI Agent 系统设计与开发：微内核架构、ReAct 循环、Tool Use、MCP 协议、Skill 系统
@@ -61,18 +63,18 @@
 
 ## 二、开源项目
 
-### Mako 🦈 — AI Coding Agent 框架
+### Mako  — AI Coding Agent 框架
 
 模型无关的 AI Coding Agent 框架。微内核 + 插件架构，内置 Trace 可观测性和 Benchmark 评测。[GitHub](https://github.com/BlueStoneQ/mako)
 
 ### XRN — React Native 企业级工程化方案
 
-多 Bundle + 热更新 + 灰度发布解决方案。CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
+多 Bundle + 热更新 + 灰度发布解决方案。Android + iOS 双端 Native 容器壳子+ CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
 
 ### 条件编译工具套件
 
 面向 xml / css / js 的 AOT 条件编译，基于注释指令按目标平台精确裁剪源码，用于包体优化与跨端复用。
-
+// TODO: 合并成一个menorepo: 或者一个新仓库,只有一个readme, 里面链接下这三个仓库, 保留手工编码的遗迹
 - babel-plugin-conditional-compile-with-comment [git](https://github.com/BlueStoneQ/babel-plugin-conditional-compile.git) · [npm](https://www.npmjs.com/package/babel-plugin-conditional-compile-with-comment)
 - postcss-plugin-conditional-compile [git](https://github.com/BlueStoneQ/postcss-plugin-conditional-compile.git) · [npm](https://www.npmjs.com/package/postcss-plugin-conditional-compile)
 - xml-conditional-compile [git](https://github.com/BlueStoneQ/xml-conditional-compile.git) · [npm](https://www.npmjs.com/package/xml-conditional-compile)
@@ -91,14 +93,25 @@
 - 全链路独立交付：技术选型 · 数据库建模 · 后端 API · 前端可视化 · CI/CD · 监控告警 · 线上问题排查
 - 性能瓶颈优化：大文件上传（**S3 MPU 分片并发**，4.4G 文件从 121s 降至 42s，**提速近 3 倍**）、ECharts 大数据渲染（Web Worker + 降采样）
 
-#### ② 快应用框架（类RN跨端框架 · Android 原生）
+#### ② 快应用框架 + Flutter 动态卡片渲染框架
+
+**A. 快应用框架**（Android · 类 RN 跨端框架）
 
 系统级快应用运行时，**JS 驱动 Native View 渲染（非 WebView）**，V8 + J2V8 同步 Bridge（类 JSI）。
 
-- 包体优化：预装包 **153MB → ~60MB**，dex **44.4MB → 27MB（-39%）**
-- 模块裁剪与降级方案：**反射解耦编译依赖** + metadata 入口控制 + 自升级兜底
-- 启动内存优化：DEX 布局优化，热代码前置减少 page fault（PSS MAX **41MB → 35.8MB**）
-- 自动化测试：Python + pytest + uiautomator2 驱动设备自动化，覆盖启动/滑动/点击等场景，支持 Android / HarmonyOS / iOS 三端
+- **包体优化**：预装包 **153MB → ~60MB**，dex **44.4MB → 27MB（-39%）**
+- **模块裁剪与降级方案**：**反射解耦编译依赖** + metadata 入口控制 + 自升级兜底
+- **启动内存优化**：DEX 布局优化，热代码前置减少 page fault（PSS MAX **41MB → 35.8MB**）
+- **自动化测试**：Python + pytest + uiautomator2 驱动设备自动化，覆盖启动/滑动/点击等场景
+
+**B. Flutter 动态卡片渲染框架**（跨平台 · C++ 引擎层）
+
+将快应用卡片能力从仅 Android 扩展到全平台（Android / iOS / IoT / 车机），C++ 统一引擎层 + Dart FFI 桥接。
+
+- **渲染链路**：JSON 协议驱动 → DOM 树 → Flexbox 布局 → Flutter Widget 渲染，天然覆盖 iOS
+- **引擎核心**：C++ 实现平台无关的 W3C DOM 子集 + CSS 层叠 + 布局计算，通过 Dart FFI 输出 FrameUpdate 给 Flutter 渲染
+- **卡片交互**：事件系统（捕获/冒泡）+ 手势识别
+- **增量更新**：TreeMutation + NodePatch 增量同步机制，避免全量重建 Widget 树
 
 #### ③ 快应用 IDE（桌面端 Electron 应用）
 
@@ -119,7 +132,7 @@
 
 ### 3.2 XC·机票事业部·机酒终端组: 资深工程师（2023.5 ~ 2023.9）
 
-#### ① XC App 机酒频道 + 国际化 App（React Native）
+#### ① XC App 机酒频道 + 国际化 App（React Native + IOS + Android）
 
 - CRN 框架（RN 企业级定制）工程化实践
 - 业务分频道、**多 Bundle、分版本热更新**上线
