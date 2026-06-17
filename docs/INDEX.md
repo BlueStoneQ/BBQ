@@ -24,6 +24,7 @@
 - [GoodNotes JD](./interview/goodnotes/jd.md)
 - [Kimi JD](./interview/kimi/jd.md)
 - [Vast JD](./interview/vast/jd.md)
+- [WJM JD](./interview/wjm/jd.md) / [WJM Prep](./interview/wjm/prep/README.md)
 
 ---
 

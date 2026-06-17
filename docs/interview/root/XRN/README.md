@@ -16,6 +16,8 @@
 - [RN 工程化深度方案（多 Bundle 容器 + 热更新 + CI/CD）](./rn-engineering-deep.md)
 - [XRN Release Platform（自建移动端发布平台）](./xrn-release-platform.md)
 - [导航与路由](./navigation-and-routing.md)
+    - [Route](./route.md)
+- [Bundle Runtime](./bundle-runtime.md)
 
 ### XRN 项目文档（代码仓库内）
 
