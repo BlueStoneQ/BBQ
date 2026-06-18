@@ -11,6 +11,7 @@
 ### 核心
 
 - [Q&A（深度问题：分 Bundle / 热更新 / Native / 性能）](./qa.md)
+- [Native Shell 设计（加载容器 / 路由 / 稳定性 / 内存 / 通信）](./native-shell.md)
 - [热更新子系统](./hot-update.md)
 - [RN + APK 可观测体系](./observability.md)
 - [RN 工程化深度方案（多 Bundle 容器 + 热更新 + CI/CD）](./rn-engineering-deep.md)
