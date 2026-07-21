@@ -9,3 +9,38 @@ XC CRN + 加上 C-Flutter的业务: rust-flutter-card:
 叙事:
 "我有 CRN 企业级框架的完整经验，现在正在规划 Flutter 版 — 把容器化、动态化、可观测这三块迁移过来。动态化部分和我之前做的快应用框架（JSON → Native 渲染）是同一个模式，只是渲染端换成 Flutter Widget。"
 ```
+
+## js卡/轻卡
+- https://www.quickapp.cn/openness/intelligentCard
+```html
+<template>
+ <div class="box-style">
+     <text class="text" @click="routerEvent">{{content}}</text>
+  </div>
+</template>
+
+<data>
+{
+  "uiData": {
+      "content": "轻卡示例"
+  },
+  "actions": {
+    "routerEvent": {
+      "type": "router",
+      "url": "hap://app/com.example.quickapp/page",
+      "params":{}
+    }
+  }
+}
+</data>
+
+<style lang="less">
+.box-style {
+  width: 100%;
+  height: 100%;
+}
+.text {
+  font-size: 12px;
+}
+</style>
+```

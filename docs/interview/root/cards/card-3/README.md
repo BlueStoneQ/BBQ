@@ -12,6 +12,8 @@
 
 → **[XRN README（核心入口）](../../XRN/README.md)**
 
+→ [WJM card3: XRN](../../../wjm/cards/card3:native-shell/XRN/README.md)
+
 ### 通用工程化
 
 - [CI/CD Quality Gate Design](./ci-quality-gate.md)

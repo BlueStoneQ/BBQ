@@ -5,6 +5,8 @@
 > 方案：C/S 架构自动化 + 统一抽象层三端共用 + 性能数据自动采集
 >
 > 效果：回归耗时 2 人天 → 2 小时，覆盖量 20 → 200+
+>
+> 方案原理: 手机上装一个"代理 App"，PC 端通过 adb/HTTP 给它发指令。
 
 ---
 
@@ -43,7 +45,7 @@ PC（pytest 测试脚本）
 | **iOS** | `tidevice` + `facebook-wda` | WebDriverAgent（需 Xcode 签名安装） | USB + HTTP |
 | **HarmonyOS** | 自研 driver（基于 `hdc`） | 系统内置 uitest 服务 | USB + hdc 命令 |
 
-> **ATX = Android Test eXtension**（openatx 开源组织）。本质是 Google UiAutomator 的 Python 封装 + HTTP 服务化。首次 `u2.connect()` 时自动通过 adb 推送安装 ATX Agent APK 到设备。
+> **ATX = Android Test eXtension**（openatx 开源组织）。Python 库（`pip install uiautomator2`），本质是 Google UiAutomator 的 Python 封装 + HTTP 服务化。[→ RN 兼容性](#注释atx-rn)
 
 ### ATX 是平台无关的吗？
 
@@ -59,23 +61,19 @@ PC（pytest 测试脚本）
 
 ### iOS 怎么做
 
-```bash
-# 1. 安装 Python 客户端
-pip install facebook-wda tidevice
+双端统一方案：Appium。
 
-# 2. 在 iOS 设备上安装 WebDriverAgent（需要 Mac + Xcode + 开发者证书）
-#    WDA 是 Facebook 开源的 iOS 自动化 Agent，基于 Apple 的 XCTest 框架
-tidevice wdaproxy -B com.facebook.WebDriverAgentRunner
+| | 安装 | 手机端代理 |
+|--|------|-----------|
+| Server 端 | `pip install Appium-Python-Client pytest` + `npm install -g appium` | — |
+| 设备端 | — | WebDriverAgent（Appium 首次运行自动编译安装，需 Mac + Xcode） |
 
-# 3. Python 侧使用
-import wda
-c = wda.Client()              # 连接设备上的 WDA
-c(name="允许").tap()           # 按 accessibility label 点击
-c.swipe_up()                  # 滑动
-c.screenshot("screen.png")    # 截图
-```
+流程：
+1. 启动 Appium Server
+2. pytest 用例通过 `accessibility_id`（= RN `testID`）定位元素，双端一套代码
+3. CI：macOS Runner + iOS Simulator → MR 触发 → pytest → 失败阻断
 
-**iOS 比 Android 麻烦的地方**：WDA 需要 Xcode 签名编译安装到设备（Apple 安全限制），不像 Android 的 ATX Agent 通过 adb 自动推送就行。
+> 和 Android 的区别只有：需要 Mac + Xcode（模拟器免证书，真机需开发者证书）。
 
 ### 这种测试叫什么
 
@@ -234,6 +232,19 @@ def test_scroll_fps(driver):
 
 ---
 
+## gitlab 卡控: runner
+GitLab CI Runner 连着真机或模拟器，就可以跑 E2E 测试做卡控：
+```yml
+e2e_test:
+  stage: test
+  script:
+    - adb devices
+    - pytest tests/e2e/ --device=emulator-5554
+  tags: [android-device]  # 指定连了手机的 Runner
+  allow_failure: false     # 失败则阻断 pipeline
+```
+实际部署：一台装了 gitlab-runner 的机器 + 连接 Android 真机（或启动模拟器）+ 装 Python + adb 环境。MR 合入时自动跑，失败就不让合。
+
 ## 效果
 
 | 指标 | 优化前 | 优化后 |
@@ -250,3 +261,30 @@ def test_scroll_fps(driver):
 - 统一测试框架抽象层，三端共用一套用例，只替换 driver
 - CI 集成：每次框架发版前自动跑，不通过不发布
 - 性能基线：每次跑完自动对比历史数据，劣化自动告警
+
+---
+
+## QA
+
+### Q1: 用例怎么定位元素？需要手动加 ID 吗？
+
+基于系统无障碍 View 树定位，不是像素操作。RN 组件加 `testID` 属性，映射为 Android `contentDescription` / iOS `accessibilityIdentifier`。
+
+```tsx
+<TouchableOpacity testID="login_button" onPress={login}>
+```
+
+```python
+driver.find_element(AppiumBy.ACCESSIBILITY_ID, "login_button").click()
+```
+
+需要手动加。规范：核心链路的可交互元素都加 `testID`，不受文案/布局变化影响。
+
+---
+
+# 注释
+
+<a id="注释atx-rn"></a>
+### ATX 对 RN 的兼容性
+
+RN 不需要特别的库——RN 最终渲染的是 Native View，`uiautomator2` 直接能识别和操作，和纯 Native 页面没区别。RN 生态也有专门的 E2E 框架（Detox），能更好地等待 JS 线程空闲再操作（减少 flaky），但 `uiautomator2` 完全够用。

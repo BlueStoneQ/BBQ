@@ -6,24 +6,6 @@
 
 ---
 
-## 最佳实践（结论）
-
-```
-首屏优化 = 减少耗时 + 感知优化
-
-减少耗时（真的快）：
-  1. Native 层：自定义控制 Splash 阶段，多线程并行（预请求 + BLE 初始化 + Bundle 加载同时进行）
-  2. 构建层：DDD 拆分首屏 Bundle，最小化原则（加载的代码量越少 → 越快）
-  3. 构建层：Hermes AOT 预编译（跳过运行时解析）
-  4. Native 层：TurboModule 懒加载（不全量注册）
-
-感知优化（觉得快）：
-  5. Splash 遮挡等待（数据就绪后才消失）
-  6. 骨架屏过渡（RN 层做，Splash 消失后数据还没来时）
-  7. 收敛多个 loading（统一初始化管理器）
-  8. Native 预请求拦截层（JS 正常请求 → Native 拦截返回缓存，零侵入）
-```
-
 ---
 
 ## 目录
@@ -49,6 +31,28 @@
   - [Splash 期间能做的事](#splash-期间能做的事)
   - [关键优化：Native 预请求](#关键优化native-预请求)
   - [实现方式：Native 拦截层（零侵入）](#实现方式native-拦截层零侵入)
+
+## 最佳实践（结论）
+- me: splash阶段(时机: Application.onCreate()):
+  - 线程1: 预热RN pool / webview pool [→ 线程分工](#注释splash-线程分工)
+  - 线程2: 预请求
+  - 预拉取: RN bundle / H5 html
+
+```
+首屏优化 = 减少耗时 + 感知优化
+
+减少耗时（真的快）：
+  1. Native 层：自定义控制 Splash 阶段，多线程并行（预请求 + BLE 初始化 + Bundle 加载同时进行）
+  2. 构建层：DDD 拆分首屏 Bundle，最小化原则（加载的代码量越少 → 越快）
+  3. 构建层：Hermes AOT 预编译（跳过运行时解析）
+  4. Native 层：TurboModule 懒加载（不全量注册）
+
+感知优化（觉得快）：
+  5. Splash 遮挡等待（数据就绪后才消失）
+  6. 骨架屏过渡（RN 层做，Splash 消失后数据还没来时）
+  7. 收敛多个 loading（统一初始化管理器）
+  8. Native 预请求拦截层（JS 正常请求 → Native 拦截返回缓存，零侵入）
+```
 
 ---
 
@@ -482,3 +486,17 @@ const devices = await api.getDevices(); // 同上
 **本质**：和 MT 优选的"数据预加载方案"思路一致——请求拦截 + 缓存命中。只不过拦截层从 JS 移到了 Native 网络模块（OkHttp Interceptor）。
 
 **一句话**：XRN 让数据请求和 Bundle 加载真正并行（Native 层发请求不等 JS），JS 启动后同步取已回来的数据 → 首屏最快。
+
+---
+
+# 注释
+
+<a id="注释splash-线程分工"></a>
+### Splash 阶段线程分工
+
+Splash 展示期间多线程并行预热，互不冲突：
+
+- **主线程**：显示 Splash 画面
+- **后台线程**：RN Instance 预热（`createReactContextInBackground()`）
+- **主线程闲时**：WebView 池预创建（`IdleHandler`，WebView 必须主线程创建）
+- **网络线程**：首屏接口预请求

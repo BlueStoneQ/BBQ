@@ -12,22 +12,11 @@
 
 ### 线上（生产环境，被动采集）
 
-| 工具 | 能力 | 特点 |
-|------|------|------|
-| **Sentry** | 异常（JS Error / Crash / ANR）+ 性能（启动/帧率/接口）+ 告警 | 全链路核心，开源可自部署 |
-| **Firebase Performance** | 启动时间 / 帧率趋势 / 网络延迟 | 补充 Sentry 的帧率分布和网络 |
-| **自建 APM** | 内存水位趋势 / OOM 预警 / 自定义分位数 | Sentry 覆盖不了的精细指标 |
+→ [详细](#线上监控)
 
 ### 本地开发（调试定位）
 
-| 工具 | 平台 | 能力 | 一句话定位 |
-|------|------|------|-----------|
-| **RN Perf Monitor** | RN 跨端 | JS FPS / UI FPS | 最轻量，随时看帧率 |
-| **Flipper** | RN 跨端 | JS 性能 / 网络 / Layout / DB | RN 专属调试中心 |
-| **LeakCanary** | Android | 内存泄漏自动检测 | 装上即用，零代码 |
-| **AS Profiler** | Android | CPU 火焰图 / 内存对象级 / 网络 / 能耗 | "哪个函数慢、哪个对象漏" |
-| **Perfetto** | Android | 系统级线程调度 / 帧渲染流水线 | "帧为什么掉了，线程被谁抢了" |
-| **Xcode Instruments** | iOS | CPU / 内存 / Leaks / 帧率 / I/O | iOS 侧同等能力 |
+→ [详细工具表格](#本地开发)
 
 ---
 
@@ -70,22 +59,19 @@
 
 ### 线上监控
 
-| 工具 | 监控什么 | 说明 |
-|------|---------|------|
-| **Sentry** | JS Error / Native Crash / ANR / 启动时间 / 帧率 / 接口耗时 / 自定义埋点 | 全链路，核心工具。详见 [sentry.md](./sentry.md) |
-| **Firebase Performance** | 启动时间 / 帧率 / 网络延迟 | 补充 Sentry 的帧率趋势和网络监控 |
-| **Firebase Crashlytics** | Native Crash（备选） | 如果不用 Sentry 的话用这个，只管 crash |
-| **自定义 APM** | 内存水位趋势 / 帧率分布 / 业务指标 | Sentry 不够精细的补这里（如 PSS 趋势监控） |
-| **自定义埋点** | BLE 连接耗时 / 首屏数据就绪 / 热更新下载 | Sentry Transaction + Firebase Trace |
+| 工具 | 说明 |
+|------|------|
+| **Sentry** | 核心。JS Error / Crash / ANR / 启动时间 / 自定义埋点 / 帧率卡顿（内置 slow/frozen frame 检测）|
+| **Firebase Performance**（海外补充） | 帧率趋势 + 网络延迟 |
 
-**线上组合推荐**：Sentry（异常 + 性能 + 告警）+ Firebase Performance（帧率趋势 + 网络）。内存趋势和 OOM 预警 Sentry 覆盖不了，大厂一般自建 APM。
+> 帧率卡顿：Sentry SDK 内置 slow frame（>16ms）/ frozen frame（>700ms）检测，不需要自己实现。线上只上报超阈值的卡顿事件，不持续采集，开销极低。[→ 卡顿检测原理](#注释卡顿检测原理)
 
 ### 本地开发
 
 | 工具 | 平台 | 需要什么 | 能看什么 | 侵入性 |
 |------|------|---------|---------|--------|
-| **RN Perf Monitor** | RN 跨端 | Dev Menu 开启 | JS FPS / UI FPS（最轻量，随时开） | 零 |
-| **Flipper** | RN 跨端 | debug 包自带 | JS 性能 / 网络 / Layout / DB / 日志 | 低 |
+| **RN Perf Monitor**（手机端） | RN 跨端 | Dev Menu 开启 | JS FPS / UI FPS 实时浮层 | 零 |
+| **React Native DevTools**（桌面端） | RN 跨端 | `npx react-native start` 自带 | Profiler / Network / Console（替代已废弃的 Flipper） | 零 |
 | **LeakCanary** | Android | 加一行依赖即可 | 内存泄漏自动检测（Activity/Fragment/对象） | 极低 |
 | **AS Profiler** | Android | Android Studio 自带 | CPU 火焰图 / 内存对象级分析 / 网络 / 能耗 | 零（attach 即可） |
 | **Perfetto** | Android | 不需要 SDK，系统自带 | 系统级：进程/线程调度、帧渲染流水线、CPU、内存 | 零 |
@@ -105,7 +91,7 @@
   → LeakCanary（自动检测）+ AS Profiler Memory Tab（dump heap 看引用链）
 
 "JS 线程是不是太忙了？"
-  → RN Perf Monitor（看 JS FPS）→ Flipper Performance（看每帧 JS 耗时）
+  → RN Perf Monitor（看 JS FPS）→ React Native DevTools Profiler（看每帧 JS 耗时）
 
 "iOS 内存泄漏？"
   → Xcode Instruments → Leaks template
@@ -197,3 +183,17 @@ CI 流水线加检查：
 ```
 采集（线上 + 自动化）→ 可视化（Dashboard）→ 告警（退化通知）→ 定位（排查 SOP）→ 修复 → 验证 → 持续监控
 ```
+
+---
+
+# 注释
+
+<a id="注释卡顿检测原理"></a>
+### 卡顿检测原理
+
+不是"帧率低于 X 就是卡顿"——是**有渲染请求但超时没完成**。
+
+- Android：`Choreographer.FrameCallback`，系统每帧回调一次（16ms），两次回调间隔 > 16ms = 掉帧
+- iOS：`CADisplayLink`，同理，屏幕刷新时回调，间隔超时 = 掉帧
+
+页面静止不动时系统不触发帧回调（没有 View invalidate / 没有动画 → 不渲染），所以不会误判为卡顿。只有 UI 正在变更时才检测。

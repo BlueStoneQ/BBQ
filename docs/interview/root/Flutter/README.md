@@ -1,5 +1,11 @@
 # Flutter 核心概念
 
+## 大纲
++ 状态管理 
++ 渲染原理 
++ 性能优化 
++ 原生混合
+
 ## 本质
 
 **Flutter = Dart 语言 + Skia 自绘引擎 + 跨平台编译**
@@ -113,9 +119,7 @@ MethodChannel(flutterEngine.dartExecutor, "com.myapp/ble").setMethodCallHandler 
 
 ---
 
-## 你的应对策略
-
-如果被问"为什么不用 Flutter"：
+## 为什么不用 Flutter
 
 > "Flutter 的 UI 一致性和渲染性能确实最好，但我选 RN 的原因是：
 > 1. 热更新能力（IoT 设备固件配合 App 迭代快，需要不发版修 bug）

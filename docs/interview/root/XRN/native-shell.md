@@ -143,7 +143,7 @@ interface XRNUpdaterNativeModule {
 | 策略 | 触发时机 | 实现 | 适用模块 |
 |------|---------|------|---------|
 | `preload` | common 加载完立即 | 异步并行加载 | 首页、搜索 |
-| `idle` | 主线程空闲 | IdleHandler（Android）/ RunLoop idle（iOS） | 次高频模块 |
+| `idle` | 主线程空闲 | [IdleHandler（Android）/ RunLoop idle（iOS）](#注释idle监听) | 次高频模块 |
 | `on-demand` | 用户打开时 | 显示 loading → 加载 → 渲染 | 低频模块 |
 | `conditional` | 用户行为触发 | 事件驱动预加载 | 预测性加载 |
 
@@ -182,3 +182,32 @@ Page A (Instance 1)          Native EventBus           Page B (Instance 2)
 - JS 层通过 TurboModule 调用 Native 的 EventBus
 - Native 层维护事件订阅表，广播给所有注册了该事件的 Instance
 - 序列化：事件数据经过 JSI / JSON 序列化传递
+
+---
+
+# 注释
+
+<a id="注释idle监听"></a>
+### idle 时机监听
+
+**Android：IdleHandler**
+
+```kotlin
+// 主线程消息队列空闲时回调
+Looper.myQueue().addIdleHandler {
+    preloadNextBundle()
+    false  // false = 只触发一次
+}
+```
+
+**iOS：CFRunLoopObserver**
+
+```swift
+// RunLoop 即将进入休眠 = 主线程空闲
+let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.beforeWaiting.rawValue, true, 0) { _, _ in
+    self.preloadNextBundle()
+}
+CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .defaultMode)
+```
+
+两个 API 都是系统级的，能精确监听"主线程当前帧没事干了"这个时机。

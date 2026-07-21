@@ -37,17 +37,20 @@
 
 ## 如何优化
 
-### RN/JS 层
+### Top 3（核心）
 
-| 手段 | 做什么 | 为什么 |
-|------|--------|--------|
-| **FlashList** 替代 FlatList | View 复用（类似 RecyclerView） | FlatList 销毁重建 View，FlashList 复用 |
-| **React.memo** 包裹 item | props 没变就不重渲染 | 避免滚动时所有 item 都重渲染 |
-| **useCallback** 缓存 onPress | 函数引用不变 → memo 生效 | 否则每次渲染新函数 → memo 失效 |
-| **estimatedItemSize** | 预设 item 高度 | FlashList 提前计算布局，减少白屏 |
-| **keyExtractor** 用稳定 ID | 不用 index | 避免 item 销毁重建 |
-| **windowSize** 调优 | 控制渲染窗口大小 | 太大浪费内存，太小白屏 |
-| **getItemLayout**（固定高度时） | 精确告诉列表每个 item 的位置 | 跳过布局计算 |
+| # | 手段 | 为什么 |
+|---|------|--------|
+| 1 | [**FlashList**](#注释flashlist) 替代 FlatList | 底层回收复用（类似 RecyclerView），不销毁重建 View |
+| 2 | **React.memo** + **useCallback** | 避免滚动时所有 item 重渲染 |
+| 3 | [**estimatedItemSize**](#注释estimateditemsize) + **getItemType** | 告诉列表 item 多高 + 有几种类型，不用每个都算一遍 |
+
+### 补充
+
+| 手段 | 说明 |
+|------|------|
+| keyExtractor 用稳定 ID | 不用 index，避免重建 |
+| windowSize 调优 | 控制渲染窗口（太大浪费内存，太小白屏） |
 
 ### Native 层
 
@@ -139,3 +142,19 @@ const DeviceCard = React.memo(({ device, onPress }) => (
 - 没 useCallback → memo 失效（函数引用每次都变）
 - 没 FastImage → 图片闪烁/重复下载
 - 没 estimatedItemSize → 白屏/跳动
+
+---
+
+# 注释
+
+<a id="注释estimateditemsize"></a>
+### estimatedItemSize
+
+给一个预估高度像素值（如 `estimatedItemSize={80}`），FlashList 用它预判可视区域能放多少 item，滚动时提前准备即将出现的 item。不要求精确，近似值就行。如果 item 高度完全固定，用 `getItemLayout` 给精确值更好。
+
+<a id="注释flashlist"></a>
+### FlashList 底层原理
+
+me: 虚拟列表(只渲染可见区域) + Native组件元素复用(这个复用是RecyclerView本身就提供的吧)
+
+FlatList 滑出屏幕的 item 直接销毁，滑入时重新创建 → 大量 JS↔Native 通信。FlashList 用 RecyclerView 思路：item 滑出后不销毁，改数据后复用给滑入的新 item（只改内容不改容器）。结果：创建的 View 总数 = 屏幕可见数 + 少量缓冲，而不是整个列表长度。

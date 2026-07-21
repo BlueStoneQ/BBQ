@@ -142,7 +142,7 @@ src/
 ```
 
 **核心思想**：
-- **features 按业务切**：不按技术类型（components/hooks/services）切，而是按业务功能切。好处：一个功能的所有代码在一个目录，删功能 = 删目录。
+- **Feature-based 目录结构**（= DDD 思想）：features 按业务切，不按技术类型切。好处：一个功能的所有代码在一个目录，删功能 = 删目录。
 - **shared 放公共**：只有被 2 个以上 feature 用到的才提到 shared。
 - **native 单独放**：TurboModule 的 JS Spec 集中管理，方便 Codegen。
 

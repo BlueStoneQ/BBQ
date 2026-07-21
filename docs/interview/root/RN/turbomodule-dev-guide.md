@@ -173,7 +173,7 @@ export default TurboModuleRegistry.getEnforcing<Spec>('BLEModule');
 
 | 平台 | 触发方式 | 时机 |
 |------|---------|------|
-| Android | `./gradlew build` 或 `npx react-native run-android` | Gradle 构建时自动调用 Codegen 脚本 |
+| Android | Gradle Sync / `./gradlew build` / `npx react-native run-android` | Sync 或构建时自动触发 Codegen |
 | iOS | `pod install` + Xcode Build | pod install 时生成，Xcode 编译时使用 |
 
 手动触发（调试用）：
@@ -463,14 +463,17 @@ override fun getPackages(): List<ReactPackage> {
 #import <NativeBLEModuleSpec.h>  // Codegen 生成的 Protocol
 #import <CoreBluetooth/CoreBluetooth.h>
 
-@interface BLEModule : NSObject <NativeBLEModuleSpec, CBCentralManagerDelegate>
+@interface BLEModule : RCTEventEmitter <NativeBLEModuleSpec, CBCentralManagerDelegate>
+// 继承 RCTEventEmitter 而不是 NSObject：
+//   - NSObject：不需要 emit 事件的模块用
+//   - RCTEventEmitter：需要向 JS 发事件的模块用，自带 sendEventWithName: 方法
 @property (nonatomic, strong) CBCentralManager *centralManager;
 @property (nonatomic, strong) CBPeripheral *connectedPeripheral;
 @end
 
 @implementation BLEModule
 
-// 注册模块（宏，自动处理注册逻辑，不需要手动写 Package）
+// 注册模块 [→ 注释](#注释rct-export-module)
 RCT_EXPORT_MODULE()
 
 - (NSNumber *)connect:(NSString *)deviceId {
@@ -755,3 +758,8 @@ JS: TurboModuleRegistry.get('BLEModule')
 | Android: `isTurboModule = true` | 不标记 → 走旧 Bridge |
 | iOS: `getTurboModule:` | 不实现 → 编译报错 |
 | iOS: `.mm` 后缀 | 用 `.m` → 不能写 C++ 代码 → 编译失败 |
+
+<a id="注释rct-export-module"></a>
+### RCT_EXPORT_MODULE()
+
+ObjC 宏，展开后利用 `__attribute__((constructor))` 在 App 启动时自动注册模块到 RN 的模块注册表。不需要像 Android 那样手动写 Package 类再加到 `getPackages()` 列表里——iOS 靠这个宏自动完成注册，一行搞定。

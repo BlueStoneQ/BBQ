@@ -573,10 +573,63 @@ parseParam(url);
 // }
 ```
 
+- TS版:
+
+```ts
+type ParamValue = string | number | boolean | (string | number | boolean)[]
+
+const parseParam = (url: string): Record<string, ParamValue> => {
+  const result: Record<string, ParamValue> = {}
+  const query = url.split('?')[1]
+  if (!query) return result
+
+  for (const item of query.split('&')) {
+    const [key, val] = item.split('=')
+    let value: string | number | boolean = val ? decodeURIComponent(val) : true
+
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+      value = +value
+    }
+
+    if (key in result) {
+      result[key] = ([] as (string | number | boolean)[]).concat(result[key], value)
+    } else {
+      result[key] = value
+    }
+  }
+
+  return result
+}
+```
+
+- 现代写法（`URL` + `URLSearchParams`）:
+
+```ts
+const parseParam = (url: string): Record<string, string | string[]> => {
+  const params = new URL(url).searchParams
+  const result: Record<string, string | string[]> = {}
+
+  params.forEach((value, key) => {
+    if (key in result) {
+      result[key] = ([] as string[]).concat(result[key], value)
+    } else {
+      result[key] = value
+    }
+  })
+
+  return result
+}
+
+// 使用
+parseParam('http://www.domain.com/?user=anonymous&id=123&id=456&city=%E5%8C%97%E4%BA%AC&enabled')
+// { user: 'anonymous', id: ['123', '456'], city: '北京', enabled: '' }
+```
+
+> 现代写法自动 decode，但不做类型转换（值全是 string）。面试时两种都能写，手写版展示原理，现代版展示 API 熟练度。
+
 **关键点**：
-- 使用 decodeURIComponent 解码
-- 处理重复参数
-- 类型转换
+- 手写版：`decodeURIComponent` + 数字转换 + 重复 key 合并
+- 现代版：`new URL(url).searchParams` 一行搞定解析
 
 ---
 

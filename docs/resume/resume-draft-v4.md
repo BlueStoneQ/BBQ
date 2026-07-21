@@ -5,6 +5,8 @@
 > 脱敏规则：公司名用代号（XM/XC/XT/MT/DFGX），个人信息省略
 > 注：2023 年的两段短期经历（XC/XT）未写入工作经历时间线，相关技术成果已融入项目经历中
 
+> - 视角: 从双端三层((RN/H5)-(android/ios)-c++)+全链路(编译构建-运行时-CDN)角度去看待问题
+
 ---
 
 ## 目录
@@ -39,11 +41,11 @@
 ### 2. 跨端开发与框架设计
 
 - 跨端：React Native（CRN）、快应用框架（JS → Native View）、Flutter动态渲染框架、小程序
+- RN 多 Bundle 容器：多实例管理 + 统一路由 + 热更新灰度
 - 桌面端：Electron（VS Code 二次开发 / 插件）
-- Android 原生：Java / C++、Gradle、NDK、V8 / J2V8、JNI、R8
+- Android 原生：Kotlin / C++、Gradle、NDK、V8 / J2V8、JNI、R8
 - iOS：Swift / Objective-C、RN Native Shell（RCTHost + TurboModule）、Flutter 渲染端
-- 跨端工程化：多 Bundle、版本管理、热更新、多端构建发布
-- 核心：JS Bridge 设计、渲染引擎设计、包体优化、跨端技术选型
+- Hybrid 架构：高性能 JS Bridge、定制 WebView、动态渲染引擎、包体优化、跨端技术选型
 - 设计实践：设计模式、函数式、AOP、DDD、TDD
 
 ### 3. 大前端工程化体系建设
@@ -69,7 +71,7 @@
 
 ### XRN — React Native 企业级工程化方案
 
-多 Bundle + 热更新 + 灰度发布解决方案。Android + iOS 双端 Native 容器壳子+ CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
+多 Bundle + 热更新 + 灰度发布解决方案。Android + iOS 双端 Native 容器+ CLI 脚手架 + 构建引擎 + 热更新服务端 + 客户端 SDK。[GitHub](https://github.com/BlueStoneQ/XRN)
 
 ### 条件编译工具套件
 

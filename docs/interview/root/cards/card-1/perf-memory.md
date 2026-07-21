@@ -2,7 +2,7 @@
 
 > 问题：App 用一段时间后越来越卡，最终被系统杀掉
 >
-> 本质：内存持续增长不回落 = 泄漏；峰值过高 = OOM
+> 本质：内存持续增长不回落 = 泄漏；峰值过高 = [OOM](#注释oom)
 >
 > 目标：内存稳定 < 200MB，长时间使用不增长
 
@@ -226,3 +226,34 @@ adb shell cat /proc/$(pidof com.myapp)/stat | awk '{print $10}'  # minor faults
 | PSS MAX | 41MB | 35.8MB |
 | 启动 page fault | ~1200 | ~800 |
 | 冷启动时间 | — | -100~200ms |
+
+---
+
+# 注释
+
+<a id="注释oom"></a>
+### OOM（Out Of Memory）
+
+App 内存超过系统限制时，进程被杀 → 用户看到闪退。
+
+- Android：dalvik heap limit（通常 256-512MB），超限抛 `OutOfMemoryError`。[`onTrimMemory`](#注释android-ontrimemory) 是提前预警，OOM 时已来不及
+- iOS：无固定上限，但内存压力大时系统发 [memory warning](#注释ios-memory-warning) → 不释放就被 Jetsam 杀进程
+
+OOM 在可观测体系中属于 **Crash 的一种**（Sentry/Firebase 会上报为 OOM Crash），但根因是内存问题。治理入口是内存，监控入口是稳定性（Crash 率）。
+
+常见触发场景：
+- 多 ReactInstance 实例池过大（每个 30-50MB）
+- 大图未压缩直接加载到内存
+- 内存泄漏持续累积
+
+<a id="注释ios-memory-warning"></a>
+### iOS memory warning
+
+系统通过 `didReceiveMemoryWarning`（UIViewController）或 `UIApplication.didReceiveMemoryWarningNotification` 通知 App。App 在回调里主动释放缓存（图片/非关键数据），否则系统 Jetsam 杀进程。
+
+和 Android `onTrimMemory` 机制类似——都是系统给 App 一个"自救机会"，不自救就被杀。
+
+<a id="注释android-ontrimemory"></a>
+### Android onTrimMemory
+
+系统内存紧张时的**预警回调**（不是 OOM 时才触发）。App 在 `onTrimMemory(level)` 中释放缓存（图片/IDLE 实例等），级别越高越紧急。OOM 时已经来不及——直接抛异常崩溃。`onTrimMemory` 是"自救机会"，`OutOfMemoryError` 是"已经死了"。

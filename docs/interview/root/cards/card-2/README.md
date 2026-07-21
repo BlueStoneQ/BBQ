@@ -19,6 +19,7 @@
 - [原理解析](#原理解析)
   - [完整调用链](#完整调用链)
   - [JSI 的本质](#jsi-的本质)
+  - [HostFunction：External Function 的本质](#hostfunction-external-function-的本质)
   - [HostObject 机制](#hostobject-机制)
   - [参数传递与返回值](#参数传递与返回值)
   - [为什么 JSI 比旧 Bridge 快](#为什么-jsi-比旧-bridge-快)
@@ -394,6 +395,79 @@ JS → Native：JS 调方法 → JSI(C++) → JNI → Kotlin/Java
 Native → JS：Kotlin → JNI → JSI(C++) → 调 JS 堆上的函数（如 EventEmitter.emit）
 ```
 都经过同一个 C++ JSI 层，双向通信。JSI 持有 JS 函数的引用，Native 想通知 JS 时，通过 JSI 直接调用那个 JS 函数。
+
+---
+
+### HostFunction：External Function 的本质
+
+**HostFunction = 给 JS 注入的 External Function**。JS 侧看到的是一个普通函数，实际执行的是 Native（C++）代码。
+
+这是所有 JS Bridge 的底层基础——不管 WebView 的 `@JavascriptInterface`、快应用的 J2V8、还是 RN 的 JSI，最终都是给 JS 注入 external function。
+
+#### 各引擎中的术语对照
+
+| JS 引擎 / 框架 | 术语 | 本质 |
+|----------------|------|------|
+| JSI (RN) | **HostFunction** | C++ lambda 注册为 JS 函数 |
+| JSI (RN) | **HostObject** | C++ 对象注册为 JS 对象（属性/方法都触发 C++ 回调） |
+| V8 | `v8::FunctionTemplate` / `v8::External` | 同上，V8 原生 API |
+| QuickJS | `JS_NewCFunction` | 同上，QuickJS 原生 API |
+| J2V8 (快应用) | `V8Object.registerJavaMethod()` | Java 方法注册为 JS 函数 |
+| WebView (Android) | `@JavascriptInterface` | Java 方法注入到 JS 全局 |
+| WebView (iOS) | `WKScriptMessageHandler` | Native handler 注册为 JS 可调用入口 |
+
+#### 核心代码示例
+
+```cpp
+// 创建一个 HostFunction = 给 JS 注入 external function
+auto nativeAdd = jsi::Function::createFromHostFunction(
+  rt,
+  jsi::PropNameID::forAscii(rt, "nativeAdd"),  // JS 侧看到的函数名
+  2,  // 参数个数
+  // ↓ 这个 lambda 就是 external function 的实际实现（C++/Native 代码）
+  [](jsi::Runtime& rt, const jsi::Value& thisVal,
+     const jsi::Value* args, size_t count) -> jsi::Value {
+    double a = args[0].asNumber();
+    double b = args[1].asNumber();
+    return jsi::Value(a + b);  // C++ 计算后返回给 JS
+  }
+);
+
+// 注入到 JS 全局空间
+rt.global().setProperty(rt, "nativeAdd", std::move(nativeAdd));
+```
+
+```javascript
+// JS 侧：看起来就是个普通函数，完全不知道背后是 C++
+const result = nativeAdd(1, 2); // → 3，同步返回
+```
+
+#### HostFunction vs HostObject 的区别
+
+```
+HostFunction：注入单个函数
+  JS: nativeAdd(1, 2)  →  C++ lambda 执行
+
+HostObject：注入整个对象（多个方法/属性）
+  JS: BLEModule.connect('xxx')  →  C++ get() 回调 → 返回对应 HostFunction
+  JS: BLEModule.isConnected     →  C++ get() 回调 → 返回值
+```
+
+**HostObject 本质上是一组 HostFunction 的容器**——JS 访问对象的任何属性/方法时，都触发 C++ 的 `get()` 回调，`get()` 内部返回对应的 HostFunction。
+
+#### 为什么说这是 JS Bridge 的统一底层
+
+```
+所有 JS Bridge 的本质：
+  1. 在 JS 引擎中注册一个 external function（指向 Native 实现）
+  2. JS 调用该函数时，引擎跳转到 Native 代码执行
+  3. Native 执行完后，结果通过引擎返回给 JS
+
+不同框架只是封装层次不同：
+  WebView：高层封装（@JavascriptInterface → 引擎内部帮你注册）
+  J2V8：中层封装（Java API 直接操作 V8 注册）
+  JSI：底层接口（C++ 直接操作引擎注册）
+```
 
 ---
 

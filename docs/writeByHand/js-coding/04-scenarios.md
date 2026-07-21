@@ -72,24 +72,22 @@ const test2 = () => {
 
 **作用**：延迟执行
 
-```javascript
-const sleep = (delay = 0) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, delay);
-  });
+```ts
+const sleep = (delay: number = 0): Promise<void> => {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, delay)
+  })
 }
 
-// 使用示例
-const log = async () => {
+const log = async (): Promise<void> => {
   for (let i = 0; i <= 10; i += 2) {
-    await sleep(1000);
-    console.log(i);
+    await sleep(1000)
+    console.log(i)
   }
 }
 
-log();
+log()
+
 ```
 
 **总结**：
@@ -109,25 +107,25 @@ log();
 **作用**：失败后自动重试
 
 ```javascript
-const retry = (fn) => {
-  return new Promise((resolve, reject) => {
+const retry = <T>(fn: () => Promise<T>, maxRetries: number = Infinity): Promise<T> => {
+  return new Promise<T>((resolve, reject) => {
+    let attempts = 0
     const _retry = () => {
+      attempts++
       fn()
-        .then(res => resolve(res))
-        .catch(err => _retry());
+        .then(resolve)
+        .catch((err) => {
+          if (attempts >= maxRetries) return reject(err)
+          _retry()
+        })
     }
-
-    _retry();
+    _retry()
   })
 }
 
-// 使用示例
-const fnCreator = (params) => () => {
-  return fetch(params);
-}
-
-const fn = fnCreator(params);
-retry(fn);
+// 使用
+const fn = () => fetch('/api/data').then(res => res.json()) as Promise<Data>
+const result = await retry<Data>(fn, 3)
 ```
 
 **总结**：
@@ -236,13 +234,69 @@ arrange('William').waitFirst(5).do('push').execute();
 // > Start to push
 ```
 
+- TS版:
+
+```ts
+type Task = () => Promise<void>
+
+class Arrange {
+  private taskQueue: Task[] = []
+
+  constructor(private name: string) {
+    this.taskQueue.push(() => new Promise<void>(resolve => {
+      console.log(`${name} is notified`)
+      resolve()
+    }))
+  }
+
+  do(command: string): this {
+    this.taskQueue.push(() => new Promise<void>(resolve => {
+      console.log('Start to', command)
+      resolve()
+    }))
+    return this
+  }
+
+  wait(delay: number = 0): this {
+    this.taskQueue.push(() => new Promise<void>(resolve => {
+      setTimeout(resolve, delay * 1000)
+    }))
+    return this
+  }
+
+  waitFirst(delay: number = 0): this {
+    this.taskQueue.unshift(() => new Promise<void>(resolve => {
+      setTimeout(resolve, delay * 1000)
+    }))
+    return this
+  }
+
+  execute(): this {
+    this.run()
+    return this
+  }
+
+  private async run(): Promise<void> {
+    while (this.taskQueue.length > 0) {
+      const task = this.taskQueue.shift()!
+      await task()
+    }
+  }
+}
+
+const arrange = (name: string): Arrange => new Arrange(name)
+
+// 使用
+arrange('William').waitFirst(5).do('push').execute()
+```
+
 **总结**：
 - **核心思路**：使用队列管理任务，支持链式调用和延迟执行
 - **关键点**：
   1. 使用队列管理任务
-  2. 支持链式调用（返回 this）
+  2. 支持链式调用（返回 `this`，类型用 `this`）
   3. 支持延迟执行（wait、waitFirst）
-  4. 递归执行队列中的任务
+  4. `run()` 用 async/while 替代递归，更清晰
 
 ---
 
@@ -287,10 +341,8 @@ class Scheduler {
     }
   }
 }
-```
 
-**使用示例**：
-```javascript
+// **使用示例**：
 const scheduler = new Scheduler(2);
 
 const timeout = (time) => {
@@ -310,7 +362,57 @@ addTask(400, '4');
 
 // 输出顺序：2 3 1 4
 ```
+- TS版本
+```ts
+class Scheduler {
+  private limit: number
+  private queue: (() => void)[] = []
+  private running: number = 0
 
+  constructor(limit: number) {
+    this.limit = limit
+  }
+
+  add<T>(promiseCreator: () => Promise<T>): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.queue.push(() => {
+        promiseCreator()
+          .then(resolve)
+          .catch(reject)
+          .finally(() => {
+            this.running--
+            this.run()
+          })
+      })
+      this.run()
+    })
+  }
+
+  private run(): void {
+    while (this.running < this.limit && this.queue.length) {
+      const task = this.queue.shift()!
+      this.running++
+      task()
+    }
+  }
+}
+
+// 使用
+const scheduler = new Scheduler(2)
+
+const timeout = (time: number): Promise<void> =>
+  new Promise(resolve => setTimeout(resolve, time))
+
+const addTask = (time: number, order: string): void => {
+  scheduler.add(() => timeout(time)).then(() => console.log(order))
+}
+
+addTask(1000, '1')
+addTask(500, '2')
+addTask(300, '3')
+addTask(400, '4')
+// 输出：2 3 1 4
+```
 #### 4.5.1b TypeScript 版本
 
 ```typescript
@@ -590,6 +692,7 @@ scheduler.getResults().then(results => {
 **题目**：红灯 3 秒亮一次，绿灯 1 秒亮一次，黄灯 2 秒亮一次，如何让三个灯不断交替重复亮灯？
 
 **实现**：
+- JS版:
 
 ```javascript
 function red() {
@@ -604,12 +707,13 @@ function yellow() {
   console.log('yellow');
 }
 
-function light(timer, cb) {
+// 定时任务注册器-promise版
+function light(delay, cb) {
   return new Promise((resolve) => {
     setTimeout(() => {
       cb();
       resolve();
-    }, timer);
+    }, delay);
   });
 }
 
@@ -622,7 +726,26 @@ async function step() {
 
 step();
 ```
+- TS版:
+```ts
+const light = (delay: number, cb: () => void): Promise<void> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      cb()
+      resolve()
+    }, delay)
+  })
+}
 
+const step = async (): Promise<void> => {
+  await light(3000, () => console.log('red'))
+  await light(2000, () => console.log('green'))
+  await light(1000, () => console.log('yellow'))
+  return step()
+}
+
+step()
+```
 **总结**：
 - **核心思路**：使用 async/await 控制异步流程，递归调用实现循环
 - **关键点**：
@@ -704,22 +827,29 @@ function loadImage(url) {
 }
 ```
 
-**使用示例**：
-```javascript
-loadImage('https://example.com/image.jpg')
-  .then(img => {
-    document.body.appendChild(img);
+- TS版:
+
+```ts
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    img.src = url
   })
-  .catch(err => {
-    console.error(err);
-  });
+}
+
+// 使用
+const img = await loadImage('https://example.com/image.jpg')
+document.body.appendChild(img)
 ```
 
 **总结**：
 - **核心思路**：使用 Promise 包装图片加载事件
 - **关键点**：
-  1. 监听 onload 和 onerror 事件
-  2. 在事件回调中 resolve 或 reject
+  1. 返回类型 `Promise<HTMLImageElement>`
+  2. 监听 onload / onerror 事件
+  3. 设置 `img.src` 触发加载
   3. 设置 img.src 触发加载
 
 ---

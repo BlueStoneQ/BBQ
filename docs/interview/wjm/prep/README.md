@@ -1,21 +1,13 @@
-# WJM 面试准备
+# WJM Prep
 
-> 大前端架构师（跨端方向）面试准备资料
+> 文档已全部迁移至 [cards/](../cards/) 目录。
 
----
-
-## 目录
-
-### 核心准备
-
-- [安全审计体系](./security-audit.md)
-- [JD 分析](../jd.md)
-
----
-
-## 重点准备方向
-
-| 方向 | 文档 | 优先级 |
-|------|------|--------|
-| 安全审计 | [security-audit.md](./security-audit.md) | ⭐⭐⭐ |
-| JD 匹配分析 | [jd.md](../jd.md) | ⭐⭐⭐ |
+| 原文件 | 现位置 |
+|--------|--------|
+| `engineering-fullchain.md` | [card2:engineering/](../cards/card2:engineering/engineering-fullchain.md) |
+| `prep.md`（工程化） | [card2:engineering/prep-engineering.md](../cards/card2:engineering/prep-engineering.md) |
+| `prep.md`（跨端容器） | [card3:native-shell/prep-hybrid.md](../cards/card3:native-shell/prep-hybrid.md) |
+| `security-audit.md` | [card2:engineering/](../cards/card2:engineering/security-audit.md) |
+| `js-bridge-2.md` | [card3:native-shell/](../cards/card3:native-shell/js-bridge-2.md) |
+| `qa-js-bridge.md` | [card3:native-shell/](../cards/card3:native-shell/qa-js-bridge.md) |
+| `qa-webview.md` | [card3:native-shell/](../cards/card3:native-shell/qa-webview.md) |

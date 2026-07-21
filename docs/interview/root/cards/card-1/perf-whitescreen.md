@@ -10,25 +10,29 @@
 
 ## 目录
 
+- [1. 白屏定义, 和FP FMP的关系?](#1-白屏定义-和fp-fmp的关系)
 - [白屏分类](#白屏分类)
-- [如何分析](#如何分析)
-- [如何优化](#如何优化)
-  - [启动白屏](#启动白屏)
-  - [页面跳转白屏](#页面跳转白屏)
-  - [列表滚动白屏](#列表滚动白屏)
-  - [JS Crash 白屏](#js-crash-白屏)
-  - [数据加载白屏](#数据加载白屏)
+- 根因与优化
+  - 总览表格
+  - [JS 执行阻塞与白屏](#js-执行阻塞与白屏)
+- [白屏检测 SDK 设计](#白屏检测-sdk-设计)
+  - SDK:JS侧
+  - SDK:Native侧
+    - Android侧
+    - IOS侧
 - [白屏检测方案](#白屏检测方案)
 - [Performance Monitor（RN 内置工具）](#performance-monitorrn-内置工具)
-- [JS 执行阻塞与白屏](#js-执行阻塞与白屏)
-  - [本质](#本质)
-  - [为什么会阻塞？](#为什么会阻塞)
-  - [解决方案](#解决方案)
-- [白屏检测 SDK 设计](#白屏检测-sdk-设计)
-  - [本质](#本质)
-  - [架构](#架构)
-  - [实现](#实现)
-  - [上报数据](#上报数据)
+- QA
+  - [Q1: 白屏定义, 和FP FMP的关系?](#1-白屏定义-和fp-fmp的关系)
+  - [Q2: RN 白屏检测业界怎么做？能从 Native 容器层检测吗？](#q-rn-白屏检测业界怎么做能从-native-容器层检测吗)
+- 附录:
+  - [场景分类](#如何优化)
+    - [启动白屏](#启动白屏)
+    - [页面跳转白屏](#页面跳转白屏)
+    - [列表滚动白屏](#列表滚动白屏)
+    - [JS Crash 白屏](#js-crash-白屏)
+    - [数据加载白屏](#数据加载白屏)
+
 
 ---
 
@@ -41,17 +45,6 @@
 | **列表滚动白屏** | FlatList 来不及渲染新 item | 快速滚动时 item 区域空白 |
 | **JS Crash 白屏** | JS 异常导致组件树崩溃 | 整个页面变白 |
 | **数据加载白屏** | 数据没来，条件渲染为空 | `{data && <View/>}` → 空 |
-
----
-
-## 如何分析
-
-| 工具 | 看什么 |
-|------|--------|
-| 肉眼 + 录屏 | 白屏出现的时机和持续时间 |
-| Performance Monitor | 白屏时 JS/UI 帧率 |
-| React DevTools | 组件树是否为空 / ErrorBoundary 是否触发 |
-| Sentry | 是否有 JS 异常导致白屏 |
 
 ---
 
@@ -109,6 +102,8 @@ function DeviceDetailScreen() {
 
 ## 白屏检测方案
 
+**JS 侧检测**（主力，能拿到具体错误信息）：
+
 ```typescript
 // 自动检测白屏：页面渲染后检查是否有内容
 function useWhiteScreenDetection(screenName: string) {
@@ -160,7 +155,7 @@ JS 是单线程 + 同步执行：一个函数没执行完 → 后面的代码全
 | **setTimeout(fn, 0)** | 把任务推到下一个事件循环 | 让当前帧先渲染完 |
 | **useMemo / useCallback** | 避免每帧重复计算 | 减少 JS 工作量 |
 | **Reanimated worklet** | 动画计算移到 UI 线程 | JS 阻塞不影响动画 |
-| **分片处理（chunking）** | 大任务拆成小块，每帧只做一块 | 不连续占用 JS 线程 |
+| **分片处理（chunking）** | 大任务拆成小块，每帧只做一块 | 不连续占用 JS 线程 [→注释](#注释分片用宏任务不是微任务) | |
 
 ```typescript
 // ❌ 阻塞：一次性处理大量数据 → 这一帧卡死
@@ -192,6 +187,15 @@ InteractionManager.runAfterInteractions(() => {
 ---
 
 ## 白屏检测 SDK 设计
+
+### 总览表格
+
+→ 详见 [Q2: RN 白屏检测业界怎么做？](#q-rn-白屏检测业界怎么做能从-native-容器层检测吗)
+
+| 检测层 | 方式 | 优点 | 缺点 |
+|--------|------|------|------|
+| **JS 层** | ErrorBoundary 捕获 + 超时检查子节点 | 简单，能拿到具体错误信息 | JS 崩了就检测不到 |
+| **Native 容器层** | View 树 childCount 检查 / 截图像素采样 | JS 崩了也能兜底 | 不知道具体崩的原因 |
 
 ### 本质
 
@@ -292,3 +296,122 @@ useEffect(() => {
 ```
 
 **和 MT 秒开率探针 SDK 本质一样**：有限状态机 + 生命周期打点 + 上报。RN 里分 Native 层和 JS 层两部分打点，数据统一上浮到 Native 独立线程上报。
+
+# QA
+## 1. 白屏定义, 和FP FMP的关系?
+
+**白屏 = 超过阈值时间后（通常 3-5s），页面仍然没有有意义内容（FMP 未达成）**
+
+| 指标 | 含义 | 算白屏消失？ |
+|------|------|------------|
+| FP（First Paint） | 第一个像素绘制（可能只是背景色） | ❌ 画了个白背景不算 |
+| FCP（First Contentful Paint） | 第一个文本/图片出现 | ⚠️ 骨架屏也算 FCP，但用户觉得还是"白" |
+| **FMP（First Meaningful Paint）** | 主要内容可见（列表/文章/核心 UI） | ✅ 这才算白屏消失 |
+
+检测逻辑：页面加载 N 秒后，检查是否有有意义的 DOM/View 内容 → 没有 = 白屏。
+
+> 骨架屏让判断更复杂——FCP 有了但业务数据没出来。严格的白屏检测应基于 FMP 或自定义业务打点（"首屏数据渲染完成"）。
+
+---
+
+## Q: RN 白屏检测业界怎么做？能从 Native 容器层检测吗？
+
+**业界方案**：
+
+| 方案 | 原理 | 层级 |
+|------|------|------|
+| JS侧: ErrorBoundary | JS 层捕获渲染异常 → 显示降级 UI + 上报 | JS 层 |
+| JS侧: 超时检测 | 页面挂载后 N 秒检查是否有有效子节点 | JS 层 |
+| Native View 树检查 | 页面加载 N 秒后检查根 View 的 childCount | Native 层 |
+| Native 截图检测 | 对根 View 截图 → 取样像素是否全白/全单色 | Native 层 |
+
+**Native 容器层能检测吗？能。**
+
+- **View 树检查**：拿到 RN 根 View（`ReactRootView` 本身就是一个 Android ViewGroup，Native Shell 创建它时就持有引用），N 秒后检查 `rootView.childCount == 0` → 白屏
+- **截图检测**：对根 View 截图，采样几个点颜色一致 → 白屏
+
+> Native 层检测的好处：即使 JS 完全崩了（ErrorBoundary 都没触发），Native 层还是能兜底检测到。
+
+**Q: Native 侧拿不到崩的原因，SDK 设计必须双层（JS + Native）吗？**
+
+对。JS 层负责"知道为什么崩"（ErrorBoundary 有具体错误堆栈），Native 层负责"JS 崩了也能兜底检测到"。业界也是这样——两层配合，JS 是主力，Native 是兜底。
+
+| | JS 层 | Native 层 |
+|--|------|-----------|
+| 检测什么 | ErrorBoundary 捕获 + 超时检查组件树有无内容 | 超时检查 rootView.childCount 或截图像素 |
+| 能拿到什么 | 具体错误堆栈 + 哪个组件崩了 | 只知道"白屏了"，不知道为什么 |
+| 什么时候失效 | JS 线程完全卡死/崩溃 | 不会失效（独立于 JS） |
+
+JS 是主力因为：绝大多数白屏是 JS 层问题（组件报错/数据为空/接口失败），ErrorBoundary 能精确定位。Native 只用来覆盖 JS 完全崩了的极端场景。
+
+**Q: 白屏检测到后，是不是像热更新一样本地回滚？**
+
+对。Native Shell 检测到白屏 → 标记当前 Bundle 版本为 failed → 下次启动加载上一个稳定版本。和 HMR 客户端自动回滚同一个机制。当次可以直接 reload 上一版本或显示兜底 UI。
+
+**Q: 上报统一走 Native 层专门线程？**
+
+对。JS 层检测到白屏后通过 Bridge 交给 Native 的 Sentry SDK 上报。好处：离线缓存（Sentry SDK 内置磁盘队列，无网时自动缓存，恢复后自动重发，不需要手动处理）+ 专门上报线程（不阻塞 UI/JS）+ 统一通道。
+
+---
+
+# 注释
+
+<a id="注释分片用宏任务不是微任务"></a>
+## 1. 分片用宏任务，不是微任务
+
+分片的目的是**让出线程给渲染**，所以必须用宏任务。微任务在当前帧同步代码之后立即执行，不让出线程，还是阻塞渲染。
+
+```
+微任务：同步代码 → 微任务全部执行 → 渲染  ← 不让出，还是阻塞
+宏任务：同步代码 → 微任务 → 渲染 → 下一帧宏任务  ← 每帧之间有渲染机会
+```
+
+RN 中用 `InteractionManager.runAfterInteractions()`，H5 中用 `setTimeout` / `requestAnimationFrame`。
+
+---
+
+## Q: 白屏的归因和治理？
+
+### 归因（为什么白屏）
+
+| 原因 | 层级 | 怎么确认 |
+|------|------|---------|
+| JS Error 导致组件崩溃 | JS | ErrorBoundary 捕获 + Sentry 堆栈 |
+| Bundle 加载失败 | Native Shell | Bundle 加载回调 status != success [→注释](#注释bundle-加载状态回调) |
+| 接口超时/失败 → 无数据渲染 | JS | 网络监控 + 空数据兜底缺失 |
+| 热更新包不兼容 | Native Shell | 版本号 vs minNativeVersion 不匹配 |
+| JS 线程卡死（死循环/长任务） | JS | Native 侧超时检测到白屏但无 JS Error |
+
+### 治理（白屏了怎么办）
+
+| 阶段 | 手段 |
+|------|------|
+| **预防** | ErrorBoundary 每个路由页包一层 + 接口数据空值兜底 + 热更新 minNativeVersion 卡控 |
+| **检测** | JS 层超时检查 + Native 层 View 树/截图兜底 |
+| **恢复** | 当次：reload 页面 / 显示降级 UI（重试按钮）；下次启动：回滚到上一稳定 Bundle |
+| **上报** | 通过 Bridge → Sentry 上报（白屏类型 + 版本 + 堆栈） |
+| **防退化** | CI 门禁跑 E2E 检测核心页面白屏 + 灰度阶段监控白屏率 |
+
+---
+
+<a id="注释bundle-加载状态回调"></a>
+## 注释：Bundle 加载状态回调
+
+RN 框架暴露了 Bundle 加载的生命周期事件，Native Shell 监听即可：
+
+```kotlin
+// ─── Android ───
+// ReactInstanceManager 加载成功回调
+reactInstanceManager.addReactInstanceEventListener { context ->
+    // Bundle 加载成功，JS 引擎就绪
+}
+// 失败通过 DevSupportManager 错误回调
+```
+
+```swift
+// ─── iOS ───
+NotificationCenter.default.addObserver(forName: .RCTJavaScriptDidLoad, ...)       // 成功
+NotificationCenter.default.addObserver(forName: .RCTJavaScriptDidFailToLoad, ...) // 失败
+```
+
+→ 详见 [XRN Bundle 加载运行](../../XRN/bundle-runtime.md)

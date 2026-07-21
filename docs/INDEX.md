@@ -7,6 +7,10 @@
 ## 速查
 
 - [速查手册（5 分钟复习）](./interview/root/cheatsheet.md)
+- [三张核心牌 Pro（WJM）](./interview/wjm/cards/README.md)
+  - [牌 1：可观测体系](./interview/wjm/cards/card1:observer/README.md)
+  - [牌 2：工程化全链路](./interview/wjm/cards/card2:engineering/README.md)
+  - [牌 3：Native Shell 三层双端融合定制((RN/H5)/(Android/IOS)/C++)](./interview/wjm/cards/card3:native-shell/README.md)
 - [三张核心牌](./interview/root/cards/README.md)
   - [牌 1：性能体验优化](./interview/root/cards/card-1/README.md)
   - [牌 2：跨层通信架构](./interview/root/cards/card-2/README.md)
@@ -14,10 +18,12 @@
 - [Root JD + 准备](./interview/root/jd.md) / [prep](./interview/root/prep.md) / [note](./interview/root/note.md)
 - [DD JD](./interview/DiDi/jd.md) / [DD Q&A](./interview/DiDi/qa.md) / [DD 工程化](./interview/DiDi/engineering/README.md)
 - [KS JD](./interview/KS/jd.md) / [KS Q&A](./interview/KS/qa.md)
-- [LN JD](./interview/LN/jd.md)
+- [LN JD](./interview/LN/jd.md) / [README](./interview/LN/README.md) / [简历 Flutter 版](./resume/resume-v5-for-LN-flutter/resume-draft-v5-flutter.md)
 - [Anker JD](./interview/anker/jd.md)
+  - [Anker 测评准备（价值观 + CATA + AI 飞行员）](./interview/anker/价值观+cata行测+AI飞行员测试/README.md)
 - [DJI JD](./interview/dji/jd.md)
 - [BT JD](./interview/BT/jd.md)
+- [Orbit Labs JD](./interview/orbit/jd.md) / [prep](./interview/orbit/prep.md)
 - [JY JD](./interview/jieyue/jd.md) / [prep](./interview/jieyue/prep.md)
 - [XZ JD](./interview/xz/jd.md) / [prep](./interview/xz/prep.md)
 - [PD JD](./interview/pudu/jd.md)
@@ -132,6 +138,16 @@
 ## Flutter
 
 - [Flutter 核心概念](./interview/root/Flutter/README.md)
+- [Flutter 项目结构详解](./interview/root/Flutter/project-structure.md)
+
+## 开源项目设计
+
+- [项目总规划（CardFlow / Prism / Xflutter / Pulse）](./interview/LN/proj/plan.md)
+- [CardFlow 架构设计](./interview/LN/proj/server-driven-framework/design.md)
+
+### card-kit
+
+- [card-kit 项目索引](./project/bigfe/cardflow/README.md)
 
 ## Electron（桌面端）
 

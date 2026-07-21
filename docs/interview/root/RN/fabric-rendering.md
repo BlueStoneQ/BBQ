@@ -9,6 +9,11 @@
 - [为什么有"两次 diff"](#为什么有两次-diff)
 - [完整渲染流程](#完整渲染流程)
 - [各阶段数据结构详解](#各阶段数据结构详解)
+- [QA](#qa)
+  - [Q1: ShadowNode 为什么是不可变对象](#q1-shadownode-为什么是不可变对象)
+  - [Q2: 为什么还需要 Shadow Tree 再 diff 一次](#q2-react-fiber-树已经有两棵了为什么还需要-shadow-tree还要再-diff-一次)
+  - [Q3: 管道视角 - 三层各输出什么](#q3-管道视角--三层各输出什么)
+  - [Q4: 四棵树内存不会爆吗](#q4-每层两棵树一共四棵树内存不会爆吗)
 
 ---
 
@@ -283,3 +288,148 @@ Insert(103, parent:100, index:2) → parentView.insertSubview(view103, at: 2)
 | Yoga | 就地填充 LayoutMetrics | 每个节点绝对坐标和尺寸 |
 | Fabric Diff | `vector<Mutation>` | 对 Native View 的最小操作序列 |
 | Commit | 遍历 vector 逐条执行 | UI 线程操作真实 View |
+
+
+---
+
+## QA
+
+### Q1: ShadowNode 为什么是不可变对象？
+
+**不可变 = 一旦创建就不能修改。要改属性？克隆一个新节点。**
+
+三个好处：
+
+1. **线程安全（无锁并发）**：JS 线程构建新 Shadow Tree，UI 线程同时读旧 Shadow Tree 做 commit，互不干扰。可变对象需要加锁，不可变不需要
+2. **高效 diff**：两棵树中同一个引用（`shared_ptr` 相同）= 没变过，跳过。只有新克隆的节点才需要比较
+3. **可回滚**：渲染中途被打断（新 setState 来了），旧树完好无损，直接丢弃新树
+
+```
+可变对象：修改 → 所有引用者都看到新值 → 需要加锁协调
+不可变对象：修改 = 创建新的 → 旧的完好 → 无锁并发读
+```
+
+### Q2: React Fiber 树已经有两棵了，为什么还需要 Shadow Tree？还要再 diff 一次？
+
+**React Fiber 树 ≠ Shadow Tree，在不同层，解决不同问题：**
+
+| | React Fiber 树 | C++ Shadow Tree |
+|--|---------------|-----------------|
+| 在哪 | JS 堆 | C++ 堆 |
+| 存什么 | 组件结构 + state + hooks + effect | 节点 props + 布局结果（x, y, w, h） |
+| diff 什么 | 组件 state/props 变化 → 哪些组件需要更新 | 布局后几何信息变化 → 哪些 Native View 需要操作 |
+| 输出 | "Text 的 props 从 A 变成 B" | "更新 viewId=3 的 frame + text" |
+
+**为什么不能只 diff 一次？**
+
+1. **布局在 C++（Yoga）**：一个节点 style 变了可能导致兄弟节点位置变化，JS 层不知道最终布局结果
+2. **View Flattening**：React 组件树和 Native View 树不是 1:1 的，Fabric 会优化掉纯布局容器
+3. **线程隔离**：JS 线程做组件 diff，UI 线程做 View commit，Shadow Tree 是两者之间的桥梁
+
+**简单说：React diff 管"逻辑变化"，Fabric diff 管"物理变化（布局 + View 操作）"。**
+
+### Q3: 管道视角 — 三层各输出什么？
+
+```
+┌── JS 层 ──────────────────────────────────────────────────┐
+│ 输入：setState / 用户事件                                   │
+│ 处理：React reconciler diff Fiber 树                        │
+│ 输出：节点操作指令（通过 JSI）                              │
+│   → createNode(type:'View', props:{style:{flex:1}})        │
+│   → appendChild(parentNode, childNode)                     │
+│   → cloneNodeWithNewProps(node, newProps)                  │
+└───────────────────────────┬────────────────────────────────┘
+                            │ JSI 直调（零序列化）
+                            ▼
+┌── C++ 层（Fabric）────────────────────────────────────────┐
+│ 输入：JS 的节点操作指令                                     │
+│ 处理：                                                       │
+│   1. 构建新 Shadow Tree（不可变，克隆变化路径）              │
+│   2. Yoga 布局（flexbox → 绝对坐标 x,y,w,h）               │
+│   3. diff 新旧 Shadow Tree                                  │
+│ 输出：mutation 指令列表                                      │
+│   → CREATE(viewId=5, type='View', layout={x:0,y:44,w:375}) │
+│   → UPDATE(viewId=3, newProps={color:'red'})                │
+│   → INSERT(parentId=1, childId=5, index=2)                  │
+│   → DELETE(viewId=7)                                         │
+└───────────────────────────┬────────────────────────────────┘
+                            │ JNI / ObjC++
+                            ▼
+┌── Native 层 ──────────────────────────────────────────────┐
+│ 输入：mutation 指令列表                                      │
+│ 处理：遍历指令，操作 Native View                             │
+│   CREATE → new View() + 设置 frame                          │
+│   UPDATE → view.setBackgroundColor()                        │
+│   INSERT → parent.addSubview(child, at: index)              │
+│   DELETE → child.removeFromSuperview()                       │
+│ 输出：屏幕像素                                               │
+└───────────────────────────────────────────────────────────┘
+```
+
+**一句话总结**：
+- JS 输出**树结构变化**（哪些节点增删改）
+- C++ 输出**View 操作 + 布局坐标**（对 Native View 的最小化操作指令）
+- Native 输出**屏幕像素**
+
+
+### Q4: 每层两棵树一共四棵树，内存不会爆吗？
+
+**看起来 4 棵树，实际内存约等于 1.1 棵树 + 少量变化节点。**
+
+四棵树：
+```
+JS 层：current Fiber Tree + workInProgress Fiber Tree
+C++ 层：旧 Shadow Tree + 新 Shadow Tree
+```
+
+**为什么内存不会爆：结构共享**
+
+```
+假设 100 个节点的树，只有 3 个节点变了：
+
+旧树：[N1, N2, N3, ... N100]（100 个节点）
+新树：[N1', N2, N3', ... N100, N101']
+       ↑共享97个   ↑新建3个
+
+实际新增内存 = 3 个新节点 + 变化路径上的祖先克隆
+不是 200 个节点
+```
+
+**三层保护机制：**
+
+1. **Shadow Tree：shared_ptr 共享未变化节点**。两棵树中相同的 `shared_ptr` 指向同一块内存
+2. **Fiber Tree：alternate 指针复用**。workInProgress 复用 current 的 Fiber 节点，未变化的节点两棵树共享
+3. **生命周期短**：commit 完 → 旧树引用归零 → 自动释放。稳态时只保留一棵
+
+**实际内存模型：**
+
+```
+稳态（大部分时间）：
+  JS：1 棵 Fiber Tree
+  C++：1 棵 Shadow Tree
+
+渲染中（短暂，几十ms）：
+  JS：current + workInProgress（共享大部分节点）
+  C++：旧 + 新（shared_ptr 共享 95%+ 节点）
+
+渲染完：
+  旧树释放 → 回到稳态
+```
+
+**真正的内存开销：**
+
+| | 理论最坏（4棵完整树） | 实际 |
+|--|---------|------|
+| Fiber 双缓冲 | 2x | ~1.1x（复用 alternate） |
+| Shadow Tree | 2x | ~1.05x（shared_ptr 共享 95%+ 节点） |
+| 总计 | 4x | ≈ 1.1x |
+
+**trade-off（空间换时间）：**
+
+| 多出的内存 | 换来的收益 |
+|-----------|----------|
+| 少量节点克隆 | 无锁并发（JS 线程 + UI 线程不互相等） |
+| shared_ptr 开销 | 可中断渲染（旧树完好，随时回滚） |
+| 双缓冲结构 | 批量 commit（一帧内所有变化一次提交） |
+
+**结论**：对移动端来说这个 trade-off 是值的——用约 10% 的额外内存换来并发 + 无锁 + 可中断。

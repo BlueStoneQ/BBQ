@@ -77,11 +77,28 @@ adb shell cmd package dump-profiles com.myapp
 adb pull /data/misc/profiles/cur/0/com.myapp/primary.prof ./baseline-prof.txt
 ```
 
-### Step 2：放入项目
+### Step 2：Gradle 加插件
+
+```groovy
+// build.gradle
+plugins {
+    id 'androidx.baselineprofile'
+}
+
+dependencies {
+    baselineProfile project(':baselineprofile')  // 或直接用文件
+}
+```
+
+### Step 3：放入项目
 
 ```
 app/src/main/baseline-prof.txt
 ```
+
+> 放在这个路径 + 有插件 → 构建时自动读取 → 打包进 APK → 系统安装时 ART 的 dex2oat 读取 profile → 自动做 DEX Layout Optimization（热代码物理前置）。
+
+**完整链路**：采集 profile → 加插件 → 放文件 → 构建打包 → 系统安装时自动重排 DEX。
 
 **baseline-prof.txt 记录了什么**：启动期间被执行到的类和方法列表——一份"热代码清单"。
 
@@ -122,3 +139,21 @@ adb shell cat /proc/$(pidof com.myapp)/stat | awk '{print $10}'
 | PSS MAX | 41MB | 35.8MB |
 | 启动 page fault | ~1200 | ~800 |
 | 冷启动时间 | — | -100~200ms |
+
+# 注释
+
+## Page Fault 是什么？
+
+程序访问一个内存页时，如果该页还没从磁盘加载到物理内存 → 触发 page fault → 系统暂停程序 → 从磁盘读取该页 → 加载到物理内存 → 继续执行。每次有 IO 开销。
+
+DEX 文件是 mmap 加载的（不是一次性全读进内存），启动时访问哪些类就触发哪些页的 page fault。热代码分散在 DEX 各处 → page fault 多 → 启动慢。
+
+**Page fault 与 PSS 的关系**：每次 page fault = 一页（4KB）被加载到物理内存，PSS 统计的就是物理内存页总量。热代码分散 → 启动时大量不相关的页被加载（每页可能只用了一个类但整页都算 PSS）→ PSS 高。热代码集中 → 只加载少数几页 → PSS 低。**page fault 越多 → 驻留内存页越多 → PSS 越高。**
+
+## DEX 重排为什么能降低 PSS MAX？
+
+DEX 重排不删代码（不减小体积），是重新排列 DEX 内部类的物理位置。
+
+PSS MAX 降低的原因：热代码集中到连续的少量页 → 启动阶段只需加载这几页到物理内存 → 冷代码被推到后面的页，启动期间不会被触发 → **同一时刻驻留在物理内存中的 DEX 页数减少 → PSS 峰值降低**。
+
+不是"代码变少了"（那是 R8 的事），而是"启动时需要加载到内存的页数变少了"。

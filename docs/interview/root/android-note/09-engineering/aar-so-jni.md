@@ -5,6 +5,14 @@
 - [AAR](#aar)
 - [SO（Native 共享库）](#sonative-共享库)
 - [JNI](#jni)
+- [JNI 补充：双向调用与在 TurboModule 中的角色](#jni-补充双向调用与在-turbomodule-中的角色)
+- [QA](#qa)
+  - [JNI 可以让 Java/Kotlin 和 C++ 互相调用吗](#q-jni-可以让-javakotlin-和-c-互相调用吗)
+  - [JNI 在 TurboModule 中的角色](#q-jni-在-turbomodule-中的角色是什么)
+  - [为什么需要 JNI](#q-为什么需要-jni直接调不行吗)
+  - [iOS 为什么不需要 JNI](#q-ios-为什么不需要-jni)
+- [注释：核心概念](#注释核心概念)
+  - [JNIEnv](#注释jnienv)
 
 ---
 
@@ -323,3 +331,243 @@ TurboModule：Codegen 自动生成所有 JNI 代码，你只写 Java 业务逻�
 
 TurboModule 本质就是帮你自动化了 JNI 这套繁琐的工作。
 ```
+
+
+---
+
+## JNI 补充：双向调用与在 TurboModule 中的角色
+
+### C++ → Java 反向调用
+
+JNI 不只是 Java 调 C++，也能 **C++ 主动调 Java**（通过反射）：
+
+```cpp
+// C++ 主动调用 Java 方法
+void callbackToJava(JNIEnv* env, jobject javaCallback) {
+    // 1. 找到类
+    jclass clazz = env->GetObjectClass(javaCallback);
+    
+    // 2. 找到方法（方法签名：参数和返回值类型）
+    //    "(Ljava/lang/String;I)V" = 接收 String + int，返回 void
+    jmethodID method = env->GetMethodID(clazz, "onResult", "(Ljava/lang/String;I)V");
+    
+    // 3. 调用
+    jstring msg = env->NewStringUTF("connected");
+    env->CallVoidMethod(javaCallback, method, msg, 200);
+    
+    // 4. 清理局部引用
+    env->DeleteLocalRef(msg);
+    env->DeleteLocalRef(clazz);
+}
+```
+
+**方法签名规则**：
+
+| Java 类型 | 签名 |
+|-----------|------|
+| void | V |
+| int | I |
+| long | J |
+| boolean | Z |
+| String | Ljava/lang/String; |
+| int[] | [I |
+| Object | Ljava/lang/Object; |
+
+示例：`void onResult(String msg, int code)` → `"(Ljava/lang/String;I)V"`
+
+### 双向调用总结
+
+```
+方向1：Java → C++（声明式，简单）
+  Kotlin: external fun connect(deviceId: String): Boolean
+  C++: Java_com_myapp_NativeBLE_connect(JNIEnv*, jobject, jstring) → jboolean
+
+方向2：C++ → Java（反射式，复杂）
+  C++: env->FindClass → GetMethodID → CallVoidMethod
+  需要知道类名 + 方法名 + 参数签名
+```
+
+### JNI 在 TurboModule 完整链路中的位置
+
+```
+完整链路：
+  JS → JSI(C++ HostFunction) → JNI → Java/Kotlin TurboModule 实现
+
+具体角色：
+  JSI 层：JS ↔ C++ 通信（零序列化）
+  JNI 层：C++ ↔ Java 通信（类型转换 + 反射调用）
+
+两层对比：
+  JSI：JS 和 C++ 在同一进程内，函数指针直调
+  JNI：C++ 和 Java 在同一进程内，但 Java 有独立堆 + GC，需要显式桥接
+```
+
+### 为什么 iOS 不需要 JNI
+
+| | Android | iOS |
+|--|---------|-----|
+| Native 语言 | Java/Kotlin（JVM 托管） | Objective-C/Swift |
+| C++ 调 Native | 必须 JNI（JVM 隔离） | 直接混编（ObjC 是 C 超集） |
+| 文件后缀 | `.cpp` + `.kt`（分开） | `.mm`（ObjC++ 混合写） |
+| 类型转换 | 手动（jstring ↔ std::string） | 自动（NSString 和 C++ 共存） |
+| 复杂度 | 高 | 低 |
+
+```
+Android: C++ → JNI(FindClass/GetMethodID/CallMethod) → Java
+iOS:     C++ → 直接调 ObjC 方法（同一个 .mm 文件里）
+```
+
+这就是为什么 RN TurboModule 在 Android 侧 Codegen 生成 JNI 胶水代码，在 iOS 侧只需要简单的 ObjC++ 桥接。
+
+### 性能注意事项
+
+| 操作 | 开销 | 建议 |
+|------|------|------|
+| `FindClass` | 中（首次慢，可缓存） | 在 `JNI_OnLoad` 中缓存 jclass |
+| `GetMethodID` | 中（首次慢，可缓存） | 缓存为 static 变量 |
+| `NewStringUTF` | 低（拷贝一次） | 正常使用 |
+| `Get/ReleaseArrayElements` | 中（可能拷贝整个数组） | 大数组用 `GetDirectBufferAddress` |
+| `CallVoidMethod` | 低 | 正常使用 |
+
+**最佳实践：缓存 jclass 和 jmethodID**
+
+```cpp
+// 在 JNI_OnLoad 中一次性缓存（SO 加载时执行）
+static jclass g_callbackClass = nullptr;
+static jmethodID g_onResultMethod = nullptr;
+
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+    JNIEnv* env;
+    vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
+    
+    // 缓存类引用（必须用 GlobalRef，否则会被 GC）
+    jclass localClass = env->FindClass("com/myapp/ble/BLECallback");
+    g_callbackClass = (jclass)env->NewGlobalRef(localClass);
+    env->DeleteLocalRef(localClass);
+    
+    // 缓存方法 ID
+    g_onResultMethod = env->GetMethodID(g_callbackClass, "onResult", "(Ljava/lang/String;I)V");
+    
+    return JNI_VERSION_1_6;
+}
+```
+
+
+---
+
+## QA
+
+### Q: JNI 可以让 Java/Kotlin 和 C++ 互相调用吗？
+
+**对，双向的。**
+
+```
+Java/Kotlin ←→ JNI ←→ C/C++
+```
+
+**方向1：Java → C++（native method，声明式）**
+
+> **Q: 其实就是在 Kotlin 声明一个方法，然后在 C++ 侧实现？**
+> 
+> 对，就这么简单。Kotlin 用 `external` 声明，C++ 用约定的函数名实现。
+>
+> **Q: 中间需要 JNI 声明文件吗？**
+> 
+> **不需要额外的声明文件。** 靠的是**函数名约定**：C++ 函数名必须是 `Java_包名_类名_方法名`，JVM 加载 SO 后按这个规则自动匹配。不需要任何中间文件。
+>
+> 以前有个 `javah` 工具可以根据 Java 类自动生成 `.h` 头文件（方便 IDE 补全），但这只是辅助，不是必需的。现在用 `javac -h` 替代，但大多数人直接手写。
+>
+> **Q: 底层是统一用 ABI 还是 C 函数？**
+> 
+> **是 C 函数调用约定（C ABI）。** 这就是为什么必须加 `extern "C"`：
+> - C++ 有 name mangling（同名函数重载会改名），JVM 找不到
+> - `extern "C"` 告诉编译器用 C 的命名规则（函数名不变），JVM 才能按约定名找到
+>
+> 本质：JVM 加载 `.so` → `dlsym()` 按函数名查找符号 → 找到 C 函数指针 → 调用。和动态库的标准用法一样。
+
+```kotlin
+class NativeLib {
+    external fun add(a: Int, b: Int): Int  // 实现在 C++
+    companion object { init { System.loadLibrary("mylib") } }
+}
+```
+
+```cpp
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_NativeLib_add(JNIEnv* env, jobject thiz, jint a, jint b) {
+    return a + b;
+}
+```
+
+**方向2：C++ → Java（反射调用，需要找类 + 找方法 + 调用）**
+- C++
+- 核心是: [JNIEnv](#注释jnienv) 这个JNI 在第一个参数注入的JNI, 用它才能通过反射调用java/kotlin的方法
+
+```cpp
+void callJavaFromCpp(JNIEnv* env, jobject javaObject) {
+    jclass clazz = env->FindClass("com/example/MyCallback");
+    jmethodID method = env->GetMethodID(clazz, "onResult", "(Ljava/lang/String;)V");
+    env->CallVoidMethod(javaObject, method, env->NewStringUTF("hello from C++"));
+}
+```
+
+### Q: JNI 在 TurboModule 中的角色是什么？
+
+```
+JS → JSI(C++) → JNI → Java/Kotlin
+                 ↑
+              这一步就是 JNI
+```
+
+JSI 解决 JS ↔ C++ 通信，JNI 解决 C++ ↔ Java 通信。TurboModule 的 Codegen 自动生成了 JNI 胶水代码，所以你不需要手写。
+
+### Q: 为什么需要 JNI？直接调不行吗？
+
+因为 Java 运行在 JVM（有自己的堆 + GC），C++ 直接操作内存。两个世界不能直接互通：
+1. **类型不同**：Java `String` 和 C++ `std::string` 内存布局完全不一样
+2. **内存管理不同**：Java 有 GC 自动回收，C++ 要手动管理
+3. **方法查找不同**：C++ 不知道 Java 的类和方法在哪里
+
+JNI 就是做这三件事的桥梁。
+
+### Q: iOS 为什么不需要 JNI？
+
+| | Android | iOS |
+|--|---------|-----|
+| C++ 调 Native | 必须 JNI（JVM 隔离） | 直接混编（ObjC 是 C 超集） |
+| 文件 | `.cpp` + `.kt`（分开写） | `.mm`（ObjC++ 一个文件混合写） |
+| 类型转换 | 手动（`jstring` ↔ `std::string`） | 自动（`NSString` 和 C++ 共存） |
+
+Objective-C 本身就是 C 的超集，天然能和 C++ 代码混合编译。所以 iOS 侧 TurboModule 的 Codegen 只需要简单的 ObjC++ 胶水，不需要 JNI 那套反射机制。
+
+
+---
+
+## 注释：核心概念
+
+### 注释：JNIEnv
+
+**`JNIEnv*` = C++ 操作 Java 世界的唯一入口句柄。**
+
+JVM 在每次调用 C++ 函数时自动注入为第一个参数。
+
+```cpp
+// 通过 env 能做的所有事（核心 API）：
+env->FindClass(...)           // 找类
+env->GetMethodID(...)         // 找方法
+env->CallVoidMethod(...)      // 调用 Java 方法
+env->NewStringUTF(...)        // 创建 Java String
+env->GetStringUTFChars(...)   // 读取 Java String
+env->NewByteArray(...)        // 创建 Java byte[]
+env->ThrowNew(...)            // 抛 Java 异常
+env->NewGlobalRef(...)        // 创建全局引用（防 GC 回收）
+```
+
+**类比：**
+
+```
+jsi::Runtime  → C++ 操作 JS 世界的入口
+JNIEnv*       → C++ 操作 Java 世界的入口
+```
+
+**注意**：线程绑定，不能跨线程传递。另一个线程需要 `JavaVM->AttachCurrentThread()` 获取自己的 `JNIEnv`。

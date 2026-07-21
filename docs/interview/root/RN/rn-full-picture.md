@@ -19,21 +19,31 @@
 
 ```
 my-app/
-├── android/          ← Android 壳工程（见下一节）
+├── android/          ← Android 壳工程
 ├── ios/              ← iOS 壳工程
-├── src/              ← JS/TS 业务代码
-│   ├── screens/      ← 页面
-│   ├── components/   ← 通用组件
-│   ├── navigation/   ← 路由
-│   ├── services/     ← 网络/API
-│   ├── stores/       ← 状态管理
-│   ├── hooks/        ← 自定义 Hooks
-│   └── native-modules/ ← TurboModule Spec 定义
+├── src/              ← JS/TS 业务代码（Feature-based 目录结构）
+│   ├── app/          ← 入口、导航、全局 Provider
+│   ├── features/     ← 按业务功能划分（每个 feature 内含 screens/hooks/services/stores）
+│   │   ├── device/
+│   │   │   ├── screens/          ← 页面（DeviceList / DeviceDetail）
+│   │   │   ├── components/       ← 功能内部组件（DeviceCard / StatusBadge）
+│   │   │   ├── hooks/            ← useDeviceConnect / useDeviceStatus
+│   │   │   ├── services/         ← BLE 通信 / 设备 API
+│   │   │   ├── store.ts          ← Zustand store（设备列表/连接状态）
+│   │   │   ├── types.ts          ← Device / BLEState 类型
+│   │   │   └── index.ts          ← 对外导出（其他 feature 只 import 这里）
+│   │   ├── home/
+│   │   └── profile/
+│   ├── shared/       ← 跨 feature 公共组件/hooks/utils
+│   └── native/       ← TurboModule Spec 定义
 ├── index.js          ← 入口（AppRegistry.registerComponent）
 ├── metro.config.js   ← Metro 打包器配置
 ├── babel.config.js   ← Babel 转换配置
 ├── tsconfig.json     ← TypeScript 配置
 └── package.json      ← 依赖 + RN 配置
+```
+
+> **Feature-based**：不按技术类型切（components/hooks/services），而是按业务功能切。一个 feature 的所有代码在一个目录，删功能 = 删目录。详见 [rn-2026-stack.md](./rn-2026-stack.md#三推荐目录结构)
 ```
 
 **模块划分本质**：

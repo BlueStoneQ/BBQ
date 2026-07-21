@@ -2,15 +2,20 @@
 
 ## 目录
 
+- [使用场景](#使用场景)
 - [核心原理](#核心原理)
 - [useState](#usestate)
 - [useEffect](#useeffect)
 - [useRef](#useref)
-- [useMemo / useCallback](#usememo--usecallback)
 - [useContext](#usecontext)
+- [useMemo / useCallback / React.memo](#usememo--usecallback--reactmemo)
 - [自定义 Hooks](#自定义-hooks)
   - [本质](#本质)
   - [常见自定义 Hook 实现](#常见自定义-hook-实现)
+    - [useDebounce](#usedebounce--防抖值)
+    - [usePrevious](#useprevious--获取上一次的值)
+    - [useLocalStorage](#uselocalstorage--持久化状态)
+    - [useInterval](#useinterval--安全的定时器)
   - [常用生命周期场景](#常用生命周期场景)
   - [关键区别](#关键区别)
 - [Hooks 规则与原理](#hooks-规则与原理)
@@ -20,6 +25,32 @@
   - [1. 闭包陷阱（Stale Closure）](#1-闭包陷阱stale-closure)
   - [2. useEffect 无限循环](#2-useeffect-无限循环)
   - [3. 忘记清理](#3-忘记清理)
+- [注释](#注释)
+  - [综合实战：memo + useCallback + useMemo 全家桶](#注释综合例子)
+
+---
+## 使用场景
+
+**判断标准**：这段逻辑需要用到 React 的生命周期能力（state/effect/ref），且会被复用。
+
+| 需要封装成 Hook | 不需要（用普通函数） |
+|---|---|
+| 需要 useState / useEffect / useRef | 纯计算（没有副作用/状态） |
+| 涉及组件生命周期（挂载/卸载/更新时做事） | 和渲染无关的工具函数 |
+| 多个组件会复用同一套逻辑 | 只在一个地方用一次 |
+
+**典型该封 Hook 的**：
+
+| Hook | 为什么必须是 Hook |
+|------|-----------------|
+| useDebounce | 需要 useEffect 管 timer 生命周期 + 卸载清理 |
+| useFetch | 需要 useState 存 loading/data/error + useEffect 发请求 |
+| useInterval | 需要 useRef 存最新回调 + useEffect 管 setInterval 生命周期 |
+| useLocalStorage | 需要 useState 同步 + useEffect 监听 storage 事件 |
+
+**不该封 Hook 的**：`formatDate()`、`deepClone()`、`debounce(fn)` — 纯输入输出的计算，不需要 React 的任何能力。
+
+**一句话**：需要"感知渲染周期"的逻辑 → Hook。纯输入输出 → 普通函数。
 
 ---
 
@@ -184,6 +215,27 @@ useEffect(() => {
 }, []);
 ```
 
+### useEffect和生命周期
+
+| 类比 Class 生命周期 | useEffect 写法 |
+|---|---|
+| `componentDidMount` | `useEffect(() => { ... }, [])` — 空依赖，只跑一次 |
+| `componentDidUpdate` | `useEffect(() => { ... }, [dep])` — dep 变了就跑 |
+| `componentWillUnmount` | `useEffect(() => { return () => { cleanup } }, [])` — return 的函数 |
+| 每次渲染后都跑 | `useEffect(() => { ... })` — 不写依赖数组 |
+
+```tsx
+useEffect(() => {
+  // 挂载 + dep 变化时执行
+  const sub = subscribe(dep)
+  
+  return () => {
+    // 卸载时 或 dep 变化前（清理上一次）执行
+    sub.unsubscribe()
+  }
+}, [dep])
+```
+
 ---
 
 ## useRef
@@ -262,6 +314,7 @@ function Input() {
 
 ```tsx
 function Timer() {
+  // ref值是横跨渲染的 
   const intervalRef = useRef<number | null>(null);
 
   function start() {
@@ -285,7 +338,9 @@ function Timer() {
 
 ---
 
-## useMemo / useCallback
+## useMemo / useCallback / React.memo
+
+> → [综合实战例子](#注释综合例子)
 
 ### API 签名
 
@@ -395,173 +450,100 @@ useMemo(value)  → 让传给子组件的对象/数组引用稳定 → memo 判�
 
 ## useContext
 
-### API 签名
+### 核心 API（就 3 个）
+
+| API | 作用 |
+|-----|------|
+| `createContext(defaultValue)` | 创建 Context 对象 |
+| `<Ctx.Provider value={...}>` | 提供值（组件） |
+| `useContext(Ctx)` | 消费值（Hook） |
+
+### 最小用法
 
 ```tsx
-const value = useContext<T>(Context: React.Context<T>): T;
-```
+// 1. 创建
+const ThemeContext = createContext<'light' | 'dark'>('light')
 
-**作用**：读取最近的 Provider 提供的 Context 值，Provider value 变化时自动重渲染。
+// 2. 提供
+<ThemeContext.Provider value="dark">
+  <App />
+</ThemeContext.Provider>
 
-**场景**：主题切换、语言国际化、当前用户信息等低频变化的全局状态。
-
-### 基础
-
-```tsx
-// 创建
-const ThemeContext = createContext<'light' | 'dark'>('light');
-
-// 提供
-function App() {
-  return (
-    <ThemeContext.Provider value="dark">
-      <Page />
-    </ThemeContext.Provider>
-  );
-}
-
-// 消费
+// 3. 消费
 function Button() {
-  const theme = useContext(ThemeContext);
-  return <button className={theme}>Click</button>;
+  const theme = useContext(ThemeContext)
+  return <button className={theme}>Click</button>
 }
 ```
 
-### 常用实践（value 传对象 + useMemo 优化）
+### 完整实践（Provider + 自定义 Hook）
 
 ```tsx
-import { createContext, useContext, useState, useMemo, useCallback } from 'react';
-
-// 1. 定义 Context 类型
+// 1. 定义类型
 interface ThemeContextType {
-  theme: 'light' | 'dark';
-  fontSize: number;
-  toggleTheme: () => void;
-  setFontSize: (size: number) => void;
+  theme: 'light' | 'dark'
+  toggleTheme: () => void
 }
 
-// 2. 创建 Context（给一个默认值方便类型推断）
-const ThemeContext = createContext<ThemeContextType | null>(null);
+// 2. 创建（null 默认值，强制配合 Provider 使用）
+const ThemeContext = createContext<ThemeContextType | null>(null)
 
-// 3. 封装 Provider 组件
+// 3. 封装 Provider
 function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [fontSize, setFontSize] = useState(14);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   const toggleTheme = useCallback(() => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  }, []);
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }, [])
 
-  // ⚠️ 重点：useMemo 包裹 value，避免 Provider 父组件重渲染时
-  // 创建新对象引用 → 导致所有消费者无意义重渲染
-  const ctxValue = useMemo(
-    () => ({ theme, fontSize, toggleTheme, setFontSize }),
-    [theme, fontSize, toggleTheme]
-  );
+  // useMemo 稳定 value 引用，避免无意义重渲染
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme])
 
   return (
-    <ThemeContext.Provider value={ctxValue}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
-  );
+  )
 }
 
-// 4. 封装 useTheme hook（加 null 检查，忘记包 Provider 时给出明确报错）
+// 4. 封装消费 Hook（加 null 检查）
 function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
+  return ctx
 }
 
-// 5. 消费
-function Toolbar() {
-  const { theme, fontSize, toggleTheme, setFontSize } = useTheme();
-
-  return (
-    <div style={{ background: theme === 'dark' ? '#333' : '#fff', fontSize }}>
-      <button onClick={toggleTheme}>
-        当前主题: {theme}
-      </button>
-      <button onClick={() => setFontSize(fontSize + 2)}>
-        放大字体 (当前: {fontSize}px)
-      </button>
-    </div>
-  );
-}
-
-// 6. 顶层使用
+// 5. 使用
 function App() {
   return (
     <ThemeProvider>
       <Toolbar />
-      <Page />
     </ThemeProvider>
-  );
+  )
+}
+
+function Toolbar() {
+  const { theme, toggleTheme } = useTheme()
+  return <button onClick={toggleTheme}>当前: {theme}</button>
 }
 ```
 
-**要点总结：**
-- `value` 传对象即可共享多个状态 + 操作方法
-- 用 `useMemo` 缓存 value 对象，依赖项不变时引用不变，消费者不会无意义重渲染
-- 用 `useCallback` 缓存函数引用，配合 `useMemo` 的依赖数组
-- 封装自定义 hook（`useTheme`）加 null 检查，调用方更安全、更简洁
+### 性能注意
 
-### 性能问题
-
-**Context 值变化 → 所有消费者重渲染**（无论是否用到变化的字段）。
+**Context value 变化 → 所有消费者强制重渲染**（穿透 memo）。
 
 ```tsx
-// ❌ 整个 state 作为 value，任何字段变化所有消费者都重渲染
+// ❌ 所有字段合一个 Context，任何变化全量通知
 <AppContext.Provider value={{ user, theme, settings }}>
 
-// ✅ 拆分 Context，按变化频率分离
+// ✅ 按变化频率拆分
 <UserContext.Provider value={user}>
   <ThemeContext.Provider value={theme}>
 ```
 
-**大型应用状态管理用 Zustand/Redux，不用 Context**——它们有 selector 机制，只在选中的字段变化时重渲染。
+**渲染范围**：只有直接 `useContext` 的组件会被强制更新，中间没消费的组件会被跳过。
 
-### Context 变化的渲染范围（精确理解）
-
-**Context 穿透 memo**：消费了 Context 的组件，memo 拦不住，强制重渲染。
-
-**但不是整棵子树都渲染**——只有直接 `useContext` 的组件会被强制更新，中间路径上没消费的组件会被跳过：
-
-```tsx
-<ThemeProvider>
-  <Header>              {/* ← 没消费 Context，不重渲染 ✅ */}
-    <Logo />            {/* ← 父没渲染，它也不会 ✅ */}
-    <ThemeToggle />     {/* ← useContext(ThemeContext)，强制重渲染 ❌ */}
-      <Icon />          {/* ← 跟着 ThemeToggle 渲染（父渲染了子默认跟） */}
-      <Label />         {/* ← memo 包裹 + props 没变 → 可以拦住 ✅ */}
-  </Header>
-  <Content />           {/* ← 没消费 Context，不重渲染 ✅ */}
-</ThemeProvider>
-```
-
-**传播规则**：
-```
-Context 变化
-  → React 找到所有 useContext(ThemeContext) 的 Fiber 节点（精准定位）
-  → 只标记这些节点为"需要更新"（中间层跳过，不需要参与渲染）
-  → 这些消费者重渲染
-  → 消费者的子组件按正常规则：没 memo 跟着渲染，有 memo + props 没变则跳过
-```
-
-**children 模式的性能优势**：
-
-```tsx
-// Provider setState 时，没消费 Context 的 children 不会重渲染
-// 因为 children 的 JSX 是在更上层创建的，引用没变
-function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
-  return (
-    <ThemeContext.Provider value={theme}>
-      {children}  {/* ← 引用没变，不重渲染 */}
-    </ThemeContext.Provider>
-  );
-}
-```
+**大型应用用 Zustand/Redux**，不用 Context — 它们有 selector 机制，只在选中字段变化时重渲染。
 
 ---
 
@@ -674,7 +656,7 @@ function Component() {
 
 ### 常见自定义 Hook 实现
 
-**useDebounce — 防抖值**
+#### useDebounce — 防抖值
 
 ```tsx
 function useDebounce<T>(value: T, delay: number): T {
@@ -688,18 +670,35 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
-// 使用：输入框搜索
+// 场景1：搜索框 — 值防抖，停止输入 300ms 后才请求
 function Search() {
-  const [query, setQuery] = useState('');
-  const debouncedQuery = useDebounce(query, 300);
+  const [keyword, setKeyword] = useState('')
+  // 其实就是最新的值, 在300ms后才更新到state上, 在fetch的时候 使用, 避免因为 debouncedKeyword 不稳定, 造成频繁 fetch
+  const debouncedKeyword = useDebounce(keyword, 300)
 
   useEffect(() => {
-    if (debouncedQuery) fetchResults(debouncedQuery);
-  }, [debouncedQuery]);
+    if (debouncedKeyword) fetchResults(debouncedKeyword)
+  }, [debouncedKeyword])
+
+  return <input value={keyword} onChange={e => setKeyword(e.target.value)} />
+}
+
+// 场景2：表单提交 — loading 锁，第一次生效后锁住
+function Form() {
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    if (loading) return
+    setLoading(true)
+    try { await submitForm(data) }
+    finally { setLoading(false) }
+  }
+
+  return <button disabled={loading} onClick={handleSubmit}>提交</button>
 }
 ```
 
-**usePrevious — 获取上一次的值**
+#### usePrevious — 获取上一次的值
 
 ```tsx
 function usePrevious<T>(value: T): T | undefined {
@@ -719,15 +718,20 @@ function Counter({ count }: { count: number }) {
 }
 ```
 
-**useLocalStorage — 持久化状态**
+#### useLocalStorage — 持久化状态
 
 ```tsx
+// 这个 hook 返回了 [value, setValue]，外部调用 setValue('dark') → state 变了 → 重渲染 → useEffect 检测到 value 变 → 写入 storage
 function useLocalStorage<T>(key: string, initialValue: T) {
+  // useLocalStorage 执行的时候, 会从storage中取值作为本次值
+  // useState 的初始化函数只在首次 mount 时执行一次（懒初始化），后续 re-render 不会再执行。
   const [value, setValue] = useState<T>(() => {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : initialValue;
+    const storedValue = localStorage.getItem(key);
+    return storedValue ? JSON.parse(storedValue) : initialValue;
   });
 
+  // 如果key 和 value 有变化, 则会重新 同步存储到 storage中 
+  // useEffect本质上 是一个任务注册器, 把这里的回调 和 deps 之间建立依赖
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(value));
   }, [key, value]);
@@ -739,7 +743,7 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 const [theme, setTheme] = useLocalStorage('theme', 'light');
 ```
 
-**useInterval — 安全的定时器**
+#### useInterval — 安全的定时器
 
 ```tsx
 function useInterval(callback: () => void, delay: number | null) {
@@ -946,3 +950,74 @@ useEffect(() => {
   return () => { active = false; };
 }, []);
 ```
+
+
+---
+
+# 注释
+
+<a id="注释综合例子"></a>
+### 综合实战：memo + useCallback + useMemo + useMemo 全家桶
+
+场景：商品列表页，父组件管理筛选条件，子组件展示商品卡片。
+
+```tsx
+import { memo, useState, useCallback, useMemo } from 'react'
+
+// ─── 子组件：memo 包裹 ───
+interface ProductProps {
+  product: Product
+  onAddToCart: (id: string) => void
+}
+
+const ProductCard = memo(({ product, onAddToCart }: ProductProps) => {
+  console.log('ProductCard render:', product.id) // 观察是否跳过
+  return (
+    <div>
+      <h3>{product.name} - ¥{product.price}</h3>
+      <button onClick={() => onAddToCart(product.id)}>加购</button>
+    </div>
+  )
+})
+
+// ─── 父组件 ───
+function ProductList({ products }: { products: Product[] }) {
+  const [keyword, setKeyword] = useState('')
+  const [cart, setCart] = useState<string[]>([])
+
+  // ✅ useMemo：过滤是 O(n) 计算，keyword/products 不变不重算
+  const filtered = useMemo(
+    () => products.filter(p => p.name.includes(keyword)),
+    [products, keyword]
+  )
+
+  // ✅ useCallback：函数引用稳定 → ProductCard 的 memo 才能生效
+  const handleAddToCart = useCallback((id: string) => {
+    setCart(prev => [...prev, id])
+  }, [])
+
+  return (
+    <div>
+      <input value={keyword} onChange={e => setKeyword(e.target.value)} />
+      <p>购物车: {cart.length} 件</p>
+      {filtered.map(p => (
+        <ProductCard
+          key={p.id}
+          product={p}               // ← 对象引用来自 useMemo，稳定
+          onAddToCart={handleAddToCart} // ← 函数引用来自 useCallback，稳定
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+**为什么三者缺一不可**：
+
+| 缺少 | 后果 |
+|------|------|
+| 没有 `memo` | 父组件每次 setState → 子组件无条件重渲染，useCallback/useMemo 白做 |
+| 没有 `useCallback` | `handleAddToCart` 每次新引用 → memo 浅比较 props 发现变了 → 子组件重渲染 |
+| 没有 `useMemo` | `filtered` 每次新数组引用 → 里面的 product 对象也是新的 → memo 无效 |
+
+**一句话**：`memo` 是门卫，`useCallback/useMemo` 是保证你拿的是同一张通行证。

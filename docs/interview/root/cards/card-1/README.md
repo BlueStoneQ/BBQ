@@ -1,8 +1,9 @@
-# 牌 1：性能体验优化
+# 牌 1：性能体验优化 => 可观测体系
 
 > - 命中：JD1-3（性能与质量保障）+ JD2（性能优化方法）
 > - 定位：不是修一个 bug，是建一套"测量→定位→优化→验证→监控→防退化"的体系
 > - 核心理念：不仅仅快，还要感知好（Google Core Web Vitals 理念）
+> - 视角: 从双端三层((RN/H5)-(android/ios)-c++)+全链路(编译构建-运行时-CDN)角度去优化
 
 ---
 
@@ -19,6 +20,23 @@
 - [快应用模块裁剪方案](../../../../resume/explain/3.1-xm/quickapp-framework/module-trimming.md)
 - [Sentry 错误监控与性能监控](./sentry.md)
 - [iOS 性能优化专题](./ios/README.md)
+- [构建阶段性能优化](./perf-build-phase.md)
+
+---
+
+## 目录
+
+- [结构化场景](#结构化场景)
+  - [一、稳定性](#一稳定性)
+  - [二、启动](#二启动)
+  - [三、流畅度](#三流畅度)
+  - [四、内存](#四内存)
+  - [五、包体（三层治理视角）](#五包体三层治理视角)
+  - [六、交互体验反馈](#六交互体验反馈)
+  - [七、性能监控体系](#七性能监控体系)
+- [方法论](#方法论)
+- [我的数据](#我的数据)
+- [Resume 实践](#resume-实践深度文档链接)
 
 ---
 
@@ -30,18 +48,34 @@
 
 ---
 
-### 一、启动
+### 一、稳定性
+
+> crush / (ANR/watchDog) / 白屏
+>
+> 一个RN重点治理根因: [JS 线程阻塞perf-js-blocking.md](./perf-js-blocking.md) | [线程阻塞优化🔥](./perf-js-blocking.md#3-解决手段)
+
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 闪退（Crash）治理 | [perf-crash.md](./perf-crash.md) | [ios-stability.md](./ios/ios-stability.md) |
+| ANR / Watchdog 治理 | [perf-anr.md](./perf-anr.md) | [perf-anr.md](./perf-anr.md)（含 iOS Watchdog） |
+| 白屏检测与治理（RN） | [perf-whitescreen-rn.md](./perf-whitescreen-rn.md) | 同 |
+| 白屏检测与治理（H5） | [perf-whitescreen-h5.md](./perf-whitescreen-h5.md) | 同 |
+| JS Error 治理 | ErrorBoundary + Sentry + Source Map | 同（JS 层，两端通用） |
+| OOM Crash | [perf-memory.md](./perf-memory.md) | [ios-memory.md](./ios/ios-memory.md) |
+
+### 二、启动
 
 | 子场景 | Android 文档 | iOS 文档 |
 |--------|-------------|---------|
 | RN App 启动（冷启动全链路） | [perf-splash.md](./perf-splash.md) | [ios-launch.md](./ios/ios-launch.md) |
-| 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./perf-splash.md) | [ios-launch.md](./ios/ios-launch.md) |
+| FMP: 首页加载（数据就绪 + 首屏渲染） | [perf-splash.md](./perf-splash.md) | [ios-launch.md](./ios/ios-launch.md) |
 | CLS 抖动（布局跳动） | [perf-cls.md](./perf-cls.md) | 同（JS 层，两端通用） |
 | 页面路由切换 | [perf-navigation.md](./perf-navigation.md) | 同（React Navigation 两端通用） |
 | WebView 加载 | [perf-webview.md](./perf-webview.md) | 同（WKWebView 对应 Android WebView） |
-| 白屏检测与治理 | [perf-whitescreen.md](./perf-whitescreen.md) | 同（JS 层检测两端通用） |
 
-### 二、流畅度
+### 三、流畅度
+
+- 帧率卡顿检测：Sentry 内置 slow/frozen frame 检测，线上不需要自己实现。[→ perf-monitoring.md](./perf-monitoring.md#线上监控)
 
 | 子场景 | Android 文档 | iOS 文档 |
 |--------|-------------|---------|
@@ -50,7 +84,14 @@
 | 转场流畅度 | 用 native-stack（原生转场）+ InteractionManager 延迟目标页重任务 + 骨架屏 | 同 |
 | JS Bridge 通信阻塞 | [perf-bridge.md](./perf-bridge.md) | 同（JSI 两端通用） |
 
-### 三、包体（三层治理视角）
+### 四、内存
+
+| 子场景 | Android 文档 | iOS 文档 |
+|--------|-------------|---------|
+| 内存泄漏 + 内存优化 | [perf-memory.md](./perf-memory.md) | [ios-memory.md](./ios/ios-memory.md) |
+| OOM Crash | [perf-memory.md](./perf-memory.md) | [ios-memory.md](./ios/ios-memory.md) |
+
+### 五、包体（双端三层治理视角）
 
 > 大前端包体优化 = JS Bundle 层 + Android/iOS Native 层 + C++/SO 层，三层都要管。
 
@@ -66,21 +107,14 @@
 | 打包流程优化 | [perf-build.md](./perf-build.md) | [ios-bundle-size.md](./ios/ios-bundle-size.md) |
 | 多 Bundle 方案 | → [architecture-engineering.md](../../RN/architecture-engineering.md) | 同（两端共用方案） |
 
-### 四、内存与稳定性
-
-| 子场景 | Android 文档 | iOS 文档 |
-|--------|-------------|---------|
-| 内存泄漏 + 内存优化 | [perf-memory.md](./perf-memory.md) | [ios-memory.md](./ios/ios-memory.md) |
-| 闪退（Crash）治理 | [perf-crash.md](./perf-crash.md) | [ios-stability.md](./ios/ios-stability.md) |
-
-### 五、交互体验反馈
+### 六、交互体验反馈
 
 | 子场景 | Android 文档 | iOS 文档 |
 |--------|-------------|---------|
 | 加载态（骨架屏/Shimmer） | [ux-loading.md](./ux-loading.md) | 同（JS 层，两端通用） |
 | 按钮状态机 + Pressable 反馈 + 乐观更新 | [ux-feedback.md](./ux-feedback.md) | 同（JS 层，两端通用） |
 
-### 六、性能监控体系
+### 七、性能监控体系
 
 | 子场景 | Android 文档 | iOS 文档 |
 |--------|-------------|---------|

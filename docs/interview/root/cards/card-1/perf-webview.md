@@ -86,7 +86,7 @@
 
 ### Deep Link 跳转外部 App
 
-**Deep Link 能跳转到目标 App 的任意页面**（店铺/商品/搜索），只要对方 App 注册了对应 URL Scheme。
+**Deep Link 能跳转到目标 App 的任意页面**（店铺/商品/搜索），只要对方 App [注册了对应 URL Scheme](#注释deeplink-注册)。
 
 ```typescript
 import { Linking } from 'react-native';
@@ -125,3 +125,17 @@ openInExternalApp(
   renderLoading={() => <ProgressBar progress={progress} />}
 />
 ```
+
+---
+
+# 注释
+
+<a id="注释deeplink-注册"></a>
+### Deep Link URL Scheme 注册
+
+| 平台 | 注册方式 |
+|------|---------|
+| Android | `AndroidManifest.xml` 中给 Activity 加 `<intent-filter>` + `<data android:scheme="myapp" />` |
+| iOS | `Info.plist` 中配 `CFBundleURLTypes` + `CFBundleURLSchemes: ["myapp"]`；Universal Links 需额外在域名根目录放 `apple-app-site-association` JSON 文件 |
+
+RN 侧用 `Linking.getInitialURL()` / `Linking.addEventListener('url', handler)` 统一接收双端 Deep Link。

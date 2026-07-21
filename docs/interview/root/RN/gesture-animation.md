@@ -1,4 +1,4 @@
-# 复杂手势动画
+我的# 复杂手势动画
 
 > 面试核心问题：RN 动画为什么容易卡？怎么做到 60fps 不掉帧？
 
@@ -256,9 +256,29 @@ function BrightnessSlider({ onBrightnessChange }) {
 
 | 层 | 组件 | 做什么 |
 |---|---|---|
-| **构建时** | Reanimated Babel Plugin | 提取 `'worklet'` 函数，序列化为可跨线程传递的代码 |
+| **构建时** | Reanimated Babel Plugin | 提取 `'worklet'` 函数，序列化为代码字符串（`__workletCode`） |
+
+### Worklet 编译结果
+
+```javascript
+// 编译前
+function myWorklet() {
+  'worklet';
+  return offset.value * 2;
+}
+
+// Babel 编译后
+function myWorklet() { return offset.value * 2; }
+myWorklet.__workletCode = "function(){return offset.value*2}";
+myWorklet.__isWorklet = true;
+```
+
+运行时：JS 线程通过 JSI（C++ 直接调用，非 TurboModule）把 `__workletCode` 传给 UI 线程的独立 Hermes 实例 eval 执行。两个 Hermes 实例通过 C++ SharedValue 共享数据。
+
+| 层 | 组件 | 做什么 |
+|---|---|---|
 | **Native 层** | Gesture Handler | 用平台原生 API 识别手势（Android MotionEvent / iOS UIGestureRecognizer） |
-| **Native 层** | Reanimated Runtime | UI 线程上的轻量 JS 引擎，执行 worklet 函数 |
+| **Native 层** | Reanimated Runtime | UI 线程上的独立 Hermes 实例，执行 worklet 函数 |
 | **JS 层** | useSharedValue / useAnimatedStyle | 声明式 API，定义"值变了 → style 怎么变" |
 | **JS 层** | runOnJS | worklet 里需要回到 JS 线程时的桥梁（处理业务逻辑） |
 
