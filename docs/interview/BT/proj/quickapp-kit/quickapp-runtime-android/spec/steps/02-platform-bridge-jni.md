@@ -21,6 +21,8 @@
   - [2.5.2：安装和运行验证](#252安装和运行验证)
   - [2.5.3：Logcat 验证](#253-logcat-验证)
 - [技术决策](#技术决策)
+- [核心原理解读](#核心原理解读)
+  - [step2.2.1 JNI 初始化代码的第一性原理分析](#step221-jni-初始化代码的第一性原理分析)
 - [QA](#qa)
 
 ---
@@ -387,28 +389,56 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     return JNI_VERSION_1_6;
 }
 
-// Kotlin 调用 nativeInitialize() 时进入这里。
+/** Kotlin 调用 nativeInitialize() 时进入这里。
 // 保存 Kotlin 对象的 Global Reference，注册 PlatformBridge。
+// JNI命名：Java_ + [包名] + _ + [类名] + _ + [方法名]
+// 对应kotlin：
+// Java 侧声明
+package com.quickappkit.runtime;
+
+public class QuickAppRuntime {
+    // 本地方法声明
+    public native void nativeInitialize();
+
+    // 或者在 Kotlin 中
+    // external fun nativeInitialize()
+}
+
+@params JNIEnv* env：JNI 环境指针，提供访问 Java 对象的方法
+@params jobject thiz：调用此方法的 Java 对象实例（相当于 this）
+*/
 JNIEXPORT void JNICALL
 Java_com_quickappkit_runtime_QuickAppRuntime_nativeInitialize(
         JNIEnv* env, jobject thiz) {
     LOGI("nativeInitialize called");
 
-    // 重复初始化时先释放旧引用
-    if (g_runtimeObject) { env->DeleteGlobalRef(g_runtimeObject); g_runtimeObject = nullptr; }
-    if (g_runtimeClass) { env->DeleteGlobalRef(g_runtimeClass); g_runtimeClass = nullptr; }
+    // 重复初始化时先释放旧引用 - 防止内存泄漏
+    // 如果之前已经初始化过，需要先清理旧的全局引用
+    if (g_runtimeObject) { 
+        env->DeleteGlobalRef(g_runtimeObject);  // 删除旧的全局引用
+        g_runtimeObject = nullptr;              // 置空指针，避免野指针
+    }
+    if (g_runtimeClass) { 
+        env->DeleteGlobalRef(g_runtimeClass);   // 删除旧的类引用
+        g_runtimeClass = nullptr;              // 置空指针
+    }
 
+    // 创建新的全局引用 - 将Java对象的局部引用提升为全局引用
+    // thiz 是 JNI 传入的 Java 对象（QuickAppRuntime 实例）
+    // NewGlobalRef 会创建一个全局引用，Java GC 不会回收它
     g_runtimeObject = env->NewGlobalRef(thiz);
-    jclass localClass = env->GetObjectClass(thiz);
-    g_runtimeClass = static_cast<jclass>(env->NewGlobalRef(localClass));
-    env->DeleteLocalRef(localClass);
 
-    // 注册到 Core
-    quickapp::PlatformBridge bridge{};
-    bridge.createElement = jniCreateElement;
-    bridge.setAttr = jniSetAttr;
-    bridge.setStyle = jniSetStyle;
-    quickapp::registerPlatformBridge(bridge);
+    // 获取对象的 Class 信息
+    jclass localClass = env->GetObjectClass(thiz);  // 获取局部类引用
+    g_runtimeClass = static_cast<jclass>(env->NewGlobalRef(localClass));  // 提升为全局引用
+    env->DeleteLocalRef(localClass);  // 删除局部引用，避免 JNI 引用表泄漏
+
+    // 注册到 Core - 建立 C++ 和 Java 之间的桥梁
+    quickapp::PlatformBridge bridge{};  // 创建平台桥接对象
+    bridge.createElement = jniCreateElement;  // 注册创建元素的回调
+    bridge.setAttr = jniSetAttr;              // 注册设置属性的回调
+    bridge.setStyle = jniSetStyle;           // 注册设置样式的回调
+    quickapp::registerPlatformBridge(bridge); // 注册到全局，让 C++ 端可以调用
 
     LOGI("PlatformBridge registered");
 }
@@ -717,6 +747,104 @@ Jetpack Compose 只作为 Demo 外壳，不作为 Runtime 渲染内核。原因�
 
 ---
 
+## 核心原理解读
+
+### step2.2.1 JNI 初始化代码的第一性原理分析
+
+基于 `nativeInitialize` 函数中的关键代码段：
+
+```cpp
+// 创建新的全局引用 - 将Java对象的局部引用提升为全局引用
+// thiz 是 JNI 传入的 Java 对象（QuickAppRuntime 实例）
+// NewGlobalRef 会创建一个全局引用，Java GC 不会回收它
+g_runtimeObject = env->NewGlobalRef(thiz);
+
+// 获取对象的 Class 信息
+jclass localClass = env->GetObjectClass(thiz);  // 获取局部类引用
+g_runtimeClass = static_cast<jclass>(env->NewGlobalRef(localClass));  // 提升为全局引用
+env->DeleteLocalRef(localClass);  // 删除局部引用，避免 JNI 引用表泄漏
+
+// 注册到 Core - 建立 C++ 和 Java 之间的桥梁
+quickapp::PlatformBridge bridge{};  // 创建平台桥接对象
+bridge.createElement = jniCreateElement;  // 注册创建元素的回调
+bridge.setAttr = jniSetAttr;              // 注册设置属性的回调
+bridge.setStyle = jniSetStyle;           // 注册设置样式的回调
+quickapp::registerPlatformBridge(bridge); // 注册到全局，让 C++ 端可以调用
+```
+
+#### 第一性原则分解
+
+这段代码的根本目的是**建立跨语言调用通道**，具体解决三个核心问题：
+
+**1. 跨语言内存管理的不对称性**
+- **问题**：Java 有自动垃圾回收（GC），C++ 需要手动管理内存
+- **解决方案**：使用 `NewGlobalRef()` 将 Java 对象引用从局部提升为全局
+- **为什么**：局部引用在 JNI 函数返回后会被自动释放，全局引用保证 C++ 代码长期持有 Java 对象时不会被 GC 回收
+
+**2. 跨平台渲染接口标准化**
+- **问题**：C++ Core 需要与不同平台（Android/iOS/Web）通信
+- **解决方案**：定义 `PlatformBridge` 抽象接口
+- **为什么**：
+  - **解耦**：C++ Core 只依赖抽象接口，不直接耦合 JNI 或平台 API
+  - **可扩展性**：同一套接口可在不同平台上实现
+  - **可测试性**：可以模拟平台实现进行单元测试
+
+**3. 性能与架构的平衡**
+- **问题**：每次调用都需要 JNI 查找和参数转换，性能开销大
+- **解决方案**：一次性注册函数指针 + 缓存类引用
+- **为什么**：
+  - 避免重复调用 `GetObjectClass` 的性能开销
+  - 类引用比对象引用更稳定（对象的类不会变）
+  - 函数指针调用比动态 JNI 方法查找更快
+
+#### 从 QuickApp Runtime 架构视角
+
+这是 **跨层桥接模式** 的具体实现：
+
+```
+C++ Core (JS 执行 + Yoga 布局计算) 
+    ↓ 调用标准化接口
+PlatformBridge (抽象层)
+    ↓ 函数指针调用  
+JNI Bridge (C++ → Java 适配器)
+    ↓ JNI 方法调用
+Kotlin Runtime (Android View 渲染)
+```
+
+**设计哲学**：
+1. **向下依赖**：C++ Core 向下依赖平台实现，符合依赖倒置原则
+2. **一次定义，多处实现**：同一套渲染接口可适配不同平台
+3. **最小接口**：只定义必需的渲染操作，保持接口稳定
+
+#### 技术决策的深层次考量
+
+1. **为什么不是直接 JNI 调用？**
+   - 直接 JNI 调用会导致 C++ Core 与 Android 平台强耦合
+   - 增加新平台需要修改 Core 代码，违反开闭原则
+   - 无法进行平台无关的单元测试
+
+2. **为什么用函数指针而不是虚函数？**
+   - 函数指针更轻量，无需虚表开销
+   - 纯 C 接口，兼容性更好
+   - 易于与 C 语言库（如 QuickJS）集成
+
+3. **为什么缓存类引用？**
+   - 性能优化：减少 JNI 查找开销
+   - 内存安全：全局引用确保类信息长期有效
+   - 代码清晰：明确区分对象引用和类引用
+
+#### 总结：第一性原理的架构价值
+
+这段代码不仅是技术实现，更是构建**可维护、可扩展跨平台渲染引擎**的基础设施：
+
+1. **解决本质问题**：跨语言内存管理 + 平台抽象
+2. **建立可持续架构**：为支持 iOS、Web、桌面等多平台奠定基础  
+3. **实现工程最佳实践**：解耦、性能优化、可测试性
+
+如果没有这个设计，每次 C++ 需要调用渲染方法时都需要重复进行 JNI 查找、参数转换等操作，导致代码重复、性能低下且难以维护。这体现了从**本质需求**出发，通过**分层抽象**解决复杂系统问题的架构思维。
+
+---
+
 ## QA
 
 ### 1. PlatformBridge 为什么是函数指针
@@ -837,3 +965,99 @@ LVGL     → LVGL C API
 ## 下一步
 
 待 Step 2 验收通过后，按 `design.md` / `tasks.md` 编写 Step 3：JSEngine。
+
+---
+
+## QA
+
+基于 `nativeInitialize` 函数中的关键代码段：
+
+```cpp
+// 创建新的全局引用 - 将Java对象的局部引用提升为全局引用
+// thiz 是 JNI 传入的 Java 对象（QuickAppRuntime 实例）
+// NewGlobalRef 会创建一个全局引用，Java GC 不会回收它
+g_runtimeObject = env->NewGlobalRef(thiz);
+
+// 获取对象的 Class 信息
+jclass localClass = env->GetObjectClass(thiz);  // 获取局部类引用
+g_runtimeClass = static_cast<jclass>(env->NewGlobalRef(localClass));  // 提升为全局引用
+env->DeleteLocalRef(localClass);  // 删除局部引用，避免 JNI 引用表泄漏
+
+// 注册到 Core - 建立 C++ 和 Java 之间的桥梁
+quickapp::PlatformBridge bridge{};  // 创建平台桥接对象
+bridge.createElement = jniCreateElement;  // 注册创建元素的回调
+bridge.setAttr = jniSetAttr;              // 注册设置属性的回调
+bridge.setStyle = jniSetStyle;           // 注册设置样式的回调
+quickapp::registerPlatformBridge(bridge); // 注册到全局，让 C++ 端可以调用
+```
+
+#### 第一性原则分解
+
+这段代码的根本目的是**建立跨语言调用通道**，具体解决三个核心问题：
+
+**1. 跨语言内存管理的不对称性**
+- **问题**：Java 有自动垃圾回收（GC），C++ 需要手动管理内存
+- **解决方案**：使用 `NewGlobalRef()` 将 Java 对象引用从局部提升为全局
+- **为什么**：局部引用在 JNI 函数返回后会被自动释放，全局引用保证 C++ 代码长期持有 Java 对象时不会被 GC 回收
+
+**2. 跨平台渲染接口标准化**
+- **问题**：C++ Core 需要与不同平台（Android/iOS/Web）通信
+- **解决方案**：定义 `PlatformBridge` 抽象接口
+- **为什么**：
+  - **解耦**：C++ Core 只依赖抽象接口，不直接耦合 JNI 或平台 API
+  - **可扩展性**：同一套接口可在不同平台上实现
+  - **可测试性**：可以模拟平台实现进行单元测试
+
+**3. 性能与架构的平衡**
+- **问题**：每次调用都需要 JNI 查找和参数转换，性能开销大
+- **解决方案**：一次性注册函数指针 + 缓存类引用
+- **为什么**：
+  - 避免重复调用 `GetObjectClass` 的性能开销
+  - 类引用比对象引用更稳定（对象的类不会变）
+  - 函数指针调用比动态 JNI 方法查找更快
+
+#### 从 QuickApp Runtime 架构视角
+
+这是 **跨层桥接模式** 的具体实现：
+
+```
+C++ Core (JS 执行 + Yoga 布局计算) 
+    ↓ 调用标准化接口
+PlatformBridge (抽象层)
+    ↓ 函数指针调用  
+JNI Bridge (C++ → Java 适配器)
+    ↓ JNI 方法调用
+Kotlin Runtime (Android View 渲染)
+```
+
+**设计哲学**：
+1. **向下依赖**：C++ Core 向下依赖平台实现，符合依赖倒置原则
+2. **一次定义，多处实现**：同一套渲染接口可适配不同平台
+3. **最小接口**：只定义必需的渲染操作，保持接口稳定
+
+#### 技术决策的深层次考量
+
+1. **为什么不是直接 JNI 调用？**
+   - 直接 JNI 调用会导致 C++ Core 与 Android 平台强耦合
+   - 增加新平台需要修改 Core 代码，违反开闭原则
+   - 无法进行平台无关的单元测试
+
+2. **为什么用函数指针而不是虚函数？**
+   - 函数指针更轻量，无需虚表开销
+   - 纯 C 接口，兼容性更好
+   - 易于与 C 语言库（如 QuickJS）集成
+
+3. **为什么缓存类引用？**
+   - 性能优化：减少 JNI 查找开销
+   - 内存安全：全局引用确保类信息长期有效
+   - 代码清晰：明确区分对象引用和类引用
+
+#### 总结：第一性原理的架构价值
+
+这段代码不仅是技术实现，更是构建**可维护、可扩展跨平台渲染引擎**的基础设施：
+
+1. **解决本质问题**：跨语言内存管理 + 平台抽象
+2. **建立可持续架构**：为支持 iOS、Web、桌面等多平台奠定基础  
+3. **实现工程最佳实践**：解耦、性能优化、可测试性
+
+如果没有这个设计，每次 C++ 需要调用渲染方法时都需要重复进行 JNI 查找、参数转换等操作，导致代码重复、性能低下且难以维护。这体现了从**本质需求**出发，通过**分层抽象**解决复杂系统问题的架构思维。
