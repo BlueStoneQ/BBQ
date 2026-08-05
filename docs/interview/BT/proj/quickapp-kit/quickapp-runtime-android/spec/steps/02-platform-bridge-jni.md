@@ -391,6 +391,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 }
 
 /** Kotlin 调用 nativeInitialize() 时进入这里。
+在nativeInitialize()中完成，通过函数指针将JNI实现注册到C++ Core
 // 保存 Kotlin 对象的 Global Reference，注册 PlatformBridge。
 // JNI命名：Java_ + [包名] + _ + [类名] + _ + [方法名]
 // 对应kotlin：
@@ -457,7 +458,7 @@ Java_com_quickappkit_runtime_QuickAppRuntime_nativeTestRender(
     LOGI("nativeTestRender completed");
 }
 
-// Activity 销毁时释放 JNI Global Reference。
+// 生命周期hooks: Activity 销毁时执行: 释放 JNI Global Reference。
 JNIEXPORT void JNICALL
 Java_com_quickappkit_runtime_QuickAppRuntime_nativeRelease(
         JNIEnv* env, jobject thiz) {
