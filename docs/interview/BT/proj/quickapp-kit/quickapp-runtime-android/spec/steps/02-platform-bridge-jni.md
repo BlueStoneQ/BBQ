@@ -364,7 +364,7 @@ static void jniSetAttr(int id, const char* key, const char* value) {
 static void jniSetStyle(int id, const char* key, const char* value) {
     JNIEnv* env = getJNIEnv();
     if (!env || !g_runtimeObject || !g_runtimeClass) return;
-
+    // 在 JNI 中，通过 NewStringUTF、NewObject 等方法创建的对象是局部引用（Local Reference）
     jstring jKey = env->NewStringUTF(key);
     jstring jValue = env->NewStringUTF(value);
     jmethodID methodID = env->GetMethodID(
@@ -374,6 +374,7 @@ static void jniSetStyle(int id, const char* key, const char* value) {
         env->CallVoidMethod(g_runtimeObject, methodID,
             static_cast<jint>(id), jKey, jValue);
     }
+    // JNI局部引用需要手动释放
     env->DeleteLocalRef(jKey);
     env->DeleteLocalRef(jValue);
 }

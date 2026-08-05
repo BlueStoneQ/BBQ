@@ -48,66 +48,55 @@
 
 #include <memory>
 #include <string>
-#include <functional>
+
+// 只做前置声明，接口头文件不依赖 quickjs.h。
+struct JSContext;
+struct JSRuntime;
 
 namespace quickapp {
 
 /**
  * JS 引擎抽象接口。
  *
- * Core 只依赖这个接口，不直接 include quickjs.h。
- * 后续可替换为 V8、Hermes 等实现，Core 代码不需要改动。
- *
- * 类比：Java 的 interface / Kotlin 的 abstract class。
- * C++ 中通过纯虚函数（= 0）实现同样的效果。
+ * Core 通过这个接口管理引擎生命周期、执行脚本和读取错误；它不定义一个
+ * 丢失 JS 类型、对象和异常语义的“字符串化 Native 函数”接口。
  */
 class JSEngine {
 public:
     virtual ~JSEngine() = default;
 
-    /**
-     * 初始化引擎（创建 Runtime + Context）。
-     * @return true 表示初始化成功
-     */
+    /** 初始化引擎（创建 Runtime + Context）。 */
     virtual bool initialize() = 0;
 
-    /**
-     * 销毁引擎（释放所有 JS 对象和内存）。
-     * 调用后不能再使用 eval 或其他方法。
-     */
+    /** 销毁引擎。调用后不能再使用 eval 或其他方法。 */
     virtual void destroy() = 0;
 
     /**
-     * 执行 JS 脚本。
-     * @param script JS 源码字符串（UTF-8）
-     * @param filename 文件名，用于错误堆栈显示
-     * @return 执行是否成功（false 表示有异常）
+     * 在全局作用域执行 UTF-8 JavaScript 源码。
+     * filename 用于错误堆栈显示；返回 false 表示发生 JS 异常。
      */
     virtual bool eval(const char* script, const char* filename = "<eval>") = 0;
 
-    /**
-     * 注册一个 C++ 函数给 JS 全局对象调用。
-     *
-     * 注册后 JS 中可以直接调用：globalFuncName(arg1, arg2, ...)
-     * 这是后续 JS Bridge 的基础——所有 $app_define$ 等都通过这个机制注入。
-     *
-     * @param name JS 中的全局函数名
-     * @param fn 回调：接收参数字符串数组，返回结果字符串（简化版，Step 5 会用 JSValue）
-     */
-    virtual void registerGlobalFunction(const char* name,
-        std::function<std::string(const std::vector<std::string>&)> fn) = 0;
-
-    /** 是否有未处理的 JS 异常 */
     virtual bool hasError() const = 0;
-
-    /** 获取最近一次错误信息 */
     virtual std::string getLastError() const = 0;
 };
 
 /**
- * 工厂函数：创建当前平台默认的 JS 引擎实现。
- * 当前返回 QuickJSEngine；后续如果换引擎，改这里一处即可。
+ * QuickJS 专用的可选能力接口。
+ *
+ * 只有 QuickJS Adapter（Step 4 的 microtask 调度、Step 5 的 JS Bridge）依赖它；
+ * Router、RPKLoader、VNode 等平台无关 Core 只依赖 JSEngine。调用方必须先
+ * dynamic_cast 检查实现是否支持，不能假设所有 JS 引擎都有 QuickJS Context。
  */
+class QuickJSContextProvider {
+public:
+    virtual ~QuickJSContextProvider() = default;
+    virtual JSContext* getQuickJSContext() = 0;
+    virtual JSRuntime* getQuickJSRuntime() = 0;
+    virtual void drainMicrotasks() = 0;
+};
+
+/** 当前默认实现为 QuickJSEngine。 */
 std::unique_ptr<JSEngine> createJSEngine();
 
 } // namespace quickapp
@@ -115,12 +104,13 @@ std::unique_ptr<JSEngine> createJSEngine();
 #endif // QUICKAPP_JS_ENGINE_H
 ```
 
-**为什么用抽象接口而不是直接暴露 QuickJS：**
+**为什么用分层接口而不是把 QuickJS 暴露给全部 Core：**
 
-Core 的 RPKLoader、Router、VNode 等模块只需要 `eval` 和 `registerGlobalFunction`，不需要知道底层是 QuickJS 还是 V8。接口隔离后：
-- 换引擎不改 Core
-- 单元测试可以 mock 引擎
-- 编译依赖清晰（只有 quickjs_engine.cpp 需要 include quickjs.h）
+RPKLoader、Router、VNode 等平台无关模块只需 `eval`、销毁和错误信息，因此只依赖 `JSEngine`。直接操作 `JSContext`、注册 `JSCFunction` 与执行 Promise Job 是 QuickJS 专属能力，由 `QuickJSContextProvider` 隔离给 Step 4/5 的适配层使用。这样：
+- 换引擎时，平台无关 Core 不改；
+- 单元测试可 mock `JSEngine`；
+- 需要 QuickJS ABI 的 Bridge 不能伪装成通用字符串回调；
+- 接口头文件不 include `quickjs.h`。
 
 ---
 
@@ -246,8 +236,6 @@ extern "C" {
 
 #include <android/log.h>
 #include <cstring>
-#include <vector>
-#include <unordered_map>
 
 #define LOG_TAG "quickapp-js"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -259,7 +247,7 @@ namespace quickapp {
 // QuickJSEngine 实现
 // ============================================================
 
-class QuickJSEngine : public JSEngine {
+class QuickJSEngine : public JSEngine, public QuickJSContextProvider {
 public:
     ~QuickJSEngine() override { destroy(); }
 
@@ -325,74 +313,25 @@ public:
         return true;
     }
 
-    void registerGlobalFunction(const char* name,
-            std::function<std::string(const std::vector<std::string>&)> fn) override {
-        if (!context_) return;
-
-        // 保存回调到 map 中，C 函数通过 name 查找
-        callbacks_[name] = std::move(fn);
-
-        // 注册 C 函数到 JS 全局对象
-        // JS_NewCFunction 创建一个 JS 函数对象，调用时进入 dispatchCallback
-        JSValue global = JS_GetGlobalObject(context_);
-        JS_SetPropertyStr(context_, global, name,
-            JS_NewCFunction(context_, dispatchCallback, name, 1));
-        JS_FreeValue(context_, global);
-    }
-
     bool hasError() const override { return !lastError_.empty(); }
     std::string getLastError() const override { return lastError_; }
 
-    // 暴露给后续 Step 5 的 JS Bridge 使用（直接操作 QuickJS API）
-    JSContext* getContext() { return context_; }
-    JSRuntime* getRuntime() { return runtime_; }
+    JSContext* getQuickJSContext() override { return context_; }
+    JSRuntime* getQuickJSRuntime() override { return runtime_; }
+
+    void drainMicrotasks() override {
+        if (!runtime_) return;
+
+        JSContext* jobContext = nullptr;
+        while (JS_ExecutePendingJob(runtime_, &jobContext) > 0) {
+            // 每个 Job 都在创建 runtime_ 的同一 Runtime Thread 中执行。
+        }
+    }
 
 private:
     JSRuntime* runtime_ = nullptr;
     JSContext* context_ = nullptr;
     std::string lastError_;
-
-    // Native 函数回调注册表
-    // key: JS 函数名, value: C++ 回调
-    static inline std::unordered_map<std::string,
-        std::function<std::string(const std::vector<std::string>&)>> callbacks_;
-
-    /**
-     * 所有通过 registerGlobalFunction 注册的 JS 函数调用都进入这里。
-     * 通过函数名在 callbacks_ 中查找对应的 C++ 回调。
-     */
-    static JSValue dispatchCallback(JSContext* ctx, JSValueConst this_val,
-                                     int argc, JSValueConst* argv) {
-        // 获取被调用的函数名
-        // QuickJS 的 CFunction 没有直接传函数名，我们用第一个参数 hack
-        // 更好的方式是用 JS_NewCFunctionData 携带 name，但简化版先用全局 map
-
-        // 读取所有参数为字符串
-        std::vector<std::string> args;
-        for (int i = 0; i < argc; i++) {
-            const char* str = JS_ToCString(ctx, argv[i]);
-            if (str) {
-                args.emplace_back(str);
-                JS_FreeCString(ctx, str);
-            } else {
-                args.emplace_back("");
-            }
-        }
-
-        // 通过函数对象的 name 属性找到注册名
-        // 注意：这里简化处理，实际生产应该用 JS_NewCFunctionData + magic
-        JSValue funcObj = JS_GetPropertyStr(ctx,
-            JS_GetGlobalObject(ctx), ""); // placeholder
-
-        // 简化方案：遍历 callbacks 找匹配的（Step 5 会重构为 JSClass + Opaque）
-        // 当前 Step 3 只用于验证，回调数量少，性能不是问题
-        for (auto& [name, cb] : callbacks_) {
-            // 尝试调用每个回调看是否匹配
-            // 实际上我们需要知道是哪个函数被调用了
-        }
-
-        return JS_UNDEFINED;
-    }
 
     /** 从 QuickJS 异常对象中提取错误信息 */
     std::string extractException() {
@@ -436,7 +375,9 @@ QuickJS 是纯 C 库，头文件没有 `extern "C"` 保护。C++ 文件 include 
 
 ## Step 3.4：注册测试 Native 函数并验证
 
-为了绕过 `registerGlobalFunction` 的简化回调问题，Step 3 直接在 `quickjs_engine.cpp` 中用 QuickJS 原生 API 注册两个测试函数。这是最直接的验证方式，后续 Step 5 会用完整的 JSClass 机制。
+Step 3 的测试函数**不是** `JSEngine` 对外 API，也不尝试把任意 JS 值强行转换为字符串回调。它们只在 `QuickJSEngine::initialize()` 中用原生 QuickJS API 注册，用来证明：QuickJS 已正确创建、JS 能调用 C 函数、C 函数能向 JS 返回值。
+
+正式的 `$app_require$`、`__native_render__`、Router/Prompt 对象和参数校验统一留在 Step 5 的 JS Bridge 中实现。
 
 @update `app/src/main/cpp/core/src/quickjs_engine.cpp` — 在 `initialize()` 末尾、return true 之前插入：
 
@@ -617,9 +558,9 @@ QuickJS 使用引用计数内存管理。每个 `JS_Eval`、`JS_GetGlobalObject`
 
 QuickJS 是 C 库。C++ 编译器默认会对函数名做 Name Mangling。`extern "C"` 告诉编译器按 C 的方式处理这些函数名，否则链接时找不到 QuickJS 的符号。
 
-### 4. 为什么 Step 3 的 registerGlobalFunction 是简化版？
+### 4. 为什么测试函数不放进 `JSEngine`？
 
-Step 3 的目标是验证 QuickJS 能工作。完整的 JS Bridge（支持 JSClass、Opaque、多模块、参数类型转换）在 Step 5 实现。Step 3 先用 lambda + 直接 QuickJS API 跑通，证明引擎可用。
+`JSEngine` 若把 JS 参数全部降级为字符串，就无法正确保留对象、函数、异常、`this` 和引用生命周期；若直接暴露 `JSValue`，又会把 QuickJS ABI 泄漏给所有 Core。Step 3 因此只在 QuickJS 实现内注册 `nativeLog` / `nativeAdd` 测试函数。真实宿主 ABI 由 Step 5 的 QuickJS Bridge 负责，且通过 `QuickJSContextProvider` 显式声明其引擎依赖。
 
 ### 5. QuickJS 的内存限制？
 
