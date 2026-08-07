@@ -39,8 +39,8 @@
 
 ```text
 Task 1.1：已完成 NDK 编译与 .so 打包验收
-Task 1.2：当前进行中；Step 2 文档已完成，Android 工程代码待按文档实现
-Task 1.3 及以后：待开始；对应 Step 文档在前一步完成后重新创建
+Task 1.2：Step 02 源码已实现；静态诊断和差异检查通过，但本机缺少完整 Gradle 9.5 分发且下载连接被拒绝，待联网完成 NDK/Kotlin 构建与设备验收
+Task 1.3 及以后：实现待开始；现有 Step 03–13 文档仅为规划参考，不代表对应源码已完成
 ```
 
 下面的“第一阶段验收目标”是 Phase 1 的最终目标，不代表当前已经完成。
@@ -191,7 +191,7 @@ Android 不是临时 Demo，而是第一阶段的真实宿主；`quickapp-runtim
 
 ### Task 1.2：PlatformBridge 与 JNI 最小闭环
 
-**状态：** 当前进行中；Step 2 文档已完成，Android 工程代码待实现。
+**状态：** Step 02 源码已实现，静态诊断和差异检查通过；本机 Gradle Wrapper 缺少完整 9.5 分发，下载被拒绝，因此 NDK/Kotlin 构建及设备显示、Logcat 验收待联网环境完成。
 
 **需求覆盖：** 需求 3
 
@@ -635,7 +635,7 @@ Phase 1：Runtime 基础与两条主链路
 
   Task 1.1 Android NDK 骨架 ✓ Step 01（构建与 .so 打包已验收）
       ↓
-  Task 1.2 PlatformBridge/JNI 最小闭环 → Step 02（文档完成，代码待实现）
+  Task 1.2 PlatformBridge/JNI 最小闭环 → Step 02（源码已实现；待联网构建与设备验收）
       ↓
   Task 1.3 JSEngine Interface + QuickJS → Step 03（文档待创建）
       ↓

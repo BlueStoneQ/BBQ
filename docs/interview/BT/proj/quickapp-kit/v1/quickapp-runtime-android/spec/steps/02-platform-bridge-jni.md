@@ -458,6 +458,7 @@ Java_com_quickappkit_runtime_QuickAppRuntime_nativeTestRender(
     LOGI("nativeTestRender completed");
 }
 
+// NIEXPORT 是一个宏定义，用于指定函数的导出属性。它的作用是让动态链接库（.so 文件）中的函数对 JVM 可见
 // 生命周期hooks: Activity 销毁时执行: 释放 JNI Global Reference。
 JNIEXPORT void JNICALL
 Java_com_quickappkit_runtime_QuickAppRuntime_nativeRelease(
@@ -472,6 +473,12 @@ Java_com_quickappkit_runtime_QuickAppRuntime_nativeRelease(
 ```
 
 ### 2.2.2：理解 JNI 初始化链路
+- 这些步骤其实就是C++为了拿到kotlin方法的函数指针和核心饮用，并保证不被GC，让C++侧可以一直调用
+/**
+1. 获取函数指针或方法引用 - 让 C++ 知道如何调用具体的 Kotlin 方法
+2. 创建 Global Reference - 防止 Java/Kotlin 对象被 GC 回收
+3.建立持久化的调用通道 - 使得 C++ 可以在任何时候调用 Kotlin 方法
+*/
 
 ```text
 1. Kotlin 加载 libquickapp-runtime-core.so

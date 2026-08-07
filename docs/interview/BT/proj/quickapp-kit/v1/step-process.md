@@ -29,15 +29,15 @@ C++ Core  Router · VNode · StyleResolver · Layout · EventLoop · RenderPipel
 
 ```text
 代码仓库
-/Users/qiaoyang/code/my-github/quickapp-kit/
-└── quickapp-runtime-android/     ← 唯一已有代码的项目（可编译运行）
+/Users/qy/code/my-github/quickapp-kit-ai/
+└── quickapp-runtime-android/     ← Android Runtime 当前开发工程（Step 02 源码已实现，待联网构建与设备验收）
 
-文档仓库
-/Users/qiaoyang/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/
+文档仓库=
+/Users/qy/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/
 ├── step-process.md               ← 本文档
 ├── dev-context.md                ← 项目总上下文
 ├── rpk.md                        ← RPK 包结构分析
-├── quickapp-runtime-android/spec/ ← 已完成（密度标准来源）
+├── quickapp-runtime-android/spec/ ← Step 02 实现与验收状态的规范来源
 ├── quickapp-runtime-core/spec/    ← 进行中
 ├── quickapp-runtime-cpp/          ← 空
 ├── quickapp-reuntime-ios/         ← 空（目录名有 typo: reuntime）
@@ -45,7 +45,7 @@ C++ Core  Router · VNode · StyleResolver · Layout · EventLoop · RenderPipel
 └── quickapp-toolkit/              ← 由另一个 agent 负责
 
 规范文件
-/Users/qiaoyang/code/my-github/BBQ/.kiro/steering/step-writing-rules.md
+/Users/qy/code/my-github/BBQ/.kiro/steering/step-writing-rules.md
 ```
 
 ---
@@ -54,7 +54,7 @@ C++ Core  Router · VNode · StyleResolver · Layout · EventLoop · RenderPipel
 
 | 项目 | 状态 | 负责 |
 |---|---|---|
-| quickapp-runtime-android | 代码 + 13 steps 全部完成 | 已完成 |
+| quickapp-runtime-android | Step 02 源码已实现；静态诊断通过，待联网 Gradle 构建和设备验收 | 当前会话 |
 | **quickapp-runtime-core** | **spec 三件套 + steps 01-10 完成，仅 11 待写** | **本 agent** |
 | quickapp-runtime-cpp | 完全空 | 本 agent |
 | quickapp-reuntime-ios | 完全空 | 本 agent |
