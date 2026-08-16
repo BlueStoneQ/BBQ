@@ -236,7 +236,7 @@ steps/
 
 1. `ARCHITECTURE.md`：QuickApp Kit v2 总架构。
 2. `ROADMAP.md`：阶段路线、里程碑、验收口径。
-3. `contracts/runtime-contract.md`：应用模型、生命周期、页面、事件、模块语义。
+3. `contracts/runtime-contract.md`：应用模型、生命周期、页面、事件、模块语义。已完成第一版。
 4. `contracts/render-backend-contract.md`：Core 到 Render Backend 的渲染契约。
 5. `contracts/capability-module-contract.md`：TurboModule-like 能力插件契约。
 6. `benchmarks/BENCHMARK.md`：可观测指标、采集方式、对比维度。

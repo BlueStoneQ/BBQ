@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/block-ir.json",
+  "title": "QuickApp Kit Block IR",
+  "type": "object",
+  "required": ["schemaVersion", "templateBlockId", "kind", "templateRoot"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateBlockId": { "type": "integer", "minimum": 1 },
+    "kind": { "enum": ["if", "for"] },
+    "conditionTemplateBindingId": { "type": "integer", "minimum": 1 },
+    "sourceTemplateBindingId": { "type": "integer", "minimum": 1 },
+    "keyExpression": { "type": "object" },
+    "templateRoot": { "type": "integer", "minimum": 1 }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "if" } } }, "then": { "required": ["conditionTemplateBindingId"] } },
+    { "if": { "properties": { "kind": { "const": "for" } } }, "then": { "required": ["sourceTemplateBindingId", "keyExpression"] } }
+  ],
+  "additionalProperties": false
+}

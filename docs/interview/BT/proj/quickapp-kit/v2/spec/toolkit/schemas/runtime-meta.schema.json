@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/runtime-meta.json",
+  "title": "QuickApp Kit Runtime Metadata",
+  "type": "object",
+  "required": ["schemaVersion", "runtimeAbi", "entry", "templates"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runtimeAbi": { "const": "quickapp-kit-v1" },
+    "entry": {
+      "type": "object",
+      "required": ["app"],
+      "properties": {
+        "app": { "type": "string", "minLength": 1 },
+        "pages": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "templates": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "bindings": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "blocks": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "handlers": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "styles": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "chunks": { "type": "object" }
+  },
+  "additionalProperties": false
+}

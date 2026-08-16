@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/render-transaction.schema.json",
+  "title": "QuickApp Kit V1 RenderTransaction",
+  "type": "object",
+  "required": ["schemaVersion", "surfaceId", "revision", "transactionId", "operations"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "transactionId": { "type": "string", "pattern": "^txn:.+$" },
+    "requestId": { "type": "string", "pattern": "^req:.+$" },
+    "operations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/operation" }
+    }
+  },
+  "$defs": {
+    "logicalNodeRef": {
+      "type": "object",
+      "required": ["ownerInstanceId", "templateNodeId"],
+      "properties": {
+        "ownerInstanceId": { "type": "string", "pattern": "^(cmp|blk):.+$" },
+        "templateNodeId": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "oneOf": [
+        { "$ref": "#/$defs/updateStringBinding" },
+        { "$ref": "#/$defs/updateBooleanBinding" },
+        { "$ref": "#/$defs/instantiateBlock" },
+        { "$ref": "#/$defs/removeBlock" },
+        { "$ref": "#/$defs/moveBlock" }
+      ]
+    },
+    "bindingValues": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "boolean" }
+        ]
+      }
+    },
+    "handlerBinding": {
+      "type": "object",
+      "required": ["ownerInstanceId", "templateHandlerId", "handlerId"],
+      "properties": {
+        "ownerInstanceId": { "type": "string", "pattern": "^blk:.+$" },
+        "templateHandlerId": { "type": "integer", "minimum": 1 },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "instantiateBlock": {
+      "type": "object",
+      "required": ["kind", "templateBlockId", "blockInstanceId", "parent", "index", "initialBindings", "handlers"],
+      "properties": {
+        "kind": { "const": "instantiateBlock" },
+        "templateBlockId": { "type": "integer", "minimum": 1 },
+        "blockInstanceId": { "type": "string", "pattern": "^blk:.+$" },
+        "parent": { "$ref": "#/$defs/logicalNodeRef" },
+        "index": { "type": "integer", "minimum": 0 },
+        "key": { "oneOf": [{ "type": "string" }, { "type": "number" }] },
+        "initialBindings": { "$ref": "#/$defs/bindingValues" },
+        "handlers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/handlerBinding" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "removeBlock": {
+      "type": "object",
+      "required": ["kind", "blockInstanceId"],
+      "properties": {
+        "kind": { "const": "removeBlock" },
+        "blockInstanceId": { "type": "string", "pattern": "^blk:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "moveBlock": {
+      "type": "object",
+      "required": ["kind", "blockInstanceId", "parent", "index"],
+      "properties": {
+        "kind": { "const": "moveBlock" },
+        "blockInstanceId": { "type": "string", "pattern": "^blk:.+$" },
+        "parent": { "$ref": "#/$defs/logicalNodeRef" },
+        "index": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "updateStringBinding": {
+      "type": "object",
+      "required": ["kind", "ownerInstanceId", "templateBindingId", "value"],
+      "properties": {
+        "kind": { "const": "updateBinding" },
+        "ownerInstanceId": { "type": "string", "pattern": "^(cmp|blk):.+$" },
+        "templateBindingId": { "type": "integer", "minimum": 1 },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "updateBooleanBinding": {
+      "type": "object",
+      "required": ["kind", "ownerInstanceId", "templateBindingId", "value"],
+      "properties": {
+        "kind": { "const": "updateBinding" },
+        "ownerInstanceId": { "type": "string", "pattern": "^(cmp|blk):.+$" },
+        "templateBindingId": { "type": "integer", "minimum": 1 },
+        "value": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

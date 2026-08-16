@@ -38,7 +38,10 @@ Observable Benchmark
 ```text
 v2/
 ├── REQUIREMENTS.md  Overall requirements and execution model
+├── ENVIRONMENT.md  Development environment requirements
+├── TODO.md  Design TODO list
 ├── DOC-WRITING-RULES.md  Document writing rules
+├── spec/        Overall spec and sub-spec planning
 ├── contracts/    Runtime contracts and extension protocols
 ├── decisions/    Architecture decision records
 ├── research/     RN, Lynx, Flutter, QuickApp architecture research
@@ -50,4 +53,8 @@ v2/
 
 - [REQUIREMENTS.md](./REQUIREMENTS.md)
 - [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [spec/README.md](./spec/README.md)
+- [TODO.md](./TODO.md)
+- [ENVIRONMENT.md](./ENVIRONMENT.md)
 - [DOC-WRITING-RULES.md](./DOC-WRITING-RULES.md)
+- [contracts/runtime-contract.md](./contracts/runtime-contract.md)

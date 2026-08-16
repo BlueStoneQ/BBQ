@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/manifest.schema.json",
+  "title": "QuickApp Kit V1 Runtime Manifest",
+  "type": "object",
+  "required": ["package", "versionName", "versionCode", "minPlatformVersion", "router"],
+  "properties": {
+    "package": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z0-9_]+)+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "versionName": { "type": "string", "minLength": 1 },
+    "versionCode": { "type": "integer", "minimum": 1 },
+    "minPlatformVersion": { "type": "integer", "minimum": 1 },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string", "minLength": 1 } },
+        "additionalProperties": true
+      }
+    },
+    "router": {
+      "type": "object",
+      "required": ["entry", "pages"],
+      "properties": {
+        "entry": { "$ref": "#/$defs/manifestRoute" },
+        "pages": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[^/].+$" },
+          "additionalProperties": { "$ref": "#/$defs/page" }
+        },
+        "widgets": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "manifestRoute": { "type": "string", "pattern": "^[^/].+$" },
+    "page": {
+      "type": "object",
+      "required": ["component"],
+      "properties": { "component": { "type": "string", "minLength": 1 } },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

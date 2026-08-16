@@ -1,5 +1,9 @@
 # QuickApp Kit v2 运行时架构研究报告
 
+···
+应该死磕三大系统（bridge + 渲染管线 + 事件系统） + 每层边界之间的双向通信（数据类容+通信方式+传递是走copy还是内存共享）
+···
+
 > 状态：架构研究稿  
 > 目标：为 `requirements -> architecture -> design -> tech-design -> contracts/spec` 提供可追溯的技术依据  
 > 范围：联盟快应用兼容、运行时树模型、渲染事务、线程与事件循环、页面模型、JS 引擎和 Bridge Value Model

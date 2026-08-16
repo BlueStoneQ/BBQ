@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/observation.schema.json",
+  "title": "QuickApp Kit V1 Observation Marker",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "runId", "producer", "markerName", "timestampNs", "clockDomain", "sequence"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "observationMarker" },
+    "runId": { "type": "string", "pattern": "^run:.+$" },
+    "producer": { "enum": ["toolkit", "js", "core", "platform", "benchmark"] },
+    "markerName": {
+      "enum": [
+        "build.started", "build.completed", "build.failed",
+        "package.open.started", "package.verified", "package.failed",
+        "module.load.started", "module.load.completed", "module.load.failed",
+        "bridge.request.enqueued", "bridge.request.completed", "bridge.request.failed",
+        "lifecycle.hook.started", "lifecycle.hook.completed", "lifecycle.hook.failed",
+        "surface.create.accepted", "surface.create.presented", "surface.create.failed",
+        "surface.destroy.started", "surface.destroy.completed",
+        "event.input.captured", "event.handler.started", "event.handler.completed", "event.handler.failed",
+        "state.mutated", "render.flush.started",
+        "render.transaction.submitted", "render.transaction.presented", "render.transaction.failed",
+        "mount.transaction.submitted", "mount.transaction.completed", "mount.transaction.failed",
+        "platform.present.requested", "platform.present.completed", "platform.present.failed",
+        "navigation.push.accepted", "navigation.push.presented", "navigation.push.failed",
+        "capability.requested", "capability.completed", "capability.failed",
+        "memory.sampled", "object.sampled", "runtime.counter.sampled",
+        "runtime.oom", "queue.overflow",
+        "mount.full-rebuild.started", "mount.full-rebuild.completed", "mount.full-rebuild.failed"
+      ]
+    },
+    "timestampNs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "clockDomain": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "artifactSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "appRuntimeId": { "type": "string", "pattern": "^app:.+$" },
+    "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+    "requestId": { "type": "string", "pattern": "^req:.+$" },
+    "transactionId": { "type": "string", "pattern": "^txn:.+$" },
+    "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" },
+    "nodeId": { "type": "string", "pattern": "^node:.+$" },
+    "handlerId": { "type": "string", "pattern": "^hdl:.+$" },
+    "revision": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "operationCount": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "logicalPayloadBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "actualTransportBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "memoryBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "objectCount": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "counterName": { "enum": ["runtime.node.live", "handler.live", "queue.depth", "surface.live"] },
+    "counterValue": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "metricKind": { "enum": ["rss", "heap", "runtime", "host", "lvgl", "queue"] },
+    "samplingPhase": { "enum": ["baseline", "startup", "steady", "destroyed"] },
+    "errorCode": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": {
+          "markerName": {
+            "enum": [
+              "build.failed", "package.failed", "module.load.failed", "lifecycle.hook.failed",
+              "bridge.request.failed",
+              "surface.create.failed", "event.handler.failed", "render.transaction.failed",
+              "mount.transaction.failed", "platform.present.failed", "navigation.push.failed",
+              "capability.failed", "runtime.oom", "queue.overflow", "mount.full-rebuild.failed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "errorCode": { "type": "string", "minLength": 1 } },
+        "required": ["errorCode"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": {
+          "markerName": { "enum": ["bridge.request.enqueued", "bridge.request.completed", "bridge.request.failed"] }
+        }
+      },
+      "then": {
+        "properties": { "requestId": { "type": "string", "pattern": "^req:.+$" } },
+        "required": ["requestId"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": {
+          "markerName": { "enum": ["event.input.captured", "event.handler.started", "event.handler.completed", "event.handler.failed"] }
+        }
+      },
+      "then": {
+        "properties": { "requestId": { "type": "string", "pattern": "^req:.+$" } },
+        "required": ["requestId"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": { "markerName": { "const": "runtime.counter.sampled" } }
+      },
+      "then": {
+        "properties": {
+          "counterName": { "enum": ["runtime.node.live", "handler.live", "queue.depth", "surface.live"] },
+          "counterValue": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["counterName", "counterValue"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": { "markerName": { "const": "queue.overflow" } }
+      },
+      "then": {
+        "properties": {
+          "counterName": { "const": "queue.depth" },
+          "counterValue": { "type": "integer", "minimum": 0 },
+          "errorCode": { "type": "string", "minLength": 1 }
+        },
+        "required": ["counterName", "counterValue", "errorCode"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": {
+          "markerName": { "enum": ["mount.full-rebuild.started", "mount.full-rebuild.completed", "mount.full-rebuild.failed"] }
+        }
+      },
+      "then": {
+        "properties": {
+          "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+          "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" }
+        },
+        "required": ["surfaceId", "mountAttemptId"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "memoryBytes": { "type": "integer", "minimum": 0 } },
+        "required": ["memoryBytes"]
+      },
+      "then": {
+        "properties": {
+          "metricKind": { "enum": ["rss", "heap", "runtime", "host", "lvgl", "queue"] },
+          "samplingPhase": { "enum": ["baseline", "startup", "steady", "destroyed"] }
+        },
+        "required": ["metricKind", "samplingPhase"]
+      }
+    },
+    {
+      "if": {
+        "required": ["markerName"],
+        "properties": { "markerName": { "const": "memory.sampled" } }
+      },
+      "then": {
+        "properties": {
+          "memoryBytes": { "type": "integer", "minimum": 0 },
+          "metricKind": { "enum": ["rss", "heap", "runtime", "host", "lvgl", "queue"] },
+          "samplingPhase": { "enum": ["baseline", "startup", "steady", "destroyed"] }
+        },
+        "required": ["memoryBytes", "metricKind", "samplingPhase"]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

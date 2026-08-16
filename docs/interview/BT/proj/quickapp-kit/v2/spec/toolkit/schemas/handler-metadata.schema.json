@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/handler-metadata.json",
+  "title": "QuickApp Kit Handler Metadata",
+  "type": "object",
+  "required": ["schemaVersion", "templateHandlerId", "moduleId", "exportName", "eventType", "templateNodeId"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateHandlerId": { "type": "integer", "minimum": 1 },
+    "moduleId": { "type": "string", "minLength": 1 },
+    "exportName": { "type": "string", "minLength": 1 },
+    "eventType": { "type": "string", "minLength": 1 },
+    "templateNodeId": { "type": "integer", "minimum": 1 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+- 提供service + surfaceView：服务于后续ai chat card：对话中生成
+- AI Feature：平台无关 typed API，Provider 可插拔。
+- Chat 组件：基于标准组件组合实现，后续再判断是否需要原生 Host Component。
+- AI Chat Card：将 QuickApp Surface 作为 AI Chat 中可嵌入、可交互、可管理生命周期的卡片形态。
+- AI Skills：面向 Agent 暴露 QuickApp Kit 的 build、inspect、run、observe 能力。
+- MCP Interface：以 typed Tool 暴露 QuickApp Kit 构建、检查、运行和观测能力。
+- Toolkit Skill/MCP：作为 Toolkit Application Service 的薄适配，只暴露 build、inspect、run。
+- VS Code 插件与 Agent 应用生态：扩展 create、validate、debug、bench、能力发现和应用生成。
+- Release 安全：RPK 签名、PackageOpenPolicy、信任链和分发治理。
+- 完整 Benchmark：统一数据集、统计模型和外部框架公平对比。
+- 完整 Capability/插件体系：权限策略、IDL/Codegen、动态 Provider、版本协商和运行时卸载。
+- 高级恢复：多级 Surface 恢复、进程级容灾和完整故障组合矩阵。
+- 扩展渲染能力：动画、复杂文本、完整字体排版、Widget/Card 和更多 Host Component。

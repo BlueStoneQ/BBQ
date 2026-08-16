@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/module-load.schema.json",
+  "title": "QuickApp Kit V1 Verified Module Load",
+  "oneOf": [
+    { "$ref": "#/$defs/loadRequest" },
+    { "$ref": "#/$defs/loadSuccess" },
+    { "$ref": "#/$defs/loadFailure" }
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^req:.+$"
+    },
+    "surfaceId": {
+      "type": "string",
+      "pattern": "^srf:.+$"
+    },
+    "moduleId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "bundle": {
+      "type": "object",
+      "required": ["path", "byteLength", "sha256", "bytesBase64"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytesBase64": {
+          "type": "string",
+          "minLength": 4,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "templateIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true
+    },
+    "loadRequest": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "packageId",
+        "moduleKind",
+        "moduleId",
+        "cacheScope",
+        "bundle",
+        "dependencies"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "loadVerifiedModule" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "moduleKind": {
+          "enum": ["app", "shared", "page"]
+        },
+        "moduleId": { "$ref": "#/$defs/moduleId" },
+        "cacheScope": {
+          "enum": ["appRuntime", "surface"]
+        },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "bundle": { "$ref": "#/$defs/bundle" },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/moduleId" },
+          "uniqueItems": true
+        },
+        "expectedBootstrap": {
+          "$ref": "js-bootstrap.schema.json"
+        },
+        "expectedBindingIds": { "$ref": "#/$defs/templateIds" },
+        "expectedHandlerIds": { "$ref": "#/$defs/templateIds" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": { "moduleKind": { "const": "page" } },
+            "required": ["moduleKind"]
+          },
+          "then": {
+            "type": "object",
+            "required": ["surfaceId", "expectedBootstrap", "expectedBindingIds", "expectedHandlerIds"],
+            "properties": {
+              "surfaceId": {},
+              "expectedBootstrap": {},
+              "expectedBindingIds": {},
+              "expectedHandlerIds": {},
+              "cacheScope": { "const": "surface" }
+            }
+          },
+          "else": {
+            "type": "object",
+            "properties": { "cacheScope": { "const": "appRuntime" } },
+            "not": {
+              "anyOf": [
+                { "type": "object", "properties": { "surfaceId": {} }, "required": ["surfaceId"] },
+                { "type": "object", "properties": { "expectedBindingIds": {} }, "required": ["expectedBindingIds"] },
+                { "type": "object", "properties": { "expectedHandlerIds": {} }, "required": ["expectedHandlerIds"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": { "moduleKind": { "const": "app" } },
+            "required": ["moduleKind"]
+          },
+          "then": {
+            "type": "object",
+            "properties": { "expectedBootstrap": {} },
+            "required": ["expectedBootstrap"]
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": { "moduleKind": { "const": "shared" } },
+            "required": ["moduleKind"]
+          },
+          "then": {
+            "not": {
+              "type": "object",
+              "properties": { "expectedBootstrap": {} },
+              "required": ["expectedBootstrap"]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "loadSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "moduleKind", "moduleId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "loadVerifiedModuleResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "moduleKind": { "enum": ["app", "shared", "page"] },
+        "moduleId": { "$ref": "#/$defs/moduleId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "loaded" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": { "moduleKind": { "const": "page" } },
+            "required": ["moduleKind"]
+          },
+          "then": { "type": "object", "properties": { "surfaceId": {} }, "required": ["surfaceId"] },
+          "else": {
+            "not": {
+              "type": "object",
+              "properties": { "surfaceId": {} },
+              "required": ["surfaceId"]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "loadFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "moduleKind", "moduleId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "loadVerifiedModuleResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "moduleKind": { "enum": ["app", "shared", "page"] },
+        "moduleId": { "$ref": "#/$defs/moduleId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "properties": { "moduleKind": { "const": "page" } },
+            "required": ["moduleKind"]
+          },
+          "then": { "type": "object", "properties": { "surfaceId": {} }, "required": ["surfaceId"] },
+          "else": {
+            "not": {
+              "type": "object",
+              "properties": { "surfaceId": {} },
+              "required": ["surfaceId"]
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "quickapp-kit-v3-contract-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node validate-schemas.mjs"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1"
+  }
+}

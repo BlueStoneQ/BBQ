@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/host-component.schema.json",
+  "title": "QuickApp Kit V1 Canonical Host Node",
+  "oneOf": [
+    { "$ref": "#/$defs/view" },
+    { "$ref": "#/$defs/text" },
+    { "$ref": "#/$defs/button" }
+  ],
+  "$defs": {
+    "sizeLength": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "unit": { "enum": ["logical-px", "percent"] }
+      },
+      "additionalProperties": false
+    },
+    "offsetLength": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "enum": ["logical-px", "percent"] }
+      },
+      "additionalProperties": false
+    },
+    "style": {
+      "type": "object",
+      "properties": {
+        "width": { "$ref": "#/$defs/sizeLength" },
+        "height": { "$ref": "#/$defs/sizeLength" },
+        "marginTop": { "$ref": "#/$defs/offsetLength" },
+        "marginRight": { "$ref": "#/$defs/offsetLength" },
+        "marginBottom": { "$ref": "#/$defs/offsetLength" },
+        "marginLeft": { "$ref": "#/$defs/offsetLength" },
+        "flexDirection": { "enum": ["row", "column"] },
+        "justifyContent": { "enum": ["flex-start", "center", "flex-end", "space-between"] },
+        "alignItems": { "enum": ["flex-start", "center", "flex-end", "stretch"] },
+        "backgroundColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" },
+        "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" },
+        "borderRadius": { "type": "number", "minimum": 0 },
+        "fontSize": { "type": "number", "minimum": 0 },
+        "textAlign": { "enum": ["left", "center", "right"] }
+      },
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "View" },
+        "props": { "type": "object", "maxProperties": 0 },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Text" },
+        "props": {
+          "type": "object",
+          "required": ["text"],
+          "properties": { "text": { "type": "string" } },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "button": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Button" },
+        "props": {
+          "type": "object",
+          "required": ["text", "enabled"],
+          "properties": {
+            "text": { "type": "string" },
+            "enabled": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

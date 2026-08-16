@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/js-bootstrap.schema.json",
+  "title": "QuickApp Kit V1 JS Bootstrap Metadata",
+  "oneOf": [
+    { "$ref": "#/$defs/app" },
+    { "$ref": "#/$defs/page" }
+  ],
+  "$defs": {
+    "app": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "moduleId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "app" },
+        "moduleId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "page": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "moduleId", "templateId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "page" },
+        "moduleId": { "type": "string", "minLength": 1 },
+        "templateId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/runtime-composition.schema.json",
+  "title": "QuickApp Kit V1 Runtime Composition Manifest",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "profileId", "target", "runtimeAbi", "conformance", "buildMode", "observationLevel", "jsEngine", "linkedModules", "components", "capabilities", "binaryBytes"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "runtimeCompositionManifest" },
+    "profileId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+    "target": { "enum": ["lvgl-simulator", "lvgl-embedded", "android", "ios"] },
+    "runtimeAbi": { "const": "quickapp-kit-runtime-v1" },
+    "conformance": { "enum": ["v1", "custom"] },
+    "buildMode": { "enum": ["debug", "release"] },
+    "observationLevel": { "enum": ["off", "baseline", "diagnostic"] },
+    "jsEngine": {
+      "type": "object",
+      "required": ["engineId", "engineVersion", "engineAbi", "moduleId"],
+      "properties": {
+        "engineId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+        "engineVersion": { "type": "string", "minLength": 1 },
+        "engineAbi": { "const": "quickapp-kit-js-engine-v1" },
+        "moduleId": { "type": "string", "pattern": "^engine\\.[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" }
+      },
+      "additionalProperties": false
+    },
+    "linkedModules": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/module" },
+      "allOf": [
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.bridge" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.render" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.event" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.lifecycle" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.runtime-tree" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        { "contains": { "type": "object", "properties": { "moduleId": { "const": "kernel.transaction" }, "category": { "const": "kernel" } }, "required": ["moduleId", "category"] } },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "moduleId": { "const": "runtime.js-framework" },
+              "category": { "const": "runtime" }
+            },
+            "required": ["moduleId", "category"]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "components": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)+$" }
+    },
+    "binaryBytes": { "type": "integer", "minimum": 1 },
+    "staticMemoryBytes": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "module": {
+      "type": "object",
+      "required": ["moduleId", "category"],
+      "properties": {
+        "moduleId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z][a-z0-9]*)+$" },
+        "category": { "enum": ["kernel", "runtime", "engine", "platform", "backend", "component", "capability", "diagnostic"] },
+        "version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "conformance": { "const": "v1" } },
+        "required": ["conformance"]
+      },
+      "then": {
+        "properties": {
+          "observationLevel": { "enum": ["baseline", "diagnostic"] },
+          "components": {
+            "allOf": [
+              { "type": "array", "contains": { "const": "View" } },
+              { "type": "array", "contains": { "const": "Text" } },
+              { "type": "array", "contains": { "const": "Button" } }
+            ]
+          },
+          "capabilities": {
+            "allOf": [
+              { "type": "array", "contains": { "const": "system.router" } },
+              { "type": "array", "contains": { "const": "system.prompt" } },
+              { "type": "array", "contains": { "const": "system.device" } }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

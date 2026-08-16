@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/lifecycle.schema.json",
+  "title": "QuickApp Kit V1 Lifecycle Messages",
+  "oneOf": [
+    { "$ref": "#/$defs/appContext" },
+    { "$ref": "#/$defs/vmInitializationDispatch" },
+    { "$ref": "#/$defs/vmInitializationSuccess" },
+    { "$ref": "#/$defs/vmInitializationFailure" },
+    { "$ref": "#/$defs/lifecycleDispatch" },
+    { "$ref": "#/$defs/lifecycleSuccess" },
+    { "$ref": "#/$defs/lifecycleFailure" },
+    { "$ref": "#/$defs/hostControlRequest" },
+    { "$ref": "#/$defs/hostControlSuccess" },
+    { "$ref": "#/$defs/hostControlFailure" }
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^req:.+$"
+    },
+    "surfaceId": {
+      "type": "string",
+      "pattern": "^srf:.+$"
+    },
+    "scopeRule": {
+      "if": {
+        "type": "object",
+        "properties": { "scope": { "const": "page" } },
+        "required": ["scope"]
+      },
+      "then": {
+        "type": "object",
+        "properties": { "surfaceId": {} },
+        "required": ["surfaceId"]
+      },
+      "else": {
+        "not": {
+          "type": "object",
+          "properties": { "surfaceId": {} },
+          "required": ["surfaceId"]
+        }
+      }
+    },
+    "appContext": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "packageId",
+        "versionName",
+        "versionCode",
+        "runtimeVersion",
+        "declaredCapabilities"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "appContext" },
+        "packageId": { "type": "string", "minLength": 1 },
+        "versionName": { "type": "string", "minLength": 1 },
+        "versionCode": { "type": "integer", "minimum": 1 },
+        "runtimeVersion": { "type": "string", "minLength": 1 },
+        "declaredCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(system|service|agent\\.tool)\\.[A-Za-z0-9_.-]+$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "vmInitializationDispatch": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "vmInitializationDispatch" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" }
+      },
+      "allOf": [{ "$ref": "#/$defs/scopeRule" }],
+      "additionalProperties": false
+    },
+    "vmInitializationSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "vmInitializationResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "completed" }
+      },
+      "allOf": [{ "$ref": "#/$defs/scopeRule" }],
+      "additionalProperties": false
+    },
+    "vmInitializationFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope", "status", "failedPhase", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "vmInitializationResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "failedPhase": { "enum": ["onCreate", "onInit", "initialEvaluation", "onReady"] },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "allOf": [
+        { "$ref": "#/$defs/scopeRule" },
+        {
+          "if": { "properties": { "scope": { "const": "app" } }, "required": ["scope"] },
+          "then": { "properties": { "failedPhase": { "const": "onCreate" } } },
+          "else": { "properties": { "failedPhase": { "enum": ["onInit", "initialEvaluation", "onReady"] } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "lifecycleDispatch": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope", "hook", "sequence"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "lifecycleDispatch" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "hook": { "enum": ["onShow", "onHide", "onDestroy"] },
+        "sequence": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [{ "$ref": "#/$defs/scopeRule" }],
+      "additionalProperties": false
+    },
+    "lifecycleSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope", "hook", "sequence", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "lifecycleResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "hook": { "enum": ["onShow", "onHide", "onDestroy"] },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "status": { "const": "completed" }
+      },
+      "allOf": [{ "$ref": "#/$defs/scopeRule" }],
+      "additionalProperties": false
+    },
+    "lifecycleFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "scope", "hook", "sequence", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "lifecycleResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "scope": { "enum": ["app", "page"] },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "hook": { "enum": ["onShow", "onHide", "onDestroy"] },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "allOf": [{ "$ref": "#/$defs/scopeRule" }],
+      "additionalProperties": false
+    },
+    "hostControlRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "action"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "runtimeLifecycleControl" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "action": { "enum": ["enterForeground", "enterBackground", "destroyAppRuntime"] }
+      },
+      "additionalProperties": false
+    },
+    "hostControlSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "action", "status", "runtimeState"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "runtimeLifecycleControlResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "action": { "enum": ["enterForeground", "enterBackground", "destroyAppRuntime"] },
+        "status": { "const": "completed" },
+        "runtimeState": { "enum": ["foreground", "background", "destroyed"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "enterForeground" } }, "required": ["action"] },
+          "then": { "properties": { "runtimeState": { "const": "foreground" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "enterBackground" } }, "required": ["action"] },
+          "then": { "properties": { "runtimeState": { "const": "background" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "destroyAppRuntime" } }, "required": ["action"] },
+          "then": { "properties": { "runtimeState": { "const": "destroyed" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "hostControlFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "action", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "runtimeLifecycleControlResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "action": { "enum": ["enterForeground", "enterBackground", "destroyAppRuntime"] },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

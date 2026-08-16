@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/mount-transaction.schema.json",
+  "title": "QuickApp Kit V1 MountTransaction",
+  "type": "object",
+  "required": ["schemaVersion", "surfaceId", "revision", "mountAttemptId", "sourceId", "mode", "operations"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" },
+    "sourceId": { "type": "string", "pattern": "^(req|txn):.+$" },
+    "mode": { "enum": ["incremental", "full"] },
+    "operations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/operation" }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["mode"],
+        "properties": { "mode": { "const": "full" } }
+      },
+      "then": {
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/fullOperation" }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nodeId": { "type": "string", "pattern": "^node:.+$" },
+    "layout": {
+      "type": "object",
+      "required": ["x", "y", "width", "height", "unit"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "unit": { "const": "logical-px" }
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "oneOf": [
+        { "$ref": "#/$defs/createHost" },
+        { "$ref": "#/$defs/stringProp" },
+        { "$ref": "#/$defs/booleanProp" },
+        { "$ref": "#/$defs/colorProp" },
+        { "$ref": "#/$defs/nonNegativeNumberProp" },
+        { "$ref": "#/$defs/textAlignProp" },
+        { "$ref": "#/$defs/setHostLayout" },
+        { "$ref": "#/$defs/insertHostChild" },
+        { "$ref": "#/$defs/moveHost" },
+        { "$ref": "#/$defs/removeHost" }
+      ]
+    },
+    "fullOperation": {
+      "oneOf": [
+        { "$ref": "#/$defs/createHost" },
+        { "$ref": "#/$defs/stringProp" },
+        { "$ref": "#/$defs/booleanProp" },
+        { "$ref": "#/$defs/colorProp" },
+        { "$ref": "#/$defs/nonNegativeNumberProp" },
+        { "$ref": "#/$defs/textAlignProp" },
+        { "$ref": "#/$defs/setHostLayout" },
+        { "$ref": "#/$defs/insertHostChild" }
+      ]
+    },
+    "createHost": {
+      "type": "object",
+      "required": ["kind", "nodeId", "type"],
+      "properties": {
+        "kind": { "const": "createHost" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "type": { "enum": ["View", "Text", "Button"] }
+      },
+      "additionalProperties": false
+    },
+    "setHostLayout": {
+      "type": "object",
+      "required": ["kind", "nodeId", "layout"],
+      "properties": {
+        "kind": { "const": "setHostLayout" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "layout": { "$ref": "#/$defs/layout" }
+      },
+      "additionalProperties": false
+    },
+    "insertHostChild": {
+      "type": "object",
+      "required": ["kind", "nodeId", "parentNodeId", "index"],
+      "properties": {
+        "kind": { "const": "insertHostChild" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "parentNodeId": { "$ref": "#/$defs/nodeId" },
+        "index": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "moveHost": {
+      "type": "object",
+      "required": ["kind", "nodeId", "newParentNodeId", "index"],
+      "properties": {
+        "kind": { "const": "moveHost" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "newParentNodeId": { "$ref": "#/$defs/nodeId" },
+        "index": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "removeHost": {
+      "type": "object",
+      "required": ["kind", "nodeId"],
+      "properties": {
+        "kind": { "const": "removeHost" },
+        "nodeId": { "$ref": "#/$defs/nodeId" }
+      },
+      "additionalProperties": false
+    },
+    "stringProp": {
+      "type": "object",
+      "required": ["kind", "nodeId", "name", "value"],
+      "properties": {
+        "kind": { "const": "setHostProp" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "name": { "const": "text" },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "booleanProp": {
+      "type": "object",
+      "required": ["kind", "nodeId", "name", "value"],
+      "properties": {
+        "kind": { "const": "setHostProp" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "name": { "const": "enabled" },
+        "value": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "colorProp": {
+      "type": "object",
+      "required": ["kind", "nodeId", "name", "value"],
+      "properties": {
+        "kind": { "const": "setHostProp" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "name": { "enum": ["backgroundColor", "color"] },
+        "value": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$" }
+      },
+      "additionalProperties": false
+    },
+    "nonNegativeNumberProp": {
+      "type": "object",
+      "required": ["kind", "nodeId", "name", "value"],
+      "properties": {
+        "kind": { "const": "setHostProp" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "name": { "enum": ["borderRadius", "fontSize"] },
+        "value": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "textAlignProp": {
+      "type": "object",
+      "required": ["kind", "nodeId", "name", "value"],
+      "properties": {
+        "kind": { "const": "setHostProp" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "name": { "const": "textAlign" },
+        "value": { "enum": ["left", "center", "right"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

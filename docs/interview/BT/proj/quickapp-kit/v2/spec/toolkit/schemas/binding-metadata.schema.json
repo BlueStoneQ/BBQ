@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/binding-metadata.json",
+  "title": "QuickApp Kit Binding Metadata",
+  "type": "object",
+  "required": ["schemaVersion", "templateBindingId", "dependencies", "target", "evaluator"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateBindingId": { "type": "integer", "minimum": 1 },
+    "dependencies": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "target": {
+      "type": "object",
+      "required": ["templateNodeId", "kind"],
+      "properties": {
+        "templateNodeId": { "type": "integer", "minimum": 1 },
+        "kind": { "enum": ["prop", "attr", "style", "text", "block-condition", "block-source"] },
+        "name": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "evaluator": {
+      "type": "object",
+      "required": ["moduleId", "exportName", "arity"],
+      "properties": {
+        "moduleId": { "type": "string", "minLength": 1 },
+        "exportName": { "type": "string", "minLength": 1 },
+        "arity": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

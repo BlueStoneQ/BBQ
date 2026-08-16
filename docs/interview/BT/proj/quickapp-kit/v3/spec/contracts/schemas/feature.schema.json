@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/feature.schema.json",
+  "title": "QuickApp Kit V1 Typed Host Features",
+  "oneOf": [
+    { "$ref": "#/$defs/showToastRequest" },
+    { "$ref": "#/$defs/showToastSuccess" },
+    { "$ref": "#/$defs/showToastFailure" },
+    { "$ref": "#/$defs/deviceGetInfoRequest" },
+    { "$ref": "#/$defs/deviceGetInfoSuccess" },
+    { "$ref": "#/$defs/deviceGetInfoFailure" },
+    { "$ref": "#/$defs/setTitleBarRequest" },
+    { "$ref": "#/$defs/setTitleBarSuccess" },
+    { "$ref": "#/$defs/setTitleBarFailure" },
+    { "$ref": "#/$defs/setMetaRequest" },
+    { "$ref": "#/$defs/setMetaSuccess" },
+    { "$ref": "#/$defs/setMetaFailure" }
+  ],
+  "$defs": {
+    "showToastRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "message", "durationMs"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "showToast" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "message": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "showToastSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "showToastResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "completed" }
+      },
+      "additionalProperties": false
+    },
+    "showToastFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "showToastResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "deviceInfo": {
+      "type": "object",
+      "required": [
+        "osType",
+        "platformVersionName",
+        "platformVersionCode",
+        "screenDensity",
+        "screenWidth",
+        "screenHeight",
+        "windowWidth",
+        "windowHeight",
+        "deviceType"
+      ],
+      "properties": {
+        "osType": { "type": "string", "minLength": 1 },
+        "platformVersionName": { "type": "string", "minLength": 1 },
+        "platformVersionCode": { "type": "integer", "minimum": 1 },
+        "screenDensity": { "type": "number", "exclusiveMinimum": 0 },
+        "screenWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "screenHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "windowWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "windowHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "deviceType": { "type": "string", "minLength": 1 },
+        "brand": { "type": "string" },
+        "manufacturer": { "type": "string" },
+        "model": { "type": "string" },
+        "product": { "type": "string" },
+        "osVersionName": { "type": "string" },
+        "osVersionCode": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "deviceGetInfoRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "deviceGetInfo" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "deviceGetInfoSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "info"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "deviceGetInfoResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "completed" },
+        "info": { "$ref": "#/$defs/deviceInfo" }
+      },
+      "additionalProperties": false
+    },
+    "deviceGetInfoFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "deviceGetInfoResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "setTitleBarRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "text"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setTitleBar" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "text": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "setTitleBarSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setTitleBarResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "completed" }
+      },
+      "additionalProperties": false
+    },
+    "setTitleBarFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setTitleBarResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "setMetaRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setMeta" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "anyOf": [
+        {
+          "required": ["title"],
+          "properties": { "title": true }
+        },
+        {
+          "required": ["description"],
+          "properties": { "description": true }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "setMetaSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setMetaResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "completed" }
+      },
+      "additionalProperties": false
+    },
+    "setMetaFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setMetaResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

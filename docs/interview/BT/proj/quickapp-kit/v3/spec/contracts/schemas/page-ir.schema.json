@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/page-ir.schema.json",
+  "title": "QuickApp Kit V1 Page IR",
+  "type": "object",
+  "required": ["schemaVersion", "templateId", "rootTemplateNodeId", "nodes", "bindings", "blocks", "handlers"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateId": { "type": "string", "minLength": 1 },
+    "rootTemplateNodeId": { "$ref": "#/$defs/templateId" },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "bindings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/binding" }
+    },
+    "blocks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/block" }
+    },
+    "handlers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/handler" }
+    }
+  },
+  "$defs": {
+    "templateId": { "type": "integer", "minimum": 1 },
+    "scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": { "kind": { "const": "page" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "templateBlockId"],
+          "properties": {
+            "kind": { "const": "block" },
+            "templateBlockId": { "$ref": "#/$defs/templateId" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "child": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "templateNodeId"],
+          "properties": {
+            "kind": { "const": "node" },
+            "templateNodeId": { "$ref": "#/$defs/templateId" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "templateBlockId"],
+          "properties": {
+            "kind": { "const": "block" },
+            "templateBlockId": { "$ref": "#/$defs/templateId" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "required": ["templateNodeId", "host", "children"],
+      "properties": {
+        "templateNodeId": { "$ref": "#/$defs/templateId" },
+        "host": { "$ref": "host-component.schema.json" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/child" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "required": ["templateBindingId", "scope", "target"],
+      "properties": {
+        "templateBindingId": { "$ref": "#/$defs/templateId" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "target": {
+          "type": "object",
+          "required": ["templateNodeId", "name"],
+          "properties": {
+            "templateNodeId": { "$ref": "#/$defs/templateId" },
+            "name": { "enum": ["text", "enabled"] }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "required": ["templateBlockId", "kind", "parentTemplateNodeId", "templateRootNodeId"],
+      "properties": {
+        "templateBlockId": { "$ref": "#/$defs/templateId" },
+        "kind": { "enum": ["if", "for"] },
+        "parentTemplateNodeId": { "$ref": "#/$defs/templateId" },
+        "templateRootNodeId": { "$ref": "#/$defs/templateId" }
+      },
+      "additionalProperties": false
+    },
+    "handler": {
+      "type": "object",
+      "required": ["templateHandlerId", "scope", "templateNodeId", "eventType"],
+      "properties": {
+        "templateHandlerId": { "$ref": "#/$defs/templateId" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "templateNodeId": { "$ref": "#/$defs/templateId" },
+        "eventType": { "const": "click" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

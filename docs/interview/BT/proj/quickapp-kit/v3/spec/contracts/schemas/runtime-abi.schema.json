@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/runtime-abi.schema.json",
+  "title": "QuickApp Kit V1 Runtime ABI Messages",
+  "oneOf": [
+    { "$ref": "#/$defs/instantiateTemplate" },
+    { "$ref": "#/$defs/registerHandler" },
+    { "$ref": "#/$defs/unregisterHandler" }
+  ],
+  "$defs": {
+    "instantiateTemplate": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "templateId", "ownerInstanceId", "initialBindings", "initialBlocks", "initialHandlers"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "instantiateTemplate" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "templateId": { "type": "string", "minLength": 1 },
+        "ownerInstanceId": { "type": "string", "pattern": "^cmp:.+$" },
+        "initialBindings": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "boolean" }
+            ]
+          }
+        },
+        "initialBlocks": {
+          "type": "array",
+          "items": { "$ref": "render-transaction.schema.json#/$defs/instantiateBlock" }
+        },
+        "initialHandlers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pageHandlerBinding" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pageHandlerBinding": {
+      "type": "object",
+      "required": ["ownerInstanceId", "templateHandlerId", "handlerId"],
+      "properties": {
+        "ownerInstanceId": { "type": "string", "pattern": "^cmp:.+$" },
+        "templateHandlerId": { "type": "integer", "minimum": 1 },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "registerHandler": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "ownerInstanceId", "templateHandlerId", "handlerId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "registerHandler" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "ownerInstanceId": { "type": "string", "pattern": "^(cmp|blk):.+$" },
+        "templateHandlerId": { "type": "integer", "minimum": 1 },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "unregisterHandler": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "handlerId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "unregisterHandler" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/style-ir.json",
+  "title": "QuickApp Kit Style IR",
+  "type": "object",
+  "required": ["schemaVersion", "templateId", "rules"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateId": { "type": "string", "minLength": 1 },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["selector", "declarations", "order"],
+        "properties": {
+          "selector": { "type": "object" },
+          "declarations": { "type": "object" },
+          "order": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

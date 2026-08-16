@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/runtime-value.schema.json",
+  "title": "QuickApp Kit V1 Runtime Value",
+  "$ref": "#/$defs/runtimeValue",
+  "$defs": {
+    "runtimeValue": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+        { "type": "number", "not": { "type": "integer" } },
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/runtimeValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/runtimeValue" } }
+      ]
+    }
+  }
+}

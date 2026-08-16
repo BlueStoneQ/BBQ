@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "schemas": [
+    { "id": "https://quickapp-kit.dev/v1/event-message.schema.json", "file": "event-message.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/feature.schema.json", "file": "feature.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/host-component.schema.json", "file": "host-component.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/js-bootstrap.schema.json", "file": "js-bootstrap.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/lifecycle.schema.json", "file": "lifecycle.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/manifest.schema.json", "file": "manifest.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/measure-adapter.schema.json", "file": "measure-adapter.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/module-load.schema.json", "file": "module-load.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/mount-transaction.schema.json", "file": "mount-transaction.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/navigation.schema.json", "file": "navigation.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/observation.schema.json", "file": "observation.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/package-open-policy.schema.json", "file": "package-open-policy.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/page-ir.schema.json", "file": "page-ir.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/platform-surface.schema.json", "file": "platform-surface.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/render-transaction.schema.json", "file": "render-transaction.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/runtime-abi.schema.json", "file": "runtime-abi.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/runtime-composition.schema.json", "file": "runtime-composition.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/runtime-error.schema.json", "file": "runtime-error.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/runtime-metadata.schema.json", "file": "runtime-metadata.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/runtime-value.schema.json", "file": "runtime-value.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/surface-control.schema.json", "file": "surface-control.schema.json" },
+    { "id": "https://quickapp-kit.dev/v1/transaction-result.schema.json", "file": "transaction-result.schema.json" }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/platform-surface.schema.json",
+  "title": "QuickApp Kit V1 Platform Surface Adapter",
+  "oneOf": [
+    { "$ref": "#/$defs/createRequest" },
+    { "$ref": "#/$defs/createSuccess" },
+    { "$ref": "#/$defs/createFailure" },
+    { "$ref": "#/$defs/presentRootRequest" },
+    { "$ref": "#/$defs/presentPushRequest" },
+    { "$ref": "#/$defs/presentRootSuccess" },
+    { "$ref": "#/$defs/presentPushSuccess" },
+    { "$ref": "#/$defs/presentRootFailure" },
+    { "$ref": "#/$defs/presentPushFailure" },
+    { "$ref": "#/$defs/visibilityRequest" },
+    { "$ref": "#/$defs/visibilitySuccess" },
+    { "$ref": "#/$defs/visibilityFailure" },
+    { "$ref": "#/$defs/closeRequest" },
+    { "$ref": "#/$defs/closeSuccess" },
+    { "$ref": "#/$defs/closeFailure" },
+    { "$ref": "#/$defs/destroyRequest" },
+    { "$ref": "#/$defs/destroySuccess" },
+    { "$ref": "#/$defs/destroyFailure" }
+  ],
+  "$defs": {
+    "viewport": {
+      "type": "object",
+      "required": ["width", "height", "unit"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "const": "logical-px" }
+      },
+      "additionalProperties": false
+    },
+    "requestId": { "type": "string", "pattern": "^req:.+$" },
+    "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+    "createRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "viewport"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurfaceHost" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "viewport": { "$ref": "#/$defs/viewport" }
+      },
+      "additionalProperties": false
+    },
+    "createSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "created" }
+      },
+      "additionalProperties": false
+    },
+    "createFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "presentRootRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHost" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "root" }
+      },
+      "additionalProperties": false
+    },
+    "presentPushRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode", "sourceSurfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHost" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "push" },
+        "sourceSurfaceId": { "$ref": "#/$defs/surfaceId" }
+      },
+      "additionalProperties": false
+    },
+    "presentRootSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "root" },
+        "status": { "const": "presented" }
+      },
+      "additionalProperties": false
+    },
+    "presentPushSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode", "sourceSurfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "push" },
+        "sourceSurfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "presented" }
+      },
+      "additionalProperties": false
+    },
+    "presentRootFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "root" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "presentPushFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "mode", "sourceSurfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "presentSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "mode": { "const": "push" },
+        "sourceSurfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "visibilityRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "visibility"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setSurfaceVisibility" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "visibility": { "enum": ["visible", "hidden"] }
+      },
+      "additionalProperties": false
+    },
+    "visibilitySuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "visibility", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setSurfaceVisibilityResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "visibility": { "enum": ["visible", "hidden"] },
+        "status": { "const": "completed" }
+      },
+      "additionalProperties": false
+    },
+    "visibilityFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "visibility", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "setSurfaceVisibilityResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "visibility": { "enum": ["visible", "hidden"] },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "closeRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "revealSurfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "closeSurfaceHost" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "revealSurfaceId": { "$ref": "#/$defs/surfaceId" }
+      },
+      "additionalProperties": false
+    },
+    "closeSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "revealSurfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "closeSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "revealSurfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "completed" }
+      },
+      "additionalProperties": false
+    },
+    "closeFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "revealSurfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "closeSurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "revealSurfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "destroyRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurfaceHost" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" }
+      },
+      "additionalProperties": false
+    },
+    "destroySuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "destroyed" }
+      },
+      "additionalProperties": false
+    },
+    "destroyFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurfaceHostResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

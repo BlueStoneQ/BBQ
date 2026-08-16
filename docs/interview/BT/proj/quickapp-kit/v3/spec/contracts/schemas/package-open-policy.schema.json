@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/package-open-policy.schema.json",
+  "title": "QuickApp Kit V1 Package Open Policy",
+  "type": "object",
+  "required": ["schemaVersion", "verificationMode", "allowUnsigned", "trustedKeys"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "verificationMode": { "enum": ["development", "release"] },
+    "allowUnsigned": { "type": "boolean" },
+    "trustedKeys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["keyId", "algorithm", "publicKey"],
+        "properties": {
+          "keyId": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" },
+          "algorithm": { "const": "Ed25519" },
+          "publicKey": {
+            "type": "string",
+            "description": "Unpadded base64url encoding of the 32-byte raw Ed25519 public key.",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "verificationMode": { "const": "release" } }, "required": ["verificationMode"] },
+      "then": {
+        "properties": {
+          "allowUnsigned": { "const": false },
+          "trustedKeys": { "type": "array", "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "allowUnsigned": { "const": false } }, "required": ["allowUnsigned"] },
+      "then": { "properties": { "trustedKeys": { "type": "array", "minItems": 1 } } }
+    }
+  ],
+  "additionalProperties": false
+}

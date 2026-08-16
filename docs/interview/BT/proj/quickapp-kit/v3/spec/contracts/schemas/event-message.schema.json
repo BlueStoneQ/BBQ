@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/event-message.schema.json",
+  "title": "QuickApp Kit V1 Event Protocol",
+  "oneOf": [
+    { "$ref": "#/$defs/platformInput" },
+    { "$ref": "#/$defs/jsDispatch" }
+  ],
+  "$defs": {
+    "logicalNodeRef": {
+      "type": "object",
+      "required": ["ownerInstanceId", "templateNodeId"],
+      "properties": {
+        "ownerInstanceId": { "type": "string", "pattern": "^(cmp|blk):.+$" },
+        "templateNodeId": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "platformInput": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "nodeId", "eventType", "timestamp", "payload"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "platformInput" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "nodeId": { "type": "string", "pattern": "^node:.+$" },
+        "eventType": { "const": "click" },
+        "timestamp": { "type": "number", "minimum": 0 },
+        "payload": {
+          "type": "object",
+          "additionalProperties": { "$ref": "runtime-value.schema.json" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "jsDispatch": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "target", "currentTarget", "handlerId", "eventType", "phase", "timestamp", "payload"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "jsEventDispatch" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "target": { "$ref": "#/$defs/logicalNodeRef" },
+        "currentTarget": { "$ref": "#/$defs/logicalNodeRef" },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" },
+        "eventType": { "const": "click" },
+        "phase": { "enum": ["target", "bubble"] },
+        "timestamp": { "type": "number", "minimum": 0 },
+        "payload": {
+          "type": "object",
+          "additionalProperties": { "$ref": "runtime-value.schema.json" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

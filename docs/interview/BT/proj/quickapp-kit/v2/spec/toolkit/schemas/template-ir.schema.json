@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/template-ir.json",
+  "title": "QuickApp Kit Template IR",
+  "type": "object",
+  "required": ["schemaVersion", "templateId", "root", "nodes"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "templateId": { "type": "string", "minLength": 1 },
+    "root": { "type": "integer", "minimum": 1 },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["templateNodeId", "type"],
+        "properties": {
+          "templateNodeId": { "type": "integer", "minimum": 1 },
+          "type": { "type": "string", "minLength": 1 },
+          "staticProps": { "type": "object" },
+          "staticAttrs": { "type": "object" },
+          "staticStyles": { "type": "object" },
+          "bindings": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["eventType", "templateHandlerId"],
+              "properties": {
+                "eventType": { "type": "string", "minLength": 1 },
+                "templateHandlerId": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "children": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+          "templateBlockId": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

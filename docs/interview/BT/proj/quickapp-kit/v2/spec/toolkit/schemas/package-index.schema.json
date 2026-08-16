@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/schema/v1/package-index.json",
+  "title": "QuickApp Kit Package Index",
+  "type": "object",
+  "required": ["schemaVersion", "runtimeAbi", "entry", "templates", "chunks"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runtimeAbi": { "const": "quickapp-kit-v1" },
+    "entry": {
+      "type": "object",
+      "required": ["app", "pages"],
+      "properties": {
+        "app": { "type": "string", "minLength": 1 },
+        "pages": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "templates": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "chunks": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+  },
+  "additionalProperties": false
+}

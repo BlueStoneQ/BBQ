@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/surface-control.schema.json",
+  "title": "QuickApp Kit V1 Surface Control",
+  "oneOf": [
+    { "$ref": "#/$defs/createRequest" },
+    { "$ref": "#/$defs/createSuccess" },
+    { "$ref": "#/$defs/createFailure" },
+    { "$ref": "#/$defs/surfaceContext" },
+    { "$ref": "#/$defs/destroyRequest" },
+    { "$ref": "#/$defs/destroySuccess" },
+    { "$ref": "#/$defs/destroyFailure" },
+    { "$ref": "#/$defs/instantiateSuccess" },
+    { "$ref": "#/$defs/instantiateFailure" },
+    { "$ref": "#/$defs/handlerSuccess" },
+    { "$ref": "#/$defs/handlerFailure" },
+    { "$ref": "#/$defs/surfaceStatus" }
+  ],
+  "$defs": {
+    "viewport": {
+      "type": "object",
+      "required": ["width", "height", "unit"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "const": "logical-px" }
+      },
+      "additionalProperties": false
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": { "$ref": "runtime-value.schema.json" }
+    },
+    "createRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "packageId", "route", "params", "viewport"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurface" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "packageId": { "type": "string", "minLength": 1 },
+        "route": { "type": "string", "pattern": "^/.+$" },
+        "params": { "$ref": "#/$defs/params" },
+        "viewport": { "$ref": "#/$defs/viewport" }
+      },
+      "additionalProperties": false
+    },
+    "createSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "surfaceId", "route"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurfaceResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "presented" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "route": { "type": "string", "pattern": "^/.+$" }
+      },
+      "additionalProperties": false
+    },
+    "createFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "createSurfaceResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "surfaceContext": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "packageId", "route", "templateId", "params", "hostCapabilities", "viewport"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "surfaceContext" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "packageId": { "type": "string", "minLength": 1 },
+        "route": { "type": "string", "pattern": "^/.+$" },
+        "templateId": { "type": "string", "minLength": 1 },
+        "params": { "$ref": "#/$defs/params" },
+        "hostCapabilities": {
+          "type": "array",
+          "items": { "enum": ["setTitleBar", "setMeta"] },
+          "uniqueItems": true
+        },
+        "viewport": { "$ref": "#/$defs/viewport" }
+      },
+      "additionalProperties": false
+    },
+    "destroyRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurface" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "destroySuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "surfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurfaceResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "destroyed" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "destroyFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "surfaceId", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "destroySurfaceResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "failed" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "instantiateSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "surfaceId", "committedRevision"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "instantiateTemplateResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "presented" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "committedRevision": { "const": 0 }
+      },
+      "additionalProperties": false
+    },
+    "instantiateFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "status", "surfaceId", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "instantiateTemplateResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "status": { "const": "failed" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "handlerSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "operation", "status", "surfaceId", "handlerId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "handlerRegistrationResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "operation": { "enum": ["register", "unregister"] },
+        "status": { "enum": ["registered", "unregistered"] },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operation": { "const": "register" } } },
+          "then": { "properties": { "status": { "const": "registered" } } },
+          "else": { "properties": { "status": { "const": "unregistered" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "handlerFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "operation", "status", "surfaceId", "handlerId", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "handlerRegistrationResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "operation": { "enum": ["register", "unregister"] },
+        "status": { "const": "failed" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "handlerId": { "type": "string", "pattern": "^hdl:.+$" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "surfaceStatus": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "lifecycleState", "healthState", "committedRevision"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "surfaceStatusChanged" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "lifecycleState": { "enum": ["creating", "awaitingTemplate", "mounting", "presenting", "visible", "hidden", "destroying", "destroyed"] },
+        "healthState": { "enum": ["normal", "degraded", "failed"] },
+        "committedRevision": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

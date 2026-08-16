@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/transaction-result.schema.json",
+  "title": "QuickApp Kit V1 Transaction Results",
+  "oneOf": [
+    { "$ref": "#/$defs/renderPresented" },
+    { "$ref": "#/$defs/renderRejected" },
+    { "$ref": "#/$defs/renderPresentationFailed" },
+    { "$ref": "#/$defs/mountSucceeded" },
+    { "$ref": "#/$defs/mountRecoverableFailure" },
+    { "$ref": "#/$defs/mountTerminalFailure" }
+  ],
+  "$defs": {
+    "renderPresented": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "transactionId", "submittedRevision", "committedRevision", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "renderTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "transactionId": { "type": "string", "pattern": "^txn:.+$" },
+        "submittedRevision": { "type": "integer", "minimum": 1 },
+        "committedRevision": { "type": "integer", "minimum": 1 },
+        "status": { "const": "presented" }
+      },
+      "additionalProperties": false
+    },
+    "renderRejected": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "transactionId", "submittedRevision", "committedRevision", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "renderTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "transactionId": { "type": "string", "pattern": "^txn:.+$" },
+        "submittedRevision": { "type": "integer", "minimum": 1 },
+        "committedRevision": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["rejected", "cancelled"] },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "renderPresentationFailed": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "transactionId", "submittedRevision", "committedRevision", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "renderTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "transactionId": { "type": "string", "pattern": "^txn:.+$" },
+        "submittedRevision": { "type": "integer", "minimum": 1 },
+        "committedRevision": { "type": "integer", "minimum": 1 },
+        "status": { "const": "presentationFailed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "mountSucceeded": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "mountAttemptId", "sourceId", "revision", "status", "recovery"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "mountTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" },
+        "sourceId": { "type": "string", "pattern": "^(req|txn):.+$" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "status": { "const": "mounted" },
+        "recovery": { "const": "none" }
+      },
+      "additionalProperties": false
+    },
+    "mountRecoverableFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "mountAttemptId", "sourceId", "revision", "status", "recovery", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "mountTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" },
+        "sourceId": { "type": "string", "pattern": "^(req|txn):.+$" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "status": { "const": "failed" },
+        "recovery": { "const": "rebuildSurface" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "mountTerminalFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "surfaceId", "mountAttemptId", "sourceId", "revision", "status", "recovery", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "mountTransactionResult" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "mountAttemptId": { "type": "string", "pattern": "^mnt:.+$" },
+        "sourceId": { "type": "string", "pattern": "^(req|txn):.+$" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "status": { "const": "failed" },
+        "recovery": { "const": "recreateSurface" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

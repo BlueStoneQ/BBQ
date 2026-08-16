@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/measure-adapter.schema.json",
+  "title": "QuickApp Kit V1 Measure Adapter",
+  "oneOf": [
+    { "$ref": "#/$defs/measureRequest" },
+    { "$ref": "#/$defs/measureSuccess" },
+    { "$ref": "#/$defs/measureFailure" },
+    { "$ref": "#/$defs/fontGenerationChanged" }
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^req:.+$"
+    },
+    "surfaceId": {
+      "type": "string",
+      "pattern": "^srf:.+$"
+    },
+    "nodeId": {
+      "type": "string",
+      "pattern": "^node:.+$"
+    },
+    "constraint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind"],
+          "properties": { "kind": { "const": "unconstrained" } },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "value", "unit"],
+          "properties": {
+            "kind": { "enum": ["atMost", "exactly"] },
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "const": "logical-px" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "measureRequest": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "surfaceId",
+        "nodeId",
+        "contentRevision",
+        "platformFontGeneration",
+        "role",
+        "text",
+        "fontToken",
+        "fontSize",
+        "fontSizeUnit",
+        "fontWeight",
+        "widthConstraint",
+        "heightConstraint"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "measureRequest" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "contentRevision": { "type": "integer", "minimum": 0 },
+        "platformFontGeneration": { "type": "integer", "minimum": 1 },
+        "role": { "enum": ["text", "buttonLabel"] },
+        "text": { "type": "string" },
+        "fontToken": { "type": "string", "minLength": 1 },
+        "fontSize": { "type": "number", "exclusiveMinimum": 0 },
+        "fontSizeUnit": { "const": "logical-px" },
+        "fontWeight": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "widthConstraint": { "$ref": "#/$defs/constraint" },
+        "heightConstraint": { "$ref": "#/$defs/constraint" }
+      },
+      "additionalProperties": false
+    },
+    "measureSuccess": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "surfaceId",
+        "nodeId",
+        "contentRevision",
+        "platformFontGeneration",
+        "status",
+        "width",
+        "height",
+        "unit"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "measureResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "contentRevision": { "type": "integer", "minimum": 0 },
+        "platformFontGeneration": { "type": "integer", "minimum": 1 },
+        "status": { "const": "measured" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "unit": { "const": "logical-px" }
+      },
+      "additionalProperties": false
+    },
+    "measureFailure": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "surfaceId",
+        "nodeId",
+        "contentRevision",
+        "platformFontGeneration",
+        "status",
+        "error"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "measureResult" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "surfaceId": { "$ref": "#/$defs/surfaceId" },
+        "nodeId": { "$ref": "#/$defs/nodeId" },
+        "contentRevision": { "type": "integer", "minimum": 0 },
+        "platformFontGeneration": { "type": "integer", "minimum": 1 },
+        "status": { "const": "failed" },
+        "error": {
+          "allOf": [
+            { "$ref": "runtime-error.schema.json" },
+            {
+              "type": "object",
+              "required": ["code"],
+              "properties": { "code": { "const": "MEASURE_FAILED" } }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "fontGenerationChanged": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "platformFontGeneration"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "platformFontGenerationChanged" },
+        "platformFontGeneration": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

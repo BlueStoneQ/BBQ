@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickapp-kit.dev/v1/navigation.schema.json",
+  "title": "QuickApp Kit V1 Navigation",
+  "oneOf": [
+    { "$ref": "#/$defs/pushRequest" },
+    { "$ref": "#/$defs/pushSuccess" },
+    { "$ref": "#/$defs/pushFailure" },
+    { "$ref": "#/$defs/closeRequest" },
+    { "$ref": "#/$defs/closeSuccess" },
+    { "$ref": "#/$defs/closeFailure" }
+  ],
+  "$defs": {
+    "params": {
+      "type": "object",
+      "additionalProperties": { "$ref": "runtime-value.schema.json" }
+    },
+    "pushRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId", "uri", "params"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationPush" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "uri": { "type": "string", "pattern": "^/.+$" },
+        "params": { "$ref": "#/$defs/params" }
+      },
+      "additionalProperties": false
+    },
+    "pushSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId", "targetSurfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationPushResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "targetSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "presented" }
+      },
+      "additionalProperties": false
+    },
+    "pushFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationPushResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "closeRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationClose" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" }
+      },
+      "additionalProperties": false
+    },
+    "closeSuccess": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId", "revealedSurfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationCloseResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "revealedSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "closed" }
+      },
+      "additionalProperties": false
+    },
+    "closeFailure": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "sourceSurfaceId", "status", "error"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "navigationCloseResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "sourceSurfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "const": "failed" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
