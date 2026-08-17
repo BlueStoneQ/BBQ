@@ -117,6 +117,28 @@ $app_require$(moduleId)
 7. Bundle 不导出或维护完整 VNode Tree；Template/Style 静态事实只来自 Page IR。
 8. Bundle 不复制 Binding/Handler target descriptor；JS 只按 TemplateBindingId/TemplateHandlerId 执行 evaluator/method，Core 从 Page IR 解析 target。
 
+`[已冻结] P0-JS-EXPORT-001`：App/Page Bundle 的 `module.exports` 是不可变 VM Definition，不是 VM 实例。精确机器形态固定为：
+
+```text
+AppModuleDefinition
+  schemaVersion: 1
+  kind: "app"
+  createAppVm(appContext) -> AppVm
+
+PageModuleDefinition
+  schemaVersion: 1
+  kind: "page"
+  createPageVm(surfaceContext) -> PageVm
+  bindingEvaluators: { "<TemplateBindingId>": evaluator }
+  handlerMethods: { "<TemplateHandlerId>": methodName }
+```
+
+Definition 及其 `bindingEvaluators/handlerMethods` 只能包含上述 own data property；禁止 accessor、Proxy、原型继承注入和未知字段，提交 Module Cache 前必须冻结。`createAppVm` 每个 AppRuntime 恰好调用一次；`createPageVm` 每个 Surface 恰好调用一次，并必须返回彼此隔离的普通 VM object。
+
+Binding evaluator 必须是 callable，以对应 Page VM 作为 `this`，唯一参数是当前 Block lexical aliases 的只读 `scope` object；Page scope 使用空 object。Handler export 只保存非空 `methodName`，JS Event Runtime 后续以 Page VM 为 `this` 调用该方法。VM object 上的 lifecycle/method/state 属于实例，不进入 Definition cache，也不得在不同 Surface 之间共享。
+
+Shared Module 的 `module.exports` 不使用上述 Definition shape；它仍按声明依赖在一个 AppRuntime 内求值并缓存一次。Toolkit TK-S05 只生产该形态，JS-S03 只校验并缓存 Definition，JS-S04 只调用 create 并拥有 VM 实例。
+
 ## 7. Verified Module Handoff
 
 Loader 进入 `verified` 后，Core 才能通过绑定当前 AppRuntime 的 `VerifiedModulePort` 向 JS Executor 交付模块：

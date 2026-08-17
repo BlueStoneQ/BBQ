@@ -97,19 +97,19 @@ LVGL/SDL -> Android -> iOS
 | 项目 Agent | 当前任务 | 当前门禁 |
 |---|---|---|
 | Benchmark | 当前停止扩展 | `BM-S02 VERIFIED`；`BM-S03 HOLD_M4` |
-| Toolkit | 设计 `TK-S02 + TK-S03` | `DESIGN_ALLOWED + CODE_BLOCKED` |
-| JS Runtime | 实现 `JS-S01 JS Engine Service` | `JS-S01 CODE_ALLOWED` |
-| Runtime Core | 设计 `CORE-S02 + CORE-S05` | `DESIGN_ALLOWED + CODE_BLOCKED` |
-| LVGL Runtime | 设计 `LV-S02 Runtime Host 与 Backends` | `DESIGN_ALLOWED + CODE_BLOCKED` |
+| Toolkit | 实现 `TK-S04` | `PASS + CODE_ALLOWED` |
+| JS Runtime | 返修 `JS-S02`；修订 `JS-S03/S04` | JS-S03/S04 代码阻塞 |
+| Runtime Core | 实现 `CORE-S03`；修订 `CORE-S04` | S03 `CODE_ALLOWED`；S04 代码阻塞 |
+| LVGL Runtime | 实现 `LV-S03`、`LV-S06` | 两项 `PASS + CODE_ALLOWED` |
 | Android Runtime | 当前停止扩展 | `AND-S01 VERIFIED`；`AND-S02 HOLD_M2` |
-| iOS Runtime | 实现 `IOS-S01 Runtime Host 与 PackageSource` | `IOS-S01 CODE_ALLOWED` |
-| Examples | 同步 EX-S02 到冻结的 Render 输入因果合同 | `EX-S02 READY_FOR_REVIEW + CODE_BLOCKED` |
+| iOS Runtime | 当前停止扩展 | `IOS-S01 VERIFIED`；`IOS-S02 HOLD_M3` |
+| Examples | 当前停止扩展 | `EX-S02 PASS + CODE_HOLD_POST_M1` |
 
-W1 已对通过 Foundation 的 Toolkit、Core、LVGL 开放设计；JS 完成 S01 后加入。其余推进顺序见 `V1-EXECUTION-PLAN.md`，项目内部依赖仍以各自 `subspec-index.md` 为准。
+当前处于 W1 窄返修与 W2 实现并行阶段。其余推进顺序见 `V1-EXECUTION-PLAN.md`，项目内部依赖仍以各自 `subspec-index.md` 为准。
 
 ## 5. 新对话启动提示词
 
-当前八个项目话术见 [`2026-08-16-current-agent-prompts.md`](./reviews/subspec-review/2026-08-16-current-agent-prompts.md)，可以直接逐段复制。以下模板用于后续分 Spec。
+当前项目话术见 [`2026-08-17-w2-design-review.md`](./reviews/subspec-review/2026-08-17-w2-design-review.md)，可以直接逐段复制。以下模板用于后续分 Spec。
 
 为每个项目新建一个对话，只替换 `<PROJECT>`、`<SUBSPEC-ID>` 和 `<SUBSPEC-NAME>`：
 

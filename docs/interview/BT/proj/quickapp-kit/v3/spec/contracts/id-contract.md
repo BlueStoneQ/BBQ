@@ -86,4 +86,16 @@ req:   RequestId
 
 各 producer 使用单调序列或等价不复用分配器。`AppRuntimeId` allocator 由 Core AppRuntimeFactory 持有，并晚于其创建的全部 AppRuntime 销毁；Runtime Host 只调用 Factory，不生成或传入 AppRuntime 身份。同一 AppRuntime 内的多个 RequestId producer 必须使用共享分配器或互斥命名分区，不能各自从相同局部序列直接生成 `req:` 值。opaque string 不允许编码平台指针。pending correlation 在唯一 Result 到达后删除；之后收到同 ID Result/Event 一律视为 late message 丢弃并记录，不重新创建状态。Surface 销毁后 Core 保留 SurfaceId tombstone 到 AppRuntime 销毁；AppRuntime teardown 必须先停止 Port 和清空队列，再释放 allocator/tombstone，因此不需要按时间猜测保留窗口。
 
+V1 固定使用互斥 wire 命名分区，避免为分配 ID 增加一次同步跨语言调用：
+
+| Producer | RequestId wire |
+|---|---|
+| C++ Core | `req:<positive-decimal>` |
+| JS Framework | `req:j-<positive-decimal>` |
+| Platform / Runtime Host | `req:p-<positive-decimal>` |
+
+每个 producer 的序列随 AppRuntime 创建并只单调前进；接收方必须校验消息来源与命名分区一致。跨语言层不共享可变 allocator，Core 内部多个 producer 仍必须共享同一个 allocator。
+
+JS Framework 的 `req:j-*` 分区在每个 AppRuntime 中只能有一个本地 allocator。它在 Framework bootstrap 时创建，只在 JS Executor 上运行，由 Navigation、Capability、Handler 等请求发起模块共享；它不是 C++ 服务，不通过 Native Function 暴露，也不归 Runtime ABI Client 所有。请求模块先从该 allocator 取得 ID，再把完整 typed message 交给 Runtime ABI Client。
+
 Platform 输入是 `RequestId` 的事件用法：捕获输入的 Platform Adapter 生成一次，Core 路由和 JS Handler 原样消费；一次输入产生的目标与冒泡 Dispatch 共享该 ID。它只表示因果关联，不要求产生请求/结果终态。

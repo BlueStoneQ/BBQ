@@ -3,11 +3,12 @@
 ## 目录
 
 - [1. 总规则](#1-总规则)
-- [2. 项目入口](#2-项目入口)
-- [3. 分工](#3-分工)
-- [4. 通信](#4-通信)
-- [5. 当前门禁](#5-当前门禁)
-- [6. 冻结决策](#6-冻结决策)
+- [2. 产品版本看板](#2-产品版本看板)
+- [3. 项目入口](#3-项目入口)
+- [4. 分工](#4-分工)
+- [5. 通信](#5-通信)
+- [6. 当前门禁](#6-当前门禁)
+- [7. 冻结决策](#7-冻结决策)
 
 ## 1. 总规则
 
@@ -66,7 +67,62 @@ Observation Marker / Metric Boundary / Trace Correlation
 | 项目分 Spec | 一个具体模块如何实现和测试 | `subspecs/<name>/` 下的设计、接口、任务和测试 |
 | 分 Spec 开发 | 严格按已通过的分 Spec 编码 | 代码、测试、运行证据 |
 
-## 2. 项目入口
+## 2. 产品版本看板
+
+### 2.1 结论
+
+当前处于 **`Product V1 / M1 / W1 CORRECTION + W2 IMPLEMENTATION`**。`Product V1/V2/V3` 表示产品演进版本，本文档目录名 `v3` 表示第三版架构设计基线，二者没有版本对应关系。
+
+勾选规则：只有具备实现、测试、证据和完成交接，且状态为 `VERIFIED` 的分 Spec 才标记 `[x]`；`PASS`、`CODE_ALLOWED`、`IN_PROGRESS` 和 `EVIDENCE_REQUIRED` 均标记 `[ ]`。
+
+### 2.2 产品版本总览
+
+| 产品版本 | 核心目标 | 已冻结 Spec | 已完成 | 状态 |
+|---|---|---:|---:|---|
+| Product V1 | 联盟 DSL 经 Toolkit 构建为 Runtime RPK，由共享 JS/Core 在 LVGL、Android、iOS 运行，并形成基础 Benchmark | 69 | 13 | `M1.W1 CORRECTION + W2 IMPLEMENTATION` |
+| Product V2 | 扩展 Agent 接口与完整 Benchmark；其他能力待 V1 验证后再冻结 | 3 | 0 | `PLANNED` |
+| Product V3 | 生产化、生态化和更多平台能力 | 0 | 0 | `NOT_FROZEN` |
+
+V2 当前只冻结 `TK-S10`、`BM-S08`、`BM-S09` 三个后移项。AI Feature、Chat 组件、应用卡片及其他后续能力仍是 TODO，不计入 Spec 总数。V3 尚未进入需求冻结和 Spec 拆分阶段。
+
+### 2.3 Product V1 里程碑
+
+| 里程碑 | 目标 | Spec 数 | 已完成 | 进度 |
+|---|---|---:|---:|---|
+| M1 | Toolkit + JS + Core + LVGL/SDL 跑通 Case 001 | 41 | 10 | `W1 CORRECTION + W2 IMPLEMENTATION` |
+| M2 | Android 复用同一 Runtime RPK、JS Framework 和 C++ Core | 9 | 1 | `WAIT_M1` |
+| M3 | iOS 复用同一主链，证明第三平台成立 | 9 | 1 | `WAIT_M2` |
+| M4 | 三平台基础 Benchmark 与扩展验收案例 | 10 | 1 | `WAIT_M1_M3` |
+| **V1 合计** |  | **69** | **13** | **IN_PROGRESS** |
+
+里程碑归属表示该 Spec 的最终验收位置，不表示必须完全串行。M2/M3/M4 的 Foundation 可以提前验证，但不能据此宣告对应里程碑完成。
+
+### 2.4 Product V1 Spec 进度
+
+| 里程碑 | 项目 | Spec 范围 | 完成状态 |
+|---|---|---|---|
+| M1 | Toolkit | `TK-S01..TK-S09`（9） | [x] `TK-S01..TK-S03`；[ ] `TK-S04..TK-S09` |
+| M1 | JS Runtime | `JS-S01..JS-S10`（10） | [x] `JS-S01`；[ ] `JS-S02` 窄返修、`JS-S03..JS-S10` |
+| M1 | Runtime Core | `CORE-S01..CORE-S11`（11） | [x] `CORE-S01`、`CORE-S02`、`CORE-S05`；[ ] `CORE-S03`、`CORE-S04`、`CORE-S06..CORE-S11` |
+| M1 | LVGL Runtime | `LV-S01..LV-S10`（10） | [x] `LV-S01`、`LV-S02`；[ ] `LV-S03..LV-S10` |
+| M1 | Examples | `EX-S01`（1） | [x] `EX-S01` |
+| M2 | Android Runtime | `AND-S01..AND-S09`（9） | [x] `AND-S01`；[ ] `AND-S02..AND-S09` |
+| M3 | iOS Runtime | `IOS-S01..IOS-S09`（9） | [x] `IOS-S01`；[ ] `IOS-S02..IOS-S09` |
+| M4 | Benchmark | `BM-S01..BM-S07`（7） | [x] `BM-S02`；[ ] `BM-S01`、`BM-S03..BM-S07` |
+| M4 | Examples | `EX-S02..EX-S04`（3） | [ ] `EX-S02..EX-S04` |
+
+### 2.5 Product V2/V3 Spec 进度
+
+| 产品版本 | 里程碑 | Spec | 目标 | 状态 |
+|---|---|---|---|---|
+| V2 | 待冻结 | [ ] `TK-S10` | Agent Skill + MCP Adapter | `PLANNED` |
+| V2 | 待冻结 | [ ] `BM-S08` | 完整统计与原始数据存储 | `PLANNED` |
+| V2 | 待冻结 | [ ] `BM-S09` | 外部框架 Profile 与对比 | `PLANNED` |
+| V3 | 待冻结 | 暂无 | 生产化、生态化及更多平台能力 | `NOT_FROZEN` |
+
+V2/V3 的里程碑编号必须在对应版本需求冻结后创建，不能沿用 V1 的 M1-M4，也不能为了填满路线图提前制造分 Spec。
+
+## 3. 项目入口
 
 | Agent | Spec 入口 | 代码工程 |
 |---|---|---|
@@ -79,7 +135,7 @@ Observation Marker / Metric Boundary / Trace Correlation
 | Benchmark | `/Users/qy/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/v3/projects/quickapp-benchmark/spec/README.md` | `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-benchmark/` |
 | Examples | `/Users/qy/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/v3/projects/quickapp-examples/spec/README.md` | `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/` |
 
-## 3. 分工
+## 4. 分工
 
 - Toolkit：DSL -> JS Bundle + IR + Runtime RPK；生命周期导出、Capability 引用；CLI `build/inspect/run`；Case 001 联盟闭环 Golden、Case 002 update/reorder Golden、`BLOCK-001` add/remove Golden、`CAP-DEVICE-001` 能力 Golden。
 - Android：联盟 Android 行为基线、Runtime Host、PackageSource、JNI Adapter、Host Component、PlatformProvider、Measure Adapter 和输入；组合共享 Core/JS Runtime。
@@ -138,7 +194,7 @@ F0 Foundation
 
 72 个分 Spec 是完整责任地图，不是 72 道串行门。每个分 Spec 仍须 `PASS` 后编码；执行按波次并行，单项通过即可先实现。签名、Skill/MCP、完整 Benchmark、AI 能力和高级容灾不参与 V1。
 
-## 4. 通信
+## 5. 通信
 
 每个项目的通信文件为：
 
@@ -152,47 +208,45 @@ projects/<project>/spec/AGENT-HANDOFF.md
 
 通信所有权：子 Agent 只写本项目 Handoff；总架构 Agent 读取八份 Handoff，处理公共问题并更新本工作看板。完整事件格式和公共决策升级模板见 [`SUBSPEC-AGENT-LAUNCH.md`](./SUBSPEC-AGENT-LAUNCH.md)。
 
-## 5. 当前门禁
+## 6. 当前门禁
 
 | 阶段 | 状态 |
 |---|---|
 | 平台总 Spec 标准结构 | `PASS`；定向复核 P0/P1/P2 为 0 |
 | 总架构与公共合同 | `PASS`；第五次定向复核 P0/P1/P2 为 0 |
 | Toolkit/Core/JS/Android/LVGL/iOS/Benchmark/Examples 项目总 Spec | `PASS`；组成边界闭环 |
-| 当前里程碑 | `F0 IN_PROGRESS + W1 PARTIAL_DESIGN_ALLOWED`；M1 关键 Foundation 只剩 JS-S01 实现 |
-| 已验证 | `BM-S02/TK-S01/CORE-S01/LV-S01/AND-S01/EX-S01 VERIFIED` |
-| 当前执行 | `JS-S01/IOS-S01 CODE_ALLOWED`；`TK-S02+TK-S03/CORE-S02+CORE-S05/LV-S02 DESIGN_ALLOWED`；EX-S02 等待同步后校审 |
+| 当前里程碑 | `F0 VERIFIED + W1 CORRECTION + W2 IMPLEMENTATION`；M1 尚未完成 |
+| 已验证 | `BM-S02/TK-S01..S03/JS-S01/CORE-S01,S02,S05/LV-S01,S02/AND-S01/IOS-S01/EX-S01 VERIFIED` |
+| 当前执行 | TK-S04、CORE-S03、LV-S03/LV-S06 实现；JS-S02 窄返修；JS-S03/S04 与 CORE-S04 文档修正 |
 
 项目总 Spec 或分 Spec 若发现公共合同无法实现，只在各自 `AGENT-HANDOFF.md` 记录 `[待决策]` 并暂停受影响部分；不得自行改变公共协议。
 
-第一批分 Spec 总检查结果见 [`reviews/subspec-review/2026-08-16-first-batch-review.md`](./reviews/subspec-review/2026-08-16-first-batch-review.md)。
-第二批总检查见 [`2026-08-16-second-batch-review.md`](./reviews/subspec-review/2026-08-16-second-batch-review.md)；最新 Foundation 定向复核见 [`2026-08-16-foundation-recheck.md`](./reviews/subspec-review/2026-08-16-foundation-recheck.md)。
-当前可直接转述的话术见 [`2026-08-16-current-agent-prompts.md`](./reviews/subspec-review/2026-08-16-current-agent-prompts.md)。
+W2 总架构校审与当前 Agent 指令见 [`2026-08-17-w2-design-review.md`](./reviews/subspec-review/2026-08-17-w2-design-review.md)。
 
 | 分 Spec | 检查状态 | 编码门禁 |
 |---|---|---|
 | BM-S02 | `VERIFIED` | `BM-S03 HOLD_M4` |
-| TK-S01 | `VERIFIED` | `TK-S02 + TK-S03 DESIGN_ALLOWED` |
-| JS-S01 | `PASS` | `CODE_ALLOWED`；完成后校审 |
-| CORE-S01 | `VERIFIED` | `CORE-S02 + CORE-S05 DESIGN_ALLOWED` |
-| LV-S01 | `VERIFIED` | `LV-S02 DESIGN_ALLOWED` |
+| Toolkit W2 | `TK-S01..TK-S03 VERIFIED` | `TK-S04 PASS + CODE_ALLOWED` |
+| JS Runtime | `JS-S01 VERIFIED`；JS-S02 `IMPLEMENTATION_CORRECTION_REQUIRED` | 只修 immutable bytes；JS-S03/S04 `DESIGN_CHANGES_REQUIRED` |
+| Runtime Core W2 | `CORE-S01/CORE-S02/CORE-S05 VERIFIED` | `CORE-S03 PASS + CODE_ALLOWED`；CORE-S04 `DESIGN_CHANGES_REQUIRED` |
+| LVGL Runtime W2 | `LV-S01/LV-S02 VERIFIED` | `LV-S03/LV-S06 PASS + CODE_ALLOWED` |
 | AND-S01 | `VERIFIED` | `AND-S02 HOLD_M2` |
-| IOS-S01 | `PASS` | `CODE_ALLOWED`；实现中，`IOS-S02 HOLD_M3` |
-| EX-S01 / EX-S02 | `EX-S01 VERIFIED`；`EX-S02 READY_FOR_REVIEW` | 同步 `P0-EVENT-003` 后校审；`EX-S02 CODE_BLOCKED` |
+| IOS-S01 | `VERIFIED` | `IOS-S02 HOLD_M3` |
+| EX-S01 / EX-S02 | `EX-S01 VERIFIED`；`EX-S02 PASS` | `EX-S02 CODE_HOLD_POST_M1` |
 
-### 5.1 里程碑门禁
+### 6.1 里程碑门禁
 
 | 里程碑 | 状态 | 当前阻塞条件 |
 |---|---|---|
-| F0 Foundation | `IN_PROGRESS` | M1 关键项只剩 JS-S01 实现；iOS-S01 不阻塞 M1 |
-| M1 LVGL/SDL | `W1_PARTIAL_DESIGN` | Toolkit/Core/LVGL 已开放 W1 设计；JS 完成 S01 后加入 |
+| F0 Foundation | `VERIFIED` | 无 |
+| M1 LVGL/SDL | `W1_CORRECTION / W2_IMPLEMENTATION` | JS-S02 bytes 返修；W2 四项实现、三项设计修正；W3-W5 未启动 |
 | M2 Android | `WAIT_M1` | 必须先证明同一 Runtime 在 LVGL/SDL 完整成立 |
 | M3 iOS | `WAIT_M2` | 必须复用已验证 Artifact/Core/JS 主链路 |
 | M4 基础 Benchmark | `WAIT_M1_M3` | 三平台可运行证据尚未形成 |
 
 下一波次只由总架构统一发布；项目 Agent 不因当前任务完成而自行跨入后续分 Spec。
 
-## 6. 冻结决策
+## 7. 冻结决策
 
 ### P0-ADDR-001：Binding 与 Handler 的跨层寻址
 
@@ -271,3 +325,9 @@ Core Foundation 提供 `MonotonicClock + TraceSink/NoopTraceSink + RuntimeCounte
 `[已冻结]` `AppRuntimeId` 由 Core `AppRuntimeFactory` 唯一生成，作用域为一个 Runtime Host 实例，并在该 Host 生命周期内不复用。allocator 必须晚于其创建的全部 AppRuntime 销毁；Platform Host 只请求创建 Runtime，不生成、传入或解释该 ID。
 
 理由：AppRuntime 是 Core 逻辑对象；让平台生成其身份会把同一内部对象的唯一性规则复制到三个 Host，并扩大 Platform -> Core 创建合同。
+
+### P0-ID-002：RequestId 跨语言唯一性
+
+`[已冻结]` RequestId 由请求或输入发起侧生成；V1 使用互斥 wire 命名分区：Core 为 `req:<positive-decimal>`，JS 为 `req:j-<positive-decimal>`，Platform/Runtime Host 为 `req:p-<positive-decimal>`。
+
+理由：唯一性只需要 producer 分区和 AppRuntime 内单调不复用，不需要为了分配 ID 增加一次同步跨语言调用。Core 内部多个 producer 仍共享同一 allocator。

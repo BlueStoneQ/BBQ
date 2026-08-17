@@ -41,7 +41,7 @@
 | EX-S02-R10 | 同一轮写入必须在一个 microtask checkpoint 合并为一个 RenderTransaction；不得重建完整静态页面树。 |
 | EX-S02-R11 | Render 语义必须包含 count `UpdateBinding`、conditional `RemoveBlock` 和 keyed `MoveBlock`；A/B 不得 Remove+Instantiate。 |
 | EX-S02-R12 | A/B 的 BlockInstanceId、Runtime NodeId、HandlerId（若存在）和 NativeHandle 在 reorder 前后保持；最终可见顺序为 `[B,A]`。 |
-| EX-S02-R13 | 触发输入的 RequestId 必须关联 input、Handler、state/flush、Render 和对应 Trace；`RenderTransaction` 的精确字段落点等待 `[待决策] EX-S02-REQ-001` 统一公共合同。 |
+| EX-S02-R13 | `RenderTransaction.requestId` 是可选字段；本次 Handler 返回前的同步状态 flush 产生的事务必须携带触发输入的 RequestId，并关联 input、Handler、state/flush、Render 与对应 Trace。 |
 | EX-S02-R14 | Case 002 不声称覆盖 keyed add/remove；该职责只属于 BLOCK-001。 |
 
 ## 5. BLOCK-001 需求
@@ -73,8 +73,8 @@
 | EX-S02-R27 | Fixture 必须提供嵌套 parent/child click Handler，使一次 child click 同时产生 target 和 bubble dispatch。 |
 | EX-S02-R28 | 两次连续 child click 必须得到不同且不复用的 RequestId；每次 click 内 target/bubble dispatch 共享该次 RequestId。 |
 | EX-S02-R29 | target 固定为原始 child LogicalNodeRef，currentTarget 分别为 child/parent，phase 分别为 target/bubble；两个 EventBinding 使用不同 HandlerId。 |
-| EX-S02-R30 | 单独的同步更新 click 所产生 state、flush、Render 和 Trace 必须继承该输入 RequestId；不得由 Examples 私增消息字段。 |
-| EX-S02-R31 | 由 Promise/deferred continuation 在 Handler 返回后产生的更新不得自动携带创建或完成该异步任务的输入 RequestId。 |
+| EX-S02-R30 | 单独的同步更新 click 在 Handler 返回前产生的 state、flush、Render 和 Trace 必须继承该输入 RequestId，`RenderTransaction.requestId` 必须等于该值。 |
+| EX-S02-R31 | 普通非事件更新以及由 Promise/deferred continuation 在 Handler 返回后产生的更新，其 `RenderTransaction` 必须省略 `requestId`。 |
 | EX-S02-R32 | 无同步状态更新的 click 不得伪造 state/render marker；事件关联禁止按时间戳或到达顺序猜测。 |
 
 ## 8. 质量需求

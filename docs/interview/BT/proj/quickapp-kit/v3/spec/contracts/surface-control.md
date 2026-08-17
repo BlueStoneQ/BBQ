@@ -75,6 +75,8 @@ full Mount 成功只进入 `presenting`，不得提前返回成功。Root Presen
 
 `SurfaceStatusChanged` 将两个正交维度分开：`lifecycleState=creating|awaitingTemplate|mounting|presenting|visible|hidden|destroying|destroyed`，`healthState=normal|degraded|failed`。`visible/hidden` 是可见性；`degraded/failed` 只描述健康度，不再使用含义混合的 `ready` 状态。
 
+`[已冻结] CORE-S04-REV-001`：`SurfaceStatusChanged` 只在首棵 Runtime Tree 已提交、`committedRevision` 已存在后发送。`creating/awaitingTemplate/mounting` 阶段不发送该回调；首个可发送状态是 revision `0` 的 `presenting`，之后每条状态携带当前已提交 Revision。未完成首提交即失败或销毁的 Surface 不发送该回调。Schema 保持非 nullable，`0` 永远只表示已提交的首个 Revision。
+
 Mount 终态失败或 Root Present 失败时，Surface 进入 `failed`，分别返回原 Mount error 或 `SURFACE_PRESENTATION_FAILED`；Core 向 JS 返回 `InstantiateTemplateResult(status=failed)`，销毁隐藏 Host 与 JS Page Context，再向 Runtime Host 返回 `CreateSurfaceResult(status=failed)`。失败 Surface 不允许停留为可复用的 hidden-mounted 状态。
 
 ## 5. 结果顺序

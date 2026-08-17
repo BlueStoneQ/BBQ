@@ -1,6 +1,6 @@
 # iOS Runtime Spec Agent Handoff
 
-> 状态：IOS-S01 `PASS + CODE_ALLOWED`；允许实现，IOS-S02 暂停。
+> 状态：IOS-S01 `VERIFIED`；IOS-S02 `HOLD_M3`。
 
 ## 目录
 
@@ -169,12 +169,20 @@
 
 ### 2026-08-16 / iOS Runtime Agent / IOS-S01 实现完成
 
-- 状态：`READY_FOR_REVIEW`
+- 状态：`READY_FOR_REVIEW`；本项是并行 Foundation 基础准备，不代表 iOS 平台实施提前。
 - 已完成：在 `quickapp-runtime-ios` 根实现纯 Foundation/Dispatch Swift Package，覆盖 RuntimeLaunchProfile/Composition Manifest 前置严格预检、单 Engine 与 TraceSink/Clock/PlatformPortSet 依赖选择、冻结观测矩阵、Memory/File/Bundle PackageSource、Root `presented` 启动边界、raw Scene admission、accepted RuntimeLifecycleControl 关联和确定销毁；IOS-S02 未启动。
 - 新增事实：File PackageSource 在创建时固定打开的文件身份，路径后续被替换不会改变已创建 Source 的读取对象；关闭后拒绝新读取，已接受读取仍在 Core queue 完成。
 - 本项目设计决定：raw Scene signal 仅在 RequestId 生成前去重；每条 accepted control 均进入 Core，以同 RequestId/action 唯一完成，`LIFECYCLE_BUSY` 原样透传。观测矩阵保持 `v1 baseline|diagnostic -> Recording`、`custom off -> Noop`、`custom baseline|diagnostic -> Recording`、`v1/off` 拒绝。
-- 验证证据：Debug、ASan、TSan 各 18/18 测试通过；Release 构建、`arm64-apple-ios15.0-simulator` 编译、Swift format lint 和 IOS-S01 职责边界扫描通过；三类 PackageSource 共用同一随机读取合同，并覆盖固定文件身份与短读；详见 `quickapp-runtime-ios/evidence/ios-s01-implementation.md`。
+- 验证证据：Debug、ASan、TSan 各 19/19 测试通过；Release 构建、`arm64-apple-ios15.0-simulator` 编译、Swift format lint 和 IOS-S01 职责边界扫描通过；三类 PackageSource 共用同一随机读取合同，并覆盖固定文件身份、短读及 Host 所有资源归零；详见 `quickapp-runtime-ios/evidence/ios-s01-implementation.md`。
 - 待验证项：真实 App/native target 的 link map 与 symbol inventory 需在 IOS-S08/IOS-S09 集成共享 Core、JS Framework 和选定 Engine 后生成；本轮已实现 Manifest 与注入 BuildInventory 的严格一致性校验，不伪造尚不存在的产品链接证据。
-- 阻塞项：无；IOS-S02 及后续 UIKit Surface/Mount/Input 等职责仍未实现。
-- 下一步：对 IOS-S01 产品实现做定向校验；通过前停止扩展和 IOS-S02 编码。
+- 阻塞项：IOS-S01 无；IOS-S02 及 UIKit Surface/Mount/Input 全部等待 M3，M2 Android 完成前不得启动。
+- 下一步：只对 IOS-S01 Foundation 实现做定向校验；停止扩展，不启动 IOS-S02。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / IOS-S01 实现复核 PASS
+
+- 状态：`VERIFIED + HOLD_M3`。
+- 已完成：验证脚本通过；Debug、ASan、TSan 各 19/19，Release、iOS Simulator 编译、格式和边界扫描通过。
+- 边界：该结果只证明 UIKit-free Foundation，不代表 iOS 平台 Runtime 已实施；真实产品链接证据仍由 IOS-S08/IOS-S09 收口。
+- 下一步：停止扩展；M2 Android 完成前不得启动 IOS-S02。
 - 公共合同影响：无。

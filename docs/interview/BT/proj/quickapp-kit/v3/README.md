@@ -38,7 +38,7 @@ v3/
   -> 各项目总 Spec 初稿完成
   -> 总架构与项目总 Spec 校审 PASS
   -> F0 Foundation：首批分 Spec 实现或定向返修
-  -> W1-W4：Toolkit + JS + Core + LVGL/SDL 端到端汇合
+  -> W1-W5：Toolkit + JS + Core + LVGL/SDL 端到端汇合
   -> M1：同一 Runtime RPK 完成 Case 001 S1-S5
   -> M2：Android 复用同一 Artifact/Core/JS
   -> M3：iOS 复用同一 Artifact/Core/JS
@@ -55,8 +55,8 @@ v3/
 6. `V1-EXECUTION-PLAN.md`
 7. `AGENT-WORK-BOARD.md`
 8. `SUBSPEC-AGENT-LAUNCH.md`
-9. `reviews/subspec-review/2026-08-16-current-agent-prompts.md`
+9. `reviews/subspec-review/2026-08-17-w2-design-review.md`
 10. 对应项目的 `projects/<project>/spec/README.md`
 11. 对应项目的 `AGENT-HANDOFF.md`
 
-总架构和项目总 Spec 已通过；当前里程碑、分 Spec 状态和编码授权以 `AGENT-WORK-BOARD.md` 第 5 节为唯一事实源。
+总架构和项目总 Spec 已通过；当前里程碑、分 Spec 状态和编码授权以 `AGENT-WORK-BOARD.md` 第 6 节为唯一事实源。

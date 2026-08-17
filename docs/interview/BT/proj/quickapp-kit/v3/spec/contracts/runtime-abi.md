@@ -85,6 +85,8 @@ onSurfaceStatusChanged(SurfaceStatusChanged)
 
 `onLoadVerifiedModule -> completeVerifiedModuleLoad` 是 Module Loader 异步闭环；`onVmInitializationDispatch -> completeVmInitialization` 是本地 `onCreate/onInit/initialEvaluation/onReady` 异步闭环；`onLifecycleDispatch -> completeLifecycle` 是可见性与销毁 Hook 异步闭环。三者都只投递队列，Core Runtime Thread 不同步执行或等待 QuickJS。Runtime Host 前后台和销毁入口属于 Lifecycle Host Control，不得伪装成 JS External Function。
 
+`onSurfaceStatusChanged` 只在首棵树已经提交后投递，`committedRevision=0` 表示首提交；首提交前不使用 `0` 伪造 Revision，也不投递 nullable Revision。
+
 每个 Result 的成功和失败使用同一个 `kind` 和同一个回调，仅由 `status` 判别。`MountTransactionResult` 是 Platform -> Core 合同，JS 不直接控制 Mount。
 
 ## 5. 数据边界

@@ -1,6 +1,6 @@
 # Toolkit v3 Agent Handoff
 
-> 状态：TK-S01 `VERIFIED`；TK-S02 与 TK-S03 `DESIGN_ALLOWED`。
+> 状态：TK-S01/TK-S02/TK-S03 `VERIFIED`；TK-S04 `PASS + CODE_ALLOWED`。
 > Spec：`/Users/qy/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/v3/projects/quickapp-toolkit/spec`  
 > 代码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-toolkit`  
 > Case 001：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/quickapp-code-test1`
@@ -296,3 +296,133 @@ I2 Runtime 联调和 Benchmark
 - 已完成：CLI Diagnostic 私有边界成立；typecheck/lint/build、49/49 和 CLI 17/17 通过。
 - 下一步：按 W1 并行设计 TK-S02 与 TK-S03，只写分 Spec，不编码；共同提交校审。
 - 公共合同影响：无。
+
+### 2026-08-16 / Toolkit Agent / W1 TK-S02 与 TK-S03 分 Spec 启动
+
+- 状态：`IN_PROGRESS`
+- 事件：并行设计 TK-S02 Manifest 与 Module Graph、TK-S03 UX/Script/Style Frontend；只写分 Spec，不写产品代码。
+- 已验证事实：TK-S01 已为 `VERIFIED`；工作看板明确开放 TK-S02 与 TK-S03 设计，TK-S04 尚未开放。
+- 固定边界：TK-S02 只拥有 manifest、route、module、asset、capability 关系；TK-S03 只拥有联盟 UX/JS/style 解析、源码位置、语法矩阵和诊断。
+- 共享边界：两者只消费 TK-S01 `SourceAccess`；输出止于前端结构化模型，不执行 Lowering，不预设非公共 Artifact 字段。
+- 待验证项：Case 001/002 实际 manifest、UX/JS/style 形态与联盟前端行为边界。
+- 阻塞项：无；TK-S02/TK-S03 编码和 TK-S04 设计均保持阻塞。
+- 下一步：核对总 Spec、公共合同与 Case 输入，完成两组五份分 Spec 后共同提交总架构校审。
+- 公共合同影响：无。
+
+### 2026-08-17 / Toolkit Agent / W1 TK-S02 与 TK-S03 分 Spec 完成
+
+- 状态：`READY_FOR_REVIEW`
+- 事件：完成 TK-S02 Manifest 与 Module Graph、TK-S03 UX/Script/Style Frontend 两组分 Spec；共同提交总架构校审。
+- 已完成：两个目录各包含 `README.md`、`requirements.md`、`design.md`、`tasks.md`、`acceptance.md`；各冻结 25 条需求。
+- `[已验证事实]`：Case 001 的 2 个普通 Page、1 个 Widget、icon、router/prompt/shortcut/fetch 声明、ESM/CommonJS/require.context/global/Less 语法均已进入对应验收；Case 002 的 interpolation、if、for/tid、state update 源码语法已进入 S03 验收。
+- `[已冻结]`：S03 唯一解析 UX/JS/style 并输出 AST、SourceSpan 与 `UnresolvedReference`；S02 唯一解析 Manifest、引用 target 与 App/Page/Shared/Asset/Capability 关系；S04 仍是唯一 Lowering owner。
+- `[已冻结]`：S02 从 Manifest App/Page seed 出发，通过 S03 Port 迭代建立可达闭包；不扫描打包未引用文件。Widget 产生 `TK_WIDGET_EXCLUDED_V1` 并从 V1 图排除。
+- `[已冻结]`：S03 使用结构化 parser，不用正则拆 UX、不执行 JS/Less、不解析 route/moduleId/target；App UX 禁止 template，Page UX 要求单 template + script。
+- 自检：职责隔离通过；两组各 5 文件、各 25 条需求；需求覆盖完整；全部冻结 Diagnostic code 均有直接负例；README 相对文件链接存在；未发现产品代码、Lowering、Emitter 或非公共 Artifact 字段实现。
+- 待验证项：parser 具体依赖版本、许可证与真实实现性能在分 Spec 通过并获得编码授权后验证；不影响当前设计校审。
+- 阻塞项：TK-S02/TK-S03 产品编码继续阻塞；TK-S04 未启动。
+- 下一步：等待总架构对两份分 Spec 的公共合同、依赖和 Case 闭环进行同批校审。
+- 公共合同影响：无；未修改 Manifest/Runtime Metadata/Page IR/JS Bootstrap 或其他公共 Schema。
+
+### 2026-08-17 / 总架构 Agent / W1 TK-S02 与 TK-S03 校审 PASS
+
+- 状态：`PASS + CODE_ALLOWED`；TK-S04 继续阻塞。
+- 已完成：Manifest/Module Graph 与 UX/Script/Style Frontend 的职责、SourceFrontendPort、Case 001/002、Capability、Widget 排除、错误、限制和资源闭环通过。
+- 实现前置：固定并记录 JSON CST、UX/HTML、JavaScript、CSS/Less parser 的版本和许可证。
+- 边界：S02 不解析源码语法；S03 不解析引用 target；两者都不实现 Lowering、Emitter 或 Artifact 私有字段。
+- 下一步：按各自 tasks 并行实现并联合验证真实图闭包；完成后标记 `READY_FOR_REVIEW`，不得启动 TK-S04。
+- 公共合同影响：无。
+
+### 2026-08-17 / Toolkit Agent / W1 TK-S02 与 TK-S03 实现启动
+
+- 状态：`IN_PROGRESS`
+- 事件：按 `PASS + CODE_ALLOWED` 并行实现 TK-S02/TK-S03；TK-S04 继续阻塞。
+- `[已冻结]` Parser：`jsonc-parser@3.3.1`、`parse5@8.0.1`、`acorn@8.18.0`、`postcss@8.5.26`、`postcss-less@6.0.0`，许可证均为 MIT，exact version 已写入 lockfile。
+- `[已冻结]`：S02 只拥有 Manifest/Module Graph/target resolution；S03 只拥有 UX/JS/Style syntax、SourceSpan 与 `UnresolvedReference`；真实闭包只复用一个 `SourceFrontendPort`。
+- 阻塞项：无；Lowering、Emitter、Artifact 与 TK-S04 均禁止实现。
+- 下一步：实现两项 tasks，完成 Case 001/002、确定性、资源、取消和边界证据后提交校审。
+- 公共合同影响：无。
+
+### 2026-08-17 / Toolkit Agent / W1 TK-S02 与 TK-S03 实现完成
+
+- 状态：`READY_FOR_REVIEW`
+- 已完成：TK-S03 以统一 `SourceFrontendPort` 实现 UX/Template、JavaScript、CSS/Less 结构化解析、统一 SourceSpan、Feature Matrix、未解析引用、限制和取消；第三方 parser AST 未成为跨阶段合同。
+- 已完成：TK-S02 实现严格 Manifest JSON CST、重复 key、公共 Schema validator 调用、Route/Page/Widget、local/context/style/asset/Capability target resolution 和迭代式可达 Module Graph；S02 只消费 S03 references，不解析源码语法。
+- Parser 证据：`jsonc-parser@3.3.1`、`parse5@8.0.1`、`acorn@8.18.0`、`postcss@8.5.26`、`postcss-less@6.0.0` 均为 exact version、MIT；记录于 `quickapp-toolkit/PARSER-DEPENDENCIES.md` 与 lockfile。
+- Case 证据：Case 001 得到 2 Page、4 Shared JS、3 个可达外部 Style、1 icon、1 excluded Widget；router/prompt 为 required、fetch 为 deferred、shortcut 为 declaredOnly。Case 002 只读取 App 与 Contract Page。Widget 仅在 S03 显式请求时可解析，不进入 S02 V1 图；device 正例为 required。
+- 门禁证据：`npm run typecheck`、`npm run lint`、`npm run build` 全部 PASS；`npm test` 为 62/62 PASS；CLI 回归为 17/17 PASS；Case 001/002、确定性、结构化负例、取消、100 次重复构建、资源释放和禁止范围扫描均通过。
+- 机器证据：`quickapp-toolkit/evidence/tk-s02-s03.json`。
+- 边界证据：产品目录仅新增 `compiler/frontend`、`compiler/manifest`、`compiler/module-graph`；不存在 Lowering、Emitter、Artifact 实现；TK-S04 未启动。
+- 阻塞项：无实现阻塞；等待总架构实现校审。TK-S04 继续阻塞，不能因本次完成自行启动。
+- 公共合同影响：无；公共 Manifest Schema 只通过注入 validator 调用，未复制或修改；未新增 Artifact 私有字段。
+
+### 2026-08-17 / 总架构 Agent / W1 实现检查
+
+- 状态：`IMPLEMENTATION_CHANGES_REQUIRED`；不推翻 S02/S03 设计。
+- 已验证：typecheck、lint、build、62/62 测试与 17/17 CLI 测试通过。
+- 必须修正：`require.context` 整体遍历缺少累计预算；共享 Style 的传递引用没有按 `(ownerModuleId, sourcePath)` 处理；Manifest/Model/parsedSources 运行时不可变性不完整。
+- 下一步：严格按当前 Agent 话术定向返修、补回归测试和源码摘要，重新标记 `READY_FOR_REVIEW`。
+- 边界：不得启动 TK-S04，不得实现 Lowering/Emitter/Artifact。
+- 公共合同影响：无。
+
+### 2026-08-17 / Toolkit Agent / W1 TK-S02/TK-S03 定向返修启动
+
+- 状态：`IN_PROGRESS`
+- 范围：只修复 `require.context` 全过程累计预算、共享 ParsedSource 按 owner 传播引用、Manifest/Model/ParsedSourceSet 运行时深不可变。
+- 固定边界：Parser 版本、S02/S03 职责和公共合同保持不变；TK-S04、Lowering、Emitter、Artifact 继续阻塞。
+- 验收：补充空目录零匹配超限、双 Page 共享 Style 传递关系、嵌套对象与 Map 修改失败测试，随后重跑全部门禁并生成源码摘要。
+
+### 2026-08-17 / Toolkit Agent / W1 TK-S02/TK-S03 定向返修完成
+
+- 状态：`READY_FOR_REVIEW`
+- 已修复：`require.context` 对入队目录、访问目录、扫描条目和最终匹配共享同一累计预算；每次 `SourceAccess.list` 使用全局剩余额度，单目录超额统一映射为 `TK_CONTEXT_LIMIT_EXCEEDED`。大量空目录、零匹配仍超限负例通过。
+- 已修复：ParsedSource 继续按 `sourcePath` 解析和缓存一次，引用严格按 `(ownerModuleId, sourcePath)` 处理一次。两个 Page 共用 Style 时，二级 Style import 与 asset relation 均分别传播到两个 owner，且共享 Style 只解析一次。
+- 已修复：Manifest、ResolvedAppModel 与 ParsedSource 值使用递归运行时冻结；ParsedSourceSet 改为无 `set/delete/clear` 的 `ImmutableMap`。`permissions/display/raw` 嵌套修改、Model 数组修改、ParsedSource 引用修改和 Map mutation 均在运行时失败。
+- 门禁证据：Parser 版本和许可证未变化；`npm run typecheck`、`npm run lint`、`npm run build` 全部 PASS；`npm test` 为 65/65 PASS；CLI 为 17/17 PASS；Case 001/002、确定性、取消和 100 次资源循环继续通过。
+- 源码摘要：17 个 `src/compiler/**/*.ts` 文件、1852 行；聚合 SHA-256 为 `6fe4466c043d67d2eae695408089a71454dd734147bfe94b2ece9cb3394d61f8`；明细在 `quickapp-toolkit/evidence/tk-s02-s03-source-summary.json`。
+- 机器证据：`quickapp-toolkit/evidence/tk-s02-s03.json` 已更新为 65/65，并记录三项返修均为 PASS。
+- 边界：S02/S03 公共合同和职责未变化；不存在 TK-S04、Lowering、Emitter 或 Artifact 实现。
+- 阻塞项：无返修阻塞；等待总架构重新校审。TK-S04 继续阻塞。
+
+### 2026-08-17 / 总架构 Agent / W1 TK-S02/TK-S03 复核 PASS
+
+- 状态：`TK-S02/TK-S03 VERIFIED`。
+- 已验证：17 个源码摘要全部匹配；typecheck、lint、build、65/65 测试和 CLI 17/17 全部通过。
+- 已验证：累计 context budget、多 owner 引用传播和深不可变三项返修成立；未越界实现 Lowering、Emitter 或 Artifact。
+- 下一步：停止修改，等待 W2 统一发布；不得启动 TK-S04。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / W2 TK-S04 分 Spec 设计放行
+
+- 状态：`TK-S04 DESIGN_ALLOWED`；产品代码仍阻塞。
+- 当前任务：设计 TK-S04 Canonical Lowering，冻结从 Resolved App Model + Parsed Source Model 到唯一 Lowered Model 的语义、稳定 ID、错误和资源边界。
+- 下一步：完成五份标准分 Spec并标记 `READY_FOR_REVIEW`；不得编码 TK-S04，不得启动 TK-S05/TK-S06。
+- 公共合同影响：不得修改公共 Artifact/Page IR/JS ABI；发现缺口只记录 `[待决策]`。
+
+### 2026-08-17 / Toolkit Agent / W2 TK-S04 分 Spec 设计启动
+
+- 状态：`IN_PROGRESS`。
+- 当前任务：只设计 TK-S04 Canonical Lowering；输入固定为已验证的 `ResolvedAppModel + ParsedSourceModel`，输出固定为供 TK-S05/TK-S06 共同消费的唯一 Canonical Lowered Model。
+- 固定边界：TK-S04 独占 Host Component、Style、Binding、Block、Event 的语义归一和四类 Template ID 分配；不生成 JS Bundle、Page IR 或 Artifact。
+- 禁止项：不修改公共合同、不写产品代码、不启动 TK-S05/TK-S06。
+- 下一步：完成五份分 Spec，自检后标记 `READY_FOR_REVIEW`。
+
+### 2026-08-17 / Toolkit Agent / W2 TK-S04 分 Spec 设计完成
+
+- 状态：`READY_FOR_REVIEW`；产品代码继续 `CODE_BLOCKED`，TK-S05/TK-S06 未启动。
+- 已完成：`tk-s04-canonical-lowering/` 下 README、requirements、design、tasks、acceptance 五份标准分 Spec。
+- `[已冻结]` 输入：只接受同一 Build Session、深不可变且闭包一致的 `ResolvedAppModel + ParsedSourceModel`；S04 不访问 SourceAccess、不重新解析源码或 target。
+- `[已冻结]` 唯一语义：Host Component、Style、Binding、Block、Event 只在 S04 Lower 一次；App/Shared/Page Program 与已解析 module reference 一并形成 canonical module entry。
+- `[已冻结]` ID：每页四个独立正整数命名空间，按 canonical DFS、Host prop 和 event 顺序确定性分配；稳定指相同规范输入得到相同 ID，不承诺跨源码修改保持编号。
+- `[已冻结]` 输出：唯一版本化、深不可变 `CanonicalLoweredAppModel`；TK-S05/TK-S06 只能分别投影 JS 和 Page IR，不能绕回 S02/S03 或重新解释语义。
+- `[已冻结]` 失败边界：源码位置 Diagnostic、整个请求共享的累计预算、规定取消点、无部分结果、无跨 Build Session mutable cache。
+- 自检：五文件均有目录；`TK-S04-R01..R33` 连续唯一并有验收映射；本地链接全部可解析；职责、Case 001/002、确定性、深不可变、资源和 Fake S05/S06 边界闭环。
+- 公共合同影响：无；未修改公共 Artifact/Page IR/ID/Host/Block/Render 合同，未发现需要记录的 `[待决策]`。
+- 下一步：等待总架构校审 TK-S04 分 Spec；校审通过并由工作看板明确 `CODE_ALLOWED` 前不得编码，仍不得启动 TK-S05/TK-S06。
+
+### 2026-08-17 / 总架构 Agent / TK-S04 分 Spec 校审 PASS
+
+- 状态：`PASS + CODE_ALLOWED`。
+- 已验证：唯一 Canonical Lowered Model、四类独立 Template ID、S05/S06 单向投影、确定性、取消、预算与深不可变边界闭环。
+- 下一步：严格按 TK-S04 tasks 实现并提交证据；不得启动 TK-S05/TK-S06。
+- 公共合同影响：无；P0-JS-EXPORT-001 由 TK-S05 后续消费，不改变 TK-S04 边界。

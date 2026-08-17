@@ -37,7 +37,7 @@ EX-S02 的判定原则是：可见结果证明“发生了什么”，结构化 
 4. 断言一轮 dirty flush、一个递增 Revision、一个 incremental Mount。
 5. 断言 Render 包含 count UpdateBinding、conditional RemoveBlock、一个 MoveBlock。
 6. 断言 A/B 没有 Remove/Instantiate，BlockInstanceId/NodeId/NativeHandle 保持。
-7. 断言 input、Handler、state.mutated、render.flush、render.transaction 使用 R1 关联；transactionId 闭合 Render/Mount。`RenderTransaction` 字段级断言等待 `[待决策] EX-S02-REQ-001` 统一公共合同。
+7. 断言 input、Handler、state.mutated、render.flush、render.transaction 使用 R1 关联；该同步 flush 产生的 `RenderTransaction.requestId` 必须等于 R1，transactionId 闭合 Render/Mount。
 
 出现完整 InstantiateTemplate、A/B 重建、多个普通 RenderTransaction 或最终顺序错误，均失败。
 
@@ -92,16 +92,16 @@ B3 还必须证明：Core EventBinding 先删除、Runtime subtree 全部删除�
 
 ### 6.2 同步继承
 
-单击 `同步更新` 得到 R3；同步 state write、flush、Render submitted/presented 都以 R3 形成因果链，并以 transactionId 关联 Mount。Handler 不更新时不得伪造该链。公共合同统一前，不以私有 `RenderTransaction` 字段作为通过手段。
+单击 `同步更新` 得到 R3；Handler 返回前的同步 state write、flush、Render submitted/presented 都以 R3 形成因果链，`RenderTransaction.requestId` 必须等于 R3，并以 transactionId 关联 Mount。Handler 不更新时不得伪造该链。
 
 ### 6.3 异步不继承
 
 1. `开始异步` 输入为 R4，创建 deferred Promise 并返回。
 2. `完成异步` 输入为 R5，只 resolve deferred 并返回。
 3. continuation 随后更新可见文本并产生 Render。
-4. continuation 的 state/flush/Render 不携带 R4 或 R5；R4/R5 仍只属于各自 input/Handler 链。
+4. continuation 的 `RenderTransaction` 必须省略 `requestId`；R4/R5 仍只属于各自 input/Handler 链。
 
-若异步 Render 自动携带 R4/R5，或 target/bubble 分配不同 RequestId，直接失败。
+普通非事件更新产生的 `RenderTransaction` 也必须省略 `requestId`。若异步或普通非事件 Render 出现该字段，或 target/bubble 分配不同 RequestId，直接失败。
 
 ## 7. 跨平台与负向门禁
 

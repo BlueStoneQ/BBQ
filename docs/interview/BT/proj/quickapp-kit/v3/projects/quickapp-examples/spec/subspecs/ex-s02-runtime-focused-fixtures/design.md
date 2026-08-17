@@ -85,12 +85,12 @@ click RequestId R1
 -> onUpdate once
 -> three synchronous state writes
 -> one microtask dirty flush
--> one RenderTransaction(revision=committed+1, transactionId=T1)
+-> one RenderTransaction(revision=committed+1, transactionId=T1, requestId=R1)
 -> one incremental MountTransaction
 -> presented
 ```
 
-R1 必须关联该次 state、flush、Render 与 Trace；T1 关联 Render/Mount。公共 Event Contract 要求 `RenderTransaction` 携带 R1，但当前 Render Schema 不允许 `requestId` 字段，精确字段落点见 `[待决策] EX-S02-REQ-001`。EX-S02 不新增私有字段规避冲突。
+`RenderTransaction.requestId` 是可选因果字段。本次 flush 发生在 Handler 返回前，因此事务必须携带 R1；Core 将 R1 原样复制到相关 Render Observation，T1 继续关联 Render/Mount。Platform Mount 不解释 R1。
 
 RenderTransaction 的语义操作集合必须是：
 
@@ -188,9 +188,9 @@ R2: target Handler(child,H1) -> bubble Handler(parent,H2)
 
 ### 7.3 同步与异步因果
 
-- 单击 `同步更新` 得到 R3；Handler 内同步 state write 以及随后 flush/Render Trace 都携带 R3。
+- 单击 `同步更新` 得到 R3；Handler 返回前的同步 state write、flush、`RenderTransaction.requestId` 以及相关 Render Trace 都必须携带 R3。
 - 单击 `开始异步` 得到 R4，创建 deferred；单击 `完成异步` 得到 R5 并 resolve。
-- Promise continuation 在 Handler 返回后更新 UI；该 state/flush/Render 不得自动携带 R4 或 R5。它拥有自己的 transactionId，但没有输入 RequestId，除非未来公共合同显式增加 typed handoff；EX-S02 不定义该扩展。
+- Promise continuation 在 Handler 返回后更新 UI；其 `RenderTransaction` 必须省略 `requestId`，不得携带 R4 或 R5。普通非事件更新同样必须省略该字段。事务仍拥有自己的 transactionId。
 
 ## 8. 跨平台与证据
 
@@ -213,4 +213,3 @@ R2: target Handler(child,H1) -> bubble Handler(parent,H2)
 - `[待验证]` CASE-002 当前源码的 Toolkit 编译结果与三平台 Runtime 结果。
 - `[待验证]` BLOCK-001、CAP-DEVICE-001、EVENT-REQUEST-001 源码尚未创建，其 provenance 和 Source snapshot 等待 `CODE_ALLOWED` 后冻结。
 - `[待验证]` focused Fixture 创建后的 Artifact identity、跨平台 operation/ID/cleanup 证据。
-- `[待决策] EX-S02-REQ-001`：Event Contract 要求同步事件产生的 `RenderTransaction` 携带输入 `requestId`，但 Render Contract 的机器 Schema 未声明且禁止该字段；总架构需统一公共合同后，EX-S02 才冻结消息字段级断言。

@@ -1,6 +1,6 @@
 # LVGL Runtime Spec Agent Handoff
 
-> 状态：LV-S01 `VERIFIED`；LV-S02 `DESIGN_ALLOWED`。
+> 状态：LV-S01/LV-S02 `VERIFIED`；LV-S03/LV-S06 `PASS + CODE_ALLOWED`。
 
 ## 目录
 
@@ -204,4 +204,121 @@ LVGL 类型只存在 Platform 层；输入转换为 `PlatformInputMessage`；Sur
 - 状态：`VERIFIED`。
 - 已完成：析构无隐藏清理、竞争单次尝试返回 busy；Release、ASan/UBSan、TSan 均通过。
 - 下一步：按 W1 设计 LV-S02，只写分 Spec，不编码；完成后提交校审。
+- 公共合同影响：无。
+
+### 2026-08-16 / LVGL Runtime Agent / LV-S02 分 Spec 启动
+
+- 状态：IN_PROGRESS
+- 已完成：确认 LV-S01 `VERIFIED`、W1 `LV-S02 DESIGN_ALLOWED`，并对齐 Composition、Launch、Lifecycle、Observation 与 PackageSource 公共合同。
+- 新增事实：LV-S02 的 SDL/libuv/内建 Backend 只实现基础调度、显示、原始输入和包源边界；可点击的完整 SDL Runtime 仍由 LV-S08 集成验收。
+- 本项目设计决定：Composition Root 按构建 Profile 静态选择唯一实现；`RuntimeLaunchProfile` 只提供启动数据，不在运行时切换 Engine 或 Backend。
+- 待验证项：Core/JS W1 最终 Port 名称与链接目标名须在 LV-S02 编码前对齐，不在本分 Spec 重定义公共接口。
+- 阻塞项：无。
+- 下一步：完成 `lv-s02-runtime-host-backends` 五份分 Spec，自检后标记 `READY_FOR_REVIEW`。
+- 公共合同影响：无。
+
+### 2026-08-16 / LVGL Runtime Agent / LV-S02 分 Spec 完成
+
+- 状态：READY_FOR_REVIEW
+- 已完成：`lv-s02-runtime-host-backends` 的 `README.md`、`requirements.md`、`design.md`、`tasks.md`、`acceptance.md`；完成 Composition Root、PackageSource、Core/JS/单 Engine/Trace 装配、Runtime Host、Lifecycle Control 与双 Backend Profile 设计。
+- 新增事实：S02 可以独立验证组合算法与 Host/Backend 机制，但后续 V1 组件/能力未真实链接前不得生成声称可运行的产品 Manifest；最终 link map、体积和双 Profile 裁剪证据由 LV-S09 收口。
+- 本项目设计决定：`lvgl-simulator-dev` 静态选择 QuickJS + diagnostic Trace Adapter + libuv/SDL/File；`lvgl-embedded-min` 静态选择 QuickJS + baseline Trace Adapter + builtin/device callback/Memory。两者冻结独立容量与 pump budget，owner task stop policy 均为 `drain`。
+- 待验证项：编码前机械对齐 CORE-S02 与 JS-S01 的最终公开 C++ Port/target 名称；不得据此改变本文语义。
+- 阻塞项：无设计阻塞；LV-S02 产品代码等待总架构校审 `PASS + CODE_ALLOWED`。
+- 下一步：等待总架构校审；不得编码 LV-S02，不得启动 LV-S03。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / LV-S02 分 Spec 校审 PASS
+
+- 状态：`PASS + CODE_ALLOWED`。
+- 已完成：Composition Root、Host、PackageSource、双 Backend Profile、owner thread、背压、销毁、裁剪与验收闭环通过；无公共合同冲突。
+- 边界：本轮只实现 LV-S02；不得实现 Surface/Mount/Event 或启动 LV-S03。Fake inventory 不得冒充最终产品 Manifest/link map。
+- 下一步：严格按 LV-S02 tasks 实现并提交测试和证据。
+- 公共合同影响：无。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S02 实现启动
+
+- 状态：IMPLEMENTING
+- 已完成：确认 `LV-S02 PASS + CODE_ALLOWED`；读取五份分 Spec、最新工作看板和 LV-S01 实现；确认 SDL3 3.4.14，并补齐独立 libuv 1.52.1 开发包。
+- 新增事实：CORE-S02 尚未提供完整 Runtime Host factory，JS-S01 已提供真实 `JsEngineProvider/QuickJsEngineProvider`；本轮直接复用 Core Foundation 与真实 QuickJS Provider，用 Fake Core/JS 控制面验证 S02 装配，不复制共享实现。
+- 本项目设计决定：host/embedded/simulator 分 target；只有 simulator target 依赖 SDL/libuv。Fake inventory 只产生带 isolated 标记的组合校验结果，不序列化最终 V1 Manifest。
+- 待验证项：normal、ASan/UBSan、TSan、双 Backend、裁剪、资源归零和依赖扫描。
+- 阻塞项：无。
+- 下一步：实现 LV-S02 T01-T10 与 V01-V08，生成正式 evidence。
+- 公共合同影响：无。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S02 实现完成
+
+- 状态：READY_FOR_REVIEW
+- 已完成：Composition Root、Runtime Host、严格 Launch 校验、File/Memory PackageSource、真实 QuickJS 装配、Trace Adapter、libuv/SDL simulator Backend、builtin/device callback embedded Backend、Lifecycle Control、背压与确定销毁。
+- 新增事实：共享 Core 当前只开放 Foundation，尚无 CORE-S02 完整 Runtime factory；S02 因此以真实 Core Foundation/QuickJS 加 Fake Core 控制面完成隔离验证，未复制共享实现。
+- 本项目设计决定：已接受 Core callback 构成 teardown barrier；Host 只在 owner pump 修改状态。embedded-only 配置不创建 SDL/libuv target；Fake inventory 始终为 `isolated_evidence=true/product_manifest=false`。
+- 验证证据：Debug、Release、ASan/UBSan、TSan 均 6/6 CTest PASS；embedded-only 3/3 PASS；7 组 S02 合同、跨线程 callback、Host queue full/pump budget、10,000 轮 start/destroy、双 Backend 和源码边界扫描通过。详见代码项目 `evidence/lv-s02-verification.md`。
+- 资源与裁剪证据：每轮 task/input/read/session/engine 归零；embedded probe 只链接系统库与 libc++，不链接 SDL/libuv；最终 V1 Manifest/link map/体积仍由后续集成阶段负责。
+- 待验证项：真实 CORE-S02 Runtime factory 发布后机械替换 Fake Core 控制面并重跑同一合同；不改变 S02 边界。
+- 阻塞项：LV-S03 继续 BLOCKED，等待总架构实现校审。
+- 下一步：提交 LV-S02 实现校审；不得启动 LV-S03。
+
+### 2026-08-17 / 总架构 Agent / LV-S02 实现预检查
+
+- 状态：`EVIDENCE_REQUIRED`；当前实现不要求推翻，LV-S03 继续阻塞。
+- 已验证：Debug、ASan/UBSan、TSan 均重新构建并通过 6/6 CTest；embedded-only 通过 3/3 CTest；双 Backend、裁剪、10,000 轮生命周期和边界扫描通过。
+- 缺口：正式 evidence 未绑定当前源码摘要，且未将 A01-A08、P01-P06、B01-B06、N01-N12 和资源验收逐项映射到测试/扫描证据。
+- 下一步：生成并校验 `source-manifest.sha256`，补逐项验收映射和可复现命令，重跑矩阵后重新标记 `READY_FOR_REVIEW`。
+- 边界：不重写当前实现，不启动 LV-S03。
+- 公共合同影响：无。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S02 正式证据收口
+
+- 状态：READY_FOR_REVIEW
+- 已完成：生成并校验 `evidence/source-manifest.sha256`，绑定 39 个生产源码、Foundation/Fake、测试、Probe、CMake、README 与证据输入；清单校验 39/39 `OK`。
+- 验收映射：`evidence/lv-s02-verification.md` 已逐项映射 A01-A08、P01-P06、B01-B06、N01-N12 和资源 1-10，并区分 Runtime、Scan、Combined 证据。
+- 重跑结果：Debug、Release、ASan/UBSan、TSan 均 clean rebuild 后 6/6 CTest PASS；embedded-only clean rebuild 后 3/3 PASS。
+- 裁剪证据：embedded-only build graph 不含 SDL/libuv target，`otool` 仅见系统库与 libc++；simulator probe 链接 SDL3/libuv；LV-S02 边界扫描 PASS。
+- 证据摘要：`source-manifest.sha256` 文件摘要为 `9df9e0374bc8bb965dc1118af8fc9b035c95fa7e12ce4282f7150fe47f1366dd`。
+- 边界：未修改 LV-S02 实现与测试；未增加 Surface/Mount/Event/Measure/Capability 代码；LV-S03 继续 BLOCKED。
+- 下一步：提交总架构正式校审，不启动 LV-S03。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / LV-S02 实现复核 PASS
+
+- 状态：`VERIFIED`。
+- 已验证：39 项源码摘要全部匹配；Debug、Release、ASan/UBSan、TSan 各 6/6 CTest 通过，embedded-only 3/3 通过。
+- 已验证事实：embedded-only probe 只链接系统库与 libc++，SDL/libuv 未进入该构建；Fake inventory 未冒充产品 Manifest。
+- 下一步：停止修改和扩展，等待 W2 统一发布；不得启动 LV-S03。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / W2 LV-S03/LV-S06 分 Spec 设计放行
+
+- 状态：`LV-S03/LV-S06 DESIGN_ALLOWED`；产品代码仍阻塞。
+- 当前任务：并行设计 LV-S03 Surface Host 与 LV-S06 Font Measure；二者只实现平台 Adapter，不复制 Core 的 Surface 状态或布局语义。
+- 下一步：两项分别完成五份标准分 Spec并标记 `READY_FOR_REVIEW`；不得编码，不得启动 LV-S04/LV-S07。
+- 公共合同影响：不得修改公共 Surface/Measure Port；发现缺口只记录 `[待决策]`。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S03 Surface Host 分 Spec 完成
+
+- 状态：`READY_FOR_REVIEW`。
+- 已完成：`lv-s03-surface-host` 的 README、requirements、design、tasks、acceptance；冻结五类 Surface command 到独立隐藏 page root 的映射、owner-thread 执行、原子 push/close、幂等副作用、恰好一次 Result、确定销毁和双 Profile 固定资源上限。
+- 本项目设计决定：Core 继续独占 route、Navigation 栈和权威 Surface 状态；LV-S03 只保存 `SurfaceId -> page root` 与执行命令所需的本地资源阶段。push/close 使用同一 owner task 的 preflight/no-fail commit，display flush 只观察提交后的整体状态。
+- 自检：公共 Surface command/result 字段、accepted/Result 语义、单 Surface in-flight、失败/reset、线程和资源验收已逐项映射；没有 Mount、Host Component、Input/Event/Measure 或产品代码。
+- 待决策：无。
+- 下一步：等待总架构校审；不得编码 LV-S03，不得启动 LV-S04。
+- 公共合同影响：无。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S06 Font Measure 分 Spec 完成
+
+- 状态：`READY_FOR_REVIEW`。
+- 已完成：`lv-s06-font-measure` 的 README、requirements、design、tasks、acceptance；冻结同步 MeasureRequest/Result、scalable font family、Q26.6 流式度量、双槽 immutable snapshot、严格 generation 通知、失败和双 Profile 固定资源上限。
+- 本项目设计决定：measure 只在 Core Runtime Thread 读取不可变字体快照；snapshot prepare/publish 只在 LVGL owner thread。每个已发布 generation 恰好一个 invalidation 通知，前一通知 accepted 前不发布下一代；Platform 不拥有 Yoga、Measure cache、Button chrome 或最终 Rect。
+- 自检：公共 Measure Schema 字段、generation/constraint、MEASURE_FAILED、线程、无 UI wait、simulator/embedded 一致性和资源验收已逐项映射；没有 Host Tree、Layout、Input/Event 或产品代码。
+- 待决策：无。
+- 下一步：等待总架构校审；不得编码 LV-S06，不得启动 LV-S07。
+- 公共合同影响：无。
+
+### 2026-08-17 / 总架构 Agent / W2 LV-S03/LV-S06 分 Spec 校审 PASS
+
+- 状态：两项均 `PASS + CODE_ALLOWED`。
+- LV-S03：本地 page-root 事实、owner-thread 原子视觉事务和 Result 所有权成立；未复制 Core 路由/Revision。
+- LV-S06：immutable font snapshot、Core-thread 同步度量、generation 失效和 Layout 边界成立。
+- 下一步：两项可并行实现并分别提交证据；不得启动 LV-S04/LV-S07。
 - 公共合同影响：无。

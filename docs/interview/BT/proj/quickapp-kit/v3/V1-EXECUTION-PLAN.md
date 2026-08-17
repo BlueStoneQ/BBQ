@@ -118,26 +118,26 @@ M1 必须运行 `quickapp-examples` 的 Case 001 基线，不以手写 IR、手�
 
 ### 7.1 总架构 Agent
 
-1. `EX-S02-REQ-001` 已关闭，等待 Examples Agent 同步字段级断言。
-2. Foundation 定向复核已完成：Benchmark、Toolkit、Core、LVGL、Android 通过。
-3. Toolkit、Core、LVGL 先行设计 W1；JS 完成 S01 后加入 W1。W2 暂不发布。
+1. W2 七项设计已全部提交；四项通过并开放编码，三项只需窄修正。
+2. JS-S02 因进程内 `bytesBase64` 违反 immutable byte storage 合同，暂时重开 W1 窄返修；不推翻 ABI 状态机。
+3. 当前并行实现 TK-S04、CORE-S03、LV-S03/LV-S06；JS-S03/S04 与 CORE-S04 在文档复核通过前不得编码。
 
 ### 7.2 项目 Agent
 
 | Agent | 现在做什么 | 完成后 |
 |---|---|---|
-| Toolkit | 设计 TK-S02 与 TK-S03，不编码 | 两份分 Spec 一起提交校审 |
-| Runtime Core | 设计 CORE-S02 与 CORE-S05，不编码 | 两份分 Spec 一起提交校审 |
-| LVGL Runtime | 设计 LV-S02，不编码 | 提交校审 |
-| JS Runtime | 完成 JS-S01 实现和验收 | 写 `READY_FOR_REVIEW`；不得启动 JS-S02 |
+| Toolkit | 实现 TK-S04 Canonical Lowering | 提交实现与证据；不得启动 TK-S05/TK-S06 |
+| Runtime Core | 实现 CORE-S03；同步 CORE-S04 Revision 决策 | 分别提交实现/设计复核；不得编码 CORE-S04 或启动 CORE-S06 |
+| LVGL Runtime | 分别实现 LV-S03 Surface Host 与 LV-S06 Font Measure | 分别提交实现与证据；不得启动 LV-S04/LV-S07 |
+| JS Runtime | 返修 JS-S02 immutable bytes；修订 JS-S03/S04 文档 | 提交复核；不得编码 JS-S03/S04 或启动 JS-S05 |
 | Android Runtime | AND-S01 已完成，当前停止扩展 | M1 完成后进入 M2 |
-| iOS Runtime | 只收尾已启动的 IOS-S01 Foundation | 写 `READY_FOR_REVIEW`；IOS-S02 必须等到 M3 |
+| iOS Runtime | IOS-S01 已完成，当前停止扩展 | IOS-S02 必须等到 M3 |
 | Benchmark | 当前阶段停止扩展 | 等待 M4 |
-| Examples | 将 EX-S02 同步到已冻结的 Render `requestId` 合同 | 提交 EX-S02 校审，不写 Fixture 产品代码 |
+| Examples | EX-S02 已通过，当前停止扩展 | 等待 M1 后续安排 |
 
 ### 7.3 用户操作
 
 1. 继续使用现有八个长期 Agent 对话，不为每个分 Spec 新开对话。
-2. 把 `2026-08-16-current-agent-prompts.md` 中的话术分别发给对应 Agent。
+2. 把 `2026-08-17-w2-design-review.md` 中的话术分别发给对应 Agent。
 3. 任一 Agent 标记 `READY_FOR_REVIEW` 后，只通知总架构 Agent；不要让项目 Agent 自行修改公共合同。
 4. 等总架构在工作看板写出 `PASS + CODE_ALLOWED` 后，再让该 Agent 进入编码或下一波次。

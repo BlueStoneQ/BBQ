@@ -1,6 +1,6 @@
 # QuickApp Examples Agent Handoff
 
-> 状态：EX-S01 T01-T05 `VERIFIED`；EX-S02 `READY_FOR_REVIEW + CODE_BLOCKED`。
+> 状态：EX-S01 `VERIFIED`；EX-S02 `PASS + CODE_HOLD_POST_M1`。
 
 ## 目录
 
@@ -183,3 +183,21 @@ Case 变更必须记录它覆盖的公共合同，不得为了适配实现而改
 - 冻结语义：Handler 返回前的同步状态 flush 必须携带触发输入的 RequestId；普通非事件更新和异步 continuation 必须省略。
 - 下一步：Examples Agent 只同步 EX-S02 字段级断言和待验证清单，然后提交校审；不得修改 Fixture 源码或启动 EX-S03。
 - 公共合同影响：`EX-S02-REQ-001` 已关闭，不新增 EventId，不由 Trace 补造消息语义。
+
+### 2026-08-16 / Examples Agent / [已冻结] P0-EVENT-003 已消费
+
+- 状态：READY_FOR_REVIEW
+- 已完成：EX-S02 requirements、design、acceptance 与待验证清单已同步公共 `RenderTransaction.requestId` 语义。
+- 冻结断言：该字段可选；Handler 返回前的同步状态 flush 必须携带输入 RequestId；普通非事件更新和异步 continuation 必须省略。
+- 待验证项：Fixture 源码 identity、Toolkit Artifact 和三平台运行证据保持不变。
+- 阻塞项：`EX-S02-REQ-001` 已关闭；产品代码仍 `CODE_BLOCKED`。
+- 下一步：提交 EX-S02 定向校审；不启动 EX-S03。
+- 公共合同影响：无；本次只消费 P0-EVENT-003，未新增消息、ID 或 Trace 语义。
+
+### 2026-08-17 / 总架构 Agent / EX-S02 分 Spec 校审 PASS
+
+- 状态：`PASS + CODE_HOLD_POST_M1`。
+- 已完成：CASE-002、BLOCK-001、CAP-DEVICE-001、EVENT-REQUEST-001 的输入、操作、身份、清理和因果断言闭环；P0-EVENT-003 已正确消费。
+- 边界：EX-S02 不阻塞 Case 001 M1；当前不创建新 Fixture，不启动 EX-S03。
+- 下一步：停止扩展，等待 M1 主链路完成后再放行 focused Fixture 实现。
+- 公共合同影响：无。
