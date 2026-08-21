@@ -57,9 +57,14 @@
     },
     "module": {
       "type": "object",
-      "required": ["moduleId", "bundle"],
+      "required": ["moduleId", "dependencies", "bundle"],
       "properties": {
         "moduleId": { "type": "string", "minLength": 1 },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
         "bundle": { "$ref": "#/$defs/artifact" }
       },
       "additionalProperties": false

@@ -265,10 +265,42 @@ function validateArtifactRelationships(set) {
   }
   if (!manifest.router.pages[manifest.router.entry]) errors.push("manifest entry missing from pages");
 
-  const allowedDependencies = new Set([
+  const sharedModuleIds = new Set(
+    runtimeMetadata.sharedModules.map((module) => module.moduleId)
+  );
+  const allowedPageDependencies = new Set([
     runtimeMetadata.app.moduleId,
-    ...runtimeMetadata.sharedModules.map((module) => module.moduleId)
+    ...sharedModuleIds
   ]);
+  for (const dependency of runtimeMetadata.app.dependencies) {
+    if (!sharedModuleIds.has(dependency)) errors.push(`invalid app dependency ${dependency}`);
+  }
+  const sharedById = new Map(
+    runtimeMetadata.sharedModules.map((module) => [module.moduleId, module])
+  );
+  for (const module of runtimeMetadata.sharedModules) {
+    for (const dependency of module.dependencies) {
+      if (!sharedModuleIds.has(dependency) || dependency === module.moduleId) {
+        errors.push(`invalid shared dependency ${module.moduleId} -> ${dependency}`);
+      }
+    }
+  }
+  const visiting = new Set();
+  const visited = new Set();
+  const visitShared = (moduleId) => {
+    if (visiting.has(moduleId)) {
+      errors.push(`shared dependency cycle ${moduleId}`);
+      return;
+    }
+    if (visited.has(moduleId)) return;
+    visiting.add(moduleId);
+    for (const dependency of sharedById.get(moduleId)?.dependencies ?? []) {
+      if (sharedById.has(dependency)) visitShared(dependency);
+    }
+    visiting.delete(moduleId);
+    visited.add(moduleId);
+  };
+  for (const moduleId of sharedModuleIds) visitShared(moduleId);
   const appBootstrap = bootstrapsByPath[runtimeMetadata.app.bundle.path];
   if (!appBootstrap) errors.push(`missing app bootstrap ${runtimeMetadata.app.bundle.path}`);
   else if (appBootstrap.kind !== "app" || appBootstrap.moduleId !== runtimeMetadata.app.moduleId) errors.push("app bootstrap mismatch");
@@ -287,7 +319,7 @@ function validateArtifactRelationships(set) {
       errors.push(`bootstrap mismatch ${page.route}`);
     }
     for (const dependency of page.dependencies) {
-      if (!allowedDependencies.has(dependency)) errors.push(`invalid page dependency ${dependency}`);
+      if (!allowedPageDependencies.has(dependency)) errors.push(`invalid page dependency ${dependency}`);
     }
     if (pageIr) errors.push(...validatePageIrSemantics(pageIr));
   }
@@ -577,6 +609,14 @@ const artifactRelationshipNegatives = [
   ["Manifest page without Metadata page", (set) => { set.manifest.router.pages["pages/Extra"] = { component: "index" }; }, "missing metadata route pages/Extra"],
   ["Metadata page without Manifest page", (set) => { delete set.manifest.router.pages["pages/Demo"]; }, "missing manifest route pages/Demo"],
   ["global moduleId", (set) => { set.runtimeMetadata.pages[0].moduleId = set.runtimeMetadata.app.moduleId; }, "duplicate moduleId"],
+  ["app dependency", (set) => { set.runtimeMetadata.app.dependencies = ["@unknown/module"]; }, "invalid app dependency @unknown/module"],
+  ["shared self dependency", (set) => {
+    set.runtimeMetadata.sharedModules = [{
+      moduleId: "@quickapp-kit/shared/a",
+      dependencies: ["@quickapp-kit/shared/a"],
+      bundle: { path: "shared/a.js", mediaType: "application/javascript", byteLength: 1, sha256: "a".repeat(64) }
+    }];
+  }, "invalid shared dependency @quickapp-kit/shared/a -> @quickapp-kit/shared/a"],
   ["page dependency", (set) => { set.runtimeMetadata.pages[0].dependencies = ["@unknown/module"]; }, "invalid page dependency @unknown/module"],
   ["app bootstrap", (set) => { set.bootstrapsByPath["app.js"].moduleId = "@other/app"; }, "app bootstrap mismatch"],
   ["global templateId", (set) => {

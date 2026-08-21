@@ -32,9 +32,9 @@ JS-S04 通过标准是：同一 typed 输入序列在 Fake Engine 与 QuickJS �
 | JS-S04-A05 | identical/conflicting SurfaceContext | identical no-op；conflict fault 且不覆盖 |
 | JS-S04-A06 | Surface close 后 Context | 丢弃；不创建新 generation/controller |
 | JS-S04-A07 | AppContext 超 RuntimeValue/能力限制 | admission failed/fault；无 VM/泄漏 |
-| JS-S04-A08 | 两 Surface 使用同 Page definition | Page VM 各一个，VM object/state 地址与写入互不影响 |
+| JS-S04-A08 | 两 Surface 使用同 Page Definition | 同一个 `createPageVm` Definition 被两个 Surface 各调用一次；Page VM 各一个，VM object/state 地址、Context `this` 和写入互不影响；无跨 Surface 引用 |
 | JS-S04-A09 | 同 Surface 第二次创建 VM | rejected；原 VM/Hook ledger 不变 |
-| JS-S04-A10 | handle 边界扫描 | 无 QuickJS handle、S03 cache 容器、Core/Platform state 暴露 |
+| JS-S04-A10 | Definition/handle 边界扫描 | `createAppVm/createPageVm` 只接收对应 Context 并返回普通 VM object；无 QuickJS handle、S03 cache 容器、Core/Platform state 暴露 |
 
 ## 4. Initialization
 
@@ -85,7 +85,7 @@ JS-S04 通过标准是：同一 typed 输入序列在 Fake Engine 与 QuickJS �
 | JS-S04-A43 | failed-init Surface teardown | 不调用 onDestroy 补偿；Context/VM/lease/ledger 归零 |
 | JS-S04-A44 | forced upper teardown | 不伪造 Core Result；残余 Page 后 App 顺序释放 |
 | JS-S04-A45 | AppRuntime teardown with multiple Pages | S04 不自行排序栈；关闭 admission 后全部残余资源归零 |
-| JS-S04-A46 | limits/OOM fault injection | Hook 前失败或已执行 Hook 后保留预留 Result；无部分 VM/无静默丢 completion |
+| JS-S04-A46 | limits/OOM fault injection | Hook 前失败或已执行 Hook 后保留预留 Result；无部分 VM/无静默丢 completion；transient OOM/queue overflow 不污染 Definition/VM canonical identity，资源恢复后可重试 |
 
 ## 7. 范围与证据
 
@@ -94,6 +94,6 @@ JS-S04 通过标准是：同一 typed 输入序列在 Fake Engine 与 QuickJS �
 | JS-S04-A47 | thread test | Context、VM、Hook、Stage、microtask、Result、teardown 全在唯一 JS Executor；Core callback 不 inline |
 | JS-S04-A48 | authority/boundary scan | 无 Core Surface/AppRuntime state machine、Navigation stack、Mount/Present、Binding/Render/Handler/Capability 实现或第二 Bridge |
 | JS-S04-A49 | Observation 等价 | 只发公共 lifecycle marker；Noop/Recording 的 VM/Hook/Result/error/teardown 完全等价 |
-| JS-S04-A50 | 完整证据 | Debug/Release/ASan/UBSan/TSan/API-only、资源归零、源码摘要、R01-R22 与 A01-A50 映射齐全 |
+| JS-S04-A50 | 完整证据 | Debug/Release/ASan/UBSan/TSan/API-only、两个 Surface 的独立 VM/Context/State 隔离、资源归零、源码摘要、R01-R22 与 A01-A50 映射齐全 |
 
-真实 S03 Bundle -> VM 连接必须等待 `P0-JS-EXPORT-001` 关闭；此前 Fake definition 只验证 S04 自身合同。
+`P0-JS-EXPORT-001` 已由公共 Artifact Contract 冻结；A08-A10 必须使用精确 Definition shape，禁止临时测试替代。

@@ -42,6 +42,7 @@ export const runtimeMetadata = {
   entryRoute: "/pages/Demo",
   app: {
     moduleId: "@quickapp-kit/app",
+    dependencies: [],
     bundle: artifact("app.js", "application/javascript")
   },
   sharedModules: [],

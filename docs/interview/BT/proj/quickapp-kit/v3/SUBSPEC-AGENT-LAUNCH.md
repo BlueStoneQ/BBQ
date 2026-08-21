@@ -17,7 +17,7 @@
 
 可以从总架构对话拆出八个新对话。聊天上下文只用于提高启动速度，v3 文档才是唯一事实源；即使没有继承任何聊天上下文，Agent 也必须能仅凭本文件、工作看板、公共 Spec 和项目总 Spec 正确工作。
 
-总架构和项目总 Spec 已通过。分 Spec 保留为完整责任地图，执行按 [`V1-EXECUTION-PLAN.md`](./V1-EXECUTION-PLAN.md) 的端到端波次推进；具体状态和编码门禁以工作看板第 5 节为准。
+总架构和项目总 Spec 已通过。分 Spec 保留为完整责任地图，执行按 [`V1-EXECUTION-PLAN.md`](./V1-EXECUTION-PLAN.md) 的端到端波次推进；当前先执行 [`m1-alpha/README.md`](./m1-alpha/README.md) 定义的首屏纵向切片。具体状态和编码门禁以工作看板第 6 节为准。
 
 ## 2. 总 Spec 在哪里
 
@@ -97,19 +97,19 @@ LVGL/SDL -> Android -> iOS
 | 项目 Agent | 当前任务 | 当前门禁 |
 |---|---|---|
 | Benchmark | 当前停止扩展 | `BM-S02 VERIFIED`；`BM-S03 HOLD_M4` |
-| Toolkit | 实现 `TK-S04` | `PASS + CODE_ALLOWED` |
-| JS Runtime | 返修 `JS-S02`；修订 `JS-S03/S04` | JS-S03/S04 代码阻塞 |
-| Runtime Core | 实现 `CORE-S03`；修订 `CORE-S04` | S03 `CODE_ALLOWED`；S04 代码阻塞 |
-| LVGL Runtime | 实现 `LV-S03`、`LV-S06` | 两项 `PASS + CODE_ALLOWED` |
+| Toolkit | 定向修正 Page VM/evaluator、Package dependencies 与 typed facade ID，重建 Alpha RPK | TK-S07 打包机制与详细 Spec 已通过；TK-S08/TK-S09 `CODE_BLOCKED` |
+| JS Runtime | 实现 Case 001 最小 Router 与 `$page` typed facade | Alpha initial binding/Instantiate 分层已通过；完整 Reactive/Event/Navigation `CODE_BLOCKED` |
+| Runtime Core | 对齐 App/Shared/Page Package dependencies 并继续联调待命 | Alpha Loader/Render/Layout/Mount 组件已通过；其他 Core 扩展阻塞 |
+| LVGL Runtime | 接通 `fontSize`、已声明 CJK 字体和 LV-S06 Measure | `LV-S04 ALPHA_COMPONENT_VERIFIED`；其他后续能力阻塞 |
 | Android Runtime | 当前停止扩展 | `AND-S01 VERIFIED`；`AND-S02 HOLD_M2` |
 | iOS Runtime | 当前停止扩展 | `IOS-S01 VERIFIED`；`IOS-S02 HOLD_M3` |
-| Examples | 当前停止扩展 | `EX-S02 PASS + CODE_HOLD_POST_M1` |
+| Examples | 等待四项上游修正后建立唯一 Alpha Runner | `INTEGRATION_BLOCKED_UPSTREAM`；EX-S02 仍 `CODE_HOLD_POST_M1` |
 
-当前处于 W1 窄返修与 W2 实现并行阶段。其余推进顺序见 `V1-EXECUTION-PLAN.md`，项目内部依赖仍以各自 `subspec-index.md` 为准。
+当前处于 M1-Alpha 首屏纵向切片执行阶段。Alpha 的逐项目指令见 [`m1-alpha/agent-instructions.md`](./m1-alpha/agent-instructions.md)；其余推进顺序见 `V1-EXECUTION-PLAN.md`，项目内部依赖仍以各自 `subspec-index.md` 为准。
 
 ## 5. 新对话启动提示词
 
-当前项目话术见 [`2026-08-17-w2-design-review.md`](./reviews/subspec-review/2026-08-17-w2-design-review.md)，可以直接逐段复制。以下模板用于后续分 Spec。
+当前项目话术见 [`2026-08-18-current-agent-instructions.md`](./reviews/subspec-review/2026-08-18-current-agent-instructions.md)，可以直接逐段复制。以下模板用于后续分 Spec。
 
 为每个项目新建一个对话，只替换 `<PROJECT>`、`<SUBSPEC-ID>` 和 `<SUBSPEC-NAME>`：
 

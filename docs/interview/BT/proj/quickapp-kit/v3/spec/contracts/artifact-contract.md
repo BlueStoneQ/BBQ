@@ -65,7 +65,9 @@ JS page bootstrap.moduleId/templateId == runtime.pages[route].moduleId/templateI
 
 `manifest.router.entry` 必须存在于 pages；Runtime Metadata 的 `entryRoute` 必须等于其规范化 route。Widget 不进入 V1 Runtime Metadata。
 
-Manifest 普通 pages 与 Runtime Metadata pages 必须按 `manifestRoute` 双向一一对应，不允许任一侧存在未映射页面。App、Shared 和 Page 的 `moduleId` 在整个 Package 内全局唯一；Page dependencies 只能引用 Metadata 声明的 App 或 Shared module，不得引用自身、其他 Page 或未知 module。App Bundle 的 app bootstrap 必须与 Metadata app module 一致。
+Manifest 普通 pages 与 Runtime Metadata pages 必须按 `manifestRoute` 双向一一对应，不允许任一侧存在未映射页面。App、Shared 和 Page 的 `moduleId` 在整个 Package 内全局唯一；每个模块描述符都必须携带 `dependencies[]`，其顺序和值与同模块 `$app_define$` 完全一致。
+
+`dependencies[]` 只描述 Package 内模块图：App 只能依赖 Shared；Shared 只能依赖其他 Shared；Page 只能依赖 App 或 Shared。模块不得依赖自身，Shared 图必须无环，不得引用其他 Page 或未知 module。`@app-module/system.*` 是 JS Framework 静态 typed facade，不进入 Package dependency graph。App Bundle 的 app bootstrap 必须与 Metadata app module 一致。
 
 Metadata 中的 Artifact Descriptor 固定包含 `path`、`mediaType`、`byteLength` 和小写十六进制 SHA-256。全部 Descriptor 的 path、page route、全局 moduleId 和 page templateId 在各自命名空间内唯一；Page IR/Bootstrap 集合不得包含 Metadata 未索引的额外入口。
 
@@ -113,9 +115,10 @@ $app_require$(moduleId)
 3. `bindingEvaluators` 的十进制 key 必须与 Page IR 的 `TemplateBindingId` 一一对应，求值结果必须属于 Runtime Value。
 4. `handlerMethods` 的十进制 key 必须与 Page IR 的 `TemplateHandlerId` 一一对应，value 是 Page VM 方法名。
 5. Page bootstrap 必须携带并匹配 `templateId`；Page VM 每个 Surface 独立，Shared Module 在 App JS Runtime 内只执行一次。
-6. `$app_require$("@app-module/system.router")`、`system.prompt`、`system.device` 映射到 typed Capability；`system.fetch` 只按 Capability Module Contract 解析为 V1 deferred facade；`$page` API 映射到 typed Page Host Control，不产生通用 module/method Bridge。
-7. Bundle 不导出或维护完整 VNode Tree；Template/Style 静态事实只来自 Page IR。
-8. Bundle 不复制 Binding/Handler target descriptor；JS 只按 TemplateBindingId/TemplateHandlerId 执行 evaluator/method，Core 从 Page IR 解析 target。
+6. `$app_require$("@app-module/system.router")`、`$app_require$("@app-module/system.prompt")`、`$app_require$("@app-module/system.device")` 映射到 typed Capability；`@app-module/system.fetch` 只按 Capability Module Contract 解析为 V1 deferred facade；`$page` API 映射到 typed Page Host Control，不产生通用 module/method Bridge。Toolkit 必须把联盟源码中的 capability import 规范化为该 ID；typed facade 不写入 `$app_define$` 或 Metadata 的 Package `dependencies[]`。
+7. V1 Bundle 不暴露 `$app_require$.context`；Toolkit 必须在构建期把静态 `require.context` 闭包展开为确定性的直接模块依赖和 `$app_require$(moduleId)` 调用。
+8. Bundle 不导出或维护完整 VNode Tree；Template/Style 静态事实只来自 Page IR。
+9. Bundle 不复制 Binding/Handler target descriptor；JS 只按 TemplateBindingId/TemplateHandlerId 执行 evaluator/method，Core 从 Page IR 解析 target。
 
 `[已冻结] P0-JS-EXPORT-001`：App/Page Bundle 的 `module.exports` 是不可变 VM Definition，不是 VM 实例。精确机器形态固定为：
 

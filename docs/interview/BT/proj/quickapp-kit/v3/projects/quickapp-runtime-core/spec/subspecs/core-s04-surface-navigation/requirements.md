@@ -8,8 +8,7 @@
 - [4. 原子性与失败](#4-原子性与失败)
 - [5. 质量需求](#5-质量需求)
 - [6. 非目标](#6-非目标)
-- [7. 待决策](#7-待决策)
-- [8. 需求追踪](#8-需求追踪)
+- [7. 需求追踪](#7-需求追踪)
 
 ## 1. 结论
 
@@ -21,7 +20,7 @@ Surface 和路由的本质是一套 Core 逻辑状态机加一组 Platform 执�
 |---|---|
 | S04-R01 | 每个 AppRuntime 只有一个 `SurfaceController`、一个 `SurfaceIdAllocator` 和一张 `SurfaceRecord` 表；SurfaceId 生命周期内不复用。 |
 | S04-R02 | Surface lifecycle 固定为 `creating -> awaitingTemplate -> mounting -> presenting -> visible/hidden -> destroying -> destroyed`；health 固定为正交的 `normal -> degraded -> failed`。 |
-| S04-R03 | 每个 Surface 只保存一个 optional committed Revision；首棵 Runtime Tree 成功提交时设为 `0`，以后只能由授权提交点单调加一。 |
+| S04-R03 | 每个 Surface 只保存一个 optional committed Revision；首棵 Runtime Tree 成功提交时设为 `0`，以后只能由授权提交点单调加一。首提交前不发送 `SurfaceStatusChanged`；revision 0 后首个可发送状态固定为 `presenting`。 |
 | S04-R04 | 每个 Surface 最多一个 render cycle、一个 Platform Surface command；冲突操作在发出下游命令前拒绝。 |
 | S04-R05 | Core 分配 SurfaceId、解析 verified route/Page IR、创建 hidden Host、发送 SurfaceContext，再经 S03 完成 page Module/VM 初始化。 |
 | S04-R06 | Root 创建只在 AppRuntime foreground 且权威栈为空时接受；成功语义固定为首屏已 Mount、Platform Present 成功且 Root 已提交栈。 |
@@ -70,11 +69,7 @@ Surface 和路由的本质是一套 Core 逻辑状态机加一组 Platform 执�
 - 不提供任意 remove、历史跳转、页面缓存、多窗口或动画。
 - 不维护 Platform Host Tree 或第二棵 Runtime Tree。
 
-## 7. 待决策
-
-`[待决策] CORE-S04-REV-001`：公共 `SurfaceStatusChanged` 在 `creating/awaitingTemplate/mounting` 也强制携带非负 `committedRevision`，但首棵树提交前语义上尚无 Revision。S04 内部固定使用 optional Revision；实现前需由总架构决定 wire 是“首提交前不发该消息”还是扩展 Schema 表达 `none`，S04 不私改公共合同。
-
-## 8. 需求追踪
+## 7. 需求追踪
 
 | 上级合同 | 本分 Spec |
 |---|---|

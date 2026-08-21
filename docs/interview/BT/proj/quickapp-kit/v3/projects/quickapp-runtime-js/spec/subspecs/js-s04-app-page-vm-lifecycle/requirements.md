@@ -37,8 +37,8 @@ S04 只解决：
 | JS-S04-R01 | S04 必须通过 JS-S02 固定 typed callback slot 接收 Context/Dispatch；不得注册另一套 Core callback、JSON RPC 或 External Function。 |
 | JS-S04-R02 | 一个 AppRuntime 只允许一个 immutable AppContext；每个 Surface generation 只允许一个 immutable SurfaceContext。Context 不是 mutable state store，不包含完整 Manifest、Page IR 或平台对象。 |
 | JS-S04-R03 | identical duplicate Context 必须幂等；同 owner/generation 的 conflicting Context 必须记录 local context fault，后续 initialization 返回 typed failure，不覆盖首个 Context。 |
-| JS-S04-R04 | 一个 AppRuntime 只拥有一个 `AppVmController/App VM`；每个 live `SurfaceId + generation` 只拥有一个 `PageVmController/Page VM`，不同 Surface 即使使用同一 Page definition 也不得共享 VM/state。 |
-| JS-S04-R05 | VM 创建必须 acquire JS-S03 generation-checked definition/lease；S04 不读取 Bundle/cache 容器，不执行 `$app_define$/$app_bootstrap$/$app_require$`。 |
+| JS-S04-R04 | 一个 AppRuntime 只拥有一个 `AppVmController/App VM`；每个 live `SurfaceId + generation` 只拥有一个 `PageVmController/Page VM`。不同 Surface 即使共享同一 Page Definition 和 `createPageVm` callable，也必须各自调用一次并得到彼此隔离的普通 VM object/state。 |
+| JS-S04-R05 | VM 创建必须 acquire JS-S03 generation-checked Definition/lease，并严格调用冻结的 `createAppVm(appContext)` 或 `createPageVm(surfaceContext)`；S04 不读取 Bundle/cache 容器，不执行 `$app_define$/$app_bootstrap$/$app_require$`。 |
 | JS-S04-R06 | App initialization 前置条件固定为 AppContext + loaded App definition + absent App VM；Page 固定为 SurfaceContext + loaded Page lease + absent Page VM。缺失/错代际不得部分创建 VM。 |
 | JS-S04-R07 | App initialization 顺序固定为 create/install App VM -> `onCreate` -> bounded microtask checkpoint -> completed Result；`onCreate` 每 AppRuntime 最多一次。 |
 | JS-S04-R08 | Page initialization 顺序固定为 create/install state+methods -> `onInit` -> `initialEvaluation` -> `onReady` -> bounded final checkpoint -> completed Result；每阶段最多一次。 |

@@ -11,7 +11,7 @@
 - [7. Request、重复与完成](#7-request重复与完成)
 - [8. Teardown 与资源](#8-teardown-与资源)
 - [9. 线程、异常与观测](#9-线程异常与观测)
-- [10. 待决策](#10-待决策)
+- [10. 已冻结合同](#10-已冻结合同)
 
 ## 1. 结论
 
@@ -114,7 +114,7 @@ absent -> initializing -> ready -> destroying -> destroyed
 
 独立 `visibilityProjection`：`unknown | visible | hidden`。
 
-`PageVmRecord` 保存：SurfaceId、Surface generation、Page definition/lease generation、Context ref、VM object ref、init stage、visibility projection、last lifecycle sequence、Hook/request ledger。Page module definition可以共享，VM object/state 永不共享。
+`PageVmRecord` 保存：SurfaceId、Surface generation、Page definition/lease generation、Context ref、VM object ref、init stage、visibility projection、last lifecycle sequence、Hook/request ledger。Page module definition 可以共享，VM object/state 永不共享。
 
 ### 4.3 Handle
 
@@ -124,6 +124,16 @@ absent -> initializing -> ready -> destroying -> destroyed
 - 只在 controller state 允许时借用。
 - 不暴露 Controller 容器、S03 cache、QuickJS handle 或 Core 状态。
 - teardown 开始即失效；晚到任务只能得到 stopped/surface-not-found。
+
+### 4.4 Definition 调用合同
+
+S04 直接消费 S03 已校验的公共 Artifact Definition：
+
+- App VM 只由 `createAppVm(appContext)` 创建一次；Page VM 只由 `createPageVm(surfaceContext)` 为每个 Surface 创建一次。
+- 两个 callable 只接收各自 Context view，并必须返回普通 VM object；S04 不接受 VM Definition 作为 VM 实例，也不共享返回 object。
+- `bindingEvaluators` 由后续 Binding 模块以对应 Page VM 作为 `this`、以只读 lexical `scope` 作为唯一参数调用；S04 不执行 evaluator。
+- `handlerMethods` 只作为已校验的 `TemplateHandlerId -> non-empty methodName` 映射交给后续 Handler 模块；S04 不调用 handler。
+- Definition 只属于 S03 cache；Context、VM object、state 和 lifecycle ledger 只属于当前 S04 controller。
 
 ## 5. 初始化管线
 
@@ -317,6 +327,6 @@ Core callback 只经 JS-S02 入有界 JS Executor queue；即使物理单线程�
 
 S04 只发公共 `lifecycle.hook.started/completed/failed`。Initialization 没有独立公共 marker 时不创建私有同义 marker，只通过 Bridge marker、Hook marker和 VM/queue 计数表达。Trace 使用 run-relative integer ns、RequestId、scope、hook、sequence，App Hook 不带 SurfaceId。Noop/Recording 行为等价。
 
-## 10. 待决策
+## 10. 已冻结合同
 
-S04 无新增公共合同缺口。它依赖 JS-S03 的 `[待决策] P0-JS-EXPORT-001` 产出稳定 typed App/Page definition view；该项未关闭前只能设计和使用 Fake definition，不能实现真实 Bundle -> VM 连接。
+S04 无新增公共合同缺口。公共 Artifact Contract 已冻结 `P0-JS-EXPORT-001`：S04 只消费 S03 产出的 typed App/Page Definition，调用 `createAppVm/createPageVm`，并按每个 AppRuntime/Surface 的唯一所有权创建 VM；不重复解释导出对象。

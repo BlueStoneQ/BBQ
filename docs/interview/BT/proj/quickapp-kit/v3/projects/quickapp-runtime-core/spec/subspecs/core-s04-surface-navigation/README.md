@@ -17,6 +17,7 @@ CORE-S04 是 Surface lifecycle、health、Revision gate 和 Core Navigation 栈�
 
 - 管理每个 AppRuntime 的 Surface 表、SurfaceId allocator 与 tombstone。
 - 冻结 lifecycle、health、Revision 和单在途规则。
+- 冻结状态通知规则：首棵树提交前不发送 `SurfaceStatusChanged`；revision 0 后首个可发送状态为 `presenting`。
 - 协调 Root 创建、Navigation Push、Navigation Close 和整栈销毁。
 - 维护唯一权威 Core Navigation 栈；Platform 只执行明确的 source/target command。
 - 通过 S03 完成 Page Module/VM/Hook，通过后续流水线完成 Tree/Layout/Mount。
@@ -50,6 +51,6 @@ CORE-S04 是 Surface lifecycle、health、Revision gate 和 Core Navigation 栈�
 
 ## 6. 当前状态
 
-`READY_FOR_REVIEW / CODE_BLOCKED`
+`PASS + CODE_ALLOWED_AFTER_EVIDENCE`
 
-本目录只完成设计；未获得 `PASS + CODE_ALLOWED` 前不得实现 CORE-S04。
+设计已通过；CORE-S03 全局 source manifest 刷新并通过后，可按 `tasks.md` 实现 CORE-S04。

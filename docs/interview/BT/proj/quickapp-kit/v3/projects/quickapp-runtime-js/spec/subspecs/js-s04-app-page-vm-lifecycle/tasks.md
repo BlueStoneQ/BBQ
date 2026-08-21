@@ -14,7 +14,7 @@
 ## 2. 门禁
 
 - JS-S01/JS-S02 保持 `VERIFIED`。
-- JS-S03 设计校审通过；真实连接前关闭 `P0-JS-EXPORT-001`。
+- JS-S03 设计校审通过；公共 Artifact Contract 的 `P0-JS-EXPORT-001` 已冻结，直接消费其 Definition shape，不使用临时测试替代。
 - 本分 Spec 独立校审 `PASS` 且工作看板显式 `CODE_ALLOWED`。
 - 不启动 JS-S05，不修改公共合同或 Schema。
 
@@ -42,7 +42,7 @@
 2. S03 handle/lease acquire、generation 和 release。
 3. Executor-bound VM Value、状态机和 downstream handle。
 
-**完成定义**：同 Surface 不创建第二 VM，不同 Surface 不共享 VM/state。
+**完成定义**：严格调用 `createAppVm/createPageVm`；同 Surface 不创建第二 VM，不同 Surface 不共享 VM/state；Definition、VM object 和 state 所有权不混淆。
 
 ### JS-S04-T04：实现 App initialization
 

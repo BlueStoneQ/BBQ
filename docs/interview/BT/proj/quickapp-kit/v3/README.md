@@ -19,6 +19,7 @@ v2 是过渡和孵化资料；v3 依据已验证事实重新冻结公共合同�
 v3/
 ├── spec/                         # 平台总 Spec、详细架构与公共合同
 ├── projects/<project>/spec/      # 单项目正式 Spec
+├── m1-alpha/                     # M1 首条纵向执行覆盖层，不是新项目
 ├── V1-EXECUTION-PLAN.md          # 端到端里程碑与执行波次
 └── AGENT-WORK-BOARD.md           # Agent 分工与通信入口
 ```
@@ -38,7 +39,8 @@ v3/
   -> 各项目总 Spec 初稿完成
   -> 总架构与项目总 Spec 校审 PASS
   -> F0 Foundation：首批分 Spec 实现或定向返修
-  -> W1-W5：Toolkit + JS + Core + LVGL/SDL 端到端汇合
+  -> M1-Alpha：Case 001 S1 首屏纵向闭环
+  -> W1-W5：Toolkit + JS + Core + LVGL/SDL 完成 M1
   -> M1：同一 Runtime RPK 完成 Case 001 S1-S5
   -> M2：Android 复用同一 Artifact/Core/JS
   -> M3：iOS 复用同一 Artifact/Core/JS
@@ -55,8 +57,12 @@ v3/
 6. `V1-EXECUTION-PLAN.md`
 7. `AGENT-WORK-BOARD.md`
 8. `SUBSPEC-AGENT-LAUNCH.md`
-9. `reviews/subspec-review/2026-08-17-w2-design-review.md`
-10. 对应项目的 `projects/<project>/spec/README.md`
-11. 对应项目的 `AGENT-HANDOFF.md`
+9. `m1-alpha/README.md`
+10. `reviews/subspec-review/2026-08-17-w2-design-review.md`
+11. `reviews/subspec-review/2026-08-18-js-w2-review.md`
+12. `reviews/subspec-review/2026-08-18-w2-implementation-review.md`
+13. `reviews/subspec-review/2026-08-18-current-agent-instructions.md`
+14. 对应项目的 `projects/<project>/spec/README.md`
+15. 对应项目的 `AGENT-HANDOFF.md`
 
 总架构和项目总 Spec 已通过；当前里程碑、分 Spec 状态和编码授权以 `AGENT-WORK-BOARD.md` 第 6 节为唯一事实源。

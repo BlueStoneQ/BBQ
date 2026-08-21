@@ -90,12 +90,12 @@ JS-S02 的验收本质是证明：**任何跨层调用都只能以一个合法 t
 
 | ID | 场景 | 通过条件 |
 |---|---|---|
-| JS-S02-A31 | callback accepted | Core thread只完成 typed admission/post；consumer 仅在 JS Executor 执行 |
+| JS-S02-A31 | callback accepted | Core thread只完成 typed admission/post；consumer 仅在 JS Executor 执行；Module bytes 保持同一只读 storage 地址，不发生 base64 或 byte copy |
 | JS-S02-A32 | callback FIFO | 同一 producer 的 accepted 顺序保持；每条最多分发一次 |
-| JS-S02-A33 | callback queue full | 当前 callback 返回 `QUEUE_OVERFLOW`；既有 callback 不丢失 |
-| JS-S02-A34 | consumer token unregister | 注销后排队 callback 不调用旧对象，只释放消息 |
+| JS-S02-A33 | callback queue full | 当前 callback 返回 `QUEUE_OVERFLOW`；Module bytes 立即释放，既有 callback 不丢失 |
+| JS-S02-A34 | consumer token unregister | 注销后排队 callback 不调用旧对象，只释放消息及其 immutable bytes |
 | JS-S02-A35 | callback field/version invalid | 入队前拒绝；Engine/consumer 未触达 |
-| JS-S02-A36 | callback during close race | accepted-before-close 消息由 generation 决定消费或丢弃；无 UAF/重入 |
+| JS-S02-A36 | callback during close race | accepted-before-close 消息由 generation 决定消费或丢弃；Surface generation 失效时 Module bytes 可测释放，无 UAF/重入 |
 | JS-S02-A37 | physical single-thread mode | 仍经过 Port/queue，不直接调用 consumer 或 Core handler |
 
 ## 7. 销毁与资源
@@ -113,7 +113,7 @@ JS-S02 的验收本质是证明：**任何跨层调用都只能以一个合法 t
 | ID | 场景 | 通过条件 |
 |---|---|---|
 | JS-S02-A41 | normal stop | quiescing 后不再接受；14 个 binding 反向解绑；Port 关闭；最终 stopped |
-| JS-S02-A42 | stop with correlation/callback queued | bridge correlation 清除一次；queued task 只释放；S02 不完成业务 pending，consumer 不在销毁后调用 |
+| JS-S02-A42 | stop with correlation/callback queued | bridge correlation 清除一次；queued task 及 Module bytes 只释放；S02 不完成业务 pending，consumer 不在销毁后调用 |
 | JS-S02-A43 | stop before/while start | partial token rollback；不创建第二套 catalog；stop 幂等 |
 | JS-S02-A44 | teardown order | S02 Native entry/correlation/consumer registration/Port 先归零，随后 JS-S01 Context/Engine 才销毁 |
 | JS-S02-A45 | resource counters | destroyed 后 liveNativeEntry/liveBridgeCorrelation/liveConsumerRegistration/openSurfaceScope/queuedAbiCallback 全为 0 |
@@ -128,7 +128,7 @@ JS-S02 的验收本质是证明：**任何跨层调用都只能以一个合法 t
 | JS-S02-A47 | second Bridge/authority scan | 无 JSON RPC、generic kind/payload、module/method/args、同步 ID Bridge、S02-owned allocator、completionToken 或 S02-owned Promise/callback/Render snapshot |
 | JS-S02-A48 | Observation Schema | request/result/overflow/teardown 只使用公共 marker 与结构化 ID |
 | JS-S02-A49 | Noop/Recording equivalence | EnqueueResult、Port call、bridge correlation、callback 顺序、错误和资源计数完全相同 |
-| JS-S02-A50 | bounded storage | codec limits、bridge correlation 和 callback queue 都由固定配置限制；PendingRecord 字段精确为 key/expected kind/owner-generation，无隐式增长 |
+| JS-S02-A50 | bounded storage | codec limits、bridge correlation 和 callback queue 都由固定配置限制；PendingRecord 字段精确为 key/expected kind/owner-generation；ABI public/source 无进程内 `bytesBase64`，Module bytes 类型为共享 `const` storage |
 
 ## 9. 需求覆盖
 
@@ -160,7 +160,7 @@ JS-S02 的验收本质是证明：**任何跨层调用都只能以一个合法 t
 1. Runtime ABI identity、14-entry Catalog 和 partial bind rollback 报告。
 2. 每个 public message 的 Schema fixture 与 C++ codec 正负例映射。
 3. Fake/QuickJS 共用 Native Binding + codec suite。
-4. AppRuntime 唯一 allocator、多请求模块交错取号、Fake Core accepted/overflow/closed/OOM、RequestId 分区、bridge correlation 和 callback 投递报告。
+4. AppRuntime 唯一 allocator、多请求模块交错取号、Fake Core accepted/overflow/closed/OOM、RequestId 分区、bridge correlation、callback 投递和 Module bytes 生命周期报告。
 5. Surface/AppRuntime teardown sequence 与资源计数。
 6. Debug、ASan/UBSan、TSan、API-only 构建结果。
 7. public/source dependency scan 与 second-Bridge scan。

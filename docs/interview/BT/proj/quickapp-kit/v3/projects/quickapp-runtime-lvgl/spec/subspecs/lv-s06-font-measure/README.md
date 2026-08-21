@@ -56,4 +56,4 @@ Core Runtime Thread
 
 ## 5. 状态
 
-分 Spec 已完成，当前 `READY_FOR_REVIEW`。未通过总架构校审前不得编码 LV-S06，也不得启动 LV-S07。
+`VERIFIED`：LV-S06 实现、测试、证据和总架构验收已完成；LV-S07 仍等待后续统一设计安排。

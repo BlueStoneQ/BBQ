@@ -1,6 +1,7 @@
 # JS Runtime Spec Agent Handoff
 
-> 状态：JS-S01 `VERIFIED`；JS-S02 `IMPLEMENTATION_CORRECTION_REQUIRED`；JS-S03/JS-S04 `DESIGN_CHANGES_REQUIRED`。
+> 状态：JS Alpha initial-only 与最小 typed facade `VERIFIED`；M1-Alpha 由单一集成 Agent 接管；JS 项目 Agent 停止。
+> 最新校审：[`2026-08-18-js-w2-review.md`](../../../reviews/subspec-review/2026-08-18-js-w2-review.md)。
 
 ## 目录
 
@@ -356,3 +357,135 @@ JS 不创建平台对象、不持有运行时 NodeId；更新通过 `RenderTrans
 - S04：消费同一 Definition ABI，删除 Fake-only/待决策阻塞表述，继续保持每 Surface 独立 VM。
 - 下一步：按 W2 校审话术完成 S02 实现返修与 S03/S04 文档修正，分别标记 `READY_FOR_REVIEW` 后停止。
 - 公共合同影响：P0-JS-EXPORT-001 已在公共 Artifact Contract 冻结；无 Schema 变更。
+
+### 2026-08-18 / JS Runtime Agent / W2 窄返修完成
+
+- JS-S02 状态：`IMPLEMENTATION READY_FOR_REVIEW`；JS-S03/JS-S04 未编码，JS-S05 未启动。
+- JS-S02 字节合同：进程内 `ModuleBundle.bytes` 已替换为共享不可变 `shared_ptr<const vector<uint8_t>>`；`bytesBase64` 只保留在 JSON fixture/Schema 边界。accepted 后只读，S02 不复制到 correlation。
+- JS-S02 释放证据：合同测试覆盖 rejected、Core queue overflow、terminal consumer delivery、Surface generation cancellation 和 AppRuntime teardown cancellation；每条路径均验证 byte storage 释放，未改变 14 个 Native Function、typed union、线程、队列、correlation、状态机或 teardown。
+- JS-S02 验证：Debug、Release、ASan/UBSan、TSan 均 CTest `5/5 PASS`；API-only 构建、边界扫描、Fake/QuickJS common suite 和 source manifest 均更新。
+- JS-S03 状态：`DESIGN READY_FOR_REVIEW + CODE_BLOCKED`；已消费冻结的 `P0-JS-EXPORT-001`，删除待决策/Fake-only 阻塞表述。
+- JS-S03 固定：`createAppVm/createPageVm`、Definition own data property、binding evaluator `this/scope`、`handlerMethods` 已冻结；只有确定性内容失败进入 failure cache，OOM/overflow/scope close/teardown cancellation 回滚并允许重试，不污染 canonical identity。
+- JS-S04 状态：`DESIGN READY_FOR_REVIEW + CODE_BLOCKED`；直接消费同一 Definition ABI；每个 Surface 独立调用 `createPageVm`，VM、Context、state 不跨 Surface 共享。
+- JS-S04 固定：A08-A10 补充跨 Surface Definition/VM 隔离，A46 补充 transient OOM/overflow 可重试；不重复解释 Bundle export，不使用临时测试替代。
+- 文档自检：S03/S04 各 `22 requirements / 9 tasks / 50 acceptance`；相对链接与 `git diff --check` 通过；本轮未修改公共合同或 Schema。
+- 下一步：等待定向校审；不得实现 JS-S03/JS-S04，不得启动 JS-S05。
+
+### 2026-08-18 / 总架构 Agent / W2 JS 定向校审通过
+
+- 状态：JS-S02 `VERIFIED`；JS-S03 `PASS + CODE_ALLOWED`；JS-S04 `PASS + CODE_BLOCKED`。
+- 已验证：JS-S02 immutable byte storage 返修通过；Debug、Release、ASan/UBSan、TSan 均 CTest 5/5，通过 API-only 和边界扫描。
+- 已校审：JS-S03 已消费 `P0-JS-EXPORT-001` 并区分确定性失败缓存与 transient failure；JS-S04 保持每 Surface 独立 VM，不复制 Core 状态。
+- 公共合同影响：无新增；未修改公共合同或 Schema。
+- 下一步：实现 JS-S03；JS-S03 实现通过后再编码 JS-S04；不得启动 JS-S05。
+
+### 2026-08-18 / JS Runtime Agent / JS-S03 实现完成
+
+- 状态：`IMPLEMENTATION READY_FOR_REVIEW`；JS-S04 仍 `CODE_BLOCKED`，JS-S05 未启动。
+- 已完成：实现 `quickapp_js_module_loader`、Module ABI globals、App/Shared/Page definition cache、Shared lazy require、Page Surface lease、Definition validator、failure cache、completion outbox、teardown、最小 observation 和 JS-S03 boundary scan。
+- 固定执行边界：Bundle 只消费 JS-S02 已交付的 immutable bytes；Loader 只在 JS Executor 访问 Engine/Context/JsValueRef；不读取 RPK、路径文件或 Page IR。
+- 关键实现决定：factory 调用前先完成声明依赖的求值；`$app_require$` 在 native callback 内只返回已缓存 exports。原因是 JS-S01 Engine 合同禁止 native callback 重入 Engine，避免隐藏的递归执行和线程语义漂移。
+- 验证：Debug、Release、ASan/UBSan、TSan 均 CTest `7/7 PASS`；API-only `quickapp_js_module_loader` 构建通过；JS-S01/JS-S02/JS-S03 boundary scan 通过；Fake/QuickJS common App load 通过。
+- 正式证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/evidence/js-s03-implementation-evidence.md`。
+- 源码摘要：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/evidence/js-s03/source-manifest.sha256`，已通过 `shasum -a 256 -c` 复核。
+- 公共影响：未修改公共合同、公共 Schema、JS-S02 14-entry Catalog 或平台代码；未实现 JS-S04 VM/Lifecycle、Binding、Event、Render、Capability 或 Platform。
+- 下一步：停止编码，等待 JS-S03 定向实现复核；复核通过前不得启动 JS-S04。
+
+### 2026-08-18 / JS Runtime Agent / M1-Alpha JS-S03 + S04 initial-only 实现完成
+
+- 状态：JS-S03 `IMPLEMENTATION READY_FOR_REVIEW`；M1-Alpha JS-S04 initial-only `IMPLEMENTATION READY_FOR_REVIEW`；完整 JS-S04 生命周期仍未实现。
+- 垂直切片边界：这是现有 v3 项目的 Case 001 S1 执行切片，不是新项目，不新增 Alpha 专用 Runtime，不修改公共合同或 Schema。
+- S03：继续消费 JS-S02 `VerifiedModule` immutable bytes 和冻结的 `P0-JS-EXPORT-001`；保留 App/Shared/Page Definition cache、Page lease、失败缓存、重试和确定性 teardown。
+- S04 Alpha：同一 JS Executor 内创建一个 App VM 和每个 Surface 一个 Page VM；消费已验证 `createAppVm/createPageVm`；只执行初始化和 initial-only evaluator。
+- 首屏：Page evaluator 产生 `1 -> "Hello"`、`2 -> true`，通过既有 `$quickapp_runtime_v1_instantiateTemplate$` 提交 `InstantiateTemplate`；无第二条 Bridge、无新增 Native Function。
+- 不在本轮：完整 Reactive state、Block、Event、Navigation、Capability、S2-S5、完整 Lifecycle ledger/outbox、Platform Host 或 RPK/File Loader。
+- 证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/evidence/js-s04-alpha-evidence.md`；源码摘要为 `evidence/js-s04-source-manifest.sha256`。
+- 验证：Debug、Release、ASan/UBSan、TSan 均 CTest `9/9 PASS`；API-only 构建和 S04 boundary scan 通过；ASan/UBSan 按 macOS AppleClang 能力关闭 `detect_leaks`，资源归零由确定性测试断言覆盖。
+- 下一步：停止编码，等待 M1-Alpha/JS-S03 定向复核；不得启动 JS-S05 或将 Alpha 子集宣称为完整 JS-S04。
+
+### 2026-08-18 / JS Runtime Agent / Alpha 校审定向修正完成
+
+- 状态：JS-S03 `READY_FOR_REVIEW`；M1-Alpha JS-S04 `COMPONENT_EVIDENCE_ONLY / WAITING_FOR_TK-S07_RPK`；JS-S05 继续 `CODE_BLOCKED`。
+- S03 证据：重新生成 `evidence/js-s03/source-manifest.sha256`，包含既有 S03 实现、Fake Engine、测试、边界脚本、共享 CMake 和 S03 evidence；`shasum -a 256 -c` 全部通过。
+- RequestId 所有权：删除 `VmLifecycleService` 的局部 `nextRequestId_`/`nextRequestId()`；改为消费 JS Framework bootstrap 创建的 AppRuntime 级共享 `JsRequestIdAllocatorPort`。
+- 唯一性测试：两个请求生产者交错取得 `req:j-1`、`req:j-2`、`req:j-3`，VM 首屏提交继续取得共享序列的 `req:j-4`；无独立序列、无碰撞、无复用。
+- Alpha 证据：`js-s04-alpha-evidence.md` 已明确降级为合成组件证据，不能宣称真实 Case 001、TK-S07 Runtime RPK 或 LVGL/SDL 首屏通过。
+- 当前输入事实：现有联盟参考 RPK 与正式 TK-S07 Runtime RPK 不同；当前不伪造真实 RPK 集成证据，等待 TK-S07 输出后补充独立集成记录。
+- 公共边界：未修改公共合同、Schema、Runtime ABI、Core、Platform；未实现完整 JS-S04、JS-S05、Reactive、Block、Event、Navigation 或 Capability。
+- 验证：S04 allocator/VM 测试与 boundary scan 通过；既有 Debug、Release、ASan/UBSan、TSan、API-only 验证保持通过。
+- 下一步：等待真实 TK-S07 RPK；到位后只补 App/Page Bundle -> Module Loader -> VM -> initial binding 集成证据，不启动 JS-S05。
+
+### 2026-08-18 / 总架构 Agent / JS-S03 与 Alpha JS-S04 实现复核
+
+- 状态：`IMPLEMENTATION_CORRECTION_REQUIRED`；JS-S05 继续 `CODE_BLOCKED`。
+- JS-S03 行为测试已通过，但独立 `evidence/js-s03/source-manifest.sha256` 对当前 `CMakeLists.txt`、`include/quickapp/js/module/module_loader.h`、`src/module/module_loader.cpp` 校验失败，必须重新生成并复核。
+- Alpha JS-S04 仅为合成模块的组件级证据，不消费真实 Case 001 RPK，不能宣称 Alpha S1 或完整 JS-S04 已通过。
+- 当前 `VmLifecycleService` 自有 `nextRequestId_` 违反公共合同；必须改为消费 JS Framework bootstrap 创建的 AppRuntime 级共享 `JsRequestIdAllocator/port`，并补充跨请求生产者唯一性测试。
+- 允许保留现有 JS-S03/S04 主体实现；不得启动 JS-S05，不得修改公共合同、Schema、Runtime ABI 或实现完整 S04。
+- 详细校审与可复制指令：[`2026-08-18-js-s03-alpha-review.md`](../../../reviews/subspec-review/2026-08-18-js-s03-alpha-review.md)。
+
+### 2026-08-18 / 总架构 Agent / JS Alpha 定向修正复核
+
+- 状态：`JS-S03 CORRECTION_VERIFIED`；M1-Alpha JS-S04 `COMPONENT_EVIDENCE_ONLY / INTEGRATION_ALLOWED`；JS-S05 继续 `CODE_BLOCKED`。
+- 已验证：`evidence/js-s03/source-manifest.sha256` 当前 `6/6 OK`；`VmLifecycleService` 消费 AppRuntime 级共享 `JsRequestIdAllocatorPort`；跨请求生产者唯一性测试存在。
+- 边界：现有 JS Alpha 证据仍是合成 Definition，不是真实 TK-S07 RPK；不得宣称 Case 001 S1 已通过。
+- 下一步：只参与真实 RPK -> Core VerifiedModule -> JS Module Loader -> App/Page VM -> initial binding 集成，不读取 RPK 路径，不启动 JS-S05。
+
+### 2026-08-18 / 总架构 Agent / JS Alpha 分层复核
+
+- 状态：S03 evidence/allocator 修正通过；M1-Alpha JS-S04 `ARCHITECTURE_CORRECTION_REQUIRED`。
+- 发现：`VmLifecycleService::initializePage` 直接调用 `evaluateInitialBindingsOnExecutor` 并构造/发送 `InstantiateTemplate`，违反 JS-S04-R09 和 design 4.4/5.3：S04 只能编排 `PageInitializationStagePort`，不得实现 evaluator 或 Render/Instantiate。
+- 定向纠正：保留 S04 VM/Hook 生命周期；把 initial evaluator 移入 Alpha 最小 JS-S05 Binding Stage，把 `InstantiateTemplate` 构造与提交移入 Alpha 最小 JS-S07 Initial Transaction Builder；S04 只调用 typed stage port。
+- 范围：不实现完整 Reactive、Block、Event、普通 RenderTransaction，不修改公共合同，不读取 RPK/Page IR。
+- 下一步：完成职责归位和边界测试后，再参与真实 Case 001 Module/VM/initial binding 联调。
+
+### 2026-08-18 / JS Runtime Agent / Alpha JS 职责归位完成
+
+- 状态：`ARCHITECTURE_CORRECTION READY_FOR_REVIEW`；完整 JS-S05/JS-S07 未启动；真实 Case 001 JS 装配仍阻塞。
+- S04：`VmLifecycleService` 只拥有 App/Page VM、Hook、初始化完成回执和 `PageInitializationStagePort` 编排；源码已删除 evaluator、InstantiateTemplate 和 RequestId allocator。
+- Alpha S05：`AlphaInitialBindingStage` 是 initial-only evaluator 唯一执行者，只产出 `BindingValues` snapshot；未实现 Proxy、Dirty、Reactive、Block、Event 或 flush。
+- Alpha S07：`AlphaInitialTransactionBuilder` 是 InstantiateTemplate 唯一构造/提交者，消费 AppRuntime 级共享 RequestId allocator；未实现普通 RenderTransaction。
+- S03 对齐：Module factory 调用顺序统一为 `require/module/exports`；补齐既有 `FrameworkModuleResolverPort`，只解析已创建 facade，不实现 Capability Provider，也不在 native callback 重入 Engine。
+- 门禁：Debug、Release、ASan/UBSan、TSan 均 CTest `10/10 PASS`；API-only 静态库构建通过；S04 与 Alpha S05/S07 所有权扫描通过；源码摘要全部校验通过。
+- 真实输入：TK-S07 RPK SHA-256 为 `6a8c0d1acc690e97594e4a625436485cb8c92f283f9b347e6a6123c693fa3141`，Core PackageLoader 已验证 App/Page/Page IR。
+- 真实装配阻塞：当前 Bundle 含 shared 自依赖、未装配的 `system.*`/`require.context` facade、Demo evaluator 自由变量 `title` 和 `$page` Host Control 依赖；严格 JS Loader/VM 不通过扩大 S04 职责兜底。
+- 证据：`quickapp-runtime-js/evidence/js-s04-alpha-evidence.md`；源码摘要为 `evidence/js-s04-source-manifest.sha256`。
+- 下一步：Toolkit/Examples 按冻结合同修正 Artifact 与 Composition facade 后，继续 Core VerifiedModule bytes -> JS Module/VM -> initial binding -> InstantiateTemplate；不得宣称当前已通过 Case 001 S1。
+- 公共合同影响：无；未修改公共合同或 Schema，JS 不读取 RPK、文件路径或 Page IR。
+
+### 2026-08-18 / 总架构 Agent / Alpha 分层验收与 typed facade 放行
+
+- 状态：`ALPHA_LAYERING_VERIFIED + MINIMAL_TYPED_FACADE_ALLOWED`。
+- 已验证：`VmLifecycleService` 只编排 `PageInitializationStagePort`；Binding Stage 与 Initial Transaction Builder 职责分离；本机 CTest `9/9 PASS`，源码清单全部通过。
+- 当前任务：只实现 Case 001 所需的静态 `@app-module/system.router` facade，以及按 `SurfaceContext.hostCapabilities` 安装并通过 typed ABI 转发的 `$page.setTitleBar/setMeta`。
+- 联调：消费 Toolkit 修正后的 Core `VerifiedModule`，证明 App/Page Module -> VM -> onInit -> initial binding -> InstantiateTemplate。
+- 禁止项：不得实现通用 module/method/JSON Bridge，不启动完整 Reactive、Block、Event、Navigation 或 Capability。
+- 下一步：提交测试、资源归零、源码清单并标记 `READY_FOR_REVIEW` 后停止。
+
+### 2026-08-18 / 总架构 Agent / Alpha 完成审计与重新派发
+
+- 状态：`NOT_STARTED / REDISPATCH_REQUIRED`。
+- 审计：未发现生产 Router facade、`$page` typed control 注入、对应测试、证据或完成交接；现有代码只有 Resolver Port 与 Runtime ABI。
+- 下一步：立即执行 [`2026-08-18-alpha-agent-completion-audit.md`](../../../reviews/subspec-review/2026-08-18-alpha-agent-completion-audit.md) 4.3；完成后追加 `READY_FOR_REVIEW`。
+- 禁止项：完整 Reactive/Event/Navigation/Capability 继续阻塞。
+
+### 2026-08-18 / JS Runtime Agent / Alpha S1 typed facade 完成
+
+- 状态：`READY_FOR_REVIEW`；未启动完整 Reactive、Block、Event、Navigation 或 Capability。
+- Module Resolver：新增静态 facade catalog，只解析 `@app-module/system.router`，提供 Bundle 所需冻结 default export；S1 不调用 `push`，未实现路由动作。
+- Page VM：按 `SurfaceContext.hostCapabilities` 安装 `$page.setTitleBar/setMeta`；S04 只依赖 `PageVmSetupPort`，不拥有页面控制实现。
+- Typed ABI：两项 Page Control 直接构造 `SetTitleBar/SetMeta` 并通过现有 `RuntimeAbiService` admission/correlation 提交 Core；未增加通用 module/method/args 或 JSON Bridge。
+- 组件证据：真实 QuickJS 执行合成 App/Page VerifiedModule，完成 Module Resolver -> Page VM injection -> `onInit` -> initial binding -> `InstantiateTemplate`；Core 断言 `req:j-4/5/6` 与具名字段。
+- 能力过滤：组件测试证明缺少 `setMeta` capability 时 Page VM 不安装该方法。
+- 资源释放：Surface/App VM、页面控制 Native Binding 和 facade factory 均确定归零。
+- 验证：Debug、Release、ASan/UBSan、TSan 均 CTest `11/11 PASS`；API-only 构建和全部边界扫描通过。
+- 证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/evidence/js-alpha-typed-facade-evidence.md`。
+- 源码摘要：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/evidence/js-s04-source-manifest.sha256`，已重新生成并校验。
+- 证据级别：当前为合成 VerifiedModule 组件证据，不宣称真实 RPK 到 LVGL/SDL 整链路通过。
+- 下一步：停止，等待定向复核。
+
+### 2026-08-18 / 总架构 Agent / Alpha typed facade 验收
+
+- 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
+- 已验证：Router facade、Page Host Control、typed ABI、initial binding、InstantiateTemplate 和资源释放通过。
+- 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费实现。

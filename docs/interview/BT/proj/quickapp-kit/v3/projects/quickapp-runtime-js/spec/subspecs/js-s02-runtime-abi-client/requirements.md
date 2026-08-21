@@ -23,6 +23,7 @@ JS-S02 必须建立一条且只有一条 Runtime ABI：**JS 调用先转成公�
 - JS-S01 的 `JsEnginePort::bindNativeFunction/unbindNativeFunction`、`RuntimeValue`、Value limits 与串行 JS Executor。
 - Core ingress typed Port 的同步 `EnqueueResult`。
 - Core -> JS immutable typed callback message。
+- `LoadVerifiedModule` 在进程内携带共享不可变 byte storage；base64 仅属于 JSON fixture/Schema wire 边界。
 - 请求发起模块在 JS Executor 上从本 AppRuntime 唯一 `JsRequestIdAllocator` 取得且已写入消息的 `req:j-<positive-decimal>`；Core-origin completion 只携带原 RequestId。
 - AppRuntime/Surface 开启、关闭和销毁通知。
 
@@ -48,7 +49,7 @@ JS-S02 必须建立一条且只有一条 Runtime ABI：**JS 调用先转成公�
 | JS-S02-R09 | accepted 且需要终态 Result 的消息必须登记 bounded bridge correlation record；记录只能包含 key、expectedResultKind、Surface/AppRuntime owner 和 generation，不得持有 completionToken、Promise/callback、Render snapshot 或其他业务 completion 状态。拒绝入队时必须原子撤销该记录。 |
 | JS-S02-R10 | request/result 使用 `RequestId`，Render 使用 `TransactionId`；Result 必须同时匹配 kind、关联 ID、Surface 和当前 generation，S02 才能删除 correlation record 并将完整 typed Result 投递到对应编译期固定 consumer slot。 |
 | JS-S02-R11 | duplicate、unknown、mismatched 或销毁后 late Result 必须丢弃并记录结构化事实；不得重建 bridge correlation、调用旧 consumer 或复活 Surface。 |
-| JS-S02-R12 | Core -> JS callback 必须先完成纯 typed admission，再以 move/copy immutable ownership 投递 JS-S01 有界 Executor；Core Runtime Thread 不得同步调用 JS 或等待执行完成。 |
+| JS-S02-R12 | Core -> JS callback 必须先完成纯 typed admission，再以 move/copy immutable ownership 投递 JS-S01 有界 Executor；`ModuleBundle.bytes` 必须是 `shared_ptr<const vector<uint8_t>>` 或等价一次转移的只读 storage，进程内禁止 base64 string。Core Runtime Thread 不得同步调用 JS 或等待执行完成。 |
 | JS-S02-R13 | callback consumer 必须是编译期封闭的 typed slot，不使用字符串反射表；匹配 Result 只投递 typed Result，不附带 S02 completion token。注册、替换、注销和调用只在 JS Executor，consumer registration token 先于 consumer 对象销毁。 |
 | JS-S02-R14 | bridge correlation capacity 和 callback queue capacity 必须有界；满载返回 `QUEUE_OVERFLOW`，只拒绝当前消息，不丢弃已接受消息。 |
 | JS-S02-R15 | Surface 关闭必须先关闭该 Surface 新 admission，再删除其 bridge correlation record；业务 pending 由 JS-S07/JS-S09 等所有者自行取消。AppRuntime 级 typed callback slot 保留到所属模块或 AppRuntime 注销。后续 Surface request 返回 `SURFACE_NOT_FOUND`，late callback/result 只释放消息。 |
@@ -63,7 +64,7 @@ JS-S02 必须建立一条且只有一条 Runtime ABI：**JS 调用先转成公�
 | 单一边界 | 后续 JS 请求模块共享 AppRuntime 级 `JsRequestIdAllocator` 取得 JS-origin ID，并各自拥有业务 pending；它们只能依赖 JS-S02 typed client/callback 跨 Core，不得自行 bind Native Function 或直连 Core。 |
 | 确定性 | 相同 typed 输入、队列结果和 callback 顺序产生相同 admission、bridge correlation 与分发序列。 |
 | 线程 | Native callback、bridge correlation 修改和 consumer 调用属于 JS Executor；Core producer 只做纯校验与异步 post。 |
-| 内存 | codec/bridge correlation/callback queue 有明确上限；S02 pending 不持有业务状态，失败不保留 JS Value 或可变跨层引用。 |
+| 内存 | codec/bridge correlation/callback queue 有明确上限；S02 pending 不持有业务状态。Module bytes 在 accepted 后只读共享，rejected、terminal delivery、Surface/App teardown 后由 RAII 可测释放。 |
 | 平台无关 | 公共目标不包含 QuickJS、JNI、Android、UIKit、LVGL、SDL 或 NativeHandle。 |
 | 可恢复 | 单条非法消息只拒绝该消息；ABI identity 不兼容则整个 ABI Client 不启动。 |
 | 可验证 | Fake Core 可注入 accepted、overflow、closed、乱序、重复、late 和错误 Result，无需 Module/VM/Render 实现。 |

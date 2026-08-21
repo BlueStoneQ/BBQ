@@ -1,6 +1,6 @@
 # Toolkit v3 Agent Handoff
 
-> 状态：TK-S01/TK-S02/TK-S03 `VERIFIED`；TK-S04 `PASS + CODE_ALLOWED`。
+> 状态：TK-S01..TK-S07 Alpha 范围 `VERIFIED`；M1-Alpha 由单一集成 Agent 接管；Toolkit 项目 Agent 停止。
 > Spec：`/Users/qy/code/my-github/BBQ/docs/interview/BT/proj/quickapp-kit/v3/projects/quickapp-toolkit/spec`  
 > 代码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-toolkit`  
 > Case 001：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/quickapp-code-test1`
@@ -426,3 +426,194 @@ I2 Runtime 联调和 Benchmark
 - 已验证：唯一 Canonical Lowered Model、四类独立 Template ID、S05/S06 单向投影、确定性、取消、预算与深不可变边界闭环。
 - 下一步：严格按 TK-S04 tasks 实现并提交证据；不得启动 TK-S05/TK-S06。
 - 公共合同影响：无；P0-JS-EXPORT-001 由 TK-S05 后续消费，不改变 TK-S04 边界。
+
+### 2026-08-17 / Toolkit Agent / W2 TK-S04 实现启动
+
+- 状态：`IN_PROGRESS`。
+- 当前任务：严格按 TK-S04 tasks/acceptance 实现唯一 `CanonicalLoweredAppModel`、五类语义 Lowering、四类稳定 Template ID、诊断与资源边界。
+- 固定输入：只读 `ResolvedAppModel + ParsedSourceModel`；不修改 TK-S02/TK-S03 输出，不回读 SourceAccess。
+- 固定输出：TK-S05/TK-S06 后续只能投影同一 canonical model；本次不实现 Bundle、Page IR、Emitter 或 Artifact。
+- 验收：typecheck、lint、build、全部测试、Case 001/002、确定性、深不可变、累计预算、取消、资源、源码摘要与需求映射。
+- 公共合同影响：无；发现冲突只记录 `[待决策]`。
+
+### 2026-08-18 / Toolkit Agent / W2 TK-S04 实现完成
+
+- 状态：`READY_FOR_REVIEW`；等待总架构校审；TK-S05/TK-S06 未启动。
+- 已实现：唯一 `CanonicalLoweredAppModel`，完成 Host、Style、Binding、Block、Event 五类语义 Lowering；S02/S03 输入只读，不访问 SourceAccess、不重新解析源码或引用。
+- 已冻结：每页四类独立且连续的 TemplateNodeId、TemplateBindingId、TemplateBlockId、TemplateHandlerId；按规范化 DFS、属性和事件顺序确定性分配；校验断号、重复目标、scope、reachability 和 Host target 合同。
+- 已实现边界：源码位置 Diagnostic、请求级累计预算、取消检查、失败/取消无部分模型、深不可变输出、无跨 Build Session mutable cache。
+- Case 证据：Case 001 Host/Style/Binding/Handler/module facts PASS；Case 002 if/keyed-for/nearest Block scope PASS；100 次重复 Lowering snapshot 与 ID 一致 PASS。
+- 门禁证据：`npm run typecheck` PASS；`npm run lint` PASS；`npm run build` PASS；`npm test` 71/71 PASS；`npm run test:cli` 17/17 PASS；深不可变、预算、取消、无部分结果、资源和边界扫描 PASS。
+- 机器证据：`quickapp-toolkit/evidence/tk-s04.json`；源码摘要：`quickapp-toolkit/evidence/tk-s04-source-summary.json`，7 个 Lowering 源文件、1407 行、聚合 SHA-256 为 `a8f5475a1f07c0f2d56eb413d7382d1781bc5a157acf3142adcd39780a7fece7`。
+- 需求映射：证据文件记录 `R01-R33` 的分组覆盖；未修改公共 Artifact/Page IR/ID/Host/Block/Render 合同。
+- 禁止事项确认：未实现 Bundle、Page IR emitter、Artifact、TK-S05 或 TK-S06；本任务完成后停止，等待总架构发布下一指示。
+
+### 2026-08-18 / Toolkit Agent / W2 TK-S05 与 TK-S06 分 Spec 设计启动
+
+- 状态：`IN_PROGRESS`；当前只设计 TK-S05 JS Module Emitter 与 TK-S06 Page IR Emitter，不编码；TK-S07 未启动。
+- 共同输入：[已冻结] 两项只消费同一份已验证、深不可变 `CanonicalLoweredAppModel`，不得重新解析 DSL、重新 Lower 或重新分配四类 Template ID。
+- TK-S05 边界：[已冻结] 只拥有 App/Shared/Page Bundle、Module ABI wrapper、Definition、Binding evaluator、Handler method map、typed module reference 和 Source Map；不拥有 Page IR target/structure、Metadata、Artifact 或 RPK。
+- TK-S06 边界：[已冻结] 只拥有静态 Node/Host/child、Binding target、Block parent/root、Handler target 的公共 Page IR 投影；不拥有 evaluator、method body、Bundle、Metadata、Artifact 或 RPK。
+- 联合合同：[已冻结] `S05 page bootstrap.templateId == S06 pageIr.templateId`；S05 evaluator/handler ID 集必须与 S06 Binding/Handler ID 集一致；共享事实只来自 S04，不建立第三套模型。
+- 依赖与交付：S05/S06 各自提交 README、requirements、design、tasks、acceptance；产品代码和 TK-S07 均保持阻塞。
+- 公共合同影响：无；未修改公共 JS Module ABI、Bootstrap、Page IR、Host、Artifact 合同；若发现缺口只记录 `[待决策]`。
+
+### 2026-08-18 / Toolkit Agent / W2 TK-S05 与 TK-S06 分 Spec 设计完成
+
+- 状态：`READY_FOR_REVIEW`；等待总架构校审；当前不编码；TK-S07 未启动。
+- 已交付：`subspecs/tk-s05-js-module-emitter/` 与 `subspecs/tk-s06-page-ir-emitter/` 各自完整 README、requirements、design、tasks、acceptance。
+- TK-S05 已冻结：只从唯一 `CanonicalLoweredAppModel` 投影 App/Shared/Page Bundle、`$app_define$/$app_bootstrap$/$app_require$`、公共 App/Page Definition、Binding evaluator、Handler method map、typed module reference 和 Source Map v3；不输出 Page IR target、Metadata、Artifact 或 RPK。
+- TK-S06 已冻结：只从同一模型投影公共 Page IR 的静态 Node/Host/child、Binding target、Block parent/root、Handler target；四类 Template ID 原值透传；不输出 evaluator、method、Bundle、Metadata、Artifact 或 RPK。
+- 联合自检：两套文档均有目录；S05 需求 `TK-S05-R01..R24`、S06 需求 `TK-S06-R01..R23` 连续唯一；本地链接全部可解析；Case 001/002、BLOCK-001、确定性、Schema、深不可变、预算、取消、资源、原子结果和禁止范围均有验收条目。
+- 联合合同：[已冻结] `S05 bootstrap.templateId == S06 pageIr.templateId`；`S05 bindingEvaluatorIds == S06 bindingIds`；`S05 handlerMethodIds == S06 handlerIds`。双方不互读产物，不建立第二套语义模型。
+- 公共合同影响：无；未修改公共 JS Module ABI、Bootstrap、Page IR、Host、Artifact 合同；发现公共缺口只记录 `[待决策]`。
+- 下一步：等待总架构校审；校审通过并由工作看板分别授予 `TK-S05/TK-S06 CODE_ALLOWED` 后，才可编码；不得启动 TK-S07。
+
+### 2026-08-18 / Toolkit Agent / M1-Alpha 入口冻结
+
+- 状态：`WAITING_FOR_S05_S06_REVIEW`；当前不编码 TK-S05/TK-S06，也不启动 TK-S07。
+- Alpha 定位：[已冻结] M1-Alpha 是现有 v3 项目的 Case 001 S1 垂直执行切片，不是新项目，不创建 Alpha 专用 Runtime，不新增公共合同。
+- Alpha 入口：[待放行] 仅在 TK-S05/TK-S06 总架构校审通过后，进入 TK-S07 最小 Runtime RPK 路径。
+- Alpha 输入：[已冻结] 唯一 `CanonicalLoweredAppModel`；不得重新解析 DSL、重新 Lower、重新分配 Template ID。
+- Alpha 输出：[已冻结] App/Page Bundle、Page IR、Manifest、Runtime Metadata 和可被 Core 打开的 Runtime RPK；完整 `inspect/run`、签名、TK-S08、TK-S09 和后续生态能力均不在 Alpha。
+- 目标：[已冻结] Case 001 S1：真实 RPK 加载后，LVGL/SDL 根页面可见；代码仍写入现有 Toolkit 工程和既有 v3 项目边界。
+- 下一步：等待总架构对 TK-S05/TK-S06 的校审指示；未获明确 `TK-S07 CODE_ALLOWED` 前不得创建 S07 产品代码。
+
+### 2026-08-18 / 总架构 Agent / W2 TK-S04 实现验收 PASS
+
+- 状态：`VERIFIED`。
+- 已验证：本机复跑 typecheck/build 后 `npm test` 71/71、CLI 17/17；Case 001/002、100 次确定性、深不可变、预算、取消、无部分结果和边界均通过。
+- 架构判断：唯一 Canonical Lowered Model 与四类 Template ID 保持唯一归属，未提前实现 Bundle、Page IR 或 Artifact。
+- 下一步：开始 TK-S05/TK-S06 分 Spec设计；不得编码、不得启动 TK-S07。
+- 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / TK-S05 与 TK-S06 首轮定向校审
+
+- 状态：`DESIGN_REMEDIATION_REQUIRED`；`CODE_BLOCKED`。
+- 已通过：S04 唯一 Canonical Lowered Model、S05/S06 单向投影、Page IR 图约束、四类 ID 闭包、确定性、深不可变、预算、取消、原子发布和 Alpha 边界。
+- 必须修正：S05 明确 App/Page Definition 必须通过 `module.exports` 导出；Shared Bundle 只调用 `$app_define$`，不得调用 `$app_bootstrap$`；App/Page 各自 bootstrap 恰好一次。
+- 校审记录：`v3/reviews/subspec-review/2026-08-18-toolkit-s05-s06-review.md`。
+- 下一步：只做 TK-S05 五份分 Spec 的文档返修；修正后重新标记 `READY_FOR_REVIEW`。不得编码 TK-S05/TK-S06，不得启动 TK-S07。
+- 公共合同影响：未修改公共 Schema、P0-JS-EXPORT-001、Page IR 或 Artifact Contract。
+
+### 2026-08-18 / Toolkit Agent / TK-S05 与 TK-S06 定向文档返修完成
+
+- 状态：`READY_FOR_REVIEW`；`CODE_BLOCKED`；不编码 TK-S05/TK-S06，不启动 TK-S07。
+- 已修正：TK-S05 五份分 Spec 明确 App/Page Definition 必须由各自 `$app_define$` factory 通过 `module.exports` 导出；`$app_require$(moduleId)` 返回已提交的 `module.exports`，App/Page 返回 Definition，Shared 返回普通 export。
+- 已修正：Shared Bundle 只调用 `$app_define$`，不得调用 `$app_bootstrap$`；App Bundle 和每个 Page Bundle 各自恰好调用一次 `$app_bootstrap$`。
+- 已同步：README、requirements、design、tasks、acceptance 的示例、需求、完成定义和负例已统一上述规则；已删除“每个 Bundle 都 bootstrap”的歧义。
+- 保持边界：未修改 TK-S04、TK-S06、P0-JS-EXPORT-001、Page IR Schema、Artifact Contract；Bundle 不含 Page IR target，Page IR 不含 evaluator/method。
+- 自检：五份文档均已更新，目录和本地链接保持有效；当前等待总架构复核。
+
+### 2026-08-18 / 总架构 Agent / TK-S05 与 TK-S06 复核 PASS
+
+- 状态：`PASS + CODE_ALLOWED`；`TK-S07 CODE_BLOCKED`。
+- 已验证：App/Page Definition 通过 `$app_define$` factory 的 `module.exports` 导出；`$app_require$` 返回已提交的 Definition；Shared Bundle 只 define、不 bootstrap；App/Page 各自 bootstrap 恰好一次。
+- 已验证：S05/S06 的职责边界、公共 Schema、P0-JS-EXPORT-001、Page IR target、四类 Template ID 和 M1-Alpha 入口一致。
+- 下一步：TK-S05/TK-S06 可以并行编码、测试和提交证据；两项代码验证通过后，才允许启动 TK-S07。
+- 公共合同影响：无；未修改公共 JS Module ABI、Page IR Schema 或 Artifact Contract。
+
+### 2026-08-18 / Toolkit Agent / TK-S05 与 TK-S06 实现完成
+
+- 状态：`READY_FOR_REVIEW`；等待总架构验收；TK-S07 未启动。
+- 已实现：`JsModuleEmitter` 只消费唯一深不可变 `CanonicalLoweredAppModel`，按固定 App/Shared/Page 顺序生成 JS Bundle、Definition、Binding evaluator、Handler method map 和 Source Map v3；不读取 SourceAccess、不重新解析、不重新 Lower、不重新分配 ID。
+- ABI 验证：App/Page 的 Definition 在各自 `$app_define$` factory 内通过 `module.exports` 提交；App/Page 各自恰好一个 `$app_bootstrap$`；Shared 只 define、无 bootstrap；Bundle 内的 `$app_require$` 读取注册后的 `module.exports`。
+- 已实现：Case 001 所需 ESM/CJS/capability/`require.context` AST 投影、template literal 保真发射、async/function/object/statement 基础语法；不使用源码字符串 fallback，unsupported AST 返回带 SourceSpan 的 `TK_EMIT_JS_UNSUPPORTED`。
+- 已实现：`PageIrEmitter` 只从同一 CanonicalLoweredAppModel 投影公共 Page IR；四类 Template ID 原值透传；静态 Node/Host/child、Binding target、Block parent/root、Handler target 与 S06 Schema 字段闭合；不输出 evaluator、method、source 或 Runtime 字段。
+- 已实现边界：Page 图可达性/环/共享节点、Block parent/root、scope、Host target、Binding/Handler 唯一性、连续 ID、公共 Page IR/Host Schema validator、累计 bytes/nodes/expressions/map 预算、取消、深不可变、失败/取消无部分结果、无跨 Build Session mutable cache。
+- 轻微前端合同修补：保留 TemplateElement 的 `raw/cooked` 字符串，使已经被 S03 feature matrix 接受的 template literal 在 S05 发射时不丢失静态片段；未改变 ParsedSource 公共类型或 AST 语义。
+- 证据：`quickapp-toolkit/evidence/tk-s05-s06.json`；Case 001 为 7 bundles/2 pages，Case 002 为 2 bundles/1 page；记录 JS/IR 确定性 Golden hash、公共 Schema、ABI、取消、资源和边界结果。
+- 门禁证据：`npm run typecheck` PASS；`npm run lint` PASS；`npm run build` PASS；`npm test` 74/74 PASS；Emitter 集成测试 3/3 PASS；`npm run test:cli` 17/17 PASS。
+- 源码摘要：S05/S06 emitter 与集成测试共 50,879 bytes；源码 SHA-256 已由实现会话记录，最终证据以 `evidence/tk-s05-s06.json` 为准。
+- 禁止事项确认：未实现 Page IR 以外的 Artifact、Runtime Metadata、RPK、Loader、签名、完整 inspect/run、TK-S08、TK-S09 或后续生态能力；未启动 TK-S07。
+- 公共合同影响：未修改公共 Artifact/Page IR/ID/Host/Block/Render/JS ABI Schema；未提出 `[待决策]`。
+- 下一步：等待总架构复核 S05/S06 实现；复核通过并显式放行后，才进入 M1-Alpha 的 TK-S07 最小 Runtime RPK 路径。
+
+### 2026-08-18 / 总架构 Agent / TK-S05/TK-S06 实现校审
+
+- 状态：`TK-S05/TK-S06 VERIFIED`；`TK-S07 CODE_ALLOWED`。
+- 已验证：typecheck、lint、build、npm test `74/74`、CLI `17/17`、Emitter 集成、Case Golden、ABI、Page IR Schema、确定性、取消、预算和边界扫描全部通过。
+- 边界成立：S05/S06 只消费同一 CanonicalLoweredAppModel；S05 产出 Bundle/Map，S06 产出 Page IR；未提前实现 Runtime Metadata、Artifact、RPK 或 Runtime。
+- 下一步：只实现 TK-S07 最小 Runtime RPK；不得启动 TK-S08/TK-S09。详细指令见 [`2026-08-18-toolkit-lvgl-review-and-next.md`](../../../reviews/subspec-review/2026-08-18-toolkit-lvgl-review-and-next.md)。
+
+### 2026-08-18 / Toolkit Agent / TK-S07 最小 Runtime RPK 实现完成
+
+- 状态：`READY_FOR_REVIEW`；等待总架构校审；未启动 TK-S08/TK-S09。
+- 已实现：`RuntimeArtifactBuilder` 只消费深不可变的 Canonical Lowered Model、S05 App/Shared/Page Bundle 与 Source Map、S06 Page IR，以及 S02 已验证 Manifest/资源快照；生成 Manifest、Runtime Metadata、Artifact Descriptor、Bundle/Page IR 关系索引和确定性的 Store ZIP RPK。
+- 已冻结：`quickapp-kit-rpk-v1`、`quickapp-kit-runtime-v1`、`quickapp-kit-app-module-v1`、`irVersion=1`；App 成员 `app.js`、Page Bundle/IR 路径、成员 `byteLength`/小写 SHA-256 和 Source Map 位于 `META-INF/`。
+- 已实现边界：路径安全、成员/包/Metadata/中央目录预算、64 MiB 展开包上限、重复路径拒绝、关系闭包校验、取消、输入深不可变、失败无部分 RPK、确定性成员排序和原子结果发布；无签名、inspect/run、Skill/MCP 或后续生态能力。
+- Case 001 证据：`quickapp-toolkit/evidence/tk-s07.json`、`tk-s07-case001-manifest.json`、`tk-s07-case001.rpk`；19 个成员，包大小 21442 bytes，SHA-256 `6a8c0d1acc690e97594e4a625436485cb8c92f283f9b347e6a6123c693fa3141`。
+- Core 联调事实：使用 Core `PackageLoader` 真实打开该 RPK，并成功加载 `@quickapp-kit/app`、`@quickapp-kit/page/pages/Demo` 和 `/pages/Demo` Page IR；输出 `CORE_PACKAGE_LOADER_PASS package=com.example.case1 app=1 page=1 page_ir=page:/pages/Demo`。
+- 测试证据：TK-S07 集成测试覆盖成员解包、Schema、Descriptor 哈希、确定性、关系错误、预算、取消和无部分输出；完整门禁结果待本次收口命令完成后补录。
+- 公共合同影响：未修改 v3 公共 Artifact、Runtime Metadata、Page IR、Runtime Launch Profile 或 Core Loader 合同；未提出 `[待决策]`。
+- 下一步：等待总架构校审 TK-S07；校审通过前不得启动 TK-S08/TK-S09。
+
+### 2026-08-18 / Toolkit Agent / TK-S07 验证证据收口
+
+- 状态：`READY_FOR_REVIEW`。
+- 已验证：`npm run typecheck`、`npm run lint`、`npm run build` 均 PASS；`npm test` 为 76/76 PASS；`npm run test:cli` 为 17/17 PASS。
+- 已验证：`unzip -t evidence/tk-s07-case001.rpk` 对全部 19 个成员 PASS；成员清单、路径排序、ZIP 中央目录、Manifest/Runtime Metadata Schema、描述符长度与 SHA-256、重复构建一致性均由 `test/integration/runtime-artifact.test.ts` 覆盖。
+- 已验证：Core PackageLoader probe 结果记录在 `evidence/tk-s07-core-loader.txt`；RPK、源 Manifest 副本、机器证据和源码清单分别为 `tk-s07-case001.rpk`、`tk-s07-case001-manifest.json`、`tk-s07.json`、`tk-s07-source-manifest.json`。
+- 新增事实：Case 001 的 Page `manifestRoute` 为 `pages/Demo`，因此公共 Page Bundle 路径为 `pages/pages/Demo/index.js`；此路径由 S05 和 Artifact Contract 共同决定，并由 Core Loader 成功读取。
+- 公共合同影响：无；未修改公共合同，也未扩展 S05/S06。
+- 下一步：仅等待总架构校审 TK-S07；不得自行启动 TK-S08/TK-S09。
+
+### 2026-08-18 / Toolkit Agent / TK-S07 Core 预算对齐
+
+- 状态：`READY_FOR_REVIEW`。
+- 已修正：Toolkit 在通用成员预算之外，前置 Core `PackageLoader` 的页面数 128、Manifest 1 MiB、Runtime Metadata 1 MiB 和 Page IR 4 MiB 上限；避免生成 Toolkit 接受但 Core 必然拒绝的 RPK。
+- 已验证：Case 001 重新执行 TK-S07 集成测试、typecheck 和边界扫描均 PASS；产物字节与 SHA-256 保持不变。
+- 公共合同影响：无；这是对既有 Core Loader 上限的实现对齐，不修改任何公共合同。
+- 下一步：仅等待总架构校审 TK-S07；不得自行启动 TK-S08/TK-S09。
+
+### 2026-08-18 / 总架构 Agent / TK-S07 Alpha 校审
+
+- 状态：`ALPHA_ARTIFACT_VERIFIED`；不得启动 TK-S08/TK-S09。
+- 已验证：typecheck、lint、build、npm test `76/76`、CLI `17/17`；RPK 19 个成员解包通过；source manifest `6/6 OK`；Core PackageLoader 已读取 App、Page Module 和 Page IR。
+- 已验证：关系闭包、成员路径安全、预算、取消、失败无部分产物、重复构建字节和 SHA-256 一致性成立。
+- 边界：当前实现满足 Alpha 冻结 Artifact 合同，但项目中尚未建立独立 `tk-s07` 五份详细分 Spec 目录，因此暂不把完整 TK-S07 分 Spec 标记为 `VERIFIED`。
+- 下一步：停止 Toolkit 扩展，交接 `evidence/tk-s07-case001.rpk` 给真实 Composition Root；Alpha 通过后补齐 TK-S07 详细分 Spec，补件不得改变公共合同和已验证产物。
+
+### 2026-08-18 / Toolkit Agent / TK-S07 详细分 Spec 补齐
+
+- 状态：`ALPHA_ARTIFACT_VERIFIED`；Toolkit 代码扩展停止；TK-S08/TK-S09 未启动。
+- 已完成：新增 `subspecs/tk-s07-runtime-artifact/` 下 `README.md`、`requirements.md`、`design.md`、`tasks.md`、`acceptance.md`，追溯已验证实现、公共合同、Case 001 测试、Core Loader 和 evidence。
+- 已冻结：30 条需求覆盖输入不变量、Artifact/Metadata/Descriptor、路径与预算、确定性、失败无部分结果、Case 001、Core Loader 和禁止范围；任务清单只记录已执行事实，不重新放行代码。
+- 已验证：补件前后 `evidence/tk-s07-case001.rpk` 仍为 21442 bytes，SHA-256 `6a8c0d1acc690e97594e4a625436485cb8c92f283f9b347e6a6123c693fa3141`；未修改 Toolkit 产品代码、公共 Artifact Contract 或现有 evidence。
+- 保留交接：`evidence/tk-s07-case001.rpk`、`tk-s07.json`、`tk-s07-core-loader.txt`、`tk-s07-source-manifest.json`。
+- 公共合同影响：无；未新增字段、Schema、ABI 或 Alpha 专用 Runtime。
+- 下一步：停止当前 Toolkit 工作并等待总架构指令；不得自行启动签名、inspect/run、TK-S08/TK-S09、Skill/MCP。
+
+### 2026-08-18 / 总架构 Agent / Alpha 真实 RPK 语义修正
+
+- 状态：`TARGETED_CORRECTION_ALLOWED`；TK-S08/TK-S09 保持阻塞。
+- 已完成：TK-S07 打包机制与五份详细分 Spec 通过；当前 RPK 只作为修正前证据，不再作为 Alpha 最终输入。
+- 必须修正：Case 001 Page VM 根状态与 `this.title` evaluator；App/Shared/Page 的真实包内 dependencies；Shared 自依赖；构建期展开静态 `require.context`；联盟 `system.*` 规范化为 `@app-module/system.*` typed facade。
+- 冻结边界：Package `dependencies[]` 只包含包内模块，不包含 typed facade；Bundle define dependencies 与 Runtime Metadata 必须一致。
+- 下一步：重建 RPK 和证据，验证 Core Loader 与 JS ModuleLoader 依赖闭包，标记 `READY_FOR_REVIEW` 后停止。
+- 公共合同影响：消费已更新的 Artifact Contract 与 Runtime Metadata Schema，不得再定义私有字段。
+
+### 2026-08-18 / 总架构 Agent / Alpha 完成审计与重新派发
+
+- 状态：`NOT_STARTED / REDISPATCH_REQUIRED`。
+- 审计：未发现上一条定向修正后的源码、RPK、证据或完成交接；当前 RPK 仍是修正前产物。
+- 下一步：立即执行 [`2026-08-18-alpha-agent-completion-audit.md`](../../../reviews/subspec-review/2026-08-18-alpha-agent-completion-audit.md) 4.1；完成后追加 `READY_FOR_REVIEW`。
+- 禁止项：TK-S08/TK-S09 和外围能力继续阻塞。
+
+### 2026-08-18 / Toolkit Agent / Alpha 定向修正完成
+
+- 状态：`READY_FOR_REVIEW`；仅完成本次 Alpha 定向修正；TK-S08/TK-S09 未启动。
+- 已修正：Canonical state symbol resolution 将 Case 001 `private.title` 生成为 Page VM 根状态；binding evaluator 读取 `String(this.title)`。
+- 已修正：App/Shared/Page Bundle `$app_define$` dependencies 与 Runtime Metadata `dependencies[]` 逐项一致；Package graph 只包含包内模块，拒绝未知依赖、自依赖、typed facade 和非法边；Shared 自依赖已删除。
+- 已修正：静态 `require.context` 在构建期展开为确定性直接模块依赖和 `$app_require$(moduleId)`；Bundle 不再发射 `$app_require$.context`；联盟 `@system.*` 统一为 `@app-module/system.*`，typed facade 不进入 Package dependencies。
+- 新 RPK：`evidence/tk-s07-case001.rpk`，19 members，22029 bytes，SHA-256 `95648dd40a32bc7b28830f301f6db9443decb4dbd1138d43a54c73410168b7c4`。
+- 证据：`evidence/tk-s05-s06.json`、`evidence/tk-s07.json`、`evidence/tk-s07-source-manifest.json`、`evidence/tk-s07-core-loader.txt`、`evidence/tk-s07-case001-manifest.json`；`unzip -t` 通过，Core `PackageLoader::open/load_module/load_page_ir` 通过。
+- 测试：`npm run typecheck`、`npm run lint`、`npm run build`、`npm test`（76/76）、`npm run test:cli`（17/17）全部通过；architecture boundaries PASS；重复构建 RPK bytes/SHA-256 一致。
+- 公共合同影响：无；未修改公共 Artifact Contract、Runtime Metadata Schema、Page IR Schema 或 JS ABI；未新增 Alpha 专用 Runtime。
+- 禁止项确认：不得启动 TK-S08/TK-S09；不得做签名、inspect/run、Skill/MCP 或后续生态能力；本交接后停止 Toolkit 代码扩展，等待总架构校审。
+
+### 2026-08-18 / 总架构 Agent / Alpha 定向修正验收
+
+- 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
+- 已验证：新 RPK、Page VM/evaluator、Package dependencies、静态 context 展开和 typed facade ID 均通过。
+- 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费产物。

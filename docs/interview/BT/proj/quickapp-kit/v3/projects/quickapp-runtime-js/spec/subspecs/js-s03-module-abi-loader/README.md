@@ -14,7 +14,7 @@
 
 JS-S03 冻结 verified Bundle 到可复用模块定义的唯一通路：**只消费 Core 通过 `VerifiedModulePort` 交付的 immutable bytes，在 JS Executor 上执行 `$app_define$/$app_bootstrap$/$app_require$`，全部校验通过后原子提交 Module Cache。**
 
-`$app_define$` 登记模块定义，`$app_bootstrap$` 登记 App/Page 启动描述，`$app_require$` 按声明依赖解析并至多执行一次 factory。`$app_bootstrap$` 不创建 App/Page VM、不执行 Hook；这些唯一属于 JS-S04。
+`$app_define$` 登记模块定义，`$app_bootstrap$` 登记 App/Page 启动描述，`$app_require$` 按声明依赖解析并至多执行一次 factory。App/Page export 的 Definition shape 已由公共 Artifact Contract 冻结：`createAppVm(appContext)`、`createPageVm(surfaceContext)`、`bindingEvaluators` 和 `handlerMethods` 的 own data property 与 callable/键集合规则在本分 Spec 内直接校验。`$app_bootstrap$` 不创建 App/Page VM、不执行 Hook；这些唯一属于 JS-S04。
 
 App/Shared 定义和实例绑定一个 AppRuntime；Page 定义可在同一 AppRuntime 内按 verified identity 复用，但每个 Surface 只持有独立 lease，Page VM 仍由 JS-S04 按 Surface 独立创建。
 
@@ -81,7 +81,7 @@ App/Shared 定义和实例绑定一个 AppRuntime；Page 定义可在同一 AppR
 
 ## 6. 状态
 
-`READY_FOR_REVIEW + CODE_BLOCKED`。
+`IMPLEMENTATION_CORRECTION_REQUIRED`。设计本身保持通过；当前实现必须先修复 source manifest 并重新提交证据，复核通过后才可标记 `VERIFIED`；不得启动 JS-S05。
 
 独立校审与工作看板显式 `CODE_ALLOWED` 前不得实现 JS-S03；JS-S04 可以在本设计完成后继续设计，但不得编码。
 

@@ -12,7 +12,7 @@
 
 ## 1. 结论
 
-JS-S04 冻结 App/Page VM 与 Hook 的唯一执行所有权：**一个 AppRuntime 只有一个 App VM，每个 live Surface 只有一个独立 Page VM；Context、初始化和生命周期消息全部串行进入 JS Executor，Hook 最多执行一次并返回原 typed RequestId。**
+JS-S04 冻结 App/Page VM 与 Hook 的唯一执行所有权：**一个 AppRuntime 只有一个 App VM，每个 live Surface 只有一个独立 Page VM；Context、初始化和生命周期消息全部串行进入 JS Executor，Hook 最多执行一次并返回原 typed RequestId。** VM 创建直接消费 Artifact Contract 已冻结的 `createAppVm(appContext)`/`createPageVm(surfaceContext)` Definition。
 
 S04 只维护防重、Hook 顺序和本地 VM 可见性投影，不拥有 Core AppRuntime/PageContext 状态，不维护 Surface/Navigation 栈，不决定 Mount/Present。`onReady` 只表示 Page VM 和初始动态数据准备完毕，不表示页面可见。
 
@@ -77,7 +77,7 @@ S04 只维护防重、Hook 顺序和本地 VM 可见性投影，不拥有 Core A
 
 ## 6. 状态
 
-`READY_FOR_REVIEW + CODE_BLOCKED`。
+`IMPLEMENTATION_CORRECTION_REQUIRED`（仅针对 M1-Alpha initial-only 组件切片）；完整 JS-S04 仍为 `CODE_BLOCKED`。当前 Alpha 证据是合成组件证据，不代表真实 Case 001 或完整生命周期通过；不得启动 JS-S05。
 
 独立校审与工作看板显式 `CODE_ALLOWED` 前不得实现 JS-S04；不得启动 JS-S05。
 

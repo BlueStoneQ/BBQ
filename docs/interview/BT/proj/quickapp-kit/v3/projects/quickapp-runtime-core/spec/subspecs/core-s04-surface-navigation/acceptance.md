@@ -20,7 +20,7 @@
 |---|---|---|
 | S04-S01 | 连续创建/销毁多个 Surface | SurfaceId 单调不复用，销毁后 tombstone 保留到 AppRuntime teardown |
 | S04-S02 | 完整 lifecycle | 只走合法状态边，health 与 lifecycle 正交 |
-| S04-S03 | 首树提交前/后 | internal Revision 为 none/0；后续只由 authority 单调推进 |
+| S04-S03 | 首树提交前/后 | internal Revision 为 none/0；revision 0 前无 `SurfaceStatusChanged`，首条消息为 `presenting + revision 0`；后续只由 authority 单调推进 |
 | S04-S04 | 两个并发 render | 第二个在下游执行前拒绝，只有一个 render slot |
 | S04-S05 | Surface command 在途再发 command | 第二个不投递 Platform，状态不变 |
 | S04-S06 | 错误/重复/晚到 Result | 不推进 lifecycle/stack/revision，产生 stale/late Trace |

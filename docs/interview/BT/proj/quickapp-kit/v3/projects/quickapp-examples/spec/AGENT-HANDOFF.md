@@ -1,6 +1,6 @@
 # QuickApp Examples Agent Handoff
 
-> 状态：EX-S01 `VERIFIED`；EX-S02 `PASS + CODE_HOLD_POST_M1`。
+> 状态：EX-S01 `VERIFIED`；EX-S02 `PASS + CODE_HOLD_POST_M1`；Alpha Runner `CODE_ALLOWED_RUNNER`，由单一 M1-Alpha 集成 Agent 接管；Examples 项目 Agent 停止。
 
 ## 目录
 
@@ -201,3 +201,44 @@ Case 变更必须记录它覆盖的公共合同，不得为了适配实现而改
 - 边界：EX-S02 不阻塞 Case 001 M1；当前不创建新 Fixture，不启动 EX-S03。
 - 下一步：停止扩展，等待 M1 主链路完成后再放行 focused Fixture 实现。
 - 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / M1-Alpha Composition Root 放行
+
+- 状态：`CODE_ALLOWED_ALPHA_RUNNER`；只实现 Case 001 S1 Runner/Integration，不启动 EX-S02 代码和 EX-S03。
+- 输入：Toolkit `evidence/tk-s07-case001.rpk`，不得直接运行联盟源码或手写 Page IR/Bundle/RenderTransaction/MountTransaction。
+- 目标：依次装配 JS、Core、LVGL/SDL，形成真实首屏；使用真实 LVGL/SDL Host，不使用 Fake Host。
+- 下一步：提交可复现命令、真实页面 visible、结构化 Trace 和 Surface/Node/Handler/Module/Engine 资源归零证据。
+- 公共合同影响：无；Composition Root 只组合既有公共 Port，不新增消息或 ID。
+
+### 2026-08-18 / 总架构 Agent / Alpha Composition Root 放行
+
+- 状态：`CODE_ALLOWED_RUNNER / OWNED_BY_ALPHA_INTEGRATION`。
+- 输入：Toolkit 新 RPK SHA-256 `95648dd40a32bc7b28830f301f6db9443decb4dbd1138d43a54c73410168b7c4`。
+- 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent 建立真实 Composition Root，不启动 EX-S02 产品代码。
+
+### 2026-08-18 / Examples Agent / M1-Alpha 真实装配阻塞
+
+- 状态：`INTEGRATION_BLOCKED`；未创建 Runner，未生成首屏或伪造运行证据。
+- 已验证事实：指定 `quickapp-toolkit/evidence/tk-s07-case001.rpk` 为 21442 bytes，SHA-256 `6a8c0d1acc690e97594e4a625436485cb8c92f283f9b347e6a6123c693fa3141`，ZIP 校验通过，Core `PackageLoader` 可打开；但 Runtime Metadata 的 App/Shared module descriptor 不携带 `dependencies`，Core 交付的 App/Shared `VerifiedModule.dependencies` 因此为空，而真实 Bundle 的 `$app_define$` 声明了依赖，JS `ModuleLoader` 会按冻结合同拒绝依赖集合不一致。
+- 已验证事实：Shared module `@quickapp-kit/shared/helper/apis/index` 的 Bundle 声明自身为依赖，会触发 JS Module Loader 的 module dependency cycle；该 Bundle 同时调用 `$app_require$.context`，而 V1 Module ABI 只冻结 `$app_require$(moduleId)`。
+- 已验证事实：Case 001 Page evaluator 产物为 `function (scope) { return String(title); }`，但冻结合同要求以 Page VM 为 `this` 求值；当前 VM state 位于 `this.private.title`，自由变量 `title` 无合法来源。
+- 已验证事实：Page `onInit` 调用 `this.$page.setTitleBar/setMeta`；当前 JS 侧尚无完成装配的 `$page` Page Host Control 注入。`FrameworkModuleResolverPort` 只有 Port，尚无可供 Composition Root 选择的生产实现。
+- 已验证事实：当前 LVGL Mount Host 将 Case 001 Page IR 中的 `fontSize` 作为 unsupported property 拒绝，且 LVGL 证据明确真实 CJK 字体资产尚未接入；因此即使前序 JS/Core 成功，也不能形成符合 S1 的真实 CJK visible 证据。
+- 本项目决定：Examples 不解释 Bundle、不从 Bundle 推断依赖、不改写 evaluator、不注入私有兼容层，也不手写 Page IR/Bundle/RenderTransaction/MountTransaction；在上游合同闭环前不创建只能失败或绕过真实链路的 Runner。
+- 阻塞项：Toolkit/Artifact/Core 必须形成可验证的 App/Shared dependency handoff；Toolkit 必须删除 shared self-cycle 并按冻结 evaluator 语义发射；JS 必须完成 Framework facade 与 `$page` typed host control 的生产装配接口，并完成当前 Alpha S04/S05/S07 职责归位；LVGL 必须接通 Case 001 `fontSize` 与已声明 CJK 字体资产。
+- 下一步：总架构定向分派 Toolkit、公共 Artifact/Core 和 JS 修正；修正后的同一路径 RPK 必须先通过 `Core VerifiedModule -> JS ModuleLoader -> App/Page VM -> initial binding -> InstantiateTemplate`，随后 Examples 才继续 Composition Root 到真实 LVGL/SDL。
+- 公共合同影响：`[待决策]` Runtime Metadata 的 App/Shared module 是否增加 `dependencies[]`；其余为实现对齐既有 Module ABI、Definition ABI 和职责边界。
+
+### 2026-08-18 / 总架构 Agent / Alpha 上游阻塞处理
+
+- 状态：`INTEGRATION_BLOCKED_UPSTREAM`；继续禁止绕过真实链路的 Runner。
+- 已冻结：Runtime Metadata 的 App/Shared/Page 均携带 Package `dependencies[]`；typed facade 不进入 Package dependency graph，原 `[待决策]` 已关闭。
+- 等待项：Toolkit Page VM/模块发射、Core dependency handoff、JS typed facade、LVGL `fontSize`/CJK 字体四项修正。
+- 下一步：四项通过后加载重建的真实 RPK，建立唯一 JS -> Core -> LVGL/SDL Composition Root，提交可见、Trace 与资源归零证据。
+- 禁止项：不得手写 Page IR、Bundle、BindingValue、RenderTransaction、MountTransaction 或使用 Fake Host。
+
+### 2026-08-18 / 总架构 Agent / Alpha 完成审计
+
+- 状态：`CORRECTLY_WAITING`。
+- 审计：Toolkit、Core、JS、LVGL 最新定向修正均未开始；当前不允许创建 Runner。
+- 下一步：等待四项由总架构标记 `VERIFIED`，再按 [`2026-08-18-alpha-agent-completion-audit.md`](../../../reviews/subspec-review/2026-08-18-alpha-agent-completion-audit.md) 4.5 执行。

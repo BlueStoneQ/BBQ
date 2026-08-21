@@ -50,6 +50,6 @@ CORE-S03 建立每个 `AppRuntimeId` 唯一的 `AppRuntimeController`：它拥�
 
 ## 6. 当前状态
 
-`READY_FOR_REVIEW / CODE_BLOCKED`
+`EVIDENCE_CORRECTION_REQUIRED`
 
-本目录只完成设计；未获得 `PASS + CODE_ALLOWED` 前不得实现 CORE-S03。
+CORE-S03 代码与测试已完成；全局 source manifest 刷新并通过前不得标记 `VERIFIED`。该证据修复完成后可进入 CORE-S04。

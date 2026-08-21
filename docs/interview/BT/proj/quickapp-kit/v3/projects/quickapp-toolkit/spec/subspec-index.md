@@ -30,7 +30,7 @@ Toolkit 按“语义前端、Lowering、Artifact 后端、CLI 产品面”拆分
 | TK-S04 | Canonical Lowering | Host Component、Style、Binding、Block、Event、稳定 ID | Semantic/Lowered Model | TK-S02、TK-S03 |
 | TK-S05 | JS Module Emitter | App/Shared/Page Bundle、require.context、ESM/CJS/global、typed module reference、fetch deferred reference 与 bootstrap/export | JS Bundle、Source Map | TK-S04 |
 | TK-S06 | Page IR Emitter | 静态模板图、Binding/Block/Handler 定义 | Page IR | TK-S04 |
-| TK-S07 | Runtime Artifact | Metadata、Descriptor、关系校验、确定性 RPK | Runtime RPK | TK-S05、TK-S06 |
+| TK-S07 | [Runtime Artifact](./subspecs/tk-s07-runtime-artifact/README.md) | Metadata、Descriptor、关系校验、确定性 RPK | Runtime RPK | TK-S05、TK-S06 |
 | TK-S08 | Inspect 与 Run | 包分析、消费 Runtime Composition Manifest、Artifact/Profile 兼容诊断、产生公共 Runtime Launch Profile、Runtime 启动适配 | inspect report、run invocation | TK-S01、TK-S07 |
 | TK-S09 | Golden 与诊断 | Case 001/002、BLOCK-001、CAP-DEVICE-001、fetch deferred、负例、确定性和按 Observation Contract 发 marker | Golden、测试证据 | TK-S03 至 TK-S08、公共 Observation Contract |
 | TK-S10 | Agent Skill 与 MCP Adapter（第二期） | Agent 知识包、typed tool 映射和结果一致性；不参与 V1 门禁 | Skill、MCP tools、合同测试 | V1 Toolkit 完成后 |

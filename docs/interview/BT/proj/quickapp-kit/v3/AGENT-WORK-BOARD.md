@@ -71,7 +71,9 @@ Observation Marker / Metric Boundary / Trace Correlation
 
 ### 2.1 结论
 
-当前处于 **`Product V1 / M1 / W1 CORRECTION + W2 IMPLEMENTATION`**。`Product V1/V2/V3` 表示产品演进版本，本文档目录名 `v3` 表示第三版架构设计基线，二者没有版本对应关系。
+当前处于 **`Product V1 / M1-Alpha / S1 VERTICAL SLICE`**。`Product V1/V2/V3` 表示产品演进版本，本文档目录名 `v3` 表示第三版架构设计基线，二者没有版本对应关系。
+
+M1-Alpha 是执行覆盖层，不是新项目或第二套架构。当前主路径是：Case 001 冻结 Source -> Toolkit 生成真实 Runtime RPK -> 共享 JS/Core 完成首屏 -> LVGL/SDL 根页面可见。Alpha 通过后，继续在同一代码和同一分 Spec 上推进完整 M1 S1-S5。
 
 勾选规则：只有具备实现、测试、证据和完成交接，且状态为 `VERIFIED` 的分 Spec 才标记 `[x]`；`PASS`、`CODE_ALLOWED`、`IN_PROGRESS` 和 `EVIDENCE_REQUIRED` 均标记 `[ ]`。
 
@@ -79,7 +81,7 @@ Observation Marker / Metric Boundary / Trace Correlation
 
 | 产品版本 | 核心目标 | 已冻结 Spec | 已完成 | 状态 |
 |---|---|---:|---:|---|
-| Product V1 | 联盟 DSL 经 Toolkit 构建为 Runtime RPK，由共享 JS/Core 在 LVGL、Android、iOS 运行，并形成基础 Benchmark | 69 | 13 | `M1.W1 CORRECTION + W2 IMPLEMENTATION` |
+| Product V1 | 联盟 DSL 经 Toolkit 构建为 Runtime RPK，由共享 JS/Core 在 LVGL、Android、iOS 运行，并形成基础 Benchmark | 69 | 17 | `M1.W2 IMPLEMENTATION + EVIDENCE CORRECTION` |
 | Product V2 | 扩展 Agent 接口与完整 Benchmark；其他能力待 V1 验证后再冻结 | 3 | 0 | `PLANNED` |
 | Product V3 | 生产化、生态化和更多平台能力 | 0 | 0 | `NOT_FROZEN` |
 
@@ -89,11 +91,11 @@ V2 当前只冻结 `TK-S10`、`BM-S08`、`BM-S09` 三个后移项。AI Feature�
 
 | 里程碑 | 目标 | Spec 数 | 已完成 | 进度 |
 |---|---|---:|---:|---|
-| M1 | Toolkit + JS + Core + LVGL/SDL 跑通 Case 001 | 41 | 10 | `W1 CORRECTION + W2 IMPLEMENTATION` |
+| M1 | Toolkit + JS + Core + LVGL/SDL 跑通 Case 001 | 41 | 14 | `W1 VERIFIED + W2 IMPLEMENTATION + EVIDENCE CORRECTION` |
 | M2 | Android 复用同一 Runtime RPK、JS Framework 和 C++ Core | 9 | 1 | `WAIT_M1` |
 | M3 | iOS 复用同一主链，证明第三平台成立 | 9 | 1 | `WAIT_M2` |
 | M4 | 三平台基础 Benchmark 与扩展验收案例 | 10 | 1 | `WAIT_M1_M3` |
-| **V1 合计** |  | **69** | **13** | **IN_PROGRESS** |
+| **V1 合计** |  | **69** | **17** | **IN_PROGRESS** |
 
 里程碑归属表示该 Spec 的最终验收位置，不表示必须完全串行。M2/M3/M4 的 Foundation 可以提前验证，但不能据此宣告对应里程碑完成。
 
@@ -101,10 +103,10 @@ V2 当前只冻结 `TK-S10`、`BM-S08`、`BM-S09` 三个后移项。AI Feature�
 
 | 里程碑 | 项目 | Spec 范围 | 完成状态 |
 |---|---|---|---|
-| M1 | Toolkit | `TK-S01..TK-S09`（9） | [x] `TK-S01..TK-S03`；[ ] `TK-S04..TK-S09` |
-| M1 | JS Runtime | `JS-S01..JS-S10`（10） | [x] `JS-S01`；[ ] `JS-S02` 窄返修、`JS-S03..JS-S10` |
-| M1 | Runtime Core | `CORE-S01..CORE-S11`（11） | [x] `CORE-S01`、`CORE-S02`、`CORE-S05`；[ ] `CORE-S03`、`CORE-S04`、`CORE-S06..CORE-S11` |
-| M1 | LVGL Runtime | `LV-S01..LV-S10`（10） | [x] `LV-S01`、`LV-S02`；[ ] `LV-S03..LV-S10` |
+| M1 | Toolkit | `TK-S01..TK-S09`（9） | [x] `TK-S01..TK-S04`；[ ] `TK-S05..TK-S09` |
+| M1 | JS Runtime | `JS-S01..JS-S10`（10） | [x] `JS-S01`、`JS-S02`；[ ] `JS-S03..JS-S10` |
+| M1 | Runtime Core | `CORE-S01..CORE-S11`（11） | [x] `CORE-S01`、`CORE-S02`、`CORE-S05`；[ ] `CORE-S03` evidence 修复、`CORE-S04`、`CORE-S06..CORE-S11`；Alpha 当前聚焦 `CORE-S04/S06/S07/S08` |
+| M1 | LVGL Runtime | `LV-S01..LV-S10`（10） | [x] `LV-S01`、`LV-S02`、`LV-S03`、`LV-S06`；[ ] `LV-S04/LV-S05/LV-S07..LV-S10`；Alpha 当前聚焦 `LV-S04` |
 | M1 | Examples | `EX-S01`（1） | [x] `EX-S01` |
 | M2 | Android Runtime | `AND-S01..AND-S09`（9） | [x] `AND-S01`；[ ] `AND-S02..AND-S09` |
 | M3 | iOS Runtime | `IOS-S01..IOS-S09`（9） | [x] `IOS-S01`；[ ] `IOS-S02..IOS-S09` |
@@ -215,31 +217,31 @@ projects/<project>/spec/AGENT-HANDOFF.md
 | 平台总 Spec 标准结构 | `PASS`；定向复核 P0/P1/P2 为 0 |
 | 总架构与公共合同 | `PASS`；第五次定向复核 P0/P1/P2 为 0 |
 | Toolkit/Core/JS/Android/LVGL/iOS/Benchmark/Examples 项目总 Spec | `PASS`；组成边界闭环 |
-| 当前里程碑 | `F0 VERIFIED + W1 CORRECTION + W2 IMPLEMENTATION`；M1 尚未完成 |
-| 已验证 | `BM-S02/TK-S01..S03/JS-S01/CORE-S01,S02,S05/LV-S01,S02/AND-S01/IOS-S01/EX-S01 VERIFIED` |
-| 当前执行 | TK-S04、CORE-S03、LV-S03/LV-S06 实现；JS-S02 窄返修；JS-S03/S04 与 CORE-S04 文档修正 |
+| 当前里程碑 | `F0 VERIFIED + M1-Alpha S1_VERIFIED + M1-S2 READY_TO_START`；完整 M1 尚未完成 |
+| 已验证 | `BM-S02/TK-S01..S06/JS-S01,S02/CORE-S01,S02,S03,S05/LV-S01,S02,S03,S06/AND-S01/IOS-S01/EX-S01 VERIFIED`；TK-S07 打包机制和详细 Spec 已验证；JS Alpha initial-only 分层已通过 |
+| 当前执行 | Alpha S1 已完成；按 [`m1/README.md`](./m1/README.md) 和 [`m1/agent-instructions.md`](./m1/agent-instructions.md) 逐段推进 M1-S2-S5 |
 
 项目总 Spec 或分 Spec 若发现公共合同无法实现，只在各自 `AGENT-HANDOFF.md` 记录 `[待决策]` 并暂停受影响部分；不得自行改变公共协议。
 
-W2 总架构校审与当前 Agent 指令见 [`2026-08-17-w2-design-review.md`](./reviews/subspec-review/2026-08-17-w2-design-review.md)。
+W2 实现验收见 [`2026-08-18-w2-implementation-review.md`](./reviews/subspec-review/2026-08-18-w2-implementation-review.md)；Alpha 统一派发指令见 [`m1-alpha/agent-instructions.md`](./m1-alpha/agent-instructions.md)；历史 W2 指令见 [`2026-08-18-current-agent-instructions.md`](./reviews/subspec-review/2026-08-18-current-agent-instructions.md)。
 
 | 分 Spec | 检查状态 | 编码门禁 |
 |---|---|---|
 | BM-S02 | `VERIFIED` | `BM-S03 HOLD_M4` |
-| Toolkit W2 | `TK-S01..TK-S03 VERIFIED` | `TK-S04 PASS + CODE_ALLOWED` |
-| JS Runtime | `JS-S01 VERIFIED`；JS-S02 `IMPLEMENTATION_CORRECTION_REQUIRED` | 只修 immutable bytes；JS-S03/S04 `DESIGN_CHANGES_REQUIRED` |
-| Runtime Core W2 | `CORE-S01/CORE-S02/CORE-S05 VERIFIED` | `CORE-S03 PASS + CODE_ALLOWED`；CORE-S04 `DESIGN_CHANGES_REQUIRED` |
-| LVGL Runtime W2 | `LV-S01/LV-S02 VERIFIED` | `LV-S03/LV-S06 PASS + CODE_ALLOWED` |
+| Toolkit W2 | `TK-S01..TK-S06 VERIFIED`；TK-S07 打包机制、详细 Spec 与 Loader probe 已验证 | 定向修正 Page VM/evaluator、Package dependencies 与 typed facade ID 后重建 Alpha RPK；`TK-S08/TK-S09 CODE_BLOCKED` |
+| JS Runtime | `JS-S01/JS-S02 VERIFIED`；S03 与 Alpha initial-only 分层已通过 | 只实现 Case 001 所需 Router 与 `$page` typed facade；完整 Reactive/Event/Navigation `CODE_BLOCKED` |
+| Runtime Core W2 | `CORE-S01/CORE-S02/CORE-S03/CORE-S05 VERIFIED` | Alpha 组件已通过；定向对齐 App/Shared/Page dependencies 后参与集成；完整容灾后续验收 |
+| LVGL Runtime W2 | `LV-S01/LV-S02/LV-S03/LV-S06 VERIFIED` | `LV-S04 ALPHA_COMPONENT_VERIFIED`；定向完成 `fontSize`/CJK 字体接线 |
 | AND-S01 | `VERIFIED` | `AND-S02 HOLD_M2` |
 | IOS-S01 | `VERIFIED` | `IOS-S02 HOLD_M3` |
-| EX-S01 / EX-S02 | `EX-S01 VERIFIED`；`EX-S02 PASS` | `EX-S02 CODE_HOLD_POST_M1` |
+| EX-S01 / EX-S02 | `EX-S01 VERIFIED`；`EX-S02 PASS` | Alpha Runner `INTEGRATION_BLOCKED_UPSTREAM`；不启动 EX-S02 产品代码 |
 
 ### 6.1 里程碑门禁
 
 | 里程碑 | 状态 | 当前阻塞条件 |
 |---|---|---|
 | F0 Foundation | `VERIFIED` | 无 |
-| M1 LVGL/SDL | `W1_CORRECTION / W2_IMPLEMENTATION` | JS-S02 bytes 返修；W2 四项实现、三项设计修正；W3-W5 未启动 |
+| M1 LVGL/SDL | `M1-Alpha S1_VERIFIED / M1-S2 READY_TO_START` | S2-S5 事件、Capability、增量更新、返回、恢复和销毁 |
 | M2 Android | `WAIT_M1` | 必须先证明同一 Runtime 在 LVGL/SDL 完整成立 |
 | M3 iOS | `WAIT_M2` | 必须复用已验证 Artifact/Core/JS 主链路 |
 | M4 基础 Benchmark | `WAIT_M1_M3` | 三平台可运行证据尚未形成 |

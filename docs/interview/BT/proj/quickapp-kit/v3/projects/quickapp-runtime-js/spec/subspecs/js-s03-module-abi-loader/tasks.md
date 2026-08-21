@@ -15,7 +15,7 @@
 
 - JS-S01/JS-S02 保持 `VERIFIED`。
 - 本分 Spec 独立校审 `PASS` 且工作看板显式 `CODE_ALLOWED`。
-- `[待决策] P0-JS-EXPORT-001` 在 T06 前关闭。
+- 公共 Artifact Contract 的 `P0-JS-EXPORT-001` 已冻结；T06 必须直接消费其机器形态，不创建临时测试 Definition。
 - 不修改公共合同、Schema 或 JS-S02 14-entry Catalog。
 
 ## 3. 任务清单
@@ -49,7 +49,7 @@
 
 1. definition/instance/failure/request ledger/Page lease。
 2. 完整 key、generation 和状态机。
-3. same-key join、identity conflict、failed cache hit。
+3. same-key join、identity conflict、deterministic failed cache hit；transient failure rollback 后可重试。
 
 **完成定义**：cache 只有一个 owner；无半提交、双终态和跨 AppRuntime 命中。
 
@@ -64,12 +64,12 @@
 
 ### JS-S03-T06：实现 bootstrap/export 校验
 
-1. 消费已关闭的 `P0-JS-EXPORT-001` typed shape。
-2. App/Page VM definition view。
+1. 消费已冻结的 `P0-JS-EXPORT-001` typed shape：`createAppVm/createPageVm`、evaluator `this/scope`、`handlerMethods`。
+2. App/Page VM Definition view 及 own-property/无 accessor/无未知字段校验。
 3. Binding/Handler canonical ID 集合与 value 类型校验。
 4. 不执行 evaluator/handler，不读取 Page IR。
 
-**完成定义**：缺失/额外/重复/非法 key 和错误 value 均在 commit 前失败。
+**完成定义**：Definition shape、缺失/额外/重复/非法 key 和错误 value 均在 commit 前失败；OOM/overflow/closed/cancel 返到可重试状态且不进入 failure cache。
 
 ### JS-S03-T07：实现 completion 与重复消息
 

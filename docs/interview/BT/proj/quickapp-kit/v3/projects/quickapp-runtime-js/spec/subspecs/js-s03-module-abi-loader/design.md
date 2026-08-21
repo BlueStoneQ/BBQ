@@ -11,7 +11,7 @@
 - [7. 状态、失败与重复](#7-状态失败与重复)
 - [8. 销毁与资源上限](#8-销毁与资源上限)
 - [9. 异常与观测](#9-异常与观测)
-- [10. 待决策](#10-待决策)
+- [10. 已冻结合同](#10-已冻结合同)
 
 ## 1. 结论
 
@@ -109,7 +109,7 @@ $app_define$(moduleId, dependencies, factory) -> undefined
 1. 当前 transaction 恰好一次。
 2. moduleId 与 request 完全相等。
 3. dependencies 是无重复 string array，顺序与 request 完全相等。
-4. factory callable；其调用合同固定为 `factory($app_require$, $app_exports$, $app_module$)`。
+4. factory callable；其调用合同固定为 `factory($app_require$, $app_module$, $app_exports$)`。
 5. `$app_module$.exports` 是最终 export 权威；`$app_exports$` 是初始 exports alias，factory return value不替代 `module.exports`。
 6. load 外、重复或额外 module define 立即使当前 transaction 失败。
 
@@ -168,7 +168,7 @@ Cache key：
 | Page lease | `SurfaceId + surfaceGeneration + moduleId + definitionGeneration` | Surface |
 | Failure record | 对应完整 definition key | 对应 AppRuntime/Surface lease |
 
-同 AppRuntime 中同一 `moduleId` 首次成功或失败 identity 成为 canonical identity；后续不同 SHA/path/kind/fingerprint 视为冲突，不执行新 bytes。
+同 AppRuntime 中同一 `moduleId` 首次成功或确定性内容失败 identity 成为 canonical identity；后续不同 SHA/path/kind/fingerprint 视为冲突，不执行新 bytes。OOM、队列满、scope closed 和 teardown cancellation 不建立 canonical identity，恢复资源后允许重试。
 
 ### 5.2 Entry
 
@@ -221,11 +221,13 @@ Shared load 在 definition 校验后可提交 `defined/loaded-definition`，fact
 
 ### 6.2 Export 校验
 
-- App export 能转换为一个 App VM definition，且生命周期成员只能是函数或缺失。
-- Page export 能转换为 Page VM definition、`bindingEvaluators` 和 `handlerMethods`。
-- evaluator/handler object 使用 canonical positive-decimal key；转换后比较数值 ID 集合。
-- evaluator value callable；handler value 是 Page VM 中存在的非空方法名。方法实际调用属于 JS-S08。
-- export 校验只消费 expected ID 集合，不读取 target、property、eventType 或 Page IR。
+Definition shape 直接消费公共 Artifact Contract `P0-JS-EXPORT-001`：
+
+- App 只允许 own data property `schemaVersion`, `kind`, `createAppVm`；`kind="app"` 且 `createAppVm` callable。
+- Page 只允许 own data property `schemaVersion`, `kind`, `createPageVm`, `bindingEvaluators`, `handlerMethods`；`kind="page"` 且 `createPageVm` callable。
+- Definition、`bindingEvaluators` 和 `handlerMethods` 禁止 accessor、Proxy、原型继承注入和未知字段。
+- evaluator callable，以对应 Page VM 为 `this`，唯一参数为只读 lexical `scope`；handler value 是非空 method name。实际求值/调用不属于 S03。
+- evaluator/handler object 使用 canonical positive-decimal key；转换后比较数值 ID 集合。校验只消费 expected ID 集合，不读取 target/property/eventType/Page IR。
 
 ### 6.3 并发与顺序
 
@@ -242,12 +244,12 @@ Shared load 在 definition 校验后可提交 `defined/loaded-definition`，fact
 
 ```text
 absent -> loading -> defined -> evaluating -> loaded
-                   |            \-> failed
-                   \-> failed
-loaded|failed -> releasing -> released
+                   |            \-> deterministic failed
+                   \-> transient rollback -> absent
+loaded|deterministic failed -> releasing -> released
 ```
 
-只有 `loading` 的 staging 可回滚；`loaded/failed` 都是当前 identity 的 terminal cache state。`failed` 只保存结构化错误和 identity，不保存 bytes、临时 JS Value 或异常对象。
+只有 `loading/evaluating` 的 staging 可回滚。`deterministic failed` 才是当前 identity 的 terminal cache state；transient failure 必须销毁 staging 并回到 `absent`。失败记录只保存结构化错误和 identity，不保存 bytes、临时 JS Value 或异常对象。
 
 ### 7.2 Request ledger
 
@@ -263,12 +265,13 @@ loaded|failed -> releasing -> released
 
 | 失败 | RuntimeError |
 |---|---|
-| message/module/bootstrap/export/dependency/cycle 不匹配 | `MODULE_ABI_UNSUPPORTED` |
+| message/module/bootstrap/export/dependency/cycle 不匹配 | `MODULE_ABI_UNSUPPORTED`，确定性内容失败，可缓存 |
 | bytes 长度/SHA 不匹配 | `PACKAGE_INTEGRITY_FAILED` |
-| UTF-8/source evaluate 或 factory 普通异常 | `JS_EXCEPTION` |
-| 必要分配失败 | `OUT_OF_MEMORY` |
-| transaction/waiter/byte/outbox 容量满 | `QUEUE_OVERFLOW` |
-| Surface 已关闭 | `SURFACE_NOT_FOUND` |
+| UTF-8/parse 或可证明由固定 Bundle/resolver 输入产生的 factory 异常 | `JS_EXCEPTION`，确定性时可缓存 |
+| 无法证明内容确定性的 Engine/Factory 异常 | `JS_EXCEPTION`，transient，回滚后可重试 |
+| 必要分配失败 | `OUT_OF_MEMORY`，transient，不缓存 |
+| transaction/waiter/byte/outbox 容量满 | `QUEUE_OVERFLOW`，transient，不缓存 |
+| Surface 已关闭或 teardown cancellation | `SURFACE_NOT_FOUND`/cancellation，transient，不缓存 |
 
 失败 Result 使用原 requestId/moduleKind/moduleId/surfaceId，并在 staging 清理后才提交到 Outbox。
 
@@ -314,10 +317,10 @@ stop module admission
 
 ## 9. 异常与观测
 
-Engine exception 在当前 transaction 内提取并清除，不污染下一模块。失败缓存保存 `RuntimeError`，不保存 Engine exception/value。
+Engine exception 在当前 transaction 内提取并清除，不污染下一模块。只有确定性内容失败保存 `RuntimeError`；transient failure 的 RuntimeError 只属于本次 request，不进入 canonical failure cache。
 
 S03 只使用公共 `module.load.started/completed/failed`；cycle、cache hit、failure cache hit 和 release 若公共 Catalog 无专用 marker，只通过已有 terminal marker 与轻量计数表达，不创建私有同义 marker。所有事件使用 `producer=js`、run-relative integer `timestampNs`、RequestId/SurfaceId；Noop 与 Recording 行为等价。
 
-## 10. 待决策
+## 10. 已冻结合同
 
-`[待决策] P0-JS-EXPORT-001`：公共 Artifact Contract 已冻结 App/Page export 的语义内容，但尚未冻结 JS 对象的精确属性名、App/Page VM definition 外形和 callable 签名。S03 设计以 typed `AppModuleExportView/PageModuleExportView` 隔离该细节；编码 T06 前需由总架构与 Toolkit Bundle Emit Spec 冻结机器可测 export shape，S03 不私自修改公共合同。
+公共 Artifact Contract 已冻结 `P0-JS-EXPORT-001` 的机器形态、`createAppVm/createPageVm` callable、binding evaluator 的 `this/scope` 和 `handlerMethods`。S03 直接按该合同校验并生成 immutable typed Definition view；S04 只消费 Definition，不重复解释导出对象。

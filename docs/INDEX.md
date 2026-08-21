@@ -23,6 +23,7 @@
   - [Anker 测评准备（价值观 + CATA + AI 飞行员）](./interview/anker/价值观+cata行测+AI飞行员测试/README.md)
 - [DJI JD](./interview/dji/jd.md)
 - [BT JD](./interview/BT/jd.md)
+- [BT 知识索引](./interview/BT/index.md)
 - [Orbit Labs JD](./interview/orbit/jd.md) / [prep](./interview/orbit/prep.md)
 - [JY JD](./interview/jieyue/jd.md) / [prep](./interview/jieyue/prep.md)
 - [XZ JD](./interview/xz/jd.md) / [prep](./interview/xz/prep.md)
@@ -118,6 +119,7 @@
 
 ## 快应用框架
 
+- [QuickApp Kit 边界笔记](./interview/BT/proj/quickapp-kit/note/INDEX.md)
 - [项目讲解（Deep Dive）](./resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md)
 - [架构与渲染流](./resume/explain/3.1-xm/quickapp-framework/quickapp-layout-and-architecture.md)
 - [J2V8 深入](./resume/explain/3.1-xm/quickapp-framework/j2v8-deep.md)

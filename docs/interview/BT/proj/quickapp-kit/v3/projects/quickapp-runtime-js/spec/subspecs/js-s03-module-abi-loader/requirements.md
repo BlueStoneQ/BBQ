@@ -46,8 +46,8 @@ S03 只解决三个问题：
 | JS-S03-R10 | 同一 Page definition 可被多个 Surface lease 复用；lease key 是 `SurfaceId + moduleId + definition generation`。Page definition/export 不得成为 Page VM，最后一个 lease 释放后才允许按策略回收定义。 |
 | JS-S03-R11 | 同一 key 并发 load 必须共享一个 loading transaction 并分别完成各自 RequestId；同 moduleId 的冲突 identity 必须在执行新 bytes 前拒绝。 |
 | JS-S03-R12 | cache entry 必须具有 `absent/loading/defined/evaluating/loaded/failed/releasing/released` 闭合状态；状态只在 JS Executor 上推进，不允许 loaded 与 failed 双终态。 |
-| JS-S03-R13 | 任一 integrity、Engine、define、bootstrap、require、cycle 或 export 校验失败必须先回滚 staging，再提交失败缓存；相同 identity 的后续 load 返回同类 terminal failure，不自动重执行有副作用的 Bundle。 |
-| JS-S03-R14 | App export 必须可转换为 App VM definition；Page export 必须可转换为 Page VM definition、`bindingEvaluators` 和 `handlerMethods`，且两个十进制 key 集合分别与 expected ID 集合一一相等。 |
+| JS-S03-R13 | 任一失败都必须先回滚 staging。只有可由 immutable bytes、固定 expected contract 和固定 resolver 输入确定复现的内容失败（完整性、UTF-8/parse、Module ABI、依赖/cycle、Definition shape）才能进入 terminal failure cache；`OUT_OF_MEMORY`、`QUEUE_OVERFLOW`、scope closed 和 teardown cancellation 必须回滚到可重试状态，不污染 canonical identity。普通 JS exception 只有能证明属于该固定内容输入时才缓存，否则按 transient failure 处理。 |
+| JS-S03-R14 | App export 必须严格是公共 Artifact Contract 冻结的 own data property Definition：`schemaVersion=1`、`kind="app"`、`createAppVm(appContext) -> AppVm`；Page 必须严格包含 `schemaVersion=1`、`kind="page"`、`createPageVm(surfaceContext) -> PageVm`、`bindingEvaluators` 和 `handlerMethods`，禁止 accessor/Proxy/未知字段，且两个十进制 key 集合分别与 expected ID 集合一一相等。 |
 | JS-S03-R15 | evaluator 必须 callable；handler mapping value 必须是非空方法名；重复、0、非十进制、超 safe integer、缺失或额外 ID 均在 cache commit 前失败。S03 不执行 evaluator/method。 |
 | JS-S03-R16 | `loaded` 只表示 Module ABI、bootstrap 和 export 已验证且 cache 已提交；不表示 VM initialized、Runtime Tree created、Mount 或 Present。 |
 | JS-S03-R17 | 每个 accepted Core RequestId 最多发送一个 `LoadVerifiedModuleResult`；duplicate/late/cancelled request 不重执行 Bundle、不重建 entry、不复活已销毁 scope。 |
@@ -61,7 +61,7 @@ S03 只解决三个问题：
 
 - 单一权威：S03 是 JS Module definition/instance cache 的唯一所有者。
 - 失败原子：staging 不进入 committed cache；失败不泄漏可见 export。
-- 有界：无无限依赖递归、无限 waiter、无限 failed entry 或长期 bytes 保留。
+- 有界：无无限依赖递归、无限 waiter、无限 deterministic failure entry 或长期 bytes 保留；transient failure 不进入 canonical cache。
 - 平台无关：公共目标不引用 QuickJS、JNI、UIKit、LVGL、SDL 或文件 API。
 - 可测试：Fake Engine 与 QuickJS 使用同一 Module ABI suite。
 - 可观测：关闭 Observation 后 load 行为完全等价。

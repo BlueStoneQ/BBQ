@@ -126,4 +126,4 @@ S04 不读取文件系统，不重新解析源码，不解析 import target。
 
 ## 9. 状态
 
-`READY_FOR_REVIEW`：只完成 TK-S04 分 Spec；产品代码仍为 `CODE_BLOCKED`，TK-S05/TK-S06 未启动。
+`VERIFIED`：TK-S04 实现、测试、证据和总架构验收已完成；TK-S05/TK-S06 可进入分 Spec设计。

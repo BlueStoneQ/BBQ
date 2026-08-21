@@ -327,7 +327,8 @@ concat("Hello ", toDisplayString(name), ", ", toDisplayString(count))
 
 S04 为 expression 做以下语义标注，不执行表达式：
 
-- identifier 解析为 Page VM state/method 或当前 `for` alias。
+- `private` 的静态字段被规范化为 Page VM 根状态符号；identifier 解析为根状态、Page method 或当前 `for` alias。
+- lexical alias 优先于同名 Page state；Canonical expression 分别记录 `lexicalBindings` 与 `stateBindings`，S05 只能据此投影，不能重新猜测作用域。
 - nested Block 可引用自身 alias 和外层 lexical alias；同名时最近 scope 优先。
 - text/value 使用 `toDisplayString`：string 原值，有限 number/boolean 使用 ECMAScript 字符串语义，null 为空字符串；其他值在运行时求值失败。
 - `if` controller 使用 JavaScript truthiness 语义并输出 boolean。

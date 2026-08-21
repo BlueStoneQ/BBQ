@@ -1,6 +1,6 @@
 # LVGL Runtime Spec Agent Handoff
 
-> 状态：LV-S01/LV-S02 `VERIFIED`；LV-S03/LV-S06 `PASS + CODE_ALLOWED`。
+> 状态：LVGL Alpha Mount/Present 与 `fontSize`/CJK 接线 `VERIFIED`；M1-Alpha 由单一集成 Agent 接管；LVGL 项目 Agent 停止。
 
 ## 目录
 
@@ -24,6 +24,52 @@
 LVGL 类型只存在 Platform 层；输入转换为 `PlatformInputMessage`；Surface 容器遵循公共 Platform Surface Adapter；Core 只接收平台无关协议。
 
 ## 交接记录
+
+### 2026-08-18 / LVGL Runtime Agent / M1-Alpha Core Mount 联调
+
+- 状态：`READY_FOR_REVIEW`；LV-S04 保持 `ALPHA_COMPONENT_VERIFIED + INTEGRATION_ALLOWED`，未启动任何后续 LVGL 分 Spec。
+- 已完成：新增 `CoreMountBridge`，消费 Core `MountCoordinator` 生成的 typed `MountTransaction`；有界转换后由 owner-thread S04 Mount 执行，成功后调用 S03 `PresentRootSurfaceHost`，只有 Present 成功才将 typed `MountTransactionResult` 回送 Core。
+- 已验证：真实 SDL/LVGL Host、Core generated transaction、Mount、Present、root visible、Core success Result、Platform Present Trace 和 close 资源归零；Debug 13/13、Release/ASan/UBSan/TSan 各 3/3、embedded-only 8/8 通过；source manifest 摘要 `5cafb644e2cd472bd0d55489fc72d4d6777c6aac564b5cf4f9dfb2b659a091e6`。
+- 证据边界：上述输入是最小 Core Page IR，不是 Toolkit Runtime RPK；不得宣称 Case 001 S1 已通过。
+- [待决策]：Core Alpha 输出 `fontSize`，LVGL Alpha Host 尚未具备冻结的字体资产选择；桥接显式返回 `kHostFeatureUnsupported`，不得静默忽略。真实 Case 001 RPK 联调前应由 Core/LVGL 按既有 Host/Measure 边界确定该属性的 V1 语义。
+- 证据：`quickapp-runtime-lvgl/evidence/lv-s04-verification.md`。
+- 下一步：等待 TK-S07 Runtime RPK 与 JS/Core 组装；仅参与真实 RPK -> Core -> Mount -> Present -> Core Result 联调，不启动 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10。
+
+### 2026-08-18 / LVGL Runtime Agent / LV-S04 M1-Alpha 启动
+
+- 状态：`IN_PROGRESS`
+- 范围：设计并实现现有 v3 项目的 LV-S04 Mount 与 Host Components；本轮只覆盖 M1-Alpha Case 001 S1 的 View/Text/Button。
+- 固定边界：复用 v3 公共 Mount、Surface、Host Component 和 Observation 合同；不新增公共合同、不创建 Alpha 专用 Runtime；不实现 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10。
+- 设计约束：Platform 只维护 `SurfaceId -> page root` 和 `NodeId -> native object` 的本地映射；不复制 Core Runtime Tree、Revision、路由或 Layout 权威状态。所有 LVGL object 操作只在 owner thread 执行。
+- 待验证：真实 LVGL/SDL Host 的 full mount、present、visible 与确定销毁证据。
+- 下一步：完成 `lv-s04-mount-host-components` 五份分 Spec，随后实现 M1-Alpha S1 并提交可见性、挂载、展示和资源证据。
+- 公共合同影响：无。
+
+### 2026-08-18 / LVGL Runtime Agent / LV-S04 M1-Alpha 完成
+
+- 状态：`READY_FOR_REVIEW`。
+- 设计：完成 `lv-s04-mount-host-components` 五份标准分 Spec；复用 v3 公共 Render/Surface/Lifecycle 合同，没有新增公共合同或 Alpha 专用 Runtime。
+- 实现：完成 bounded MountHost、`(SurfaceId, NodeId) -> LVGL object` 本地映射、View/Text/Button、full Create/Set/Insert、incremental Move/Remove、owner-thread task、typed Result/sourceId 和显式确定关闭；full/失败清理只影响目标 Surface。
+- 真实 Host 证据：使用 `lv_sdl_window_create`、S03 page root 与真实 LVGL object；full Mount 成功后保持 hidden，S03 Present 后 root visible；close 后 object/mapping/transaction/task 归零。
+- 验证：Debug 全量 12/12；Release、ASan/UBSan、TSan 的 S04 各 2/2；embedded-only 全量 8/8；双 Surface full rebuild 隔离通过。65 项 source manifest 全部匹配，manifest 摘要 `5e1d699f29cde7370bef5fcb9acc9338b2760acc6be3e303938c6ad143016c64`。
+- 边界：本轮没有实现 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10，也没有复制 Core Runtime Tree、Revision、路由或 Layout 权威状态。
+- 证据：`quickapp-runtime-lvgl/evidence/lv-s04-verification.md`。S04 证明真实 LVGL/SDL mount/present/visible；真实 RPK -> JS -> Core -> Mount 的完整装配等待后续集成，不在本轮冒充完成。
+- 下一步：等待总架构校审；不得启动 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10。
+- 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / LV-S04 Alpha 实现校审
+
+- 状态：`ALPHA_COMPONENT_VERIFIED + INTEGRATION_ALLOWED`。
+- 已验证：真实 SDL/LVGL window、S03 page root、View/Text/Button、full/incremental Mount、Present/visible、owner-thread、失败清理、embedded-only 和资源归零证据通过。
+- 证据边界：当前输入是 typed MountTransaction fixture，不是真实 Toolkit Runtime RPK；不得宣称 Alpha S1 端到端通过。
+- 下一步：停止扩展 LVGL，等待 TK-S07 RPK，参与 Core MountTransaction -> LVGL Mount -> S03 Present 联调。详细指令见 [`2026-08-18-toolkit-lvgl-review-and-next.md`](../../../reviews/subspec-review/2026-08-18-toolkit-lvgl-review-and-next.md)。
+
+### 2026-08-18 / 总架构 Agent / M1-Alpha 真实集成放行
+
+- 状态：`ALPHA_COMPONENT_VERIFIED + INTEGRATION_ALLOWED`。
+- 新增事实：Toolkit 已提供真实 Case 001 RPK；其 Page IR 含 Text/Button 的 `fontSize: 40/30`。
+- 集成约束：`fontSize` 不得静默忽略；必须按既有 LV-S06 `system-default` 字体合同和已确认字体资产完成 Host 映射，并提交 CJK 文本可见证据。
+- 下一步：只参与真实 `RPK -> Core MountTransaction -> LVGL owner-thread Mount -> Present` 联调；不得启动 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10。
 
 ### 2026-08-15 / 总架构 Agent
 
@@ -322,3 +368,75 @@ LVGL 类型只存在 Platform 层；输入转换为 `PlatformInputMessage`；Sur
 - LV-S06：immutable font snapshot、Core-thread 同步度量、generation 失效和 Layout 边界成立。
 - 下一步：两项可并行实现并分别提交证据；不得启动 LV-S04/LV-S07。
 - 公共合同影响：无。
+
+### 2026-08-17 / LVGL Runtime Agent / LV-S03 与 LV-S06 实现启动
+
+- 状态：两项均 `IMPLEMENTING`。
+- 已完成：确认工作看板和分 Spec 校审均为 `PASS + CODE_ALLOWED`；对齐真实 Core Foundation Port、LV-S01 owner queue、LV-S02 构建与证据模式。
+- 本项目设计决定：LV-S03 的真实 LVGL 类型只存在 page-root backend；Surface gateway、状态和 Result 保持 typed/平台内部。LV-S06 的同步算法不调用 LVGL，通过固定双槽 immutable metrics snapshot 服务 Core thread。
+- 待验证项：两项各自的合同测试、Debug/Release、ASan/UBSan、TSan、边界扫描、压力、资源归零和源码摘要。
+- 阻塞项：无。
+- 下一步：严格按各自 tasks/acceptance 实现并分别收口证据；不得启动 LV-S04/LV-S07。
+- 公共合同影响：无。
+
+### 2026-08-18 / LVGL Runtime Agent / LV-S03 实现完成
+
+- 状态：READY_FOR_REVIEW
+- 已完成：实现 bounded Surface command gateway、owner-thread SurfaceHostTable、固定 16/4 page-root limits、hidden/present/push/visibility/close/destroy 状态机、原子视觉提交、RequestId replay guard、结果背压与显式确定关闭。
+- 验证证据：Debug、Release、ASan/UBSan、TSan 均 10/10 CTest PASS；embedded-only 7/7 PASS；S03 合同测试、边界扫描、四 Producer 竞争和 10,000 轮 create/present/hide/show/destroy 压力通过。
+- 资源证据：每轮压力后 live roots、pending operations/results 为零；显式 close 后资源归零；源码清单 56 项全部 OK，摘要为 dcdc8562e336037e37b2c6e691b9f062bcf40766e791ba79f7c69c3b4126ad89。
+- 边界：未实现 Core route/Navigation/Revision、Mount、Host Component、Event/Input、Measure；LVGL 类型只存在 page-root backend。
+- 证据文件：代码工程 evidence/lv-s03-verification.md。
+- 下一步：提交 LV-S03 总架构复核；不得启动 LV-S04。
+- 公共合同影响：无。
+
+### 2026-08-18 / LVGL Runtime Agent / LV-S06 实现完成
+
+- 状态：READY_FOR_REVIEW
+- 已完成：实现 immutable scalable font snapshot、双槽 reader guard、Core-thread 同步 Q26.6 measure、exact family/weight、UTF-8/CRLF/tab/CJK/wrap/constraint 规则、generation 单 pending 通知、双 Profile 4/16 faces 与固定输入上限、显式关闭。
+- 验证证据：Debug、Release、ASan/UBSan、TSan 均 10/10 CTest PASS；embedded-only 7/7 PASS；S06 合同测试、边界扫描、100,000 次 measure 和 10,000 次 generation publish 压力通过。
+- 资源证据：通知、snapshot reader 和双槽在关闭后归零；simulator/embedded mandatory catalog digest 与算法一致；源码清单 56 项全部 OK，摘要为 dcdc8562e336037e37b2c6e691b9f062bcf40766e791ba79f7c69c3b4126ad89。
+- 边界：未实现 Yoga、Core Measure cache、Layout Rect、Host Tree、LVGL object、SDL/libuv、Mount 或 LV-S07 Event/Input。
+- 证据文件：代码工程 evidence/lv-s06-verification.md。
+- 下一步：提交 LV-S06 总架构复核；不得启动 LV-S07。
+- 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / W2 LV-S03/LV-S06 实现验收 PASS
+
+- 状态：LV-S03、LV-S06 均为 `VERIFIED`。
+- 已验证：本机复跑 Debug、Release、ASan/UBSan、TSan 各 10/10，embedded-only 7/7；source manifest、压力和边界扫描通过。
+- 架构判断：Surface Host 未复制 Core 路由/Revision；Font Measure 未接管 Layout、Cache 或 UI，平台边界成立。
+- 下一步：开始 LV-S04 Mount 与 Host Components 分 Spec设计；不得编码，不得启动 LV-S05/LV-S07。
+- 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / Alpha fontSize 定向放行
+
+- 状态：`TARGETED_FONT_INTEGRATION_ALLOWED`；LV-S05/LV-S07..S10 保持阻塞。
+- 当前任务：把 Core MountTransaction 的 `fontSize` 接入既有 LV-S06 `system-default` 字体/Measure 合同和仓库内已声明字体资产。
+- 边界：不得静默忽略 `fontSize`，不得使用未声明系统字体；保持 LVGL owner thread，不接管 Core Layout、Runtime Tree 或 Revision。
+- 验收：真实 CJK 文本 mount/visible、Measure 一致性、资源归零和源码清单。
+- 下一步：标记 `READY_FOR_REVIEW` 后停止，等待 Composition Root。
+
+### 2026-08-18 / 总架构 Agent / Alpha 完成审计与重新派发
+
+- 状态：`NOT_STARTED / REDISPATCH_REQUIRED`。
+- 审计：`fontSize` 仍是 unsupported negative case，未发现 CJK 字体接线、正例、证据或完成交接。
+- 下一步：立即执行 [`2026-08-18-alpha-agent-completion-audit.md`](../../../reviews/subspec-review/2026-08-18-alpha-agent-completion-audit.md) 4.4；完成后追加 `READY_FOR_REVIEW`。
+- 禁止项：LV-S05/LV-S07..S10 继续阻塞。
+
+### 2026-08-18 / LVGL Runtime Agent / Alpha fontSize/CJK 定向任务完成
+
+- 状态：`READY_FOR_REVIEW`；仅完成已放行的字体接线，未启动 LV-S05/LV-S07/LV-S08/LV-S09/LV-S10。
+- 已完成：`MountTransaction.fontSize` 以 1..256 整数映射到既有 LV-S06 `system-default/400`；Text=40px、Button=30px 使用同一有界字体实例表，创建、style 赋值和释放均只在 LVGL owner thread 执行。
+- 字体资产：仓库内声明并由 CMake 纳入 `quickapp_lvgl_font_asset` 的 `SourceHanSansSC-Alpha.otf`；digest=`2ce36ea70e5f694eba7ca8279fd9a681578eaa5d7a9f35ab6e36ac63a8e1223d`。它是声明的 ASCII 与 Case 001 CJK 子集，不使用系统字体兜底。
+- 已验证：真实 LVGL/SDL Text/Button 挂载并可见 `欢迎体验快应用开发`、`跳转到详情页`；`中` 的实际 LVGL glyph 存在；40px glyph advance 与 LV-S06 Q26.6 Measure 宽度相等，行高只存在小于 1px 的整数像素量化差。
+- 资源与 Profile：删除、full rebuild、Surface/Host close 后 font/object/mapping/task 归零；Simulator 与 embedded-only 使用同一字体字节、同一 digest 与同一 glyph/Measure probe。Debug、Release、ASan/UBSan、TSan 各 14/14 PASS；embedded-only 9/9 PASS。
+- 证据边界：当前 Core 联调输入仍是 typed Page IR fixture，不把它表述为完整 Toolkit RPK -> JS -> Core 链路；本轮只补足 Core transaction 到真实 LVGL Host 的 fontSize/CJK 事实。
+- 证据：`quickapp-runtime-lvgl/evidence/lv-s04-verification.md`、`quickapp-runtime-lvgl/evidence/lv-s06-verification.md`、`quickapp-runtime-lvgl/evidence/source-manifest.sha256`。
+- 公共合同影响：无。下一步：等待总架构校审，不继续扩展。
+
+### 2026-08-18 / 总架构 Agent / Alpha 字体接线验收
+
+- 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
+- 已验证：真实 LVGL/SDL CJK visible、fontSize、Measure 一致性、资源归零和双 Profile 通过。
+- 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费实现。

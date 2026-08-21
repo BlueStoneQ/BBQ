@@ -275,6 +275,7 @@ SurfaceId 不复用；generation 仍用于拒绝已排队但晚于 close 的 cal
 | borrowed JS args | JS-S01 Provider / native call stack | decoder 返回前转为独立 RuntimeValue，不保存 view |
 | `CoreInboundMessage` | S02 -> Core | accepted 时 move；rejected 时 S02 释放 |
 | `JsInboundMessage` | Core -> S02 | callback post accepted 时 move；rejected 时 Core producer 保留/释放 |
+| `ModuleBundle.bytes` | Core Loader -> S02 -> S03 consumer | 进程内为 `shared_ptr<const vector<uint8_t>>`；accepted 后各持有者只能读，最后一个 owner 在 terminal delivery、拒绝或取消路径结束时释放；base64 只在 Schema/fixture wire 边界 |
 | bridge correlation registry | RuntimeAbiService / JS Executor | 只保留关联字段，不从 Core thread访问，不持有业务 completion |
 | JS-origin RequestId sequence | JS Framework bootstrap 创建的 AppRuntime 唯一 `JsRequestIdAllocator` / JS Executor | 所有请求模块共享取号；S02 只接收完整 typed message 并校验，不拥有 allocator，不同步请求 C++ 分配 |
 | typed callback slot | 后续 JS 模块 | S02 只投递完整 typed Result；registration token 注销后不能再调用，业务 pending 仍由模块持有 |
@@ -296,6 +297,8 @@ mark Surface closing
 ```
 
 新 Surface 请求返回 `SURFACE_NOT_FOUND`。late Result/Event 不调用 consumer、不重建 correlation。
+
+排队中的 Surface-scoped `LoadVerifiedModule` 在 generation 失效后只销毁 callback，从而释放其 immutable bytes；S02 不把 bytes 复制进 correlation 或 tombstone。
 
 ### 10.2 AppRuntime
 

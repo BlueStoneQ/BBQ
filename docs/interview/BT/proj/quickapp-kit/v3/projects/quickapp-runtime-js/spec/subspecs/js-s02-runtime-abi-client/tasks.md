@@ -105,10 +105,10 @@
 **工作**：
 
 1. producer thread 只做纯字段/version/scope admission。
-2. 使用 JS-S01 有界 Executor move immutable callback。
+2. 使用 JS-S01 有界 Executor move immutable callback；`ModuleBundle.bytes` 使用共享不可变 byte storage，进程内不得保留 `bytesBase64`。
 3. 在 JS Executor 重查 generation；Result 先匹配并删除 bridge correlation record，再把完整 typed Result 投递给固定 slot。
 4. 实现编译期固定 CallbackSlots 和 move-only registration token。
-5. 覆盖 callback queue overflow、close race、late task 和 consumer 注销。
+5. 覆盖 callback queue overflow、close race、late task、consumer 注销，以及 Module bytes 在 rejected、terminal delivery、Surface/App teardown 的释放。
 
 **完成定义**：Core thread 从不进入 Engine/consumer；accepted callback 按 FIFO 最多分发一次；拒绝时所有权明确。
 

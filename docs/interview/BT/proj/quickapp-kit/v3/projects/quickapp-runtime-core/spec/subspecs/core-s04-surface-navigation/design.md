@@ -14,8 +14,7 @@
 - [10. 失败恢复与销毁](#10-失败恢复与销毁)
 - [11. S03 与后续流水线边界](#11-s03-与后续流水线边界)
 - [12. 线程、内存与观测](#12-线程内存与观测)
-- [13. 待决策](#13-待决策)
-- [14. 边界不变量](#14-边界不变量)
+- [13. 边界不变量](#13-边界不变量)
 
 ## 1. 结论
 
@@ -94,6 +93,8 @@ committedRevision = n + 1                authorized incremental commit
 ```
 
 S04 保存 Revision 与 gate；后续 S08 是唯一提交执行者。S04 发出 move-only `RenderPermit(surfaceId, baseRevision, operationEpoch)`，只有持有内部 `SurfaceCommitAuthority` 的 S08 可以在同一 Core turn 提交新 Revision 并清空 render slot。
+
+wire 通知规则已冻结：`committedRevision=none` 期间不发送 `SurfaceStatusChanged`；首棵树提交 revision 0 且 lifecycle 进入 `presenting` 后，才允许发送第一条状态消息。Schema 保持非负整数，`0` 只表示真实首个 committed Revision，不表示“尚未提交”。
 
 每个 Surface 有两个独立但互斥受控的槽：
 
@@ -275,11 +276,7 @@ S04 决定 Page lifecycle 转换和 Hook 时机；S03 执行 typed JS dispatch�
 - Trace 覆盖 create/present/visibility/push/close/destroy accepted、command/result、commit、failure 和 late message。
 - 测试 snapshot 提供 stack IDs、每个 Surface 的 lifecycle/health/revision/slots、pending navigation 和 live/tombstone counts。
 
-## 13. 待决策
-
-`[待决策] CORE-S04-REV-001`：S04 内部在首棵树提交前使用 `committedRevision=none`。公共 `SurfaceStatusChanged` 当前强制所有 lifecycle 状态携带非负 Revision；S04 不自行把 `0` 解释成“尚未提交”，也不修改公共 Schema。总架构需冻结首提交前的 wire 行为。
-
-## 14. 边界不变量
+## 13. 边界不变量
 
 1. 一个 AppRuntime 只有一个 Surface 表、一个 Navigation 栈和一个 navigation slot。
 2. stack 只包含已提交 Surface；pending target 不进入 stack。
@@ -288,3 +285,4 @@ S04 决定 Page lifecycle 转换和 Hook 时机；S03 执行 typed JS dispatch�
 5. S04 不复制 AppRuntime lifecycle，不执行 JS，不实现 Render/Layout/Mount/Event。
 6. 每个 Surface 只有一个 S05 RuntimeTreeStore；Platform Host Tree 不是 Core 权威。
 7. destroyed Surface 永不复活，SurfaceId 到 AppRuntime teardown 前不复用。
+8. revision 0 前不发送 `SurfaceStatusChanged`；首个可发送 lifecycleState 只能是 `presenting`。

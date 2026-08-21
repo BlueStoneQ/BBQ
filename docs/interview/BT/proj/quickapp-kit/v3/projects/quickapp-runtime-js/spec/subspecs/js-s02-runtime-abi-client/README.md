@@ -22,6 +22,7 @@ JS-S02 不解释业务，不执行 Module、VM、Binding、Render、Handler 或�
 - `quickapp-kit-runtime-v1` 与消息 `schemaVersion=1` 的兼容性门禁。
 - `RuntimeAbiClient`：JS -> Core typed request/result-completion 的编码、字段校验和同步 `EnqueueResult`。
 - `RuntimeAbiCallbacks`：Core -> JS typed callback 的字段校验、JS Executor admission 和分发。
+- `LoadVerifiedModule.bundle.bytes` 的进程内形态固定为共享不可变 byte storage；`bytesBase64` 只存在于 JSON fixture/Schema 边界。
 - 基于 `JsEnginePort::bindNativeFunction` 的闭集 Native Function Catalog。
 - 基于 immutable capability support snapshot 的同步只读 `supportsCapability` 查询。
 - 校验 JS-origin `RequestId` 的 `req:j-<positive-decimal>` wire 分区，并负责纯 bridge correlation 容量和 late/duplicate Result 处理；每个 AppRuntime 由 JS Framework bootstrap 创建唯一的本地 `JsRequestIdAllocator`，所有请求发起模块在 JS Executor 上共享取号后再调用 S02。
@@ -43,6 +44,7 @@ JS-S02 不解释业务，不执行 Module、VM、Binding、Render、Handler 或�
 - Composition Root 交付的 immutable Runtime ABI identity：`quickapp-kit-runtime-v1`。
 - Core 在 App JS 执行前冻结的 capability support snapshot。
 - Core Foundation 提供的异步 Core ingress Port 和 Core -> JS typed Port。
+- Core 已把 wire `bytesBase64` 解码为 `shared_ptr<const vector<uint8_t>>` 的 `LoadVerifiedModule`；S02 不执行 base64 编解码。
 - 请求发起模块已从本 AppRuntime 唯一 `JsRequestIdAllocator` 取得并写入 typed message 的 JS-origin `RequestId`；Core-origin completion 携带需要原样回显的原 RequestId。
 - 公共 Runtime ABI、Runtime Value、Error、ID、Lifecycle/Threading 合同及机器 Schema。
 

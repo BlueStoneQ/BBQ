@@ -1,6 +1,6 @@
 # Runtime Core Spec Agent Handoff
 
-> 状态：CORE-S01/CORE-S02/CORE-S05 `VERIFIED`；CORE-S03 `PASS + CODE_ALLOWED`；CORE-S04 `DESIGN_CHANGES_REQUIRED`。
+> 状态：Core Alpha 组件与 Package dependency handoff `VERIFIED`；M1-Alpha 由单一集成 Agent 接管；Core 项目 Agent 停止。
 
 ## 目录
 
@@ -22,6 +22,21 @@
 Core 是共享实现的唯一归属，不再从 Android 事后抽取。覆盖 PackageSource、RPK/Manifest/Runtime Metadata/Page IR Loader、Runtime Controller、App/Page Lifecycle、Surface/Navigation、Runtime Tree、NodeId、Style/Yoga、Measure cache、`InstantiateTemplate`、`RenderTransaction`、Platform Input/Event Router、ModuleRegistry/CapabilityInvoker、typed Page Control 路由、线程和所有权。
 
 ## 交接记录
+
+### 2026-08-18 / Runtime Core Agent / CORE-S03 证据修复与 CORE-S04 实现
+
+- 状态：CORE-S03 `VERIFIED`；CORE-S04 `READY_FOR_REVIEW`；CORE-S06 未启动。
+- CORE-S03：重新生成完整 `evidence/source-manifest.sha256`，包含当前
+  `CMakeLists.txt`、CORE-S03 源码、测试和边界扫描；`shasum -a 256 -c`
+  全部通过。未修改 CORE-S03 产品行为或公共合同。
+- CORE-S04：完成唯一 Surface record table、Navigation stack、Root/Push/Close、
+  Revision/status gate、Platform command/result correlation、生命周期协作者、
+  destroyAll、失败恢复、tombstone、OOM/overflow/teardown 路径。
+- 验收证据：`evidence/core-s04-verification.md`；Release、ASan/UBSan、TSan
+  和 TSan 重复运行均通过，完整 CTest 为 12/12。
+- 边界：未实现 CORE-S06、Render、Layout 或 Mount；Platform 不拥有路由，未建立第二
+  Navigation 栈或第二 Runtime Tree。
+- 下一步：等待定向校审；不得启动 CORE-S06。
 
 ### 2026-08-15 / 总架构 Agent
 
@@ -122,6 +137,14 @@ Core 是共享实现的唯一归属，不再从 Android 事后抽取。覆盖 Pa
 - 阻塞项：无。
 - 下一步：读取全部公共合同并编写 CORE-S01 五份分 Spec 文档。
 - 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / Core Alpha 实现校审
+
+- 状态：`ALPHA_COMPONENT_PASS + INTEGRATION_ALLOWED`。
+- 已验证：Alpha Core 14/14 CTest、ASan/UBSan、TSan、连续 TSan 3 轮、边界扫描和 source manifest 全部通过；唯一 RuntimeTree、PageIrHandle、Yoga/Measure、full Mount、Trace、teardown 成立。
+- 证据边界：当前仍是 Core PageIrHandle fixture，不是真实 Toolkit Runtime RPK，也不包含真实 LVGL Present；不得宣称 Case 001 S1 已通过。
+- 后续门禁：完整 Mount 失败恢复和二次失败销毁属于完整 M1 Render/容灾范围；Alpha 本轮不扩张实现。
+- 下一步：停止扩展 Core，等待 TK-S07 真实 RPK 后参与跨项目联调；详细指令见 [`2026-08-18-core-alpha-review.md`](../../../reviews/subspec-review/2026-08-18-core-alpha-review.md)。
 
 ### 2026-08-16 / Runtime Core Agent / [待决策] CORE-S01-ID-001
 
@@ -342,3 +365,114 @@ Core 是共享实现的唯一归属，不再从 Android 事后抽取。覆盖 Pa
 - 冻结规则：首棵树提交前不发送 `SurfaceStatusChanged`；revision 0 后才发送，首个可发送状态为 `presenting`。
 - 下一步：实现 CORE-S03；同步 CORE-S04 五份文档并重新标记设计 `READY_FOR_REVIEW`。不得编码 CORE-S04/CORE-S06。
 - 公共合同影响：规则已写入公共 Surface Control 与 Runtime ABI；Schema 不变。
+
+### 2026-08-18 / Runtime Core Agent / CORE-S04 规则同步
+
+- 状态：`DESIGN READY_FOR_REVIEW / CODE_BLOCKED`。
+- 已完成：CORE-S04 五份分 Spec 已同步冻结规则：首棵树提交前不发送 `SurfaceStatusChanged`；revision 0 后才发送；首个可发送状态为 `presenting`。
+- 本项目设计决定：`committedRevision=none` 只存在于 Core 内部；wire 不用负值或 sentinel 表达未提交，Schema 不变。
+- 待验证项：无；该规则是既有公共合同的消费，不需要扩展公共 Schema。
+- 阻塞项：CORE-S04 仍禁止编码，等待后续独立 `PASS + CODE_ALLOWED`。
+- 下一步：停止修改 CORE-S04，继续 CORE-S03 实现验收。
+- 公共合同影响：无。
+
+### 2026-08-18 / Runtime Core Agent / CORE-S03 实现完成
+
+- 状态：`READY_FOR_REVIEW`；CORE-S04 `DESIGN READY_FOR_REVIEW / CODE_BLOCKED`；CORE-S06 未启动。
+- 已完成：实现单一 `AppRuntimeController`、AppRuntime/VM 状态机、单 control slot、bounded correlation、AppContext、真实 S02 `VerifiedModule` 交付、App/Page VM 初始化、Page lifecycle service、Host foreground/background/destroy、typed child result 校验和确定 teardown。
+- 本项目设计决定：模块 correlation 使用 S02 `VerifiedModule` 自带的 AppRuntime RequestId；VM、Hook、Surface collaborator child operation 使用同一 AppRuntime RequestId allocator；Host RequestId 只原样关联 Host control/result。S03 不拥有 Surface/Navigation/Runtime Tree。
+- 失败与并发：重复/迟到/错 kind/scope/surface/sequence/epoch Result 不推进状态；OOM/queue overflow 不发布残留 operation；4 producer 并发 ingress 由 bounded MPSC 接收、Core Runtime Thread 串行 drain。
+- 最小观测：Core 只借用 `ObservationEmitter`，支持 Noop/Recording 等价；不做文本格式化、文件 I/O、Collector 等待或分析。
+- 验证：Release、ASan/UBSan、TSan 各 10/10 CTest 通过；S03 dependency scan 通过；真实 S02 module -> S03 App/Page VM、Hook、destroy、OOM、overflow、late、并发和资源归零通过。
+- 证据：`quickapp-runtime-core/evidence/core-s03-verification.md`；源码摘要 SHA-256 同步记录于该文件。
+- 待验证项：总架构定向实现复核；本机未运行 clang-format，构建使用 `-Wall -Wextra -Wpedantic -Werror`。
+- 阻塞项：无 S03 实现阻塞；不得编码 CORE-S04/CORE-S06。
+- 下一步：停止修改，等待 CORE-S03 定向复核；S04 保持文档状态等待后续放行。
+- 公共合同影响：无；只消费最新 Lifecycle、ID、Artifact、Observation 合同。
+
+### 2026-08-18 / 总架构 Agent / W2 CORE-S03 实现验收
+
+- 状态：CORE-S03 `EVIDENCE_CORRECTION_REQUIRED`；CORE-S04 `PASS + CODE_ALLOWED_AFTER_EVIDENCE`。
+- 已验证：本机复跑 Release、ASan/UBSan、TSan 均 10/10；S03 状态机、并发 ingress、OOM/overflow、真实 S02 module、VM/Hook、teardown 和边界扫描通过。
+- 待修：`evidence/source-manifest.sha256` 中 CMakeLists SHA-256 仍是旧值，必须重新生成完整清单并通过 `shasum -a 256 -c`。
+- 下一步：先完成该证据修复；随后可开始 CORE-S04 实现。不得启动 CORE-S06。
+- 公共合同影响：无。
+
+### 2026-08-18 / Runtime Core Agent / CORE-S03 证据修复、CORE-S04 与 M1-Alpha Core 实现完成
+
+- 状态：CORE-S04 与 M1-Alpha 最小 CORE-S06/S07/S08 `READY_FOR_REVIEW`。
+- CORE-S03 证据：重新生成完整 `evidence/source-manifest.sha256`，覆盖当前 CMake、全部 Core 源码、测试和边界扫描；`shasum -a 256 -c` 全部 `OK`。
+- CORE-S04：实现 Core 唯一 Surface 表、Navigation 栈、Revision、Root/Push/Close、Platform command/result correlation、失败恢复和 teardown；revision 0 前不发送 `SurfaceStatusChanged`。
+- Alpha 数据流：Surface initial command 与 PageIrHandle 进入 `InitialRenderStager`；在唯一 `RuntimeTreeStore` 上生成 staged mutation；Yoga 执行最小 Style/Layout，文字和按钮尺寸只经同步 `MeasurePort`；Core 生成 revision 0 的 full `MountTransaction` 并通过内部 commit authority 提交唯一 Tree。
+- 平台边界：Platform 只消费 typed Mount operation；Core 不持有具体 Platform object。本轮未新增公共合同、项目或 Alpha 专用 Runtime。
+- 明确未做：完整增量 Render、Block、Event、Capability、Navigation S2-S5、完整容灾和第二棵 Runtime Tree。
+- 验证：Release 14/14、ASan/UBSan 14/14 PASS；TSan 完整 14 项连续 3 轮 PASS；Alpha 边界扫描 PASS。
+- 资源与 Trace：Mount 成功/Measure 失败、失败不发布、Surface release、Runtime Node 归零通过；结构化 `render.transaction.submitted`、`mount.transaction.submitted/completed`、`render.transaction.presented` 通过。
+- 证据：`quickapp-runtime-core/evidence/core-s04-verification.md`、`quickapp-runtime-core/evidence/m1-alpha-core-verification.md`、`quickapp-runtime-core/evidence/source-manifest.sha256`。
+- 跨项目状态：Core fixture 不冒充真实 Case 001 S1。真实 `Toolkit RPK -> Core Loader -> LVGL/SDL 可见根页面` 等待 TK-S05/TK-S06/TK-S07 与 LVGL Mount/Host Components 完成后执行。
+- 下一步：停止修改 Core，等待定向复核和跨项目 Alpha 组装。
+- 公共合同影响：无。
+
+### 2026-08-18 / Runtime Core Agent / M1-Alpha 真实联调门禁
+
+- 状态：`ALPHA_COMPONENT_PASS + INTEGRATION_ALLOWED`；停止扩展 Core。
+- 联调唯一链路：真实 Runtime RPK -> `PackageLoader` -> `PageIrHandle` -> `InitialRender` -> Yoga/Measure -> `MountTransaction` -> Platform Present。
+- 联调约束：必须使用 Core 唯一 `RuntimeTreeStore`；禁止手写 Page IR、Fake Page IR、第二棵 Tree 或 Alpha 专用 Runtime。
+- 当前事实：TK-S05/TK-S06 已 `VERIFIED`，TK-S07 已 `CODE_ALLOWED`，但 Toolkit 工程尚未产出真实 Runtime RPK；LVGL Mount/Host Components 接入也尚未形成最终跨项目运行证据。
+- 本轮不做：完整 Mount 失败恢复和其他 Core 扩展保留给后续 M1 门禁。
+- 下一步：等待 TK-S07 RPK；RPK 到位后只做上述窄联调和运行证据收口。
+- 公共合同影响：无。
+
+### 2026-08-18 / 总架构 Agent / M1-Alpha 真实集成放行
+
+- 状态：`ALPHA_COMPONENT_PASS + INTEGRATION_ALLOWED`。
+- 新增事实：TK-S07 Case 001 Runtime RPK 已由 PackageLoader 成功读取 App、Page Module 和 Page IR。
+- 集成约束：只走 `Runtime RPK -> PackageLoader -> PageIrHandle -> JS initial binding -> InitialRender -> Yoga/Measure -> 唯一 RuntimeTreeStore -> MountTransaction`；不得手写 Page IR、第二棵 Tree 或 Alpha 专用 Runtime。
+- 下一步：参与 Composition Root 真实联调，提交 PageIrHandle、RuntimeTree、MountTransaction、Trace 和资源归零证据；完整 Mount 失败恢复仍留在后续 M1 门禁。
+
+### 2026-08-18 / Runtime Core Agent / Case 001 真实联调阻塞收口
+
+- 状态：`INTEGRATION_BLOCKED_UPSTREAM`；本轮未修改 Core 源码、公共合同或 Core 证据；Core 保持停止扩展。
+- 已确认输入：真实 RPK `tk-s07-case001.rpk` 的 SHA-256 为 `6a8c0d1acc690e97594e4a625436485cb8c92f283f9b347e6a6123c693fa3141`；Core PackageLoader 已真实发布 App Module、Page Module 和 `/pages/Demo` PageIrHandle。
+- 阻塞 1 / Toolkit：真实 Page Bundle 的 binding evaluator 为 `String(title)`，但 Case 001 Page VM 的状态位于 `this.private.title`；按冻结 `this=PageVm、scope=Page lexical scope` 语义，当前 Bundle 会在 initial binding 求值时失败，不能由 Composition Root 注入或预置标题。
+- 阻塞 2 / JS：真实 Page Bundle 在 factory 中请求 `system.router`；当前 JS ModuleLoader 只解析声明依赖，Case 001 metadata 未声明该模块，静态 typed Facade 尚未接入；不能在 Runner 中伪造模块或新增 Alpha Runtime。
+- 阻塞 3 / JS：Case 001 `onInit` 调用 `$page.setTitleBar/setMeta`；当前 Page VM Composition 未提供 typed Page Control Facade，不能用 Runner 直接吞掉调用。
+- 阻塞 4 / LVGL：Core 真实 Page IR 输出 `fontSize`，当前 Core-to-LVGL bridge 明确拒绝该属性；需由 LVGL 侧按既有 `system-default` 字体/Measure 合同接线，不能静默丢弃。
+- Core 接线合同：阻塞解除后，Runner 只能把 Core `VerifiedModule.bytes()` 映射为 JS `LoadVerifiedModule`，把 JS typed `InstantiateTemplate` 映射为 `InitialRenderIntent`，把真实 `PageIrHandle` 原样交给 `MountCoordinator`；Core 继续只维护一棵 `RuntimeTreeStore`。
+- 禁止项：不得手写 Page IR、Bundle、BindingValue、RenderTransaction、MountTransaction；不得用 Fake Page IR、第二棵 Tree 或 Alpha 专用 Runtime 伪造 S1。
+- 下一步：等待 Toolkit/JS/LVGL 端口修正后，在同一 Composition Root 复跑真实链路并补结构化 Trace、可见性和资源归零证据；当前不存在可宣称的 Case 001 S1 通过证据。
+
+### 2026-08-18 / 总架构 Agent / Module dependency handoff 定向放行
+
+- 状态：`TARGETED_CONTRACT_ALIGNMENT_ALLOWED`；其他 Core 扩展保持停止。
+- 公共规则：Runtime Metadata 的 App/Shared/Page 描述符均携带 Package `dependencies[]`；App 只依赖 Shared，Shared 只依赖其他 Shared 且图无环，Page 只依赖 App/Shared。
+- 当前任务：PackageLoader 读取并校验上述依赖，拒绝未知、自依赖、Page 依赖和 Shared cycle，并原样发布到 `VerifiedModule`。
+- 边界：`@app-module/system.*` 是 JS Framework typed facade，不属于 Package dependency graph；不得由 Core 创建 facade。
+- 下一步：提交 Loader 正负例、源码清单并标记 `READY_FOR_REVIEW` 后停止；随后继续联调待命。
+- 公共合同影响：只消费已更新的 Artifact Contract 与 Runtime Metadata Schema。
+
+### 2026-08-18 / 总架构 Agent / Alpha 完成审计与重新派发
+
+- 状态：`NOT_STARTED / REDISPATCH_REQUIRED`。
+- 审计：未发现 App/Shared dependency parser、DAG 负例、证据或完成交接；当前 Loader 仍只解析 Page dependencies。
+- 下一步：立即执行 [`2026-08-18-alpha-agent-completion-audit.md`](../../../reviews/subspec-review/2026-08-18-alpha-agent-completion-audit.md) 4.2；完成后追加 `READY_FOR_REVIEW`。
+- 禁止项：除 dependency handoff 外的 Core 扩展继续阻塞。
+
+### 2026-08-18 / Runtime Core Agent / PackageLoader Module dependency 对齐完成
+
+- 状态：`READY_FOR_REVIEW`；除 PackageLoader dependency handoff 外未扩展 Core。
+- 已完成：App、Shared、Page 描述符统一读取必需的有序 `dependencies[]`；`VerifiedModule` 对三类模块均原样发布该数组。
+- 图规则：App 仅可指向 Shared；Shared 仅可指向其他 Shared，并以拓扑排序拒绝 cycle；Page 仅可指向 App/Shared；全局拒绝未知、自依赖及任何指向 Page 的依赖。
+- 系统模块边界：`@app-module/system.*` 不进入 Package graph；Metadata 引用被拒绝，PackageLoader 也不会解析、创建或发布该模块。
+- 失败原子性：依赖图非法统一返回 `PACKAGE_INVALID`，不发布 `VerifiedPackage`，Loader 不进入 executable 状态。
+- 正负例：正例覆盖 App、两级 Shared DAG、Page 及三类依赖顺序/bytes 发布；负例覆盖缺失字段、未知、自依赖、App/Shared 指向 Page、Shared cycle、Page 指向 Page 和 system facade 混入。
+- 验证：Release、ASan/UBSan、TSan 各 14/14 CTest 通过，全部 Core boundary scan 通过。
+- 证据：`quickapp-runtime-core/evidence/core-s02-module-dependencies-verification.md`；`evidence/source-manifest.sha256` 已重新生成，`shasum -a 256 -c` 全部 `OK`。
+- 公共合同影响：无；只消费已冻结 Artifact Contract 与 Runtime Metadata Schema。
+- 下一步：停止修改，等待定向复核。
+
+### 2026-08-18 / 总架构 Agent / Module dependency handoff 验收
+
+- 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
+- 已验证：App/Shared/Page dependencies、DAG、非法依赖、原子失败和 VerifiedModule 原样发布通过。
+- 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费实现。

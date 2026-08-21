@@ -15,7 +15,7 @@
 
 - CORE-S04 分 Spec 校审为 `PASS`，工作看板标记 `CODE_ALLOWED`。
 - CORE-S03 实现已 `VERIFIED`；CORE-S02/S05 保持 `VERIFIED`。
-- `[待决策] CORE-S04-REV-001` 已由总架构关闭。
+- 状态通知规则已冻结：revision 0 前不发送 `SurfaceStatusChanged`，首个可发送状态为 `presenting`。
 - CORE-S06/S07/S08 未实现时使用 Fake initial/render pipeline 和 Fake commit authority。
 
 ## 3. 任务
@@ -23,7 +23,7 @@
 | ID | 任务 | 依赖 | 主要证据 |
 |---|---|---|---|
 | CORE-S04-T01 | 建立 SurfaceController、limits、SurfaceId allocator/tombstone 和依赖扫描 | 门禁 | ID/limit tests |
-| CORE-S04-T02 | 实现 SurfaceRecord lifecycle/health/revision/slots 与状态验证 | T01 | state-machine tests |
+| CORE-S04-T02 | 实现 SurfaceRecord lifecycle/health/revision/slots 与 revision 0 后状态通知门禁 | T01 | state-machine/status tests |
 | CORE-S04-T03 | 实现唯一 Navigation stack、generation、pending operation 和 snapshot | T02 | stack authority tests |
 | CORE-S04-T04 | 实现 Platform Surface Port correlation、multi-surface lock 与 Fake | T03 | command/result tests |
 | CORE-S04-T05 | 接入 verified route/Page IR 与 S03 Page lifecycle service | T04 | route/page-init tests |

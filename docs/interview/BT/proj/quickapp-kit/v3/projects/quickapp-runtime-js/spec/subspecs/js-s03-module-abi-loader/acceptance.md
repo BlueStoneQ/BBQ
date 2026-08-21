@@ -57,7 +57,7 @@ JS-S03 通过标准是：verified Bundle 成功时只产生一个合法 committe
 | JS-S03-A19 | 两 Surface load 同 Page key | definition/factory 一次、lease 两个、Page VM 零个 |
 | JS-S03-A20 | 同 moduleId 不同 SHA/path/kind | 新 bytes 不执行；identity conflict failed |
 | JS-S03-A21 | same-key loading join | 一个 transaction；waiter 有界；各自一个 Result |
-| JS-S03-A22 | terminal failed cache hit | 不重执行 Bundle；返回同类错误；新 RequestId 正确回显 |
+| JS-S03-A22 | deterministic terminal failed cache hit | 完整性/ABI/shape/cycle 等确定性内容失败不重执行 Bundle；返回同类错误；新 RequestId 正确回显 |
 | JS-S03-A23 | declared Shared dependency | 第一次 require 执行一次，后续返回同一 exports instance |
 | JS-S03-A24 | diamond dependency | 共享底层 factory 只执行一次 |
 | JS-S03-A25 | self cycle | 无 partial exports；active stack 恢复为空 |
@@ -69,8 +69,8 @@ JS-S03 通过标准是：verified Bundle 成功时只产生一个合法 committe
 
 | ID | 场景 | 通过条件 |
 |---|---|---|
-| JS-S03-A29 | 合法 App export | 转为 typed App definition view；不执行 onCreate |
-| JS-S03-A30 | 合法 Page export | Page definition、evaluator、handler view 完整 |
+| JS-S03-A29 | 合法 App export Definition | 仅有冻结的 own data property；`schemaVersion=1/kind=app/createAppVm` 精确成立；转为 typed view，不执行 onCreate |
+| JS-S03-A30 | 合法 Page export Definition | `schemaVersion=1/kind=page/createPageVm/bindingEvaluators/handlerMethods` 精确成立；evaluator 的 `this/scope` 与 handler name 规则完整，且不创建 VM |
 | JS-S03-A31 | Binding ID 缺失/额外/重复/0/非法十进制 | `MODULE_ABI_UNSUPPORTED`；cache 不提交 |
 | JS-S03-A32 | Handler ID 缺失/额外/重复/超 safe integer | 同 A31 |
 | JS-S03-A33 | evaluator 非 callable | commit 前失败 |
@@ -89,9 +89,9 @@ JS-S03 通过标准是：verified Bundle 成功时只产生一个合法 committe
 | JS-S03-A41 | Surface close during Page load | generation 失效；staging/waiter/bytes/lease 清理；late load 不提交 |
 | JS-S03-A42 | 关闭一个共享 Page Surface | 只释放其 lease；另一 Surface handle 仍有效 |
 | JS-S03-A43 | AppRuntime teardown | Page/App/Shared Value、entry、failure、request、bytes、outbox 全为 0 |
-| JS-S03-A44 | limits 全部打满 | 当前工作确定拒绝；已 committed entry/accepted load 不丢失；无隐式扩容 |
-| JS-S03-A45 | Engine/factory throw | `JS_EXCEPTION`；pending exception 清除；后续模块可运行 |
-| JS-S03-A46 | OOM fault injection | `OUT_OF_MEMORY`；staging 原子回滚；最小 Trace 尽力发送 |
+| JS-S03-A44 | limits 全部打满 | 当前工作确定拒绝；已 committed entry/accepted load 不丢失；无隐式扩容；容量恢复后该请求可重试，不建立 failure identity |
+| JS-S03-A45 | Engine/factory throw | 可证明由固定 content/resolver 输入产生时进入 deterministic failure cache；否则回滚到 absent；pending exception 清除，后续重试语义可观察 |
+| JS-S03-A46 | OOM fault injection | `OUT_OF_MEMORY`；staging 原子回滚、不写 failure cache；资源恢复后同一 identity 可重试；最小 Trace 尽力发送 |
 
 ## 8. 范围与证据
 
@@ -100,6 +100,6 @@ JS-S03 通过标准是：verified Bundle 成功时只产生一个合法 committe
 | JS-S03-A47 | dependency/boundary scan | 无 QuickJS public type、Platform、PackageSource、RPK/Page IR/file API、VM/Hook/Render 实现 |
 | JS-S03-A48 | Require 边界 | builtin 只经 typed FrameworkModuleResolverPort；无 module/method/args 或 JSON Bridge |
 | JS-S03-A49 | Observation 等价 | Noop/Recording 对 Result/cache/factory/error/teardown 完全等价；marker 通过公共 Schema |
-| JS-S03-A50 | 完整证据 | Debug/Release/ASan/UBSan/TSan/API-only、资源归零、源码摘要、R01-R22 与 A01-A50 映射齐全 |
+| JS-S03-A50 | 完整证据 | Debug/Release/ASan/UBSan/TSan/API-only、资源归零、跨两个 Surface 的 Definition/lease 与独立 VM 隔离证据、源码摘要、R01-R22 与 A01-A50 映射齐全 |
 
-`P0-JS-EXPORT-001` 未关闭前，A29-A34 只能使用临时 typed test view，不构成产品编码放行。
+`P0-JS-EXPORT-001` 已由公共 Artifact Contract 冻结；A29-A34 必须使用该精确 Definition shape，禁止临时测试替代。
