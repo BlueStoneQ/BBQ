@@ -153,6 +153,8 @@ export const branchFixtures = {
     showToastRequest: { schemaVersion: 1, kind: "showToast", requestId: "req:toast", surfaceId: "srf:case", message: "done", durationMs: 0 },
     showToastSuccess: { schemaVersion: 1, kind: "showToastResult", requestId: "req:toast", surfaceId: "srf:case", status: "completed" },
     showToastFailure: { schemaVersion: 1, kind: "showToastResult", requestId: "req:toast-fail", surfaceId: "srf:case", status: "failed", error: platformError },
+    featureRequest: { schemaVersion: 1, kind: "featureRequest", requestId: "req:feature", surfaceId: "srf:case", module: "fetch", method: "fetch", url: "local://status", httpMethod: "GET", headers: { accept: "application/json" }, timeoutMs: 1000, responseType: "json" },
+    featureResult: { schemaVersion: 1, kind: "featureResult", requestId: "req:feature", surfaceId: "srf:case", status: "completed", httpStatus: 200, responseBody: "{\"ok\":true}", responseIsJson: true },
     deviceGetInfoRequest: { schemaVersion: 1, kind: "deviceGetInfo", requestId: "req:device", surfaceId: "srf:case" },
     deviceGetInfoSuccess: {
       schemaVersion: 1,
@@ -183,7 +185,16 @@ export const branchFixtures = {
   [id("host-component")]: {
     view: { type: "View", props: {}, style: {} },
     text: { type: "Text", props: { text: "hello" }, style: {} },
-    button: { type: "Button", props: { text: "go", enabled: true }, style: {} }
+    button: { type: "Button", props: { text: "go", enabled: true }, style: {} },
+    image: { type: "Image", props: { src: "assets/logo.png" }, style: { width: { value: 64, unit: "logical-px" }, height: { value: 64, unit: "logical-px" } } },
+    input: { type: "Input", props: { value: "hello", enabled: true }, style: {} }
+    ,switch: { type: "Switch", props: { checked: true, enabled: true }, style: {} }
+    ,slider: { type: "Slider", props: { min: 0, max: 100, step: 1, value: 40, enabled: true }, style: {} }
+    ,picker: { type: "Picker", props: { mode: "text", range: "安静,标准,性能", selected: 1 }, style: {} }
+    ,list: { type: "List", props: {}, style: {} }
+    ,scroll: { type: "Scroll", props: {}, style: {} }
+    ,video: { type: "Video", props: { src: "https://example.invalid/demo.mp4", poster: "assets/logo.png", autoplay: false, controls: true, muted: true }, style: {} }
+    ,tabs: { type: "Tabs", props: { items: "首页|发现|我的", selected: 1 }, style: {} }
   },
   [id("js-bootstrap")]: {
     app: appBootstrap,
@@ -544,6 +555,51 @@ export const schemaFixtures = {
 };
 
 export const supplementalPositiveFixtures = [
+  [id("event-message"), {
+    schemaVersion: 1,
+    kind: "platformInput",
+    requestId: "req:input-value",
+    surfaceId: "srf:case",
+    nodeId: "node:input",
+    eventType: "input",
+    timestamp: 2,
+    payload: { value: "next" }
+  }, "Input event carries value"],
+  [id("event-message"), {
+    schemaVersion: 1,
+    kind: "platformInput",
+    requestId: "req:change-value",
+    surfaceId: "srf:case",
+    nodeId: "node:input",
+    eventType: "change",
+    timestamp: 3,
+    payload: { value: "committed" }
+  }, "Change event carries value"],
+  [id("event-message"), {
+    schemaVersion: 1,
+    kind: "jsEventDispatch",
+    requestId: "req:focus-input",
+    surfaceId: "srf:case",
+    target: ref("cmp:page", 4),
+    currentTarget: ref("cmp:page", 4),
+    handlerId: "hdl:focus",
+    eventType: "focus",
+    phase: "target",
+    timestamp: 4,
+    payload: { focused: true }
+  }, "Focus event carries focused state"],
+  [id("page-ir"), {
+    ...pageIr,
+    nodes: pageIr.nodes.map((node) => node.templateNodeId === 1
+      ? { ...node, children: [...node.children, { kind: "node", templateNodeId: 6 }, { kind: "node", templateNodeId: 7 }] }
+      : node.templateNodeId === 6
+        ? { templateNodeId: 6, host: { type: "Image", props: { src: "assets/logo.png" }, style: { width: { value: 48, unit: "logical-px" }, height: { value: 48, unit: "logical-px" } } }, children: [] }
+        : node.templateNodeId === 7
+          ? { templateNodeId: 7, host: { type: "Input", props: { value: "hello", enabled: true }, style: {} }, children: [] }
+          : node),
+    bindings: [...pageIr.bindings, { templateBindingId: 3, scope: { kind: "page" }, target: { templateNodeId: 7, name: "value" } }],
+    handlers: [...pageIr.handlers, { templateHandlerId: 2, scope: { kind: "page" }, templateNodeId: 7, eventType: "input" }]
+  }, "Page IR Image/Input extension"],
   [id("runtime-composition"), {
     ...schemaFixtures[id("runtime-composition")],
     profileId: "lvgl-router-only",

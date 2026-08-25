@@ -115,7 +115,7 @@ $app_require$(moduleId)
 3. `bindingEvaluators` 的十进制 key 必须与 Page IR 的 `TemplateBindingId` 一一对应，求值结果必须属于 Runtime Value。
 4. `handlerMethods` 的十进制 key 必须与 Page IR 的 `TemplateHandlerId` 一一对应，value 是 Page VM 方法名。
 5. Page bootstrap 必须携带并匹配 `templateId`；Page VM 每个 Surface 独立，Shared Module 在 App JS Runtime 内只执行一次。
-6. `$app_require$("@app-module/system.router")`、`$app_require$("@app-module/system.prompt")`、`$app_require$("@app-module/system.device")` 映射到 typed Capability；`@app-module/system.fetch` 只按 Capability Module Contract 解析为 V1 deferred facade；`$page` API 映射到 typed Page Host Control，不产生通用 module/method Bridge。Toolkit 必须把联盟源码中的 capability import 规范化为该 ID；typed facade 不写入 `$app_define$` 或 Metadata 的 Package `dependencies[]`。
+6. `$app_require$("@app-module/system.router")`、`$app_require$("@app-module/system.prompt")`、`$app_require$("@app-module/system.device")`、`$app_require$("@app-module/system.openUrl")`、`$app_require$("@app-module/system.webview")` 映射到 typed Capability；`@app-module/system.fetch` 只按 Capability Module Contract 解析为 V1 deferred facade；`$page` API 映射到 typed Page Host Control，不产生通用 module/method Bridge。Toolkit 必须把联盟源码中的 capability import 规范化为该 ID；typed facade 不写入 `$app_define$` 或 Metadata 的 Package `dependencies[]`。
 7. V1 Bundle 不暴露 `$app_require$.context`；Toolkit 必须在构建期把静态 `require.context` 闭包展开为确定性的直接模块依赖和 `$app_require$(moduleId)` 调用。
 8. Bundle 不导出或维护完整 VNode Tree；Template/Style 静态事实只来自 Page IR。
 9. Bundle 不复制 Binding/Handler target descriptor；JS 只按 TemplateBindingId/TemplateHandlerId 执行 evaluator/method，Core 从 Page IR 解析 target。

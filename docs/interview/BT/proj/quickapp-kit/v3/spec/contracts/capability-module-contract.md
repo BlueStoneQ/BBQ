@@ -39,9 +39,13 @@ $app_require$("@app-module/system.xxx")
 | `system.router` | `back` | `NavigationClose -> NavigationCloseResult` | CoreProvider |
 | `system.prompt` | `showToast` | `ShowToast -> ShowToastResult` | PlatformProvider |
 | `system.device` | `getInfo` | `DeviceGetInfo -> DeviceGetInfoResult` | PlatformProvider |
-| `system.fetch` | `fetch` | V1 deferred facade；调用直接拒绝 | 无，不进入 Core |
+| `system.prompt` | `alert`、`confirm` | `FeatureRequest -> FeatureResult` | PlatformProvider |
+| `system.fetch` | `fetch`、`cancel` | `FeatureRequest -> FeatureResult` | PlatformProvider |
+| `system.file` | `read`、`write`、`exists`、`delete` | `FeatureRequest -> FeatureResult` | PlatformProvider |
+| `system.openUrl` | `open` | `FeatureRequest(url) -> FeatureResult` | PlatformProvider；系统默认浏览器 |
+| `system.webview` | `open` | `FeatureRequest(url) -> FeatureResult` | PlatformProvider；平台 WebView 页面 |
 
-`system.fetch` 只为冻结 Case 001 的标准模块加载合同提供“可解析、不可调用”语义：JS Framework 返回包含固定 `fetch` 方法的 frozen facade；调用立即以 rejected Promise 返回 `CAPABILITY_UNSUPPORTED`，不生成 Runtime ABI request，不注册 Provider，不实现网络。它不是通用 unknown-module stub，其他未进入静态 Facade Catalog 的 import 仍以 `MODULE_ABI_UNSUPPORTED` 失败。
+`system.fetch` 和 `system.file` 在 B4 进入真实 typed request 链路；B6 增加 `system.openUrl` 和 `system.webview`，但仍不由 Core 实现平台浏览器或 WebView。Host 未注册对应 Provider 时，Facade 以 `CAPABILITY_UNSUPPORTED` 结束；这不是通用 unknown-module stub，其他未进入静态 Facade Catalog 的 import 仍以 `MODULE_ABI_UNSUPPORTED` 失败。
 
 `system.device.getInfo` 的 V1 结果包含：
 
@@ -83,7 +87,7 @@ register(moduleName, methodSet, providerKind, factory)
 2. Manifest `features` 是应用请求集合，Registry descriptor 是宿主提供集合；二者交集是可调用集合。
 3. `$app_require$` 只解析静态 Facade，不创建 Provider；第一次真实方法调用才懒加载 Provider，同一 AppRuntime 后续复用同一实例。
 4. Provider 构造失败被缓存为 unavailable，不得在每次调用时反复构造。
-5. JS 可通过 Framework 内部 `supports(moduleName, methodName)` 查询能力；结果固定为 Manifest 已声明 AND Registry descriptor 已提供该方法，查询不触发 Provider 创建。`system.fetch.fetch` 在 V1 固定为 false。
+5. JS 可通过 Framework 内部 `supports(moduleName, methodName)` 查询能力；结果固定为 Manifest 已声明 AND Registry descriptor 已提供该方法，查询不触发 Provider 创建。B4 的 `system.fetch` 和 `system.file` 也遵循该规则。
 6. Module Facade 由 JS Framework 固定提供，不从平台动态注入 JS 源码。
 
 V1 不实现独立权限 Guard。`CapabilityInvoker` 只执行 Manifest declaration 与 Registry descriptor 的静态交集校验；账号、系统授权、弹窗和 deny policy 在第二期通过 Core 扩展点加入，平台权限对象仍不得进入公共合同。
@@ -93,8 +97,8 @@ V1 不实现独立权限 Guard。`CapabilityInvoker` 只执行 Manifest declarat
 公共边界固定为 `JsEnginePort` Native Function Binding + 封闭 typed union。QuickJS Provider 可以用 External Function 实现该绑定；其他 Provider 以自己的 native binding 机制映射到同一封闭集合：
 
 ```text
-CapabilityRequest = NavigationPush | NavigationClose | ShowToast | DeviceGetInfo
-CapabilityResult  = NavigationPushResult | NavigationCloseResult | ShowToastResult | DeviceGetInfoResult
+CapabilityRequest = NavigationPush | NavigationClose | ShowToast | DeviceGetInfo | FeatureRequest
+CapabilityResult  = NavigationPushResult | NavigationCloseResult | ShowToastResult | DeviceGetInfoResult | FeatureResult
 ```
 
 禁止把 `moduleName/methodName/JSON args` 作为跨层业务合同。Module name 只在 Facade 解析和 Registry 选择 Provider 时使用。
@@ -109,6 +113,7 @@ CapabilityResult  = NavigationPushResult | NavigationCloseResult | ShowToastResu
 | Host 未注册模块或方法 | Facade 保持可解析，调用失败：`CAPABILITY_UNSUPPORTED` |
 | Provider 构造或执行失败 | 调用失败：`CAPABILITY_FAILED`，不得伪造成功 |
 | Surface 在执行前销毁 | 返回 `SURFACE_NOT_FOUND` |
+| Fetch 在途请求被取消 | 原请求返回 `cancelled`，不得再返回 `completed` |
 | AppRuntime 销毁 | 先取消在途调用，再逆注册顺序销毁已创建 Provider |
 
 unsupported fallback 的语义是“静态 Facade Catalog 中的应用模块仍可加载、调用可观察地失败”，不是给任意 module/method 返回动态空对象。JS 业务可以用 `supports` 或捕获 typed error 实现降级。
@@ -132,7 +137,7 @@ Router 的页面栈和 Surface 事务始终由 Core 管理；把它暴露为 Mod
 
 | Namespace | V1 |
 |---|---|
-| `system.*` | 可注册；V1 可调用 router/prompt/device，fetch 仅 deferred facade |
+| `system.*` | 可注册；V1 可调用 router/prompt/device 及 B4/B6 prompt/fetch/file/openUrl/webview |
 | `service.*` | 保留，不创建 ServiceContext，不允许应用注册 |
 | `agent.tool.*` | 保留，不创建 Agent Provider，不允许应用注册 |
 

@@ -81,6 +81,8 @@ Observation Marker / Metric Boundary / Trace Correlation
 
 - [总架构](./architecture.md)
 - [V1 Scope And Acceptance](./v1-scope-and-acceptance.md)
+- [V1 Basic Runtime Capability Matrix](./v1-basic-runtime-capability-matrix.md)
+- [V1 Basic Runtime Phase 2](../v1-basic-runtime/README.md)
 - [Render Contract](./contracts/render-contract.md)
 - [Event Contract](./contracts/event-contract.md)
 - [Runtime ABI](./contracts/runtime-abi.md)

@@ -208,3 +208,17 @@ JNI 只属于 Android Platform Adapter；不得把 Android 类型带入 Core，�
 - 已完成：固定文件资源身份、路径替换/截断/read-close 竞争和 7/7 合同组通过；真实链接证据仍正确标记 pending。
 - 下一步：停止扩展，等待 M2；不得启动 AND-S02。
 - 公共合同影响：无。
+
+### 2026-08-23 / Android M2 / Android Spine A1 完成
+
+- 状态：`A1_VERIFIED`。
+- 已完成：以真实 `quickapp-toolkit/evidence/tk-s07-case001.rpk` 组装 Android Host，串通 RPK Loader、共享 QuickJS/JS Framework、共享 C++ Core、Android Surface Host、typed JNI、事件和 Core Navigation。
+- 已验证：首屏 `srf:1` 创建、18 个 Mount 操作、Root Present；真实 Button `node:3` 点击；Platform Input `RequestId` 进入 JS；JS Handler 触发 typed `NavigationPush`；Core 接受 `/pages/DemoDetail`；详情 `srf:2` 创建、28 个 Mount 操作、push Present。
+- 已验证：正常 Activity 退出后 `runtime.stopped` 报告 `surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0 javaSurfaces=0 javaNodes=0`。
+- 构建证据：CMake/Ninja Android arm64 native build 通过；APK 使用 NDK `28.2.13676358`、Android platform 36.1、build-tools 36.0.0；因 Maven 网络不可用，Gradle APK 未作为本次验收前提，使用本地 `aapt2 + zipalign + apksigner` 组装并安装签名 APK。
+- Fixture：`tk-s07-case001.rpk` SHA-256 为 `32e012e2235c7ffa36143d9619c90264bbbab5ae0d083e12a13092859990b493`。
+- 代码边界：Android/JNI/Android View 代码留在 `quickapp-runtime-android`；Core sole owner Runtime Tree、Navigation、Lifecycle；Android Platform Adapter 只负责 UI thread View 操作、typed message 和输入；未创建旁路路由、第二棵 Runtime Tree 或通用 JSON Bridge。
+- 证据：`quickapp-runtime-android/evidence/android-spine-a1-implementation.md`。
+- 当前限制：已在 arm64 Android Emulator 验证，尚未在实体 Android 设备验证；A1 只覆盖 View/Text/Button、首屏、点击、push 和 teardown，不代表完整 Android 平台能力或 V1 全量完成。
+- 下一步：进入 Android A2/后续 M2 分阶段实现前，先由总架构 Agent 复核 A1 证据；不得因 A1 成功扩张冻结公共合同或提前实现外围能力。
+- 公共合同影响：无。

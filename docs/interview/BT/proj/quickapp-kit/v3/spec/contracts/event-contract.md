@@ -24,7 +24,13 @@ kind = platformInput
 requestId / surfaceId / nodeId / eventType / timestamp / payload
 ```
 
-`payload` 必须是可序列化 typed 数据，不携带 JNI、UIKit、LVGL 指针。
+`payload` 必须是可序列化 typed 数据，不携带 JNI、UIKit、LVGL 指针。V1 事件类型为 `click`、`input`、`change`、`focus`、`scroll`、`scrollend`、`scrolltop`、`scrollbottom`、`prepared`、`start`、`pause`、`finish`、`error`、`timeupdate`；`input` 和 `change` 的 payload 至少包含字符串字段 `value`，`focus` 的 payload 至少包含布尔字段 `focused`。
+
+List/Scroll 的滚动 payload 至少包含数值 `scrollOffset`、`contentSize` 和 `viewportSize`；`scrolltop`/`scrollbottom` 表示到达对应边界。
+
+Slider 的 `change` payload 至少包含数值 `value` 和布尔 `isFromUser`；Picker 的 `change` payload 至少包含数值 `selected` 和字符串 `value`；Switch 的 `change` payload 至少包含布尔 `checked`。
+
+Video 的生命周期事件不携带平台播放器对象：`prepared`、`start`、`pause`、`finish` 的 payload 可为空；`timeupdate` 至少包含有限非负 `currentTime`；`error` 至少包含稳定的错误分类。`play`、`pause`、`seek` 是平台 Adapter 接收的 typed 控制意图，其中 `seek` 使用秒数，不通过通用 JSON 或私有旁路传递。
 
 `requestId` 标识一次 Platform 输入，由捕获该输入的 Platform Adapter 生成，在同一 AppRuntime 生命周期内不复用。Core 必须把它原样复制到该输入产生的每个 `JsEventDispatch`；目标 Handler 与冒泡 Handler 共享同一个 `requestId`，不得为每个 Handler 重新分配。
 
@@ -98,4 +104,4 @@ OwnerInstanceId + TemplateHandlerId
   -> C++ EventBinding(NodeId, EventType, HandlerId)
 ```
 
-V1 先实现 `click`、目标节点校验和基础冒泡；捕获、默认行为和手势属于后续扩展。Handler 执行通过 JS 队列异步进入 JS Executor；Handler 抛异常只生成错误结果，不得使 Runtime 崩溃。Handler 内触发的状态更新在本次 Handler 返回后统一 flush，形成新的 `RenderTransaction`。
+V1 合同先定义 `click`、`input`、`change`、`focus`、目标节点校验和基础冒泡；本次只扩展合同，不承诺平台实现已经完成。捕获、默认行为、blur 和手势属于后续扩展。Handler 执行通过 JS 队列异步进入 JS Executor；Handler 抛异常只生成错误结果，不得使 Runtime 崩溃。Handler 内触发的状态更新在本次 Handler 返回后统一 flush，形成新的 `RenderTransaction`。

@@ -93,7 +93,7 @@
           "required": ["templateNodeId", "name"],
           "properties": {
             "templateNodeId": { "$ref": "#/$defs/templateId" },
-            "name": { "enum": ["text", "enabled"] }
+            "name": { "enum": ["text", "enabled", "value", "selected"] }
           },
           "additionalProperties": false
         }
@@ -118,7 +118,7 @@
         "templateHandlerId": { "$ref": "#/$defs/templateId" },
         "scope": { "$ref": "#/$defs/scope" },
         "templateNodeId": { "$ref": "#/$defs/templateId" },
-        "eventType": { "const": "click" }
+        "eventType": { "enum": ["click", "input", "change", "focus", "scroll", "scrollend", "scrolltop", "scrollbottom", "prepared", "start", "pause", "finish", "error", "timeupdate"] }
       },
       "additionalProperties": false
     }

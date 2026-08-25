@@ -33,7 +33,7 @@ type UpdateBinding = {
   kind: 'updateBinding'
   ownerInstanceId: ComponentInstanceId | BlockInstanceId
   templateBindingId: TemplateBindingId
-  value: string | boolean
+  value: string | boolean | number
 }
 ```
 
@@ -47,7 +47,7 @@ type InstantiateBlock = {
   parent: LogicalNodeRef
   index: number
   key?: string | number
-  initialBindings: Record<TemplateBindingId, string | boolean>
+  initialBindings: Record<TemplateBindingId, string | boolean | number>
   handlers: Array<HandlerBinding>
 }
 

@@ -186,3 +186,26 @@
 - 边界：该结果只证明 UIKit-free Foundation，不代表 iOS 平台 Runtime 已实施；真实产品链接证据仍由 IOS-S08/IOS-S09 收口。
 - 下一步：停止扩展；M2 Android 完成前不得启动 IOS-S02。
 - 公共合同影响：无。
+
+### 2026-08-23 / iOS Code Agent / IOS-A1 最小端到端实现
+
+- 状态：`IMPLEMENTED + HOST_VERIFIED + SIMULATOR_BUILD_VERIFIED + UI_RUNTIME_BLOCKED`；不能标记 `IOS-A1 VERIFIED`。
+- 已完成：iOS Runtime Spine、UIKit Gateway、UIKit Surface/Mount Adapter、Simulator App target 和 macOS Host probe；使用真实 `tk-s07-case001.rpk` 复用共享 QuickJS/JS Framework、C++ Core 和 RPK Loader。
+- 已验证事实：Host probe 输出 `first surfaces=1 nodes=3 handlers=1 jsResources=3`；点击后 `surfaces=2 nodes=8 handlers=2 jsResources=5`；teardown 后 `surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0`。iOS Simulator `arm64` target 构建成功，Bundle 内 RPK SHA 为 `32e012e2235c7ffa36143d9619c90264bbbab5ae0d083e12a13092859990b493`；Swift Foundation 回归 19/19 通过。
+- 关键实现修正：JS-owned services 使用 `JsEngineService::stop` 的 owner-thread teardown barrier 释放；不把普通 queued task 当作停止清理任务，避免 Quiescing 后任务取消导致 VM 析构异常。
+- 合理推断：Objective-C++ Gateway 的 UIKit 主线程边界和 typed 回 Core 路径已完成编译接入；Host probe 证明共享 Core/JS/RPK 链路，尚未证明真实 UIKit 运行。
+- 待验证项：本机 `CoreSimulatorService` 当前 `Connection refused`，因此真实安装、首屏截图、UIKit Button 点击、Detail 页面、Scene 关闭迟到输入、Simulator Sanitizer 和正式 App link map 尚未完成。
+- 失败和降级：RPK/Surface/Mount 失败不发布半存活 Runtime；teardown 期间输入被拒绝；CoreSimulator 不可用时仅保留 Host probe 和 Simulator build 证据，不把编译当作 UI 运行证据。
+- 公共 Contract 是否变化：无。未修改 Core、JS Runtime、Toolkit、Android、LVGL 或公共 Contract。
+- 证据：`quickapp-runtime-ios/evidence/ios-spine-a1-implementation.md`。
+- 下一步：修复或恢复 CoreSimulatorService 后运行 Bundle，补齐真实 UIKit 证据；总架构复核前停止 IOS-S02 及外围扩展。
+
+### 2026-08-23 / iOS Code Agent / IOS-A1 真实 UI 复核
+
+- 状态：`UI_VERIFIED + TEARDOWN_PENDING`。
+- 已验证事实：iPhone 17 Pro / iOS 26.5 Simulator 已安装并启动 Bundle；真实 UIKit 首屏显示 RPK 内容；真实 Button 点击日志为 `ios.input.click surface=srf:1 node=node:3`；点击后 Detail Surface 截图已保存到 `quickapp-runtime-ios/evidence/screenshots/ios-a1-detail.png`。
+- 已修复：iOS Gateway 支持基线所需 `textAlign`、`borderRadius`；Button Action 按值捕获 SurfaceId/NodeId，修复点击后 NodeId 失效导致 Handler 无法匹配的问题。
+- 合理推断：真实点击已通过 UIKit -> typed Gateway -> JS Handler -> Core Navigation；Detail 页面截图与 Host probe 的第二 Surface 结果一致。
+- 待验证项：`simctl terminate` 未触发当前 AppDelegate 的 `applicationWillTerminate`，所以真实 iOS teardown 资源归零尚未证明；Simulator 运行期 Sanitizer 和正式 link map 仍待补齐。
+- 公共 Contract 是否变化：无。未修改 Core、JS Runtime、Toolkit、Android、LVGL 或公共 Contract。
+- 下一步：只补齐 teardown/运行期 Sanitizer/link map，然后进行总架构复核；停止 IOS-S02 及外围扩展。

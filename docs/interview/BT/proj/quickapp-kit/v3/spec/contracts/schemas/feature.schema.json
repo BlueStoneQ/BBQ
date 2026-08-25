@@ -6,6 +6,8 @@
     { "$ref": "#/$defs/showToastRequest" },
     { "$ref": "#/$defs/showToastSuccess" },
     { "$ref": "#/$defs/showToastFailure" },
+    { "$ref": "#/$defs/featureRequest" },
+    { "$ref": "#/$defs/featureResult" },
     { "$ref": "#/$defs/deviceGetInfoRequest" },
     { "$ref": "#/$defs/deviceGetInfoSuccess" },
     { "$ref": "#/$defs/deviceGetInfoFailure" },
@@ -17,6 +19,57 @@
     { "$ref": "#/$defs/setMetaFailure" }
   ],
   "$defs": {
+    "featureRequest": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "module", "method"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "featureRequest" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "module": { "enum": ["prompt", "fetch", "file", "openUrl", "webview"] },
+        "method": { "enum": ["alert", "confirm", "fetch", "cancel", "read", "write", "exists", "delete", "open"] },
+        "text": { "type": "string" },
+        "url": { "type": "string", "minLength": 1 },
+        "httpMethod": { "type": "string", "minLength": 1 },
+        "headers": { "type": "object", "additionalProperties": { "type": "string" } },
+        "body": { "type": "string" },
+        "timeoutMs": { "type": "integer", "minimum": 0 },
+        "responseType": { "enum": ["text", "json"] },
+        "targetRequestId": { "type": "string", "pattern": "^req:.+$" },
+        "path": { "type": "string", "pattern": "^private/.+" },
+        "data": { "type": "string" }
+      },
+      "allOf": [
+        { "if": { "required": ["module"], "properties": { "module": { "const": "prompt" } } }, "then": { "properties": { "method": { "enum": ["alert", "confirm"] }, "text": { "type": "string" } }, "required": ["text"] } },
+        { "if": { "required": ["module"], "properties": { "module": { "const": "fetch" } } }, "then": { "properties": { "method": { "enum": ["fetch", "cancel"] } } } },
+        { "if": { "required": ["module"], "properties": { "module": { "const": "file" } } }, "then": { "properties": { "method": { "enum": ["read", "write", "exists", "delete"] }, "path": { "type": "string" } }, "required": ["path"] } },
+        { "if": { "required": ["module"], "properties": { "module": { "enum": ["openUrl", "webview"] } } }, "then": { "properties": { "method": { "const": "open" }, "url": { "type": "string", "pattern": "^https?://.+" } }, "required": ["url"] } }
+      ],
+      "additionalProperties": false
+    },
+    "featureResult": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "requestId", "surfaceId", "status"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "featureResult" },
+        "requestId": { "type": "string", "pattern": "^req:.+$" },
+        "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
+        "status": { "enum": ["completed", "failed", "unsupported", "cancelled"] },
+        "confirmed": { "type": "boolean" },
+        "httpStatus": { "type": "integer", "minimum": 100 },
+        "responseBody": { "type": "string" },
+        "responseIsJson": { "type": "boolean" },
+        "fileData": { "type": "string" },
+        "fileExists": { "type": "boolean" },
+        "error": { "$ref": "runtime-error.schema.json" }
+      },
+      "allOf": [
+        { "if": { "required": ["status"], "properties": { "status": { "enum": ["failed", "unsupported"] } } }, "then": { "properties": { "error": { "$ref": "runtime-error.schema.json" } }, "required": ["error"] } }
+      ],
+      "additionalProperties": false
+    },
     "showToastRequest": {
       "type": "object",
       "required": ["schemaVersion", "kind", "requestId", "surfaceId", "message", "durationMs"],

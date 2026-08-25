@@ -5,7 +5,16 @@
   "oneOf": [
     { "$ref": "#/$defs/view" },
     { "$ref": "#/$defs/text" },
-    { "$ref": "#/$defs/button" }
+    { "$ref": "#/$defs/button" },
+    { "$ref": "#/$defs/image" },
+    { "$ref": "#/$defs/input" },
+    { "$ref": "#/$defs/switch" }
+    ,{ "$ref": "#/$defs/slider" }
+    ,{ "$ref": "#/$defs/picker" }
+    ,{ "$ref": "#/$defs/list" }
+    ,{ "$ref": "#/$defs/scroll" }
+    ,{ "$ref": "#/$defs/video" }
+    ,{ "$ref": "#/$defs/tabs" }
   ],
   "$defs": {
     "sizeLength": {
@@ -35,6 +44,10 @@
         "marginRight": { "$ref": "#/$defs/offsetLength" },
         "marginBottom": { "$ref": "#/$defs/offsetLength" },
         "marginLeft": { "$ref": "#/$defs/offsetLength" },
+        "paddingTop": { "$ref": "#/$defs/sizeLength" },
+        "paddingRight": { "$ref": "#/$defs/sizeLength" },
+        "paddingBottom": { "$ref": "#/$defs/sizeLength" },
+        "paddingLeft": { "$ref": "#/$defs/sizeLength" },
         "flexDirection": { "enum": ["row", "column"] },
         "justifyContent": { "enum": ["flex-start", "center", "flex-end", "space-between"] },
         "alignItems": { "enum": ["flex-start", "center", "flex-end", "stretch"] },
@@ -82,6 +95,144 @@
           "properties": {
             "text": { "type": "string" },
             "enabled": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Image" },
+        "props": {
+          "type": "object",
+          "required": ["src"],
+          "properties": {
+            "src": { "type": "string", "pattern": "^assets/[A-Za-z0-9._/-]+$" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Input" },
+        "props": {
+          "type": "object",
+          "required": ["value", "enabled"],
+          "properties": {
+            "value": { "type": "string" },
+            "enabled": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "switch": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Switch" },
+        "props": {
+          "type": "object",
+          "required": ["checked", "enabled"],
+          "properties": { "checked": { "type": "boolean" }, "enabled": { "type": "boolean" } },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "slider": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Slider" },
+        "props": {
+          "type": "object",
+          "required": ["min", "max", "step", "value", "enabled"],
+          "properties": {
+            "min": { "type": "number" }, "max": { "type": "number" },
+            "step": { "type": "number", "exclusiveMinimum": 0 },
+            "value": { "type": "number" }, "enabled": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "picker": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Picker" },
+        "props": {
+          "type": "object",
+          "required": ["mode", "range", "selected"],
+          "properties": {
+            "mode": { "const": "text" }, "range": { "type": "string", "minLength": 1 },
+            "selected": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "list": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": { "type": { "const": "List" }, "props": { "type": "object", "maxProperties": 0 }, "style": { "$ref": "#/$defs/style" } },
+      "additionalProperties": false
+    },
+    "scroll": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": { "type": { "const": "Scroll" }, "props": { "type": "object", "maxProperties": 0 }, "style": { "$ref": "#/$defs/style" } },
+      "additionalProperties": false
+    },
+    "video": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Video" },
+        "props": {
+          "type": "object",
+          "required": ["src", "poster", "autoplay", "controls", "muted"],
+          "properties": {
+            "src": { "type": "string", "minLength": 1 },
+            "poster": { "anyOf": [{ "const": "" }, { "type": "string", "pattern": "^assets/[A-Za-z0-9._/-]+$" }] },
+            "autoplay": { "type": "boolean" },
+            "controls": { "type": "boolean" },
+            "muted": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/style" }
+      },
+      "additionalProperties": false
+    },
+    "tabs": {
+      "type": "object",
+      "required": ["type", "props", "style"],
+      "properties": {
+        "type": { "const": "Tabs" },
+        "props": {
+          "type": "object",
+          "required": ["items", "selected"],
+          "properties": {
+            "items": { "type": "string", "minLength": 1 },
+            "selected": { "type": "integer", "minimum": 0 }
           },
           "additionalProperties": false
         },

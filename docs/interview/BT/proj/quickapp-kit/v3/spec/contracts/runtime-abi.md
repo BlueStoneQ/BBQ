@@ -26,13 +26,15 @@ pushRoute(NavigationPush)
 closeRoute(NavigationClose)
 showToast(ShowToast)
 getDeviceInfo(DeviceGetInfo)
+system.openUrl.open(FeatureRequest(url))
+system.webview.open(FeatureRequest(url))
 setTitleBar(SetTitleBar)
 setMeta(SetMeta)
 supportsCapability(moduleName, methodName) -> boolean
 completeLifecycle(LifecycleResult)
 ```
 
-`pushRoute/closeRoute/showToast/getDeviceInfo` 是 [Capability Module Contract](./capability-module-contract.md) 的强类型方法入口。`supportsCapability` 固定计算“Manifest 已声明 AND Registry descriptor 已提供该方法”，查询不创建 Provider、不传递业务参数，也不构成通用 Bridge；`system.fetch.fetch` 在 V1 固定为 false。
+`pushRoute/closeRoute/showToast/getDeviceInfo` 以及 `system.openUrl.open/system.webview.open` 是 [Capability Module Contract](./capability-module-contract.md) 的强类型方法入口。`supportsCapability` 固定计算“Manifest 已声明 AND Registry descriptor 已提供该方法”，查询不创建 Provider、不传递业务参数，也不构成通用 Bridge；`system.fetch.fetch` 在 V1 固定为 false。
 
 `InstantiateTemplate` 首屏载荷包含：
 

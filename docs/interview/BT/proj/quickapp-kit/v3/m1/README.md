@@ -34,11 +34,11 @@ S2-S5 由同一个长期 M1 集成 Agent 连续负责。Spine 阶段在每个切
 |---|---|---|
 | M1-Alpha S1 | `VERIFIED` | 真实 Case 001 RPK -> JS -> Core -> LVGL/SDL 首屏可见，资源归零 |
 | M1-S2 | `VERIFIED` | Spine：真实输入、事件、Handler、路由 Push、Detail 可见、资源归零 |
-| M1-S3.5 | `CODE_ALLOWED` | State -> Binding -> RenderTransaction -> Mount |
-| M1-S4 | `BLOCKED_BY_S3.5` | Platform Back -> Core Navigation Close -> 前页恢复 |
-| M1-S5 | `BLOCKED_BY_S4` | 失败恢复、跨线程边界、完整销毁和资源归零 |
-| M1-S3 | `BLOCKED_BY_SPINE` | typed Capability、Platform Provider、Toast；Spine 后执行 |
-| M1 | `IN_PROGRESS` | Spine S1/S2 已通过，S3.5/S4/S5 未完成 |
+| M1-S3.5 | `VERIFIED` | State -> Binding -> RenderTransaction -> Mount，BINDING-001 通过 |
+| M1-S4 | `VERIFIED` | Platform Back -> Core Navigation Close -> 前页恢复 |
+| M1-S5 | `VERIFIED` | 失败恢复、跨线程边界、完整销毁和资源归零 |
+| M1-S3 | `CODE_ALLOWED` | typed Capability、Platform Provider、Toast；Spine 后执行 |
+| M1 | `IN_PROGRESS` | M1-Spine 已通过，剩余 Capability 与 Hardening |
 
 Alpha 的最终证据见 `../m1-alpha/INTEGRATION-HANDOFF.md`；该文件是历史交接与 S1 事实来源，本目录负责后续 M1 执行。
 
@@ -59,8 +59,8 @@ S2-S5 都使用 Toolkit 生成的真实 Runtime Artifact。Focused fixture 只�
 ## 4. Agent 组织
 
 - Alpha Agent 已完成 S1；优先直接将其延续为长期 M1 集成 Agent，保留真实主链上下文。
-- S2 Agent 已结束；现在启动一个干净上下文的 M1-S3.5 Agent。检查点 A 通过后，再使用一个干净上下文的 M1 Agent 完成 S4、S5。
-- 当前 S2 Spine 已通过并放行 S3.5；S4、S5 等待前置切片，S3 Capability 等待 Spine。
+- S2、S3.5、S4、S5 已完成并通过对应检查点；当前启动 M1-S3 Capability。
+- 当前 M1-Spine 已通过；S3 Capability 完成后进入 M1 Hardening，不重复修改已验证的主链。
 - 每完成一个切片，M1 Agent 在共享 Handoff 追加主链、focused tests、资源和遗留项。
 - S2 后直接进入 S3.5；S3.5 和 S5 完成后暂停等待总架构检查点；S3 在 Spine 后执行。
 - M1 Agent 不得修改公共合同；发现合同缺口必须记录 `[待决策]` 并暂停受影响部分。

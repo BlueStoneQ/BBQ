@@ -25,7 +25,7 @@
         "requestId": { "type": "string", "pattern": "^req:.+$" },
         "surfaceId": { "type": "string", "pattern": "^srf:.+$" },
         "nodeId": { "type": "string", "pattern": "^node:.+$" },
-        "eventType": { "const": "click" },
+        "eventType": { "enum": ["click", "input", "change", "focus", "scroll", "scrollend", "scrolltop", "scrollbottom", "prepared", "start", "pause", "finish", "error", "timeupdate"] },
         "timestamp": { "type": "number", "minimum": 0 },
         "payload": {
           "type": "object",
@@ -45,7 +45,7 @@
         "target": { "$ref": "#/$defs/logicalNodeRef" },
         "currentTarget": { "$ref": "#/$defs/logicalNodeRef" },
         "handlerId": { "type": "string", "pattern": "^hdl:.+$" },
-        "eventType": { "const": "click" },
+        "eventType": { "enum": ["click", "input", "change", "focus", "scroll", "scrollend", "scrolltop", "scrollbottom", "prepared", "start", "pause", "finish", "error", "timeupdate"] },
         "phase": { "enum": ["target", "bubble"] },
         "timestamp": { "type": "number", "minimum": 0 },
         "payload": {

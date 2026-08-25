@@ -30,10 +30,10 @@
 | `navigation.schema.json` | NavigationPush / NavigationClose 与 typed Result |
 | `observation.schema.json` | Toolkit/JS/Core/Platform 公共 Marker、整数纳秒、关联 ID、计数器与错误/降级事件 |
 | `package-open-policy.schema.json` | 后续 Release profile 的包外签名信任策略草案，非 V1 门禁 |
-| `feature.schema.json` | ShowToast / DeviceGetInfo typed Capability 与 SetTitleBar / SetMeta Page Control |
+| `feature.schema.json` | ShowToast / Prompt / Fetch / File / Device / OpenUrl / Webview typed Capability 与 SetTitleBar / SetMeta Page Control |
 | `transaction-result.schema.json` | Render/Mount 异步执行结果 |
 | `surface-control.schema.json` | Surface 创建/销毁、首屏、Handler 和状态结果 |
-| `host-component.schema.json` | V1 View/Text/Button、Prop 与 Style 语义 |
+| `host-component.schema.json` | V1 Host Component（含 Video）、Prop 与 Style 语义 |
 | `runtime-value.schema.json` | 跨语言 Runtime Value 唯一值域 |
 | `runtime-error.schema.json` | 公共 RuntimeError |
 

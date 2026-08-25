@@ -35,12 +35,30 @@ JS Framework typed Page Control request
 
 C++ 只校验、路由和关联请求；JNI、UIKit、LVGL 类型仅存在 Platform Adapter。请求进入 Core 队列时复制或转移为 immutable message，层间不共享可变 JS 对象。
 
-## 4. 生命周期
+## 4. B4 Feature 扩展
+
+B4 保持同一条 typed ABI，但把三个可替换能力加入封闭合同：
+
+| Module | Methods | Result payload | Provider 边界 |
+|---|---|---|---|
+| `system.prompt` | `alert`、`confirm` | `confirmed?` | 平台提示 Provider |
+| `system.fetch` | `fetch`、`cancel` | `httpStatus?`、`responseBody?`、`responseIsJson?` | 平台或宿主网络 Provider |
+| `system.file` | `read`、`write`、`exists`、`delete` | `fileData?`、`fileExists?` | 应用私有目录或内存 Provider |
+| `system.openUrl` | `open` | 无业务载荷 | 系统默认浏览器 Provider |
+| `system.webview` | `open` | 无业务载荷 | 平台 WebView Provider |
+
+Fetch 请求固定包含 `url`、`httpMethod`、`headers`、`body?`、`timeoutMs`、`responseType=text|json`；File 路径必须以 `private/` 开头。Core 不访问网络、文件系统或原生弹窗，只负责 ModuleRegistry、RequestId 关联、Surface 生命周期和 typed Result 转发。
+
+B6 的 URL 规则是：应用内 `/...` 路径由 `system.router` 进入 Core Router；`system.openUrl.open({url})` 和 `system.webview.open({url})` 只接受 `http(s)` URL，并分别进入系统浏览器和平台 WebView。第一版不实现内嵌 `webview` Host Component、Cookie、UA、网页 JS 双向通信或 WebView 内部路由。
+
+所有 B4 Result 的状态是 `completed | failed | unsupported | cancelled`。`failed/unsupported` 必须带结构化错误；`cancelled` 表示在途 Fetch 被取消，可以不带错误。JS Facade 负责 Promise 结算，未注册 Provider 必须可观察地 reject，不得伪造成功。
+
+## 5. 生命周期
 
 1. ABI 同步校验失败时不入队。
 2. 入队后只能产生一次同类型 Result。
 3. Surface 在执行前销毁时返回 `SURFACE_NOT_FOUND`。
-4. Page Host Control 不创建、销毁或修改 Surface/Runtime Tree。
+4. Page Host Control 和 Feature Provider 不创建、销毁或修改 Surface/Runtime Tree。
 5. 控制结果需要改变页面内容时，结果回到 JS，再由状态更新产生 `RenderTransaction`。
 
 机器合同：[feature.schema.json](./schemas/feature.schema.json)。
