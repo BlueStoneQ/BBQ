@@ -2280,3 +2280,53 @@ Surface teardown 清理平台子控件与监听器。未创建第二棵 Tree、�
 架构侧需要先修复 JS Framework 初始 binding 对冻结 `string | boolean | number`
 合同的支持，然后用同一 RPK 重跑首屏、切换、回写、重复切换和 teardown；Android 不修改
 Core、JS、Toolkit、公共 Contract 或 Examples。
+
+## Android B3.5 Tabs 复验交接（2026-08-26）
+
+本节 supersedes 上面的初始启动阻塞结论。
+
+结论：Android Tabs 平台映射、真实 RPK 首屏和平台事件链路已通过；完整的受控状态
+回写仍被共享 JS ABI 阻塞，不能标记 B3.5 Android 完成。
+
+- RPK：`quickapp-examples/showcases/tabs-001/dist/tabs-001.rpk`
+- SHA-256：`9a53e285d8d4cf13080b782f64762b6ab44596ad3c3ab68ace08a19340108792`
+- 首屏：`page.vm.ready`、`handler_bind onTabChange bound=1`、`mount.result ok=true`。
+- 真实点击：`任务 -> 我的 -> 我的（重复） -> 首页`；日志证明
+  `input.tabs.change -> event.change.received -> event.change.dispatched=1 ->
+  handler_execute dispatched=1`。
+- 平台 tab 选中样式发生变化，但绑定文本和 `if` 内容仍是首页，事件后没有新的
+  MountTransaction。
+- 根因：`quickapp-runtime-js/src/abi/runtime_abi_codec.cpp` 的 `updateBinding`
+  校验仍只接受 `string | boolean`，拒绝 Tabs `selected` 所需的 numeric binding。
+  该问题属于公共 JS/ABI，Android 不得用本地状态绕过。
+- Android evidence：`quickapp-runtime-android/evidence/b3.5-tabs-android.md`。
+- 截图：`tabs-001-android-task.png`、`tabs-001-android-mine.png`、
+  `tabs-001-android-home-final.png`。
+
+下一步：公共 JS/ABI 接受 numeric `updateBinding` 后，用同一 RPK 重跑受控更新、重复
+切换和 teardown；在此之前 B3.5 只算平台实现完成，不算完整验收完成。
+
+## iOS B3.5 Tabs 复验交接（2026-08-26）
+
+结论：iOS `Tabs -> UISegmentedControl` 平台实现、真实 RPK 首屏、真实 UIKit
+交互、重复切换和 teardown 已通过；完整的 `selected` 受控状态回写仍被共享 JS
+ABI 阻塞，不能标记 B3.5 iOS 全部完成。
+
+- RPK：`quickapp-examples/showcases/tabs-001/dist/tabs-001.rpk`
+- SHA-256：`9a53e285d8d4cf13080b782f64762b6ab44596ad3c3ab68ace08a19340108792`
+- 首屏：`rpk.verified -> page.vm.ready -> ios.ui.mount.result ... mounted=1`。
+- 平台控件：真实 `UISegmentedControl`，首屏 `items=3`、`selected=0`，布局为
+  `<63.0,102.0,276.0,48.0>`。
+- 真实平台操作：`index=1 -> index=1（重复） -> index=2`；每次均为
+  `ios.tabs.control ... status=completed -> ios.event.change.dispatched ... accepted=1 -> ios.js.event.executed ... accepted=1`。
+- 平台视觉：修复选中态文字颜色后，第三个标签“我的”可见；截图为
+  `quickapp-runtime-ios/evidence/screenshots/ios-tabs-001-selected-2026-08-26.png`。
+- Teardown：`surfaces=0 nodes=0 handlers=0 jsResources=0 coreQueue=0`，随后
+  `ios.runtime.platform.resources surfaces=0 nodes=0`。
+- 阻塞：事件已执行到 JS Handler，但没有后续 `ios.render.submit`；共享
+  `quickapp-runtime-js/src/abi/runtime_abi_codec.cpp` 的 `updateBinding` 仍拒绝
+  numeric value。iOS 不修改共享 JS 或用平台状态绕过。
+- Evidence：`quickapp-runtime-ios/evidence/ios-tabs-001-b35-2026-08-26.md`。
+
+状态：`IOS_PLATFORM_IMPLEMENTED_SHARED_JS_NUMERIC_UPDATE_BLOCKED`。公共 JS ABI
+接受 numeric `updateBinding` 后，三端使用同一 RPK 重跑完整受控更新验收。

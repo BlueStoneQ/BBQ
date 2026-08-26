@@ -334,3 +334,999 @@ Binding: selected <- number
 ## 剩余问题
 
 Tabs 的公共语义和 RPK 已完成；Android、iOS、LVGL 的原生 Tabs 视觉和交互映射属于后续平台工作。本次未声称三端已渲染 Tabs，也未扩展虚拟化、复杂动画或多级路由能力。
+
+# B3.5 Tabs JS 初始绑定修复交接（2026-08-26）
+
+## 结论
+
+已修复 JS 初始绑定阶段拒绝 number 的阻塞。`AlphaInitialBindingStage` 现在接受并原样传递 `string`、`boolean`、`double`；非法对象等类型仍返回 `MODULE_ABI_UNSUPPORTED`。number 不转换为 string。
+
+## 修改文件
+
+- `quickapp-runtime-js/src/binding/alpha_initial_binding_stage.cpp`
+- `quickapp-runtime-js/tests/js_s04_vm_lifecycle_tests.cpp`
+
+未修改 Core Contract、Tabs Contract、Toolkit、RPK、Android、iOS 或 LVGL。
+
+## 类型链路
+
+```text
+RPK Page IR selected:number
+-> JS binding evaluator
+-> AlphaInitialBindingStage: std::variant<std::string, bool, double>
+-> AlphaInitialTransactionBuilder
+-> InstantiateTemplate.initialBindings
+-> Core/Platform 后续消费
+```
+
+## 验证
+
+- JS 初始绑定测试覆盖 string、boolean、number；
+- 非法 object 初始绑定仍失败，错误为：
+  `Initial binding result must be string, boolean, or number`；
+- `js_s01_contract_tests`：通过；
+- `js_s02_contract_tests`：通过，Tabs event codec 通过；
+- `js_s03_module_loader_tests`：通过；
+- `js_s04_vm_lifecycle_tests`：通过；
+- `tabs-001.rpk` Page IR 已确认 `Tabs.selected=0` 和 selected binding 存在；
+- RPK SHA-256：`9a53e285d8d4cf13080b782f64762b6ab44596ad3c3ab68ace08a19340108792`。
+
+## 平台边界
+
+现有 Examples Loader/Composition Root 使用 `tabs-001.rpk` 时会报告 `unsupported host component`，因为 Tabs 尚未接入平台 Host 映射。该问题不属于本次 JS 修复，也未在 JS 层绕过；后续由 Android、iOS、LVGL 平台 Agent 使用同一 RPK 完成 Tabs Host Mount 和交互验收。
+
+状态：`READY_FOR_PLATFORM_TABS_VALIDATION`
+
+# B3.5 Tabs 共享 JS ABI 增量 number 修复交接（2026-08-26）
+
+## 结论
+
+已修复共享 JS ABI 对增量 `updateBinding.value` 的类型校验缺口。现在 `updateBinding.value` 接受 `string | boolean | number`，number 保持为 `double`，不会转换为 string；数组、对象等非法类型仍返回 typed ABI failure。
+
+本次只修改 `quickapp-runtime-js` 的 ABI 校验和 JS-S02 合同测试。没有修改 Core Contract、Toolkit、RPK、Android、iOS、LVGL、Router、Render Pipeline、Event Router 或任何平台类型转换。
+
+## 修改文件
+
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/src/abi/runtime_abi_codec.cpp`
+  - `validRenderOperation(updateBinding)` 增加 `std::holds_alternative<double>`。
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/tests/js_s02_contract_tests.cpp`
+  - 增加 string、boolean、number 三种 updateBinding 解码断言。
+  - 增加非法数组类型失败断言。
+
+已有 `BindingValue = std::variant<std::string, bool, double>` 和既有 number 解码分支未改动；本次只修正入口白名单，保持现有 typed ABI 设计。
+
+## 类型合同
+
+```text
+updateBinding.value:
+  string  -> BindingValue::string
+  boolean -> BindingValue::bool
+  number  -> BindingValue::double
+  array/object/null -> ABI_INVALID_ARGUMENT
+```
+
+Tabs 的目标链路现在可以通过 JS ABI 合同边界：
+
+```text
+Tabs change({index:number, value:string})
+-> JS Handler writes selected
+-> updateBinding(selected:number)
+-> validRenderOperation
+-> decodeCoreMessage
+-> UpdateBindingOperation.value = double
+```
+
+本次未在平台侧增加 number 转换，也未创建旁路 ABI、第二套路由或第二棵 Tree。
+
+## 验证
+
+- JS CMake build：通过。
+- JS 定向及相关全量 CTest：`9/9` 通过，包含 `js_s01_contract_tests`、`js_s02_contract_tests`、`js_s03_module_loader_tests`、`js_s04_vm_lifecycle_tests` 和边界扫描。
+- JS-S02：string、boolean、number updateBinding 均保持原生类型；非法数组返回失败。
+- 真实 RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/tabs-001/dist/tabs-001.rpk`。
+- RPK SHA-256：`9a53e285d8d4cf13080b782f64762b6ab44596ad3c3ab68ace08a19340108792`。
+- RPK `unzip -t`：通过，未重新生成 RPK。
+
+## 真实入口回归边界
+
+已重建既有 LVGL Simulator 并使用上述真实 RPK 启动；当前结果为：
+
+```text
+case001_lvgl_error=RPK open failed: Runtime component unavailable
+```
+
+该错误发生在现有 Examples Composition Root/运行装配入口，不是本次 JS ABI 校验结果；本任务明确禁止修改 `quickapp-examples`、LVGL 或平台代码，因此不能据此报告完整平台链路通过。后续由平台 Agent 修复或验证 Runtime Composition 后，再重跑 Tabs 点击、状态回写、MountTransaction 和 teardown。
+
+状态：`READY_FOR_PLATFORM_TABS_REVALIDATION`
+
+# Commerce-001 主展示案例升级交接（2026-08-26）
+
+## 结论
+
+`commerce-001` 已升级为主展示案例：一个 Home 页面内使用受控 Tabs 展示首页、分类、购物车、我的四个状态内容；首页保留商品 Image/Text/Button、状态切换、`if`、keyed `for` 和商品详情 `router.push/back`。四个 Tab 没有被实现为四个并行页面或四套路由。
+
+## 修改文件
+
+- `quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+  - 接入真实 `<tabs items="首页|分类|购物车|我的" selected="{{ selectedTab }}" onchange="onTabChange">`。
+  - `onTabChange` 使用 `{ index, value }` 更新 `selectedTab`、`selectedValue`。
+  - Tab 内容通过 `selectedTab === 0/1/2/3` 的 `if` Block 状态驱动渲染。
+  - 首页保留三项商品 keyed `for`、Image、Text、Button、加载状态 `if`、确定性状态刷新和详情入口。
+  - 商品详情继续通过 `router.push({ uri: '/pages/ProductDetail' })` 进入。
+- `quickapp-examples/showcases/commerce-001/src/manifest.json`
+  - 路由收敛为 `/pages/Home` 和 `/pages/ProductDetail`。
+  - 保留 `system.router`、`system.prompt`。
+- `quickapp-examples/showcases/commerce-001/README.md`
+  - 更新案例能力和路由说明。
+- 未修改 Core、JS、Platform Runtime、公共 Contract、`quickapp-code-test1`、`controls-001` 或 `wallet-001`。
+
+## 真实 RPK
+
+- 构建命令：
+
+```text
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001
+node scripts/build-commerce.mjs
+```
+
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`49563` bytes
+- SHA-256：`ca41387ecd21513a81cf98c256ae44b18517ba5a3885e69f5358c49955bb5f20`
+- 第二次构建：SHA-256 相同，`deterministicBuild=true`
+- 入口：`/pages/Home`
+- 路由：`/pages/Home`、`/pages/ProductDetail`
+- capabilities：`system.router`、`system.prompt`
+- 图片：3 张本地 PNG，均为 32x32；总计 `5717` bytes，单张不超过 4 KiB。
+
+## RPK 结构验收
+
+- Home Host：包含 `Tabs`、`Image`、`Text`、`Button`。
+- Tabs props：`items="首页|分类|购物车|我的"`、`selected=0`。
+- Home bindings：包含 Tabs `selected` binding、状态文本 binding 和商品 block binding。
+- Home blocks：包含四个 Tab 条件 Block、loading 条件 Block、稳定状态条件 Block、keyed `for` 商品 Block，共 7 个 Block。
+- Home handlers：Tabs `change`、商品详情 `click`、刷新 `click`。
+- ProductDetail：包含 Image/Text/Button 和返回 `click` Handler。
+- manifest、Page IR、JS bundle、三张图片资源均进入 RPK。
+
+## Toolkit 验证
+
+- `npm test`：`90/90` 通过。
+- `node scripts/build-commerce.mjs`：通过。
+- RPK 构建两次字节和 SHA-256 一致。
+
+## 平台边界
+
+本交接只确认 Toolkit 生成的真实 RPK 和 Page IR 结构。Android、iOS、LVGL 尚未在本任务中验证 Tabs 的原生 Mount、视觉布局、点击 `change({index,value})`、selected 回写以及商品详情 push/back；后续平台 Agent 使用该 RPK 验收，不在案例中补造 Tabs、Bridge、Runtime Tree 或 Navigation。
+
+状态：`READY_FOR_PLATFORM_SHOWCASE`
+
+# Tabs 内容不切换：共享 JS ABI 与 RenderTransaction 回归交接（2026-08-26）
+
+## 结论
+
+已确认并修复 Tabs 内容不切换的共享 JS ABI 阻塞：增量 `updateBinding.value` 的校验此前拒绝 number，导致 JS Handler 生成的 RenderTransaction 在 ABI 入口失败。现在 number 原样保持为 `BindingValue::double`，RenderTransaction 可以进入 Core ingress。
+
+本次只修改 JS Runtime 及 JS 测试；没有修改 Core、Toolkit、RPK、Android、iOS、LVGL、平台状态、Bridge 架构、Runtime Tree 或 Router。
+
+## 修改
+
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/src/abi/runtime_abi_codec.cpp`
+  - `updateBinding.value` 合法类型从 `string | boolean` 修复为 `string | boolean | number`。
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/tests/js_s02_contract_tests.cpp`
+  - 保留三种类型解码测试和非法类型失败测试。
+  - 增加 QuickJS Handler 回归：Handler 调用 `$quickapp_runtime_v1_submitRenderTransaction$`，`selectedTab=2` 作为 number 进入 Core，Core 收到一个 `SubmitRenderTransaction`，其 `UpdateBindingOperation.value` 仍为 `double(2.0)`。
+
+## JS 公共链路证据
+
+```text
+Tabs change({index: 2, value: "我的"})
+-> JS Handler: selectedTab = event.index
+-> JS microtask flush
+-> updateBinding(templateBindingId=1, value=2)
+-> Runtime ABI validator accepts number
+-> decodeCoreMessage
+-> CoreIngressPort receives SubmitRenderTransaction
+-> UpdateBindingOperation.value == double(2.0)
+```
+
+生成式页面代码中的 `flush` 同时会把受 `selectedTab` 依赖的 `if` Block 操作合并进同一个 RenderTransaction；本次 JS 测试验证的是公共入口和 number 类型，不在 JS 层复制 Core Tree 或平台 Mount。
+
+## 验证
+
+- JS CMake build：通过。
+- JS 全量 CTest：`11/11` 通过。
+- JS-S02：string、boolean、number、非法数组类型均通过；QuickJS Handler -> native ABI -> Core RenderTransaction 回归通过。
+- `tabs-001.rpk` SHA-256：`9a53e285d8d4cf13080b782f64762b6ab44596ad3c3ab68ace08a19340108792`。
+- `commerce-001.rpk` SHA-256：`97905939e1c0d9cd77bf642bde1d95c69279f34cfdac3f6a9d498a3328c724e1`。
+- 两个真实 RPK 均通过 `unzip -t`；本次未重新生成或修改 RPK。
+
+## 真实 RPK 入口边界
+
+使用现有 Examples JS Composition Root 分别启动上述两个真实 RPK，当前均返回：
+
+```text
+RPK open failed: Runtime component unavailable
+```
+
+因此本次能够确认 JS 公共 RenderTransaction 已产生并可被 ABI 接收，但不能在 JS-only 任务中伪造“平台页面内容已切换”或“平台 teardown 已归零”。真实页面内容变化和 teardown 必须由 Android/iOS/LVGL 平台 Agent 在其 Runtime Composition Root 修复/接入后继续验收。
+
+状态：`READY_FOR_PLATFORM_CONTENT_REVALIDATION`
+
+# V1 最终验收 Showcase RPK 交接（2026-08-26）
+
+## 结论
+
+已生成三份真实联盟 DSL RPK：能力总览 `capability-gallery-001`、移动端展示 `commerce-001`、嵌入式展示 `wearable-001`。三包均由现有 Toolkit 生成，未手写 Page IR、RenderTransaction、MountTransaction、第二套路由或平台旁路。
+
+## 交付物
+
+### capability-gallery-001
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/capability-gallery-001/`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/capability-gallery-001/dist/capability-gallery-001.rpk`
+- 大小：`236469` bytes
+- SHA-256：`46ab31154fe53a3ea99692f802d9e030ec71f554bcd7979ce236dddc2db38f2a`
+- 路由：Home、View、Text、Button、Image、Input、Switch、Slider、Picker、List、Scroll、Tabs、Prompt、Fetch、File、Device、Navigation、NavigationDetail
+- Host 覆盖：View、Text、Button、Image、Input、Switch、Slider、Picker、List、Scroll、Tabs
+- Feature 覆盖：`system.router`、`system.prompt`、`system.device`、`system.fetch`、`system.file`
+- 首页按能力分组分页，每次只挂载 4 个条目；每个条目进入独立能力页并经 Core Router 返回。
+- 资源：1 张 32x32 PNG，`1720` bytes。
+
+### commerce-001
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`46122` bytes
+- SHA-256：`0eaeb9a71f11c2119c86119f253af122511867eb5b388fa682b14719456a9a4f`
+- 路由：Home、ProductDetail
+- 能力：受控 Tabs、Image/Text/Button、keyed `for`、状态 `if`、确定性刷新、商品 push/back。
+- 资源：3 张 32x32 PNG，总计 `5717` bytes。
+
+### wearable-001
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/wearable-001/`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/wearable-001/dist/wearable-001.rpk`
+- 大小：`37243` bytes
+- SHA-256：`ba62accc70a63ba73b3154db85bf2e613eea3153b936d49e988cfaef97fdba38`
+- 路由：Home、Detail
+- 能力：220x220 安全区域、Scroll -> List、keyed `for`、Image/Text/Button、状态刷新、push/back。
+- 资源：2 张 32x32 PNG，总计 `3716` bytes。
+
+## 构建与验证
+
+三个案例分别执行：
+
+```text
+node scripts/build-capability-gallery.mjs
+node scripts/build-commerce.mjs
+node scripts/build-wearable.mjs
+```
+
+每个案例连续构建两次，产物 SHA-256 一致；Toolkit `npm test`：`90/90` 通过。Examples Composition Root 已统一注册 11 个 Host Component，并为三份最终 Showcase 的自动入口提供真实 Loader/Mount/teardown 路径。
+
+LVGL 自动验收命令：
+
+```text
+SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl --rpk showcases/capability-gallery-001/dist/capability-gallery-001.rpk
+SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl --rpk showcases/commerce-001/dist/commerce-001.rpk
+SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl --rpk showcases/wearable-001/dist/wearable-001.rpk
+```
+
+结果：三包均 `rpk.loader=true`、`rpk.lvgl_mount=true`、`resources_released=true`、退出码 `0`。既有 Case 001、CASE-002、BLOCK-001 回归均退出码 `0`。
+
+## 平台边界
+
+- 本轮未修改 Core、JS Runtime、Android、iOS 或 LVGL Runtime 实现。
+- Android/iOS 尚未使用三份最终 Showcase 做真实设备/模拟器视觉与交互验收。
+- `system.device` 在不提供该能力的平台上应展示真实 `unsupported/failed`，不由案例伪造结果；`system.fetch/file/prompt` 使用当前已定义 typed ABI。
+- `system.openUrl`、`system.webview` 未放入三包最终 capability manifest，因为它们当前不是三端共同可加载能力；对应 Toolkit Fixture 保持独立。
+
+状态：`READY_FOR_ANDROID_IOS_SHOWCASE_VALIDATION`
+
+# Examples Composition Root 公共入口修复（2026-08-26）
+
+## 结论
+
+LVGL Simulator 与自动验收入口现在共用同一份 Examples Composition Root
+组件/能力清单。11 个已实现 Host Component 均已纳入：View、Text、Button、
+Image、Input、Switch、Slider、Picker、List、Scroll、Tabs。真实 Feature
+入口纳入 system.prompt、system.fetch、system.file，并保留 system.router、
+system.device、system.shortcut 以兼容既有联盟基线；移除了当前 Provider 不支持
+的 system.openUrl、system.webview 注册。
+
+旧的 `Feature::Request` 位置聚合初始化已改为按当前字段名初始化，避免结构扩展
+后继续产生编译错误。
+
+## 修改文件
+
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/composition/runtime_composition.h`
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/composition/case001_lvgl.cpp`
+
+未修改 Core、JS ABI、Toolkit、LVGL、Android、iOS 或任何 RPK。
+
+## 构建
+
+```text
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples
+cmake --build build-m1-s2 --target quickapp_case001_lvgl quickapp_lvgl_simulator -j 4
+```
+
+结果：两个入口均构建通过。
+
+## 五个真实 RPK
+
+命令统一为：
+
+```text
+SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl \
+  --rpk showcases/<case>/dist/<case>.rpk
+```
+
+| RPK | Loader | LVGL Mount | teardown | 结果 |
+|---|---:|---:|---:|---|
+| controls-001.rpk | PASS | PASS | PASS | exit 0；Input/Switch/change 真实回归通过 |
+| controls-002.rpk | PASS | BLOCKED | PASS（资源归零） | LVGL Mount 拒绝 Slider 的 `enabled` 属性；非入口注册问题 |
+| list-001.rpk | PASS | PASS | PASS | exit 0；List/Scroll/资源归零 |
+| tabs-001.rpk | PASS | PASS | PASS | exit 0；Tabs/if/状态绑定/资源归零 |
+| platform-001.rpk | PASS | PASS | PASS | exit 0；prompt/fetch/file 页面真实 Mount，资源归零 |
+
+`controls-002` 的 RPK 已不再出现 `Runtime component unavailable`；入口现在会将
+Mount 失败转为明确的 `rpk.lvgl_mount=false` 结果并完成资源清理。失败发生在
+LVGL Mount 属性执行阶段。其 `Slider` 初始 Page IR 含 Toolkit 自动补出的
+`enabled=true`，当前 LVGL MountHost 只接受 Button/Input/Switch 的 enabled 属性。
+修复该平台属性合同需要修改 `quickapp-runtime-lvgl`，本任务明确禁止，因此不在
+Examples Composition Root 中伪造、过滤或重写 Render/Mount Transaction。
+
+## 既有回归
+
+- Case 001：PASS，exit 0，真实路由/事件/Prompt/teardown 通过。
+- CASE-002：PASS，exit 0，增量更新、removeBlock、moveBlock 通过。
+- BLOCK-001：PASS，exit 0，keyed 身份、删除/重建和资源归零通过。
+
+## 状态
+
+`READY_FOR_PLATFORM_FIX_CONTROLS_002`：公共入口阻塞已修复；剩余唯一问题是
+controls-002 对应的 LVGL `Slider.enabled` 属性兼容性，属于平台 Mount 实现范围。
+
+# 公共入口复核（2026-08-26）
+
+本轮按前置条件重新复核，未新增代码范围；当前入口实现已满足组件、Feature
+注册和显式 `Request` 初始化要求。
+
+## 复核结果
+
+- 构建 `quickapp_case001_lvgl`：PASS。
+- 构建 `quickapp_lvgl_simulator`：PASS。
+- `controls-001.rpk`：Loader PASS，真实 Mount PASS，teardown PASS，exit 0。
+- `controls-002.rpk`：Loader PASS；Mount 仍因 LVGL `Slider enabled=true` 属性拒绝而 BLOCKED；入口明确输出 `rpk.lvgl_mount=false`，资源清理 PASS，exit 0。
+- `list-001.rpk`：Loader PASS，真实 Mount PASS，teardown PASS，exit 0。
+- `tabs-001.rpk`：Loader PASS，真实 Mount PASS，teardown PASS，exit 0。
+- `platform-001.rpk`：Loader PASS，真实 Mount/Feature Provider 入口 PASS，teardown PASS，exit 0。
+
+五个 RPK 均未出现 `Runtime component unavailable` 或 `Runtime capability unavailable`。
+
+## 旧案例回归
+
+- Case 001：PASS，exit 0，资源归零。
+- CASE-002：PASS，exit 0，资源归零。
+- BLOCK-001：PASS，exit 0，资源归零。
+
+当前唯一剩余问题仍是 `controls-002` 的 LVGL 平台 Mount 属性兼容性；本任务禁止
+修改 LVGL，因此不在 Examples Composition Root 中伪造通过。
+
+# Toolkit Agent Skill 文档（2026-08-26）
+
+## 结论
+
+已新增 Toolkit Agent Skill：
+
+`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-toolkit/skills/quickapp-toolkit/SKILL.md`
+
+文档按当前实现区分了真实 CLI 合同、已实现的编译器/RPK Builder 能力和
+尚未安装的 `build`、`inspect`、`run` Use Case，没有修改 CLI 行为。
+
+## 实际 CLI
+
+- 入口：`dist/cli/bin.js`；`package.json` 的 `quickapp` binary 指向同一入口。
+- 已注册命令：`build`、`inspect`、`run`。
+- 通用参数：`--config <path>`、`--format human|json`、`--no-color`、`--help`。
+- 顶层参数：`--help`、`--version`。
+- 默认 standalone Composition Root 中没有安装 Build/Inspect/Run Use Case；`build`
+  进入操作阶段后返回 `TK_OPERATION_UNAVAILABLE`，`inspect` 和 `run` 同样如此。
+- 退出码合同：成功 `0`；用法错误 `2`；Workspace 错误 `3`；配置错误 `4`；
+  操作失败或非信号取消 `10`；内部错误 `70`；SIGINT `130`；SIGTERM `143`。
+
+## 验证
+
+```text
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-toolkit
+npm run build
+npm test
+node dist/cli/bin.js --help
+node dist/cli/bin.js --version
+node dist/cli/bin.js inspect sample.rpk --format json
+node dist/cli/bin.js unknown --format json
+node ../quickapp-examples/showcases/gallery-001/scripts/build-gallery.mjs
+unzip -t ../quickapp-examples/showcases/gallery-001/dist/gallery-001.rpk
+```
+
+结果：TypeScript 构建通过；Toolkit 测试 `90/90` 通过；Gallery-001 使用真实
+Toolkit Compiler、Page IR/JS Emitters 和 RuntimeArtifactBuilder 构建成功，生成
+`gallery-001.rpk`，报告 `status=PASS`，RPK 为 `39154` bytes，`unzip -t` 通过。
+Gallery-001 包含 `manifest.json`、`app.js`、两个页面 JS、两个 Page IR、runtime
+metadata、source maps 和三张本地图片资源。
+
+CLI 探针结果：`--help` 和 `--version` 为 `0`；保留的 `inspect` 为 `10` 并返回
+`TK_OPERATION_UNAVAILABLE`；未知命令为 `2` 并返回 `TK_CLI_UNKNOWN_COMMAND`。
+直接执行默认 `build` 也不会伪造成功：无 Workspace 时返回 `3`，在真实 Workspace
+路径下因 Build Use Case 未安装返回 `10`。
+
+## 已覆盖与未覆盖
+
+已在 Skill 中记录：Workspace/manifest 输入、`.ux` template/style/script 解析、
+module graph、Host/style/binding/handler/if/for lowering、Page IR、JS module
+emission、runtime metadata、资源打包、schema/relation/ABI/determinism/diagnostic
+校验和真实 RPK 完整性检查。
+
+未覆盖或待后续实现：standalone CLI 的真实 Build Use Case、CLI `inspect` 业务逻辑、
+CLI `run` 业务逻辑、Toolkit 内置独立 RPK inspect 命令、Toolkit 内置 MCP/Skill
+执行器、Runtime Loader 验收和 Benchmark 报告。这些未在本次文档任务中补实现。
+
+# Wearable-001 LVGL 嵌入式平台验收交接（2026-08-26）
+
+## 输入与构建
+
+- 实际输入：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/wearable-001/dist/wearable-001.rpk`
+- SHA-256：`ba62accc70a63ba73b3154db85bf2e613eea3153b936d49e988cfaef97fdba38`
+- RPK 大小：`37243` bytes。
+- LVGL 构建：`cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-lvgl && cmake --build build -j 4`，通过。
+- 自动验收：`SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl --rpk showcases/wearable-001/dist/wearable-001.rpk`，退出码 `0`。
+
+## 已验证
+
+- 真实 RPK Loader、两个本地 Image 资源、220x220 小屏 Page IR 和 LVGL Mount 通过。
+- 真实 Page IR 包含 Image/Text/Button/Scroll/List、keyed `for` 和 `if`；初始 Mount 为 `25` 个 nodes、`6` 个 handlers。
+- Initial Mount：`revision=0`、`surface=srf:1`、`mounted=1`。
+- teardown 前：`surfaces=1 nodes=25 handlers=6 mount_objects=25 roots=1`。
+- teardown 后：`surfaces=0 nodes=0 handlers=0 mount_objects=0 roots=0`；JS handlers、module entries、VM surfaces、ABI entries、queue depth 均为 `0`。
+
+## 未完成与边界
+
+当前自动入口对最终 Showcase 使用 `mount_only` 模式，未真实执行点击、state/if/keyed for 可见刷新、Home -> Detail、Detail -> Home 和重复进入详情；这些不能标记为通过。持续 SDL Simulator 命令为：
+
+`./build-m1-s2/quickapp_lvgl_simulator --rpk showcases/wearable-001/dist/wearable-001.rpk --zoom 1.0`
+
+当前环境返回 `case001_lvgl_error=SDL display creation failed`，无可用真实 GUI，因此没有合法 Simulator 截图。LVGL 平台 evidence：`quickapp-runtime-lvgl/evidence/wearable-001-embedded-acceptance.md`。
+
+状态：`PARTIAL_ACCEPTANCE_GUI_INTERACTION_PENDING`。
+
+## Android commerce-001 传统能力验收（2026-08-26）
+
+结论：Android 使用真实 `commerce-001.rpk` 完成了 RPK 加载、Home 首屏、
+Image/Text/Button、字符串/布尔状态刷新、keyed 商品 block、商品详情
+`push/back` 和重复进入详情。Tabs 原生点击事件已到达 JS，但 numeric 受控
+绑定和最终 teardown 资源归零证据仍未闭环。
+
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- SHA-256：`0eaeb9a71f11c2119c86119f253af122511867eb5b388fa682b14719456a9a4f`
+- 构建：`cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android && ./gradlew :app:assembleDebug --no-daemon`
+- 安装：`adb install -r app/build/outputs/apk/debug/app-debug.apk`
+- 启动：`adb shell am start -n dev.quickapp.kit.android/.MainActivity --es quickapp.rpk commerce-001.rpk`
+- 首屏证据：`quickapp-runtime-android/evidence/commerce-001-android-home.png`；真实日志包含 `rpk.verified`、`page.vm.ready`、`operations=179`、`mount.result ok=true`。
+- Tabs：`分类` 原生选中样式变化，`input.tabs.change -> Event Router -> JS Handler` 通过；但 `selectedValue` 与 `if` 内容仍为首页，因为共享 `quickapp-runtime-js/src/abi/runtime_abi_codec.cpp` 的 `updateBinding` 仍拒绝 numeric value。Android 未使用平台状态绕过。
+- 状态/keyed for：点击推荐状态产生 `revision=1`、`operations=11`、`mount.result ok=true`；商品 block handler 正常绑定。
+- 路由：`srf:1 -> srf:2 -> srf:1` 通过；再次 `srf:1 -> srf:3 -> srf:1` 通过，日志含 `navigation.push`、`navigation.close`、`close.result`。
+- 截图和日志：见 `quickapp-runtime-android/evidence/commerce-001-android.md` 及同目录 `commerce-001-android-*.png/.log`。
+- Teardown：Activity 退出记录 `android.runtime.destroy.begin surfaces=3 nodes=49`，进程随后结束，未收到最终 `runtime.stopped surfaces=0 nodes=0` 回调；无 `AndroidRuntime` 崩溃，因此只能标记 `INCOMPLETE_EVIDENCE`，不能声称资源归零。
+- 边界：本次只使用 `quickapp-runtime-android`；未修改 Core、JS、Toolkit、公共 Contract、Examples 或其他平台。
+
+## Android commerce-001 更新 RPK 复验（2026-08-26）
+
+更新后的真实 RPK 已重新同步、构建、安装并加载到 `emulator-5554`。
+
+- 新 RPK SHA-256：`fb0420bf561224518c2278dcf468701aa889ba15e60aa75fa68ba95ae0377b8f`。
+- 首屏、Image/Text/Button、keyed 商品 block、普通按钮状态刷新和商品详情两次
+  `push/back` 均通过。
+- 普通状态刷新已产生：`android.render.submit ... revision=1 ok=1`，说明 Core
+  增量事务和 Android Mount 链路正常。
+- Tabs 点击已产生 `input.tabs.change`、`event.change.dispatched=1` 和
+  `handler_execute`；平台选中样式变化，但事件后没有 `android.render.submit`，
+  `selectedTab` 驱动的 `if` 内容没有切换。最新公共 numeric ABI 已包含在构建中，
+  因此当前应继续由 JS Framework/生成 RPK 的响应式提交路径定位，Android 不增加旁路状态。
+- Teardown 记录 `android.runtime.destroy.begin surfaces=3 nodes=55`，进程随后退出，
+  未收到 `runtime.stopped surfaces=0 nodes=0`；无崩溃，只能记为资源归零证据不完整。
+- 详细证据：`quickapp-runtime-android/evidence/commerce-001-android-rpk-refresh.md`。
+
+## iOS commerce-001 传统能力验收（2026-08-26）
+
+结论：iOS 使用真实 `commerce-001.rpk` 完成首屏、UIKit Image/Text/Button、Tabs 原生切换、状态刷新、keyed 商品列表、商品详情两次 push/back、点击事件和最终平台资源清理。证据为 `PASS_WITH_PUBLIC_TAB_BINDING_NOTE`。
+
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- SHA-256：源文件与 iOS Bundle 内 RPK 均为 `0eaeb9a71f11c2119c86119f253af122511867eb5b388fa682b14719456a9a4f`。
+- 构建：`cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios && cmake --build build-ios-ninja --target quickapp_ios_simulator -j 4`。
+- 运行：使用 `SIMCTL_CHILD_QUICKAPP_RPK=commerce-001`、`SIMCTL_CHILD_QUICKAPP_IOS_COMMERCE_ACTIONS=1`、`SIMCTL_CHILD_QUICKAPP_IOS_COMMERCE_TEARDOWN=1` 启动真实 iOS Simulator。
+- 交互：Tabs index 1 重复切换、state button、商品 `node:20` 两次进入详情；详情 `node:8` 两次通过 Core Navigation 返回 Home。
+- 资源：最终 `ios.runtime.platform.resources surfaces=0 nodes=0`，`ios.commerce.probe.teardown.completed=1`。
+- 截图：`quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-home-2026-08-26.png`、`ios-commerce-001-detail-2026-08-26.png`、`ios-commerce-001-home-final-2026-08-26.png`。
+- 公共问题：Tabs 原生选中态和 `change` 事件通过，但选择“分类”后页面绑定文案仍为“首页”，且未产生后续 RenderTransaction；iOS 未绕过修复。`NSLog` 中文乱码仅影响日志显示，截图正常。
+- 详细 evidence：`quickapp-runtime-ios/evidence/ios-commerce-001-2026-08-26.md`。
+
+### commerce-001 更新后 reload（2026-08-26）
+
+- Examples 更新后的 RPK SHA-256：`fb0420bf561224518c2278dcf468701aa889ba15e60aa75fa68ba95ae0377b8f`。
+- iOS 已重新构建、安装并以 `SIMCTL_CHILD_QUICKAPP_RPK=commerce-001` 手动启动，Bundle 已包含新 RPK。
+- 新版首屏截图：`quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-home-reloaded-2026-08-26.png`。
+- 已确认新版 Tabs 位于底部，商品卡片和文案更新已在 iOS Simulator 渲染。
+
+### commerce-001 最新 reload（2026-08-26）
+
+- 最新 RPK SHA-256：`97905939e1c0d9cd77bf642bde1d95c69279f34cfdac3f6a9d498a3328c724e1`，源文件与 iOS Bundle 一致。
+- 已重新构建、安装并手动启动，进程：`79439`。
+- 最新截图：`quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-home-reloaded-latest2-2026-08-26.png`。
+- 已确认最新商品卡片的大图、完整商品名/分类/价格和“查看详情”按钮均已渲染。
+
+## iOS Tabs 增量状态更新验收（2026-08-26）
+
+- 最新 RPK SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`，源文件与 iOS Bundle 一致。
+- iOS 已重新构建并链接当前工作区 JS Runtime；未修改 Core、JS、Toolkit、RPK 或公共 Contract。
+- Tabs 实际 NodeId 为 `node:8`。自动执行 `index=1 -> index=2 -> index=3`，三次均经过 `ios.tabs.control -> ios.input.change -> Core Event Router -> ios.js.event.executed`。
+- 原生 Tabs 选中态正确切换到“我的”，但三次事件后均没有 `ios.render.submit`，页面 `if` 内容未切换；证据截图：`quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-tabs-index3-2026-08-26.png`。
+- 同一版本状态按钮 `node:10` 可产生 `revision=1 operations=3` 的 RenderTransaction，说明 iOS 渲染和 boolean `if` 增量路径正常。
+- 商品详情两次 push/back、重复进入和 teardown 通过；最终 `ios.runtime.platform.resources surfaces=0 nodes=0`。
+- 边界：RPK Page IR 已包含 `Tabs.selected` binding，生成 JS 已执行 `this.selectedTab = event.index`，iOS 已发送 numeric `index`，JS ABI 已接受 `double`；剩余问题位于 JS Handler 执行之后、RenderTransaction 之前，需公共 JS/Core 侧继续定位，iOS 未绕过修复。
+- 详细 evidence：`quickapp-runtime-ios/evidence/ios-commerce-001-2026-08-26.md`。
+
+## commerce-001 Tabs 内容切换修复（2026-08-26）
+
+结论：已修复。`selectedTab` 是 Tab 的唯一状态源；四个 Tab 各自拥有独立的
+条件内容区，离开首页时商品 keyed `for` 数据清空，返回首页时恢复确定性商品集合，
+因此不会再由首页商品内容持续遮挡其他 Tab。
+
+### 修改
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+- `onTabChange({ index, value })` 只写入 `selectedTab` 并根据其值切换首页商品数据；未新增
+  `selectedValue`、`selectedContent` 或平台分支。
+- `selectedTab === 0/1/2/3` 分别控制首页、分类、购物车、我的内容块。
+- 首页保留 `if` 状态、keyed `for` 商品列表、商品详情 `router.push` 和详情返回逻辑。
+
+### 构建与 RPK
+
+- 构建命令：
+  `cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`53962` bytes。
+- SHA-256：`eda6e8989359226ceb085885d5fcc83a0b700635fd0b1407b117329de9f67090`。
+- 连续两次构建字节完全一致；RPK `unzip -t` 通过。
+- 包内包含两个路由、三张本地图片、四个 `selectedTab` 条件分支、商品 keyed `for`，
+  生成 JS 保留 `updateBinding`、`removeBlock`、`moveBlock`、`navigationPush` 和
+  `navigationClose` 操作。
+
+### 验证
+
+- Toolkit：`npm test`，`90/90` 通过。
+- LVGL：真实 RPK Loader、三张图片资源和首屏 Mount 通过，日志为
+  `platform.mount.complete ... mounted=1`、`core.initial.complete ... completed=1`。
+- 自动入口随后进入面向旧 Showcase 的通用点击探针并以 `exit=134` 结束；该入口没有
+  commerce-001 的四 Tab 专用驱动，因此本次不把该退出码解释为四 Tab 交互通过，也不把
+  teardown 标记为通过。
+- 结构化 Tab 验收：四个 `selectedTab` 条件区均进入 Page IR；`onTabChange` 更新
+  `selectedTab` 后会触发条件块重算，离开首页产生商品 block 移除，返回首页产生 keyed
+  商品 block 重建。
+- 当前 `quickapp_case001_lvgl` 对 commerce 使用首屏/资源/teardown 入口，没有四 Tab
+  自动点击脚本；当前环境的 SDL GUI 入口返回 `SDL display creation failed`，因此四个 Tab
+  的实际视觉点击仍需在可用 Android、iOS 或 SDL GUI 环境完成，不标记为 GUI 点击通过。
+
+状态：`READY_FOR_PLATFORM_TAB_INTERACTION`。
+
+## commerce-001 移动端页面布局修复（2026-08-26）
+
+结论：已完成。Home 和 ProductDetail 不再依赖 `300px x 560px` 根页面尺寸；Home
+使用可伸缩根节点、顶部 Header、中间 Scroll 内容区和底部 Tabs，商品列表位于 Scroll
+内容中，不会覆盖底部 Tabs。
+
+### 修改
+
+- Home：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+  - 根节点改为 `width: 100%; height: 100%`，使用纵向布局和 `justify-content: space-between`。
+  - 新增 Header 容器；Tabs 从顶部移动到根节点最后，保持 `width: 100%; height: 48px`。
+  - 新增 Scroll 内容区，使用 `width: 100%; height: 70%`，商品列表和四个 Tab 内容均位于其内容壳内。
+  - 商品卡片改为 `width: 100%`，文本和操作按钮使用稳定的响应式子布局。
+- ProductDetail：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/ProductDetail/index.ux`
+  - 根节点改为 `width: 100%; height: 100%`，保留原有详情和 `router.back()`。
+- 未修改 Core、JS Runtime、Android、iOS、LVGL、公共 Contract 或旧案例。
+
+### 构建与验证
+
+- 构建命令：
+  `cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`54574` bytes。
+- SHA-256：`fb0420bf561224518c2278dcf468701aa889ba15e60aa75fa68ba95ae0377b8f`。
+- 连续两次构建字节完全一致；`unzip -t` 通过；Toolkit `90/90` 通过。
+- Page IR 已确认：活动路由的根节点 `100% x 100%`，Scroll 内容区 `100% x 70%`，Tabs
+  `100% x 48px`；Home/ProductDetail 的活动源码和生成 IR 不再包含 `300px` 或 `560px`
+  根页面尺寸。`Live/Agent/Me` 是 manifest 未引用的历史源码，本次未纳入活动 RPK。
+- 真实 LVGL Loader、图片资源和首屏 Mount 通过：`mounted=1`、`core.initial.complete=1`。
+
+### 截图边界
+
+- 当前环境 SDL GUI 返回 `SDL display creation failed`，无法生成本次新 RPK 的 Simulator 截图。
+- Android/iOS 现有 commerce 截图对应旧 SHA-256 `0eaeb9...` 的 RPK，本次不复用、不标记为
+  新布局截图；需要把新 RPK 部署到各平台后重新截取 Home、Tab、列表滚动和 Detail/back。
+- 依据 Page IR 几何合同，常见 320x568 viewport 的垂直占用上界为
+  `Header 82 + Content 70% + Tabs 48 + page padding 22 = 549.6px`，Tabs 保持在底部且
+  内容区与 Tabs 不重叠；更高手机 viewport 保留更大间隔。
+
+状态：`READY_FOR_ANDROID_IOS_LAYOUT_SCREENSHOT`。
+
+## commerce-001 Tabs 商品列表条件切换复核（2026-08-26）
+
+结论：已验证当前 V1 DSL 的可行实现。商品列表仍保持 keyed `for`，并由
+`onTabChange` 以 `selectedTab` 为触发源将非首页 `products` 置空、回首页恢复确定性
+商品集合；因此四个 Tab 的可见内容不会再被商品列表持续占用。
+
+### 关键边界
+
+曾按要求尝试同一元素：
+
+`<div if="{{ selectedTab === 0 }}" class="product" for="{{ (index, item) in products }}" tid="id">`
+
+当前 Toolkit 明确拒绝同一元素同时使用 `if` 和 `for`，构建错误为：
+`One element cannot contain both if and for`。在不修改 Toolkit、Core、JS ABI 或公共
+Contract 的约束下，不能提交该不可构建形式；最终源码保留现有可构建的 keyed `for`，并
+使用 `selectedTab -> products=[]/恢复` 完成等价增量控制。
+
+### 最终实现与验证
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`54574` bytes。
+- SHA-256：`fb0420bf561224518c2278dcf468701aa889ba15e60aa75fa68ba95ae0377b8f`。
+- 两次构建 SHA-256 一致，字节完全一致；RPK `unzip -t` 通过。
+- Toolkit：`90/90` 通过。
+- Page IR：四个 `selectedTab === 0/1/2/3` 条件块、商品 keyed `for`、Tabs 的
+  `selected` number binding 均存在；生成 JS 包含 `updateBinding` 和 `removeBlock`。
+- 真实 LVGL：Loader、三张图片资源、首屏 Mount 通过，日志包含
+  `platform.mount.complete ... mounted=1` 和 `core.initial.complete ... completed=1`。
+- 当前 LVGL 自动入口没有 commerce 的四 Tab 专用点击驱动，通用点击探针执行到旧 Showcase
+  路径后以 `exit=139` 结束；SDL GUI 入口在当前环境无法创建窗口。因此四 Tab 的平台点击、
+  截图和四次可见内容切换不标记为已通过。
+
+状态：`PARTIAL_TAB_RUNTIME_ACCEPTANCE_PENDING_PLATFORM_DRIVER`。
+
+## commerce-001 20 条长列表展示（2026-08-26）
+
+结论：已完成 20 条商品长列表展示。列表位于现有 Scroll 内容区，超过 viewport 后可
+继续向下查看；四 Tab、首页条件区、刷新状态和详情入口仍保留。
+
+### 实现边界
+
+- 20 条商品行使用本地确定性文本，重复内容不影响长列表展示目标。
+- 20 条行放在一个 `selectedTab === 0` 条件区内，避免创建 20 个动态 `for` block。
+- 这是因为当前 LVGL 首次 Mount 事务对 20 个动态 block 实例会触发
+  `QUEUE_OVERFLOW: Core Mount transaction exceeds LVGL bound`；本轮不修改 Core 或
+  公共事务上限。
+- 首页状态仍使用 `products.length`（20）、`selectedTab` 和 `refreshState`；刷新会轮换
+  数据状态但不会把列表缩回 3 条；详情按钮继续走 `onProduct -> router.push`。
+- 当前长列表展示案例不承担 keyed `for` 验收；keyed `for` 保留在其他 V1 基线案例中。
+
+### 构建与验证
+
+- 源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`66932` bytes。
+- SHA-256：`91c33ac1b017c0b473d5798319e0049cc85c8dcbc4de3c16cab26790ed8e55b5`。
+- 源码确认 `class="product"` 行数为 `20`。
+- RPK 连续两次构建字节完全一致；`unzip -t` 通过。
+- Toolkit：`90/90` 通过。
+- LVGL 真实 RPK：Loader、资源加载和首屏 Mount 通过，日志包含
+  `platform.mount.complete ... mounted=1`、`core.initial.complete ... completed=1`。
+- 当前 `quickapp_case001_lvgl` 后续进入通用 Showcase 点击探针并以 `exit=139` 结束；
+  当前 SDL GUI 无法创建窗口，因此本次没有合法的滚动截图或手动滚动日志。
+
+状态：`READY_FOR_GUI_LONG_LIST_SCROLL_CHECK`。
+
+## commerce-001 Android 最新 RPK 重新加载（2026-08-26）
+
+结论：最新案例 RPK 已重新构建、复制进 Android APK、安装并在
+`emulator-5554` 启动成功。Home 首屏、Image/Text/Button、20 条商品列表、ScrollView
+和底部 Tabs 均已真实挂载。点击“分类”后，Android 原生 Tabs 选中态变化，事件也经过
+Core Event Router 到达 JS `onTabChange`；但没有后续 `RenderTransaction`，页面仍显示
+`当前栏目：首页`。因此案例产物已更新，但 Tabs 的 JS 状态到增量渲染仍为阻塞项。
+
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- RPK SHA-256：`91c33ac1b017c0b473d5798319e0049cc85c8dcbc4de3c16cab26790ed8e55b5`
+- Android 资产 SHA-256：`91c33ac1b017c0b473d5798319e0049cc85c8dcbc4de3c16cab26790ed8e55b5`
+- APK SHA-256：`7cf9e8fffd486a80006d054f82175390849ce87649728cddf9e2cda9090c1a78`
+- 构建：`./gradlew :app:assembleDebug --no-daemon`
+- 安装：`adb install -r app/build/outputs/apk/debug/app-debug.apk`
+- 启动：`adb shell am start -n dev.quickapp.kit.android/.MainActivity --es quickapp.rpk commerce-001.rpk`
+- 证据：`quickapp-runtime-android/evidence/commerce-001-android-rpk-reload-v3.md`
+- 截图：`quickapp-runtime-android/evidence/commerce-001-android-category-v3.png`
+- 日志：`quickapp-runtime-android/evidence/commerce-001-android-category-v3.log`
+
+关键日志：
+
+```text
+android.input.tabs.change surface=srf:1 node=node:7 index=1 value=分类
+android.event.change.received surface=srf:1 node=node:7
+android.event.js_callback posted=1 error=
+android.event.change.dispatched=1
+android.event.handler_execute surface=srf:1 handler=hdl:3 dispatched=1
+```
+
+没有出现后续 `android.render.submit`。本次未修改 Core、JS、Toolkit、公共 Contract、
+案例源码或其他平台；问题边界是“平台事件已送达，但 JS handler 未形成可见的增量渲染提交”。
+
+## commerce-001 Android 最新 RPK 重新加载 v4（2026-08-26）
+
+最新案例产物已重新构建并安装到模拟器，视觉布局更新已生效：Home 显示新的商品卡片、
+图片、详情按钮、Scroll 内容和底部 Tabs。
+
+- RPK SHA-256：`97905939e1c0d9cd77bf642bde1d95c69279f34cfdac3f6a9d498a3328c724e1`
+- Android 资产 SHA-256：`97905939e1c0d9cd77bf642bde1d95c69279f34cfdac3f6a9d498a3328c724e1`
+- APK SHA-256：`27968cc5fa67ff081ae89a95abc311d007cdf0f11569568eac6a29666de2bc63`
+- 构建：`./gradlew :app:assembleDebug --no-daemon`
+- 安装：`adb install -r app/build/outputs/apk/debug/app-debug.apk`
+- 启动：`adb shell am start -n dev.quickapp.kit.android/.MainActivity --es quickapp.rpk commerce-001.rpk`
+- 证据：`quickapp-runtime-android/evidence/commerce-001-android-rpk-reload-v4.md`
+
+点击“分类”后的结果仍为部分通过：Android 原生 Tabs 选中态变化，事件到达 JS
+`onTabChange`，但没有后续 `RenderTransaction`，页面仍显示“当前栏目：首页”。本次未修改
+Core、JS、Toolkit、公共 Contract、案例源码或其他平台。
+
+## commerce-001 Android 最新 JS ABI 验收（2026-08-26）
+
+Android 已重新链接当前工作区的 JS ABI，使用最新真实 RPK 完成验证：
+
+- RPK SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`
+- Android 资产 SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`
+- APK SHA-256：`9e2600be195367259984be86525de659251355fb8ebbabf669550218acfb1fc9`
+- 构建：`./gradlew :app:assembleDebug --no-daemon`
+- 安装：`adb install -r app/build/outputs/apk/debug/app-debug.apk`
+- 启动：`adb shell am start -n dev.quickapp.kit.android/.MainActivity --es quickapp.rpk commerce-001.rpk`
+- 证据：`quickapp-runtime-android/evidence/commerce-001-android-jsabi-validation.md`
+
+结论：普通“切换推荐状态”已经证明 `updateBinding.value` 的 number 路径可用，日志为
+`android.render.submit ... revision=1 ok=1` 和 `mounted=1`。Tabs 的“分类/购物车/我的/首页”
+四次切换均完成 `Android Input -> Core Event Router -> JS Handler`，但没有后续
+`RenderTransaction`，条件内容仍停留在 Home。该阻塞不在 Android 输入、RPK 加载或公共
+数字 ABI 校验，而在 Tabs handler 触发后的 JS 增量提交路径。
+
+页面内详情返回回归通过两次：`srf:1 -> srf:2 -> srf:1`，再
+`srf:1 -> srf:3 -> srf:1`。teardown 后进程已停止且无崩溃；Android 强制停止不会回传
+Runtime 最终零资源回调，因此不宣称 `surfaces=0`。
+
+## LVGL Mount Batch 收口（2026-08-26）
+
+结论：已完成首次 Mount 的分批提交能力验证；单批操作预算仍为 256，超过预算的完整
+Runtime Tree 会按依赖顺序拆成多个 Batch，全部成功后才显示。
+
+- 修改项目：`quickapp-runtime-core`、`quickapp-runtime-lvgl`、`quickapp-examples`。
+- 协议：每个 Batch 携带 `transactionId`、`batchIndex`、`batchCount`、`isFinal`。
+- 顺序：CreateHost -> props/styles -> layout -> InsertHostChild。
+- 失败语义：任一 Batch 失败，释放本次 Surface 创建的全部 LVGL 对象并返回一次失败；旧
+  Runtime 状态不提交。
+- 真实 Fixture：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/long-list-001/dist/long-list-001.rpk`。
+- RPK SHA-256：`b0b6e2ea980a46b8a478f3c7d00f554ef62bfa8b528159f9c060848ad88f82e2`。
+- 真实运行：Loader、资源加载、两批 Mount、最终 Core commit 和 root visible 均通过。
+- 测试：`lv_s07_batched_mount_tests` 的成功、首批失败、中间批失败、末批失败均通过；
+  旧 LVGL S03/S04/B35 回归通过；Examples 和 LVGL 构建通过。
+- 退出说明：dummy SDL 运行使用 `alarm 3` 仅用于终止持续 Simulator，退出码 134 是人工
+  SIGALRM，不是 Mount 或 Runtime 崩溃；GUI 运行应不加 alarm，直到用户关闭窗口。
+- 资源：失败回滚和 teardown 后 Surface、Runtime Node、Handler、Mount Object 归零。
+- 公共架构：未新增 Tree、Router 或 Bridge；Render Contract 仅增加向后兼容的 Batch 元数据。
+- 状态：`READY_FOR_ARCH_REVIEW`。
+
+## commerce-001 商品卡与详情增强（2026-08-26）
+
+结论：移动端 commerce-001 已从窄文本行收敛为可展示的商品卡；每条卡片包含本地商品图、标题、分类/状态、价格和详情入口，点击后通过现有 JS Handler 与 `router.push` 进入 ProductDetail，返回仍使用 `router.back`。
+
+- 修改源码：
+  - `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+  - `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/ProductDetail/index.ux`
+- 商品卡：`112px` 高；本地 `32x32` PNG 以 `64x64` Host Image 布局展示；价格使用 `item.price`；列表保留 keyed `for` 和现有 Scroll 内容区。
+- 详情：20 个商品 ID 均有稳定的标题、分类/状态和价格；详情入口保持 `/pages/ProductDetail`，返回保持 `router.back()`；未新增路由、Tree、Bridge 或平台逻辑。
+- 构建命令：`cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`61815` bytes。
+- SHA-256：`97905939e1c0d9cd77bf642bde1d95c69279f34cfdac3f6a9d498a3328c724e1`；连续两次构建一致。
+- 资源：三张本地 `32x32` PNG，总字节 `5717`，未引入网络资源。
+- Toolkit：`90/90` 通过。
+- 语法约束：页面 VM 不支持 `ForStatement`，商品选择采用现有静态 Handler 后缀匹配；未修改 Runtime 或公共 Contract。
+- 平台状态：源码和 RPK 已完成；当前 LVGL Simulator 对 20 条富卡片仍需单独处理已有 Mount 批处理后的平台对象创建失败，不能将其误记为商品点击或 Toolkit 失败。
+
+状态：`READY_FOR_ANDROID_IOS_SHOWCASE_RELOAD`。
+
+## commerce-001 冗余栏目文本清理（2026-08-26）
+
+移除 Home 顶部重复显示的“当前栏目：首页/分类/购物车/我的”。Tabs 本身已经表达当前栏目，该文字不承载状态、渲染或验收语义，保留会增加移动端首屏噪音。
+
+- 修改：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`59160` bytes。
+- SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`；构建脚本报告连续构建一致。
+- 商品图片、价格、详情 `router.push/back`、20 条列表和四个 Tabs 内容未改变。
+
+## 长列表能力收口（2026-08-26）
+
+### 阶段一：MountBatch + 队列背压
+
+状态：`READY_FOR_ARCH_REVIEW`。
+
+- 单批操作上限仍为 `256`，没有通过扩大上限规避问题。
+- Core Mount 操作保持依赖顺序：CreateHost -> props/styles -> layout -> InsertHostChild。
+- LVGL Batch 继续携带 `batchIndex`、`batchCount`、`isFinal`；同一逻辑事务全部成功后才 Present。
+- CoreMountBridge 增加有限的保留批次内存预算和待处理 Batch 深度；预算不足返回
+  `kOutOfMemory`，队列满返回可重试的 `kQueueOverflow`，两者都不崩溃、不静默丢事务。
+- MountHost 增加单批内存预算和队列深度；批次转换后按实际操作数收缩 vector，256 仍是
+  操作预算而不是无限内存分配。
+- 任一 Batch 失败仍释放本次 Surface 创建的全部 LVGL 对象，旧状态不提交。
+- 真实 RPK：
+  `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/long-list-001/dist/long-list-001.rpk`
+- RPK SHA-256：`b0b6e2ea980a46b8a478f3c7d00f554ef62bfa8b528159f9c060848ad88f82e2`。
+- 真实运行：Loader、20 条长列表首屏、分批 Mount、最终 commit 和 root visible 通过。
+- 回滚测试：首 Batch、中间 Batch、末 Batch 失败均通过，资源归零。
+
+### 阶段二：VirtualList 最小物理窗口
+
+状态：`PHYSICAL_WINDOW_READY_FOR_RUNTIME_CONTRACT_INTEGRATION`。
+
+- 新增 LVGL `VirtualListWindow` 和 `VirtualListHost`：固定行高、纵向窗口、scrollOffset、
+  keyed item 到物理 slot 的稳定复用、点击命中、对象创建上限和 teardown。
+- 直接测试覆盖 1000 条逻辑 item、8 个物理槽位、滚动边界、同 key 槽位保持、重复 key
+  拒绝和 LVGL object 释放。
+- 测试：`lv_s08_virtual_list_tests` 通过；物理对象峰值不超过 8，初始 1000 条逻辑数据
+  只创建 6 个可见窗口对象。
+- 当前尚未把标准 RPK 的 `List` 自动接入 `VirtualListHost`。原因是现有 MountTransaction
+  只有逐节点操作，没有携带逻辑列表项、key、可见范围和物理复用描述；在 Examples 或
+  LVGL Composition Root 中旁路创建会违反 Core 唯一 Runtime Tree 和事件权威。
+- 因此 `long-list-001` 已验证 MountBatch 长列表，但不标记为“真实 RPK VirtualList 滚动
+  已完成”。下一步应先增加向后兼容的 VirtualList Mount Contract，再由 Core 生成逻辑项
+  映射，LVGL Host 接管可见窗口；不应在当前阶段继续旁路扩展。
+
+### 回归
+
+- Toolkit：`npm test`，`90/90` 通过。
+- Examples：`cmake --build build-m1-s2 -j 4`，通过。
+- LVGL：`lv_s01`、`lv_s03`、`lv_s04`、`lv_s07`、`lv_s08`、`lv_b35` 相关 CTest 全部通过。
+- SDL dummy 运行使用 `alarm 3` 终止持续 Simulator 时退出码为人工 `SIGALRM` 的 `134`；
+  Mount 日志已显示成功，不是 Runtime 崩溃。
+
+修改范围：`quickapp-runtime-core` Mount 元数据/阶段顺序、`quickapp-runtime-lvgl` Batch
+背压/预算/VirtualList Host、`quickapp-examples` long-list-001 Fixture；未修改 Android、
+iOS、Toolkit、Timer、第二棵 Tree、第二套路由或旁路 Bridge。
+
+## LVGL commerce-001 Tabs 增量验证（2026-08-26）
+
+状态：`BLOCKED_BEFORE_TABS_EVENT`
+
+本轮重新构建并加载真实 `commerce-001.rpk`。Composition Root 已包含 `Tabs`，共享 JS ABI
+已支持 `updateBinding.value` 为 number，RPK 未被修改。
+
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`
+- 构建：`cmake --build /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/build-m1-s2 --target quickapp_lvgl_simulator -j 4`，通过。
+- Toolkit：`npm test`，`90/90` 通过。
+- JS ABI：`cmake --build /Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-js/build-m1-s2 --target js_s02_contract_tests -j 4` 和对应 CTest，通过。
+- LVGL Tabs：`lv_b35_tabs_mount_tests`、`lv_s04_mount_contract_tests`，`2/2` 通过。
+- commerce 真实加载：RPK 打开、三张图片资源加载、JS app/page 初始化均通过；首次 Mount 返回
+  `PLATFORM_REJECTED: host object creation failed`，因此未进入 Tabs click/change、JS
+  `selected:number`、RenderTransaction 或 if 内容切换。
+- Tabs 对照：真实 `tabs-001.rpk` 完成 Loader、Tabs Mount、首屏可见和 teardown，资源归零。
+- 截图：本次未生成；当前执行环境无法创建 SDL GUI 窗口，dummy 模式只能验证结构化运行结果。
+- 资源：`tabs-001` teardown 输出 `surfaces=0 nodes=0 handlers=0 mount_objects=0`，并报告
+  `resources_released=true`；commerce 因首次 Mount 失败未进入完整交互验收。
+- 修改范围：仅构建和运行验证，无 Core、JS、LVGL、Toolkit、RPK 或公共 Contract 修改。
+
+结论：Tabs 平台 Host 和 number ABI 已由专项测试验证；commerce-001 当前阻塞在富页面首次
+LVGL Host 创建，不能宣称 Tabs 增量链路已完成，也不能归因于 RPK 或 Tabs change 逻辑。
+
+## commerce-001 条件 Binding 最小复现与公共链路定位（2026-08-26）
+
+结论：Toolkit 和 JS Framework 的条件 Binding 增量链路已通过最小复现；当前 commerce-001
+四 Tab 不切换的根因不在 JS/Toolkit，而在 Android/iOS 的 `JsCoreIngress::post()` 丢弃了
+Core Event payload。本任务禁止修改 Android/iOS，因此本轮不伪造修复结果。
+
+### 已验证链路
+
+- `commerce-001` Home Page IR 为 `selectedTab === 0/1/2/3` 生成四个 Tab 面板条件，且每个
+  条件的依赖集合都包含 `selectedTab`。
+- 生成 JS 另有首页 summary、refresh、state、featured 条件，共七个 `selectedTab` 条件块；
+  商品 keyed `for` 保持独立的 `products` 依赖，`loading` 条件保持独立依赖。
+- 最小运行验证执行 `onTabChange(1/2/3/0)`：每次 State 写入都命中 Proxy 依赖，microtask
+  flush 生成 RenderTransaction；事务分别包含目标条件块 `instantiateBlock` 和旧条件块
+  `removeBlock`，回到 `0` 时商品 keyed block 重新创建。
+- `===`、number 状态和条件重新求值均正常；没有修改 Example 逻辑绕过。
+
+### 根因证据
+
+Android 和 iOS 的 `JsCoreIngress::post()` 都从 Core Event 构造 JS `JsEventDispatch` 时传入
+空 payload：
+
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android/src/runtime_spine.cpp`
+- `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/src/runtime_spine.cpp`
+
+Core 事件本身已经携带 `index`，但适配器没有把 `event.payload` 复制到
+`typed.payload`。因此 JS Handler 实际收到的 `event.index` 为 `undefined`，
+`Number.isInteger(event.index)` 为 false，`this.selectedTab = event.index` 不执行，后续
+自然没有 RenderTransaction。LVGL Composition Root 已有 payload 转换逻辑，边界差异与该结论
+一致。
+
+### 修改与验证
+
+- Toolkit 新增 `TK-S17`：断言 commerce-001 的七个 `selectedTab` 条件块均保留依赖，并保留
+  `loading`、keyed `for` 的独立依赖。
+- 未修改 Android、iOS、LVGL、Core、JS 公共运行时代码、Tabs Contract 或 commerce 源码。
+- Toolkit：`npm test`，`91/91` 通过。
+- JS：`ctest --test-dir quickapp-runtime-js/build-m1-s2`，`11/11` 通过。
+- commerce RPK 连续构建两次一致：`59160` bytes，SHA-256
+  `d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`；`unzip -t` 通过。
+
+### 未完成项
+
+真实 Android/iOS 四 Tab 视觉切换不能在当前约束下宣称完成。合规修复需要平台适配器把
+Core Event payload 逐项复制到 JS typed payload；该修改必须由 Android/iOS agent 在其边界
+内完成并重新验证 `Tabs -> Handler -> selectedTab -> RenderTransaction`。禁止在 JS 层接受
+缺失的 `index`、改写 Example、增加旁路状态或静态路由。
+
+状态：`BLOCKED_BY_PLATFORM_EVENT_PAYLOAD_ADAPTER`。
+
+## Android Event Payload 修复（2026-08-26）
+
+结论：Android 平台适配器已修复 Core Event payload 丢失；typed payload 已到达 JS ABI。
+未修改 Core、JS、Toolkit、RPK、公共 Contract 或 Examples DSL。
+
+- 修改：`quickapp-runtime-android/src/runtime_spine.cpp` 增加 Core RuntimeValue 到 JS
+  RuntimeValue 的递归转换，并将转换结果写入 `JsEventDispatch.typed.payload`。
+- 构建：`./gradlew :app:assembleDebug --no-daemon`，`BUILD SUCCESSFUL`；随后使用
+  `adb install -r app/build/outputs/apk/debug/app-debug.apk` 安装。
+- commerce RPK SHA-256：
+  `d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`。
+- APK SHA-256：
+  `50b0571367615b8ccc64ecc0c57b2d7d06c66671ef050e1815484f317d21a71e`。
+- Tabs：`0 -> 1 -> 2 -> 3 -> 0` 全部产生 `index=number`、`value=string`、JS Handler、
+  RenderTransaction 和内容切换；revision `1 -> 2 -> 3 -> 4` 均 `ok=1`。
+- 其他 payload：Input `value=string`；Switch `checked=boolean`；Slider
+  `value=number/isFromUser=boolean`；Picker `selected=number/value=string`；Scroll
+  `scrollOffset=number`；Click `keys=0`。详见
+  `quickapp-runtime-android/evidence/android-event-payload-validation.md`。
+- 路由：真实 commerce RPK 完成两次 `Home -> Detail -> Home`，Core Navigation push/back
+  和 Detail Surface 关闭均通过。
+- teardown：Activity 退出触发 `destroy.begin surfaces=3 nodes=172`，进程退出；本次未观测
+  `destroy.end`/零资源终态，不能将完整资源归零标记为已验证通过。
+- 独立边界：高频 Scroll payload 正确，但连续 RenderTransaction 在第 8 次后出现已有的
+  `LIFECYCLE_BUSY/ABI_INVALID_ARGUMENT`；本任务不修改 Core，后续单独处理。
+
+状态：`ANDROID_EVENT_PAYLOAD_FIXED`；Tabs 和各类 payload 回归通过，teardown 零资源终态
+观测与高频 Scroll 事务节流仍待独立任务。
+
+## iOS Event Payload Adapter Fix（2026-08-26）
+
+结论：iOS Event Payload 丢失问题已修复并通过真实 RPK 回归。根因在
+`quickapp-runtime-ios/src/runtime_spine.cpp`：Core Event 转发到 JS ABI 时使用了空
+`typed.payload`。修复仅发生在 iOS Platform Adapter，未修改 Core、JS、Toolkit、RPK、公共
+Contract 或 Examples。
+
+- RPK：`quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 源码与 Bundle SHA-256：
+  `d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`
+- 构建：`cmake --build build-ios-ninja --target quickapp_ios_simulator -j 4`，通过。
+- 部署：`xcrun simctl install booted build-ios-ninja/quickapp_ios_simulator.app`，通过。
+- Tabs：真实 `0 -> 1 -> 2 -> 3 -> 0` 全部经过 UIKit Input、Core Event Router、JS Handler，
+  产生 RenderTransaction revision `1 -> 2 -> 3 -> 4`，并完成 if 内容切换。
+- Tabs payload：`index=number`、`value=string`。
+- 其他 payload：Input `value=string`；Switch `checked=boolean`；Slider
+  `value=number/isFromUser=boolean`；Picker `selected=number/value=string`；Scroll
+  `scrollOffset/contentSize/viewportSize=number`；Click 保持空 payload。
+- 路由：真实商品按钮 `Home -> Detail`，真实 UIKit 返回按钮通过 Core Navigation
+  `Detail -> Home`；独立回归重复进入并返回通过。
+- Teardown：`ios.runtime.platform.resources surfaces=0 nodes=0`。
+- 截图：
+  `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-tabs-payload-index0-2026-08-26.png`
+  `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/screenshots/ios-commerce-001-detail-back-regression-2026-08-26.png`
+- 详细证据：
+  `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/ios-commerce-001-2026-08-26.md`
+
+状态：`IOS_EVENT_PAYLOAD_FIXED`。本次未触碰公共架构；无阻塞。

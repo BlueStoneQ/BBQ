@@ -47,7 +47,7 @@ QuickApp Kit 是基于稳定 Contract 的平台无关运行时：以可裁剪外
 4. Slider
 5. Picker
 6. List + Scroll
-7. prompt/fetch/file
+7. prompt/fetch/fileAI-EXECUTION-PLAN.md
 8. Android/iOS Video
 9. openUrl + system.webview
 10. 三端 capability RPK 验收与包装
