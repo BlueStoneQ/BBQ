@@ -49,11 +49,26 @@
       "required": ["path", "mediaType", "byteLength", "sha256"],
       "properties": {
         "path": { "$ref": "#/$defs/logicalPath" },
-        "mediaType": { "enum": ["application/javascript", "application/json", "application/octet-stream", "image/png", "image/jpeg"] },
+        "mediaType": { "enum": ["application/javascript", "application/json", "application/octet-stream", "image/png", "image/jpeg", "video/mp4", "video/webm"] },
         "byteLength": { "type": "integer", "minimum": 0 },
-        "sha256": { "$ref": "#/$defs/sha256" }
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "resourceId": { "$ref": "#/$defs/logicalPath" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "durationMs": { "type": "integer", "minimum": 0 }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "mediaType": { "enum": ["video/mp4", "video/webm"] } } },
+          "then": {
+            "required": ["resourceId"],
+            "properties": {
+              "resourceId": { "$ref": "#/$defs/logicalPath" }
+            }
+          }
+        }
+      ]
     },
     "module": {
       "type": "object",

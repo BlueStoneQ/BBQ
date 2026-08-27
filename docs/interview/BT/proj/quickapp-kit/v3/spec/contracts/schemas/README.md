@@ -21,6 +21,7 @@
 | `event-message.schema.json` | PlatformInputMessage 与 JsEventDispatch |
 | `manifest.schema.json` | Runtime 所需联盟 Manifest 投影 |
 | `runtime-metadata.schema.json` | RPK 执行索引、版本与 Artifact 完整性 |
+| `media-resource-contract.md` | 静态媒体资源引用、元数据、生命周期与错误语义 |
 | `page-ir.schema.json` | Template/Binding/Block/Handler Page IR |
 | `js-bootstrap.schema.json` | App/Page `$app_bootstrap$` Metadata |
 | `module-load.schema.json` | Verified Artifact/Core Loader -> JS Module Loader 的 Bundle 交接与结果 |

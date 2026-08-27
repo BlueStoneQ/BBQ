@@ -11,7 +11,8 @@ const artifact = (path, mediaType = "application/json") => ({
   path,
   mediaType,
   byteLength: 1,
-  sha256
+  sha256,
+  ...(mediaType === "video/mp4" ? { resourceId: path } : {})
 });
 
 export const manifest = {

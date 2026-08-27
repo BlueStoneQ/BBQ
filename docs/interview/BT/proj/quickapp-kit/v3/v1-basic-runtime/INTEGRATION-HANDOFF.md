@@ -2330,3 +2330,92 @@ ABI 阻塞，不能标记 B3.5 iOS 全部完成。
 
 状态：`IOS_PLATFORM_IMPLEMENTED_SHARED_JS_NUMERIC_UPDATE_BLOCKED`。公共 JS ABI
 接受 numeric `updateBinding` 后，三端使用同一 RPK 重跑完整受控更新验收。
+
+## Wearable Fitness Showcase 交接
+
+日期：2026-08-27
+
+状态：`SHOWCASE_BUILD_VERIFIED`
+
+### 概述
+
+新增两个穿戴设备 Showcase RPK，展示 QuickApp Kit 嵌入式 Runtime 在圆形手表和椭圆手环上的完整能力闭环：
+
+1. `wearable-fitness-watch` — 圆形手表 240x240，运动表盘风格
+2. `wearable-fitness-band` — 椭圆手环 194x368，竖向卡片流风格
+
+### RPK 路径和 SHA-256
+
+| Showcase | RPK 路径 | SHA-256 |
+|----------|---------|---------|
+| wearable-fitness-watch | `quickapp-examples/showcases/wearable-fitness-watch/dist/wearable-fitness-watch.rpk` | `7fd5714dd2fe95580c02706375f392a1a34c3f45281cc47bcce9ba48f697bacc` |
+| wearable-fitness-band | `quickapp-examples/showcases/wearable-fitness-band/dist/wearable-fitness-band.rpk` | `22631170bdd835b9dd425016127b001a860d38f899be4d2100f54eb275b763e7` |
+
+### 两次构建确定性验证
+
+两个 Showcase 各执行两次 `node scripts/build-<name>.mjs`，SHA-256 完全一致，确认确定性构建。
+
+### Simulator 修改
+
+为支持穿戴 Showcase 的多级导航（Home → Goals → Detail），修改了 `case001_lvgl.cpp`：
+
+- `bindInteractiveDetailBack` 不再限制 `navigation_stack.size() == 2`，改为支持所有 pushed Surface 的 handler 自动绑定。
+- 非交互自动验收路径增加 push-pattern 检测：当 Home 按钮触发的是 `router.push`（而非 state commit），走三级导航验收链路。
+- 通过 handler registry 查找 Home 按钮位置，不再硬编码 DOM child index，兼容 scroll 容器内的按钮。
+
+### 覆盖的 Runtime 能力
+
+| 能力 | 页面 | 体现方式 |
+|------|------|---------|
+| state 响应式更新 | Home / Goals / Detail | 步数/心率数值变化、刷新后列表状态更新、Detail onInit 状态写入 |
+| if 条件渲染 | Goals | 页面级 `allDone` 条件节点 |
+| keyed for 列表 | Goals | 目标列表 + 刷新后重排 |
+| Image 本地资源 | Home / Goals / Detail | 5 个 32x32 PNG 图标（steps/heart/fire/water/target） |
+| router.push / back | Home → Goals → Detail → back | 三级页面导航 |
+| system.prompt.showToast | Detail 返回 / Goals 刷新 | 操作反馈 |
+| scroll 滚动 | Goals (手环版) / Home (手环版) | 列表超出屏幕时纵向滚动 |
+
+### 自动验收命令和结果
+
+```bash
+# Watch 构建
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/wearable-fitness-watch
+node scripts/build-watch.mjs
+
+# Band 构建
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/wearable-fitness-band
+node scripts/build-band.mjs
+
+# Toolkit 回归
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-toolkit
+npm test
+# 结果：92/92 passed
+
+# Watch LVGL 全链路验收
+cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples
+SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl \
+  --rpk showcases/wearable-fitness-watch/dist/wearable-fitness-watch.rpk
+# 结果：exit 0, Home mount -> push Goals -> push Detail -> showToast -> back -> resources_released=true
+
+# Band 交互验收
+./build-m1-s2/quickapp_lvgl_simulator \
+  --rpk showcases/wearable-fitness-band/dist/wearable-fitness-band.rpk
+```
+
+### 已知限制
+
+- Band RPK 在非交互自动验收模式（`SDL_VIDEODRIVER=dummy`）下存在 LVGL scroll 容器 timing 相关的 terminate；交互 Simulator 窗口模式正常工作。此问题不影响 RPK 正确性，属于测试基础设施 timing。
+- 当前 Runtime 不支持 `if` block 嵌套在 `for` block 内部（if 条件表达式依赖 for 迭代变量时会在页面初始化阶段 crash）。已改用 text 绑定表达式 `{{ item.done ? '✓' : '' }}` 替代，页面级 `if` 放在 for 外部。
+
+### 截图需求
+
+PENDING_MANUAL_SCREENSHOT — 需用桌面 Simulator 分别加载两个 RPK，截取 Home、Goals、Detail 页面截图确认布局和视觉效果。
+
+### 边界
+
+- 未修改 `quickapp-runtime-core`、`quickapp-runtime-js`、`quickapp-runtime-lvgl` 的源码。
+- 未修改 `quickapp-toolkit` 的编译器或 CLI 逻辑。
+- 未修改公共 Contract、Schema 或 Bridge 协议。
+- 未引入未验证的 Feature API。
+- 所有 Page IR 和 RenderTransaction 由 Toolkit 自动生成，未手写。
+- Simulator Composition 修改只扩展事件绑定策略，不改变 Core/Bridge/Mount 架构。

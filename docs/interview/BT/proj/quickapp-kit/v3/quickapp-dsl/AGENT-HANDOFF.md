@@ -1149,6 +1149,23 @@ Runtime Tree 会按依赖顺序拆成多个 Batch，全部成功后才显示。
 - SHA-256：`d0317e888354356a965c1eb7e8b07aa17fbe9aad99c447223b348607c5b780d4`；构建脚本报告连续构建一致。
 - 商品图片、价格、详情 `router.push/back`、20 条列表和四个 Tabs 内容未改变。
 
+## commerce-001 商品详情页增强（2026-08-26）
+
+结论：ProductDetail 已升级为标准电商详情结构，仍完全基于现有联盟 DSL 和既有 Runtime 能力。
+
+- 详情页增加商品主图、商品标题、分类/状态、价格、销量、标签、配送与服务、规格、商品说明。
+- 增加“加入购物车”和“立即购买”两个确定性本地状态操作，分别通过 `if` 显示操作结果；不接支付、网络或存储。
+- 保留顶部返回和底部返回首页，均通过现有 `router.back()`；详情页内容放入 `Scroll`，适配移动端较长信息布局。
+- 修改源码：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/src/pages/ProductDetail/index.ux`
+- 构建命令：`cd /Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`
+- RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+- 大小：`67390` bytes。
+- SHA-256：`6ee994ef0fa8e38e561ef1373b9f60beeda58b4afa0c033690a199e8ac75827f`；构建脚本报告连续构建一致。
+- Toolkit：`91/91` 通过。
+- 兼容修复：样式 `align-items: baseline` 不属于当前 Toolkit 合法枚举，已改为 `center`。
+
+状态：`READY_FOR_ANDROID_IOS_DETAIL_SHOWCASE`。
+
 ## 长列表能力收口（2026-08-26）
 
 ### 阶段一：MountBatch + 队列背压
@@ -1330,3 +1347,152 @@ Contract 或 Examples。
   `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/ios-commerce-001-2026-08-26.md`
 
 状态：`IOS_EVENT_PAYLOAD_FIXED`。本次未触碰公共架构；无阻塞。
+
+## Commerce 主展示案例增强（2026-08-26）
+
+结论：`commerce-001` 已升级为可展示的移动端电商主案例；商品图、种草内容、购物车和我的设置均使用真实联盟 DSL、Core 唯一状态和现有 Runtime 能力。未修改 Runtime、公共 Contract 或其他案例。
+
+- 商品图片：替换为 3 张本地 48x48 PNG，分别为台灯、背包、保温杯；总字节 `8123`，单张均小于 `4 KiB`。
+- Home：商品列表保持 keyed `for`，商品卡展示图片、标题、分类、状态、价格和详情入口；非 Home Tab 不渲染商品列表。
+- 种草：分类 Tab 更名为种草，使用本地商品内容卡片；视频播放仍由独立 `media-001` 覆盖，本案例未伪造本地 MP4 能力。
+- 购物车：初始 2 条本地商品；商品详情点击加入购物车后，通过共享页面状态回到购物车新增条目并重新计算合计；条目可进入详情；结算按钮只更新本地演示状态，不调用支付。
+- 我的：增加消息通知、收货地址、售后服务 3 个 keyed 设置项，点击后更新本地状态并调用 `system.prompt`。
+- 详情：保留 `router.push` / `router.back`，保留加入购物车、立即购买和本地状态反馈。
+- 修改文件：`quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`、`ProductDetail/index.ux`、`README.md`、3 张 PNG 资源；重新生成 `dist/commerce-001.rpk` 和元数据。
+- 构建：`cd quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`。
+- RPK：`80774` bytes，SHA-256 `6178ac548bac4a2236d1221703db065d3506e8fc359953bbd9de4f4b0f92ead8`；连续两次构建一致；`unzip -t` 通过。
+- Toolkit：`npm test`，`91/91` 通过。
+- 平台约束：当前 Toolkit Image 只允许静态 `assets/...` 路径，因此列表图片使用静态主图；当前构建器只收集图片资源，MP4 播放暂不并入此 RPK。
+
+状态：`READY_FOR_MOBILE_SHOWCASE`。
+
+## Commerce 白屏修复（2026-08-26）
+
+结论：白屏已修复。根因是 `commerce-001` 页面把动态 `if/for` 嵌套在动态块中，当前 V1 初始化路径拒绝该结构并返回 `block owner scope mismatch`；iOS 同时使用了未包含最新 Core 构建结果的旧静态库。问题不在 Core 主架构、RPK Loader 或 Bridge 合同。
+
+- 修改：`quickapp-examples/showcases/commerce-001/src/pages/Home/index.ux`；将动态块展平为同级结构，并用条件数据源控制非当前 Tab 的 `for` 列表为空，保留 `selectedTab`、商品 keyed `for`、详情 `push/back` 和四个 Tab。
+- 测试基线同步：`quickapp-toolkit/test/integration/canonical-lowering.test.ts` 将该案例的动态块期望更新为 `16`；Toolkit 测试 `91 passed, 0 failed`。
+- RPK：`quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`，`81600` bytes，SHA-256 `dbc2b56fe12b1b5fedd4dba461a5467b5b741628da8c99766778049ec65c38a5`。
+- Android：重新执行 `./gradlew :app:assembleDebug --no-daemon` 并安装；真实 RPK 挂载成功，`operations=843`、`prepared=1`，已确认首屏可见。
+- iOS：执行 `cmake --build build-ios-ninja --target quickapp_ios_simulator --clean-first -j 4` 后重新安装；真实 RPK 挂载成功，`operations=843`、`mounted=1`、`prepared=1`，已确认首屏可见。
+- 截图：Android `/tmp/commerce-001-fixed-android.png`；iOS `/tmp/commerce-001-fixed-ios.png`。
+
+状态：`COMMERCE_BLANK_SCREEN_FIXED`。当前 V1 约束：动态块不得嵌套动态块；后续案例应遵守该约束，不应为此修改公共 Runtime。
+
+## Commerce 静态媒体与内容布局（2026-08-26）
+
+结论：`commerce-001` 已将商品图片、种草卡片、本地视频和购物车内容收敛到真实联盟 DSL；本次没有改变 Core、Bridge、Render、Event、Navigation 或公共 Contract。Android 已重新构建并安装最终 RPK，购物车与种草视频均已取得真实运行证据。
+
+- 商品列表按台灯、背包、保温杯分组使用 3 张静态本地 PNG，继续保持 Image/Text/Button、keyed `for`、`if` 和详情 `push/back`。
+- 删除首页“切换推荐状态”和刷新依赖，首页摘要改为确定性本地文本。
+- 种草 Tab 改为两列卡片流，并加入现有 Video Host 的本地 `assets/videos/seed-demo.mp4`；不是运行时下载，不是截图资源。
+- 购物车使用一个受 `selectedTab` 控制的静态商品列表，展示对应图片、商品标题、价格、详情入口、合计和本地结算演示状态；避免当前增量挂载路径对多个并列动态列表的布局兼容问题。
+- Toolkit 为支持静态媒体重新生成 RPK：`quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`。
+- RPK 大小：`1454625` bytes；SHA-256：`bf98ec31f777bb9711e2f63bd7698541a868466b0d3a3ceded6cf01378da5bb0`。
+- 图片资源：3 张 `48x48` PNG，总计 `8123` bytes，均小于 `4 KiB`。
+- 视频资源：`assets/videos/seed-demo.mp4`，`1358537` bytes，包内 SHA-256：`1456ac6014de2e2fa2aa5412002648b872e428bc7ddce1c7d532b4ffdfe0fcbb`。
+- Toolkit 变更：深冻结对原始数组的处理改为避免展开大数组；RPK ZIP 写入改为迭代追加字节，支持大于 1 MiB 的静态媒体。
+- 构建命令：`cd quickapp-examples/showcases/commerce-001 && node scripts/build-commerce.mjs`；连续构建结果 SHA-256 一致。
+- Android：`./gradlew :app:assembleDebug --no-daemon` 通过；安装并启动真实 commerce RPK 时出现 `rpk.verified`、`android.native.mount ... operations=829`、`android.platform.mount.result ... ok=true`、`android.initial.result ... prepared=1`。
+- Android 种草验证：切换 `Tabs index=1 value=种草` 后，RenderTransaction revision `1` 挂载成功；RPK 中的 `assets/videos/seed-demo.mp4` 已 materialize，收到 `android.video.prepared`，点击视频后收到 `android.event.start.received`，截图出现真实视频画面。
+- Android 购物车验证：切换 `Tabs index=2 value=购物车` 后，RenderTransaction revision `1` 挂载成功；截图和 UI 节点确认 `晨光便携灯 / 129 元`、`城市通勤包 / 299 元`、`合计：428 元` 和结算按钮可见。
+- Android 截图：`/tmp/commerce-android-seed-final.png`、`/tmp/commerce-android-seed-video-playing-final.png`、`/tmp/commerce-android-cart-final-latest.png`。
+- Android 构建：`cd quickapp-runtime-android && ./gradlew :app:assembleDebug --no-daemon`；安装：`adb install -r app/build/outputs/apk/debug/app-debug.apk`；启动：`adb shell am start -n dev.quickapp.kit.android/.MainActivity --es quickapp.rpk commerce-001.rpk`。
+- iOS：本次未修改；其 RPK 资源解析与 Video 播放仍需单独确认本地 `assets/videos` 支持。
+
+状态：`READY_FOR_ANDROID_SHOWCASE`。
+
+## Media-001 本地 MP4 验收包（2026-08-27）
+
+结论：`media-001` 已从外部视频地址切换为真实本地 MP4，重新生成的 RPK 可重复构建，静态资源索引和 ZIP 均通过；本次未修改 Core、JS ABI、公共 Contract 或任何平台 Runtime。
+
+- DSL：`quickapp-examples/showcases/media-001/src/pages/Home/index.ux` 使用 `assets/videos/demo.mp4`。
+- 视频：H.264/AVC、`432x240`、约 `20.109s`、`1358537` bytes；资源 SHA-256：`1456ac6014de2e2fa2aa5412002648b872e428bc7ddce1c7d532b4ffdfe0fcbb`。
+- 海报：`assets/images/media-poster.png`，`32x32`，`1720` bytes；失败路径 `onerror` 保留。
+- RPK：`quickapp-examples/showcases/media-001/dist/media-001.rpk`，`1374522` bytes；SHA-256：`d1faf1aae393579053b7a68960f6a3a13973122a456859763521118cd5fddc87`。
+- RPK 资源索引：`assets/videos/demo.mp4` 的 MIME 为 `video/mp4`，`byteLength=1358537`，`resourceId=assets/videos/demo.mp4`；`unzip -t` 通过。
+- 构建命令：`cd quickapp-examples/showcases/media-001 && node scripts/build-media.mjs`；连续两次构建 SHA-256 一致。
+- Toolkit：`cd quickapp-toolkit && npm test`，`92 passed, 0 failed`。
+- 平台边界：本包只验证 Toolkit/RPK 资源合同；Android VideoView、iOS AVPlayer 的本地 RPK 资源解析和播放由各平台 Adapter 单独验收，LVGL 继续遵循现有 Video 支持策略。
+
+状态：`MEDIA_001_LOCAL_MP4_READY_FOR_PLATFORM_VALIDATION`。
+
+## LVGL 嵌入式 Video 能力评估（2026-08-27）
+
+结论：LVGL 当前没有可靠的视频解码和播放后端，因此本轮不实现伪播放。平台能力固定为
+typed `unsupported`，并保证不创建播放器、解码缓冲、播放线程或残留资源。
+
+- 输入 RPK：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/media-001/dist/media-001.rpk`
+- RPK SHA-256：`439009523904f8335f96902e642e6d2150379dacdc28d3bceb690923ea0ba0df`
+- RPK 内容：Video Host、`src/poster/autoplay/controls/muted` 和生命周期语义；仅携带
+  `assets/images/media-poster.png`，没有视频字节。
+- 后端检查：LVGL 工程没有 FFmpeg、硬件解码器、GStreamer、Video Host 或播放器线程；现有
+  SDL 只提供窗口/输入，不提供媒体解码。
+- 新增 LVGL `LvglMediaAdapter`：`play/pause/seek` 返回
+  `VideoControlResult{kUnsupported, HOST_FEATURE_UNSUPPORTED}`；非法 seek 返回
+  `kFailed/ABI_INVALID_ARGUMENT`。适配器不持有资源，`teardown/clear` 后计数恒为 `0`。
+- 单测：`lv_b7_video_unsupported_tests`，`1/1` 通过；覆盖三种控制、非法参数和 teardown
+  零资源。
+- 真实 Loader：执行 `SDL_VIDEODRIVER=dummy ./build-m1-s2/quickapp_case001_lvgl --rpk
+  showcases/media-001/dist/media-001.rpk`，确定性返回 `RPK open failed: Runtime component unavailable`。
+  原因是当前 LVGL Runtime Composition 未声明 Video；未绕过该门禁，也未创建部分 Host 对象。
+- 构建：LVGL 重新配置、`lv_b7_video_unsupported_tests` 构建和 CTest 通过；Simulator 既有
+  构建不受影响。
+- 预算判断：不引入视频帧缓存，因此本轮 LVGL 运行时 RAM/Flash 增量为零；真实解码能力需要
+  后续按目标硬件的 codec、帧缓冲、带宽和帧率预算单独立项。
+- 修改范围：仅 `quickapp-runtime-lvgl` 的 Media Adapter、单测和本交接记录；未修改 Core、
+  JS、Toolkit、Android、iOS、Examples 或公共 Contract。
+
+状态：`LVGL_VIDEO_UNSUPPORTED_READY`。
+
+## Unified Media Resource Contract 与 media-001（2026-08-27）
+
+结论：本地静态视频的最小合同已冻结。Toolkit 负责读取、格式/路径/预算校验、计算字节大小与 SHA-256 并写入 RPK；Core Loader 只保留并校验资源描述符；JS/Core 只传递 typed 控制意图和生命周期事件；Platform Adapter 后续负责播放器。Core 不持有媒体字节，不解码，不创建播放器线程。
+
+- 合同文档：`v3/spec/contracts/media-resource-contract.md`；资源描述符新增可选 `resourceId`、`width`、`height`、`durationMs`。静态视频 V1 使用 `resourceId == path`，视频路径必须位于 `assets/videos/`，MIME 为 `video/mp4` 或 `video/webm`。
+- 错误语义：Toolkit 路径/MIME/格式/预算错误为构建失败；Core 描述符或 ZIP member 不完整为 `PACKAGE_ENTRY_INVALID`；SHA-256 不一致为 `PACKAGE_INTEGRITY_FAILED`；平台能力缺失为 typed `unsupported`；加载、解码、控制失败为 typed `failed` 和 Video `error`。失败和 teardown 均不得留下播放器或缓存资源。
+- 生命周期：`indexed -> verified -> requested -> prepared -> playing -> paused/finished`，异常转 `error`；`timeupdate` 要求非负有限 `currentTime`，`error` 要求非空错误分类。
+- 修改范围：`quickapp-runtime-core` 的 ArtifactDescriptor/Loader 及 Core Loader 测试；`quickapp-runtime-js` 的 Video 生命周期 payload 校验及 JS-S02 测试；`quickapp-toolkit` 的视频资源输入、格式签名校验、描述符生成和测试；`quickapp-examples/showcases/media-001` 使用本地 `assets/videos/demo.mp4`。未修改 Android、iOS、LVGL、播放器、Router、Tree 或 Bridge 架构。
+- 真实 RPK：`quickapp-examples/showcases/media-001/dist/media-001.rpk`，`1,374,522` bytes，连续两次 SHA-256 均为 `d1faf1aae393579053b7a68960f6a3a13973122a456859763521118cd5fddc87`；`unzip -t` 通过。资源共 2 个：poster PNG `1,720` bytes；视频 `assets/videos/demo.mp4`，MIME `video/mp4`，`1,358,537` bytes，`resourceId` 同路径，SHA-256 `1456ac6014de2e2fa2aa5412002648b872e428bc7ddce1c7d532b4ffdfe0fcbb`。
+- Toolkit：`npm test`，`92/92` 通过；新增真实媒体描述符确定性和非法格式/身份拒绝测试。
+- Core：`core_s02_package_loader_tests` 构建并执行通过；覆盖视频描述符、可选元数据、资源身份和非法身份。Core 全量 CTest 的既有 `core_m1_alpha_core_boundary_scan` 仍因 `mount_coordinator.cpp` 命中 `LVGL` 失败，本次未触碰该文件。
+- JS：`js_s02_contract_tests` 构建并执行通过，Video `prepared/timeupdate/error` payload 和非法值校验通过；JS CTest `11/11` 通过。
+- Schema：`validate-schemas.mjs` 通过，包含 Runtime Metadata 新增视频分支；旧四字段 Artifact Descriptor 仍合法，旧 RPK 保持兼容。
+
+状态：`MEDIA_RESOURCE_CONTRACT_FROZEN`。
+
+## iOS Media Adapter Contract Revalidation (2026-08-27)
+
+结论：iOS Media Adapter 已切换为严格的 RPK 本地资源路径；真实
+`media-001.rpk` 当前没有本地视频资源，因此本次通过的是资源拒绝、错误事件和
+teardown，不是播放成功。旧的 `example.invalid` 到 Bundle MP4 映射不再适用。
+
+- 真实输入：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/media-001/dist/media-001.rpk`
+- RPK SHA-256：`439009523904f8335f96902e642e6d2150379dacdc28d3bceb690923ea0ba0df`
+- Bundle：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/build-ios-ninja/quickapp_ios_simulator.app/media-001.rpk`
+- Bundle SHA-256：`439009523904f8335f96902e642e6d2150379dacdc28d3bceb690923ea0ba0df`
+- RPK 内容：只有 `assets/images/media-poster.png`，没有 `assets/videos/*.mp4`；Video
+  `src` 是 `https://example.invalid/quickapp-kit/demo.mp4`。
+- 修改范围：仅 `quickapp-runtime-ios/include/quickapp/ios/ios_gateway.h`、
+  `quickapp-runtime-ios/src/runtime_spine.cpp`、
+  `quickapp-runtime-ios/src/ios_gateway.mm` 及 iOS evidence。
+- Adapter 合同：只接受 `assets/...`；拒绝 URL、路径穿越、缺失资源、空资源、非
+  `video/mp4`、长度不匹配、超过 16 MiB 或 SHA-256 不匹配；校验成功后写入受控临时
+  缓存，AVPlayer 只使用缓存文件。
+- 真实日志：
+  `ios.video.resource ... code=MEDIA_PATH_INVALID`
+  `ios.video.source ... code=MEDIA_SOURCE_REJECTED`
+  `ios.video.event ... type=error`
+  `ios.video.control ... action=play|pause|seek ... code=VIDEO_NOT_READY`
+- Teardown：
+  `ios.runtime.stopped surfaces=0 nodes=0 handlers=0 pendingCallbacks=0 jsResources=0 coreQueue=0`
+  `ios.runtime.platform.resources surfaces=0 nodes=0`。
+- 截图：`/tmp/quickapp-ios-media-001-error-state-20260827.png`；已归档至
+  `quickapp-runtime-ios/evidence/screenshots/ios-media-001-error-state-2026-08-27.png`。
+- 构建：`cmake --build build-ios-ninja --target quickapp_ios_simulator -j 4`，通过；
+  仅有既有 SDK 弃用和初始化警告。
+- 限制：当前 RPK 无法验证 `prepared/start/pause/finish`；不能通过修改 Core、JS、
+  Toolkit、RPK 或公共 Contract 补造资源。下一次真实播放验收必须使用包含本地
+  `assets/videos/*.mp4` 和一致资源元数据的 RPK。
+
+状态：`IOS_MEDIA_ADAPTER_CONTRACT_ALIGNED_INPUT_BLOCKED`。

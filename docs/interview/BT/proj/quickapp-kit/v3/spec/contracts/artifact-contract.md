@@ -71,6 +71,8 @@ Manifest 普通 pages 与 Runtime Metadata pages 必须按 `manifestRoute` 双�
 
 Metadata 中的 Artifact Descriptor 固定包含 `path`、`mediaType`、`byteLength` 和小写十六进制 SHA-256。全部 Descriptor 的 path、page route、全局 moduleId 和 page templateId 在各自命名空间内唯一；Page IR/Bootstrap 集合不得包含 Metadata 未索引的额外入口。
 
+静态视频资源的 `resourceId`、可选媒体元数据和资源生命周期遵循 [Media Resource Contract](./media-resource-contract.md)。
+
 ## 5. Page IR
 
 Page IR 是一页的不可变静态定义，不是运行时树。它的语义模型是一棵有根、有序的静态模板树；Artifact 使用按 ID 寻址的归一化表编码，Core 加载后可建立不可变 ID 索引，不需要复制成第二棵长期驻留对象树：
