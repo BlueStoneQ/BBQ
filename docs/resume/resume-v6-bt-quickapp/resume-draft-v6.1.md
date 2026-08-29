@@ -46,8 +46,8 @@
 
 独立设计的跨平台快应用 Runtime，对标行业轻应用/小程序引擎。三层架构：JS Framework（状态 + 增量意图）→ C++ Core（Runtime Tree + Layout + Event）→ Platform Adapter（Android / LVGL / iOS）。
 
-- 三大系统：bridge + 渲染管线 + 事件系统，应用运行系统
-- 配套工具链：toolkit -》 IDE
+- Runtime 骨架：以 Runtime Tree（唯一权威可变树，单一事实源）为状态中枢、bridge（typed ABI + Transaction）为通信底座，其上是渲染管线、事件系统、生命周期/导航三条核心链路；路由、feature 等为在其之上生长的上层系统。
+- 配套工具链：toolkit（构建期，独立支柱）-》 IDE
 - 可裁剪性：固定骨架 + 可裁剪外围
     - QuickApp Kit 通过单向依赖、模块化外围和编译期 Build Profile，在保持 Bridge、渲染管线、事件系统完整的前提下，移除目标设备不需要的组件、能力和第三方依赖。
 - 可观测：
