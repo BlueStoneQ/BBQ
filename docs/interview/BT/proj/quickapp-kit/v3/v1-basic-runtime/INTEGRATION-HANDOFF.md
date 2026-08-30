@@ -2419,3 +2419,38 @@ PENDING_MANUAL_SCREENSHOT — 需用桌面 Simulator 分别加载两个 RPK，�
 - 未引入未验证的 Feature API。
 - 所有 Page IR 和 RenderTransaction 由 Toolkit 自动生成，未手写。
 - Simulator Composition 修改只扩展事件绑定策略，不改变 Core/Bridge/Mount 架构。
+
+## Showcase 语义化改名
+
+日期：2026-08-27
+
+状态：`RENAMED_REBUILT_VERIFIED`
+
+将三个 showcase 目录改为语义化命名（`git mv` 保留历史）：
+
+| 旧名 | 新名 | package | 新 RPK SHA-256 |
+|------|------|---------|----------------|
+| `commerce-001` | `shop` | `com.quickappkit.shop` | `0ebec00fe54ae70f9fe01cd7a54a2c8c3d2a62adce1060c3cc741304ac4fb5c9` |
+| `wearable-fitness-watch` | `sport-watch` | `com.quickappkit.sport.watch` | `c8080e156605379e45b542063dfd2448c30205ed464ccb48e03b22c868886876` |
+| `wearable-fitness-band` | `sport-band` | `com.quickappkit.sport.band` | `5e4f64a0c0843946c59098e4f0a770811b060bc80bd261715bc260306389b186` |
+
+### 改动范围
+
+- 目录名（`git mv`，git 识别为 rename）
+- 构建脚本：`build-commerce.mjs`→`build-shop.mjs`、`build-watch.mjs`→`build-sport-watch.mjs`、`build-band.mjs`→`build-sport-band.mjs`
+- `manifest.json` 的 `package` 与 `name`
+- 各自 README 与 `showcases/README.md` 索引
+- dist 产物随目录名重建（`shop.rpk` / `sport-watch.rpk` / `sport-band.rpk`）
+
+### 验证
+
+- 三个 RPK 各两次构建 SHA-256 一致，确定性通过。
+- `sport-watch` LVGL 全链路运行通过（`resources_released=true`）。
+- `sport-band` 交互 Simulator 可用。
+- `shop` 使用 Tabs 组件，属 Android/iOS C 端 showcase，在 LVGL harness 报 `Runtime component unavailable` 为固有行为（改名前后一致，非本次引入）。
+
+### 边界与说明
+
+- 未修改 Core/JS/LVGL/Toolkit/Contract；`case001_lvgl.cpp` 无旧名硬编码（运行分支靠 `entry_route` 判断）。
+- 历史 evidence 文档仍引用旧名 `commerce-001`（时间快照，保持原样）。
+- 改动仅本地提交，未 push。
