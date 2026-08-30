@@ -72,3 +72,15 @@ n3 → { parent:n1,   children:[n4] }
 （树的形状由 parent/children 字段拼出，节点本身互不嵌套）
 
 **为什么 / 收益**：改任意节点 O(log n) 直达无需从根遍历；删/移动只改 ID 引用不搬内存；ID 稳定可跨边界传且不悬空。嵌套 JSON 适合传输序列化，扁平 map 适合频繁局部修改的运行时状态。
+
+### Page IR 是什么？
+页面静态模板的中间表示（`pages/*.ir.json`），Toolkit 编译 .ux 时把模板结构（节点树、样式、绑定点 TemplateBindingId、事件、if/for 块）归一化成一张 JSON 表，随 RPK 分发。只存编译期能定的静态骨架，不含运行时动态数据。
+
+### Page IR 和 Runtime Tree 什么关系？
+Page IR 是静态模板蓝图（编译期定、双方共享），Runtime Tree 是运行时按蓝图实例化出的权威树。类比 class 定义 之于 object 实例。
+
+### Page IR 为什么关键？
+它是「ID 寻址 + 免冗余传输」的基石：JS 提交渲染意图只发 OwnerInstanceId + TemplateBindingId（小 ID），不传完整节点；Core 用 Page IR 反解出节点类型/样式/结构再在 Runtime Tree 上实例化。通信量极小，对嵌入式带宽/内存尤其关键。
+
+### Page IR 和虚拟 DOM 区别？
+vdom 是运行时内存里构建的完整树、每次 diff 新旧树；Page IR 是编译期产物、静态、只描述模板骨架，运行时不 diff 整树，靠 ID 定位增量更新，更省、更适合嵌入式。
