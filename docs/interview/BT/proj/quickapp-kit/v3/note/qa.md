@@ -106,6 +106,34 @@ toolkit 构建模块依赖图，ModuleNode.kind = app/page/shared，共享模块
 ### IR 是文件，运行时频繁读硬盘吗？
 不。IR 只读一次硬盘：parse_page_ir 把 JSON 解析成内存对象 VerifiedPageIr（map<id, 定义>）；运行时 find_binding/find_node 是内存 O(log n) 查表，不碰硬盘。PageIrCache 带 budget + pin(钉当前页) + LRU 淘汰管理内存。IR=磁盘序列化态，读一次驻留内存反复查。
 
+### Page IR 和 page VM 的关系？
+Page IR = C++ Core 持有的四张 map（静态模板定义，nodes/blocks/bindings/handlers）。page VM = JS 引擎内的执行作用域（页面 data、handler）。一个页面 = 一个 page VM + 一个 Page IR。
+
+### Runtime NodeId 如何生成？JS 侧知道吗？
+Runtime NodeId 由 C++ Core 的 NodeIdAllocator 生成（递增 uint64）。JS 侧不知道具体 Runtime NodeId，只操作编译期定的 templateNodeId/templateBindingId/ownerInstanceId。
+
+### Runtime Tree 的结构例子？
+```
+// map<NodeId, RuntimeNode>
+{
+  1001: {id:1001, type:"div", parent:null, children:[1002,1003]},
+  1002: {id:1002, type:"text", parent:1001, children:[], text:"hello"},
+  1003: {id:1003, type:"view", parent:1001, children:[1004], style:{...}},
+  1004: {id:1004, type:"image", parent:1003, children:[], src:"..."}
+}
+```
+
+### 关键设计点：ID 映射机制？
+templateNodeId (IR) → RuntimeNodeId（运行时）
+templateBindingId → Runtime NodeId + property（通过 IR 反解）
+
+### 关键设计点：block 实例化？
+if block：条件满足时 instantiate，否则跳过
+for block：循环数据 instantiate N 次（ownerInstanceId + index 组合标识）
+
+### 动态节点根源 ID 是什么？
+block instantiation 时，Core 给每个实例分配 ownerInstanceId + index 组合标识，作为该实例子树内节点的"家族 ID"前缀。
+
 ### binding 本质？
 编译期在「模板节点的某属性」上钉的稳定 ID 锚点，解耦连接「JS 动态值」与「树上某节点某属性」。JS 只报 bindingId+新值 → Core 靠 IR 反解到具体节点属性改树 → JS 不碰树、Core 不跑 JS。TemplateBindingDefinition={id, target_node_id, property}。
 
@@ -148,6 +176,8 @@ pageVM 本身是"JS 侧的东西"，但它是被 C++ 创建和持有的 JS 对�
 
 ### JS 侧够薄吗？（核心设计要求：尽量下沉到 C++）
 结论：JS 侧非常薄，"下沉 C++"的设计要求达到了。
+底层原理：其实就是require这些都是由cpp在core实现的feature，js中只是引擎注入的external
+func，js中不做定义
 
 证据：
 1. quickapp-runtime-js 整个仓库是 C++（16 个 .cpp），几乎没有独立的 JS runtime 代码。它不是"一坨 JS framework"，而是 JS 引擎的 C++ 集成层——VM 生命周期、module loader、ABI、binding stage、handler registry，全是 C++ 在管。
@@ -163,3 +193,10 @@ pageVM 本身是"JS 侧的东西"，但它是被 C++ 创建和持有的 JS 对�
 - Nyrax：framework 逻辑基本下沉到 C++，JS 侧只留"业务代码 + 薄胶水"。响应式（Proxy 状态劫持）、事务打包、binding 求值调度这些，是 C++ 主导。
 
 诚实边界：有一块必然留在 JS、下沉不了——用户业务逻辑的求值（handler 里的 this.count++、binding 表达式的计算）。因为那是用户写的 JS，只能在 JS 引擎跑。能下沉的是框架机制，不能下沉的是用户逻辑。
+
+### IR 加载：是 Page IR 不是 page VM
+澄清：四张 map 在 Page IR 里，不在 page VM 里。
+
+Page IR：编译期模板定义（nodes/blocks/bindings/handlers），一个页面一份，C++ Core 持有
+page VM：JS 执行作用域，持有页面 data、执行 handler
+所以：一个页面 = 一个 page VM（JS 侧）+ 一个 Page IR（C++ 侧）

@@ -119,6 +119,7 @@
 
 ## 快应用框架
 
+- [QuickApp Kit V3 技术笔记](./interview/BT/proj/quickapp-kit/v3/note/index.md)
 - [QuickApp Kit 边界笔记](./interview/BT/proj/quickapp-kit/note/INDEX.md)
 - [项目讲解（Deep Dive）](./resume/explain/3.1-xm/quickapp-framework/quickapp-project-deep-dive.md)
 - [架构与渲染流](./resume/explain/3.1-xm/quickapp-framework/quickapp-layout-and-architecture.md)
