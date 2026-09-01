@@ -374,10 +374,27 @@ esptool.py --port /dev/cu.usbserial-* write_flash 0x310000 my_app.rpk
 
 ## 10. 下一步
 
-- [ ] 准备 11 根杜邦线 (母对母), 按第 7 节接线方案连接
-- [ ] 安装 ESP-IDF v5.4
-- [ ] 更新项目驱动代码 (ILI9341 + XPT2046 替换原 GC9A01 + CST816S)
-- [ ] 编写并测试 LVGL 显示初始化 (240×320)
+- [ ] 准备 14 根杜邦线，按第 7 节完成触摸 SPI 三线并联
+- [x] 安装并锁定 ESP-IDF v5.4 与 ESP32-S3 工具链
+- [x] 完成 ILI9341 + XPT2046 驱动代码
+- [x] 编译并真机验证 LVGL 显示初始化 (240×320)
+- [ ] 烧录 minimal 固件并验证 XPT2046 点击坐标
 - [ ] 实现触摸校准流程
 - [ ] 通过 esptool 测试 RPK 烧写到 Flash 分区
 - [ ] (后期) 购入 MicroSD 卡, 启用 SD 卡 RPK 加载
+
+## 11. 2026-09-01 构建状态
+
+- 工程：`quickapp-kit-ai/quickapp-embedded/quickapp-device-esp32`。
+- 修复组件迁移后的根目录解析：由顶层 `QUICKAPP_KIT_ROOT` 统一指向
+  `quickapp-kit-ai`，组件不再各自使用易失效的相对层级。
+- 修复 minimal 模式：顶层根据 `main/minimal.mode` 唯一设置 `QA_MINIMAL`，
+  Main 与 Runtime 组件只消费该开关。
+- 当前机器未发现 `~/esp/esp-idf/export.sh`；实际可用且已验证的是工程内锁定环境，
+  统一通过 `source ./activate.sh` 激活。脚本已内置
+  `IDF_SKIP_CHECK_SUBMODULES=1`。
+- 验证命令：`source ./activate.sh && idf.py reconfigure && idf.py build`。
+- 结果：minimal 固件构建通过，`build/quickapp_device.bin` 为约 `562 KB`，
+  最小应用分区剩余 `82%`。
+- 当前 `/dev/cu.usbserial-1130` 不在线，因此本轮没有烧录；补齐触摸接线并连接
+  COM 口后执行：`source ./activate.sh && idf.py -p /dev/cu.usbserial-1130 flash monitor`。

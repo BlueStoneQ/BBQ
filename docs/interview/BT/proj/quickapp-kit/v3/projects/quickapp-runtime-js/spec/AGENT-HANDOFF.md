@@ -489,3 +489,25 @@ JS 不创建平台对象、不持有运行时 NodeId；更新通过 `RenderTrans
 - 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
 - 已验证：Router facade、Page Host Control、typed ABI、initial binding、InstantiateTemplate 和资源释放通过。
 - 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费实现。
+
+### 2026-09-01 / JS Runtime Agent / EventLoop Backend Contract 第一阶段
+
+- 状态：`READY_FOR_REVIEW`；默认运行行为保持不变，未接入 libuv。
+- 接口：新增 `EventLoopBackend`，统一 `start`、`post`、`postUniqueMicrotaskContinuation`、`beginStop`、`stopAndDrain`、`pumpOne`、`pumpUntilIdle`、`state`、`pendingDepth` 和 `isOwnerThread`；调度类型也位于独立合同头文件。
+- 默认实现：新增 `JsExecutorBackend` 薄适配器，内部复用现有 `JsExecutor`；不删除、不复制、不改变既有 FIFO、有界队列、microtask continuation 去重、quiescing、teardown barrier 和手动 pump 语义。
+- Service：`JsEngineService` 现在依赖 `EventLoopBackend`；未注入时默认创建 `JsExecutorBackend`，也支持注入未来后端。现有 `executor()` 只暴露合同接口，调用方继续使用兼容的 `isOnExecutor` 别名。
+- 修改文件：`include/quickapp/js/engine/event_loop_backend.h`、`include/quickapp/js/engine/js_executor_backend.h`、`src/engine/js_executor_backend.cpp`、`include/quickapp/js/engine/js_executor.h`、`include/quickapp/js/engine/js_engine_service.h`、`src/engine/js_engine_service.cpp`、`CMakeLists.txt`、`tests/event_loop_backend_tests.cpp`。
+- 验证：JS Runtime 全量构建通过；CTest `12/12` 通过，包含新增 Backend Contract 测试和既有 `js_s01/js_s02/js_s03/js_s04`、边界扫描、QuickJS probe。
+- 兼容性：未修改公共 ABI、RPK、Core、Bridge、Render Pipeline、Event Router、Navigation、Runtime Tree 或其他平台；单 JS owner thread 和 QuickJS Job Queue 主动 Drain 保持不变。
+- 后续 libuv：由 LVGL 或其他外围实现独立 `LibuvEventLoopBackend : EventLoopBackend`，把 libuv owner loop 的 wake/post/drain/stop 映射到合同；不得让 Core 依赖 libuv，不在本阶段链接或接入 LVGL 已有 `libuv_loop_backend`。
+
+### 2026-09-01 / JS Runtime Agent / EventLoop Backend 双实现完成
+
+- 状态：`READY_FOR_ARCH_REVIEW`；`JsExecutorBackend` 与 `LibuvEventLoopBackend` 均实现同一 `EventLoopBackend` 合同。
+- Libuv 范围：独立使用 `uv_loop_t + uv_async_t` 作为 wakeup/owner-loop 机制；仅提供单线程 FIFO task、microtask continuation 去重、队列背压、owner 判断、stopAndDrain 和晚到任务拒绝，不实现 Timer、异步 I/O、网络、文件或 WebSocket。
+- 可替换性：`JsEngineService` 通过已有 backend 注入点接收实现；未注入时仍使用 `JsExecutorBackend`。默认 LVGL Simulator 选择 Libuv，`quickapp_lvgl_simulator_js_executor` 为 JsExecutor 对照入口，自动验收入口同时提供 `quickapp_case001_lvgl` 与 `quickapp_case001_lvgl_libuv`。
+- 合同测试：同一 `event_loop_backend_tests` 在 JsExecutor 和 Libuv 两个工厂上运行 FIFO、microtask、背压、quiescing、stopAndDrain、owner thread 和 wakeup 测试；Libuv 配置与默认配置均 CTest `12/12 PASS`。
+- 真实 RPK：`../quickapp-toolkit/evidence/tk-s07-case001.rpk`，SHA-256 `9812df4762e3821b26040f8b0b26ce7689d3dcd9ea9eef803510a9b05f6f79ca`；两种自动入口均 `exit=0`，JS、渲染、事件、路由、microtask、teardown 输出一致，最终 `resources_released=true`。
+- 持续 Simulator：同一 RPK 在 `quickapp_lvgl_simulator`（Libuv）和 `quickapp_lvgl_simulator_js_executor`（JsExecutor）下均可启动、显示、响应 SIGTERM 并完成资源归零，均 `exit=0`。
+- 修改文件：`quickapp-runtime-js/include/quickapp/js/engine/libuv_event_loop_backend.h`、`quickapp-runtime-js/src/engine/libuv_event_loop_backend.cpp`、`quickapp-runtime-js/tests/event_loop_backend_tests.cpp`、`quickapp-runtime-js/CMakeLists.txt`、`quickapp-runtime-js/cmake/check_js_s01_boundaries.cmake`、`quickapp-examples/CMakeLists.txt`、`quickapp-examples/composition/case001_lvgl.cpp`。
+- 边界：未修改 Core、RPK、Toolkit、Android、iOS 或 LVGL Runtime；未删除、降级或废弃 JsExecutorBackend；未把现有 LVGL `libuv_loop_backend` 直接伪装成 JS Backend。后续可由受限设备 Profile 继续默认选择 JsExecutor，Libuv 失败时保留 Composition Root 回退路径。

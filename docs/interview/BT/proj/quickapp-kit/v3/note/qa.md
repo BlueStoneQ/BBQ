@@ -36,7 +36,16 @@ runtime 核心
 
 ## QA
 
-## QA
+### 分域ID驱动的稳定寻址
+QuickApp Kit 的核心机制，就是“分域 ID 驱动的稳定寻址”。
+编译期：Template ID 标识静态声明
+运行期：Instance ID 标识具体实例
+跨层通信：Transaction 携带 ID 和变更值
+Core：通过 ID 直接定位 Runtime Tree 节点、属性或事件
+
+### id如何生成和回收？如何避免碰撞？
+- 每个 ID 域拥有独立分配器和明确生命周期，因此不需要跨域避免碰撞。
+- ID 可以失效，但同一生命周期内不应复用；旧事件和旧事务因此无法误命中新对象
 
 ### Runtime Tree 是什么数据结构？
 一张 `std::map<NodeId, RuntimeNode>`，节点间用 NodeId 记父子关系形成树（ID 互指，非指针）。
@@ -200,3 +209,70 @@ func，js中不做定义
 Page IR：编译期模板定义（nodes/blocks/bindings/handlers），一个页面一份，C++ Core 持有
 page VM：JS 执行作用域，持有页面 data、执行 handler
 所以：一个页面 = 一个 page VM（JS 侧）+ 一个 Page IR（C++ 侧）
+
+### binding的本质？
+- 所谓binding就是把某个property绑定到某个节点，内存中使用map<NodeID， property>
+
+### id一共有几种 每种都是一个域 一个域里面一组id 代替了原来的tree path来确定寻址的唯一性
+- `SurfaceId`：页面显示实例域
+- `TemplateNodeId`：静态模板节点域
+- `ComponentInstanceId`：组件实例域
+- `BlockInstanceId`：动态 `if/for` 实例域
+- `NodeId`：Runtime Tree 节点域
+- `TemplateBindingId`：模板绑定点域
+- `TemplateHandlerId`：模板事件声明域
+- `HandlerId`：JS 回调实例域
+- `TransactionId`：渲染事务域
+- `RequestId`：跨层异步请求域
+
+### 为什么 Tree Path寻址 脆弱
+Tree Path 用“结构位置”冒充“对象身份”：
+root.children[1].children[3]
+前面插入、删除或移动节点后，路径就会变化，原路径可能指向另一个节点。系统因此需要重新计算路径、同步引用，并防止事件或异步任务命中过期节点。路径描述的是“现在在哪里”，不是“它是谁”。
+
+### 多 ID 域会不会内存压力更重
+通常不会，甚至更轻、更可控。
+ID 通常是 32/64 bit 整数。
+多个“域”是类型语义，不代表每个域都需要一张 Map。
+静态 ID 存在只读 Page IR，可被多个页面实例共享。
+Runtime Tree 节点只保存必要的 NodeId 和关系。
+只有跨域寻址才建立索引，例如：
+(OwnerInstanceId, TemplateNodeId) -> NodeId
+HandlerId -> JS Function
+Tree Path 本身可能是变长字符串或数组，比较、复制、哈希成本更高；结构变化后还需要更新路径。ID 增加少量固定内存，换来稳定的 O(1)/O(log n) 寻址和更低的维护成本。
+真正风险不是 ID 数量，而是重复索引过多、生命周期未统一回收。
+
+### 内核稳定，外围可裁剪
+- 我们的边界设计非常清晰 所以不需要代码粒度的条件编译 而是编译的时候 可以选择不同的外围
+
+### mount方案
+- 渲染指令队列： flush一个渲染指令队列 paltform是消费者，按序执行
+
+### 传递mount指令
+- core不关心怎么传出去
+
+Core 只定义并生成渲染指令，不关心具体传输机制。
+
+Core
+-> MountTransaction
+-> PlatformMountPort
+之后由 Platform Adapter 决定：
+同进程：直接传递结构体；
+Android：JNI 映射；
+iOS：Objective-C++ / Swift 桥接；
+LVGL：直接调用 LVGL；
+跨进程：另行序列化。
+
+### post = sendMountTransaction
+- Core 只调用 post，post具体实现由 Platform Adapter 提供
+- post就是sendMountTransaction
+Core 生成 transaction
+-> 调用虚函数 post
+-> Platform 实现 post
+-> 放入平台 Owner Queue
+-> Platform 消费并执行指令
+
+### 首帧渲染
+- 也就是：首帧core侧只需要生成一个事务即可，platform侧消费是自己的节奏，可以拆成多个内部batch执行
+Core：只生成并 post 一次逻辑 MountTransaction
+Platform：接收后自行拆分、排队、执行
