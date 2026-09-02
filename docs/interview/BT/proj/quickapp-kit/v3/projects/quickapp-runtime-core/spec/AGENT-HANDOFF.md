@@ -476,3 +476,12 @@ Core 是共享实现的唯一归属，不再从 Android 事后抽取。覆盖 Pa
 - 状态：`VERIFIED / PROJECT_AGENT_STOPPED`。
 - 已验证：App/Shared/Page dependencies、DAG、非法依赖、原子失败和 VerifiedModule 原样发布通过。
 - 下一步：由 `v3/m1-alpha/INTEGRATION-AGENT.md` 的单一集成 Agent消费实现。
+
+### 2026-09-02 / JS C++ 归位到 Core
+
+- 状态：`COMPLETED`；只改变源码归属和构建所有权，公共 ABI 与运行行为不变。
+- 迁移：原 `quickapp-runtime-js` 的 Engine、Executor、EventLoop、QuickJS Provider、ABI、Module/VM Host、Native Binding、Handler 与 Alpha Host 共 71 个文件进入 `quickapp-runtime-core/runtime/js`。
+- 兼容：namespace、`quickapp/js/...` include 和全部 `quickapp_js_*` Target 保持，Android、iOS、LVGL 源码未改。
+- 验证：Core + 迁入模块 CTest `30/30`；LVGL、Android APK、iOS Host 与 iOS Simulator 构建通过；真实 Case 001 在 JsExecutor/Libuv 两种 Backend 下结果一致并完成资源归零。
+- 设计记录：`v3/spec/refactors/js-cpp-to-core-migration.md`。
+- 后续：版本化纯 JS Framework Bundle 独立立项，不在 Core 中补写响应式语义。

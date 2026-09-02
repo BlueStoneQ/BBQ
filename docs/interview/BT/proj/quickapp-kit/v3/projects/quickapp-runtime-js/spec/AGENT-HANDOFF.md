@@ -511,3 +511,12 @@ JS 不创建平台对象、不持有运行时 NodeId；更新通过 `RenderTrans
 - 持续 Simulator：同一 RPK 在 `quickapp_lvgl_simulator`（Libuv）和 `quickapp_lvgl_simulator_js_executor`（JsExecutor）下均可启动、显示、响应 SIGTERM 并完成资源归零，均 `exit=0`。
 - 修改文件：`quickapp-runtime-js/include/quickapp/js/engine/libuv_event_loop_backend.h`、`quickapp-runtime-js/src/engine/libuv_event_loop_backend.cpp`、`quickapp-runtime-js/tests/event_loop_backend_tests.cpp`、`quickapp-runtime-js/CMakeLists.txt`、`quickapp-runtime-js/cmake/check_js_s01_boundaries.cmake`、`quickapp-examples/CMakeLists.txt`、`quickapp-examples/composition/case001_lvgl.cpp`。
 - 边界：未修改 Core、RPK、Toolkit、Android、iOS 或 LVGL Runtime；未删除、降级或废弃 JsExecutorBackend；未把现有 LVGL `libuv_loop_backend` 直接伪装成 JS Backend。后续可由受限设备 Profile 继续默认选择 JsExecutor，Libuv 失败时保留 Composition Root 回退路径。
+
+### 2026-09-02 / 纯 JS Framework 边界归位
+
+- 状态：`BOUNDARY_COMPLETED / STANDALONE_BUNDLE_PENDING`。
+- 已完成：本仓库不再包含或编译 C/C++；原平台无关 C++ Runtime 全部迁入 Core；独立 npm/CMake 边界测试通过。
+- 已验证事实：当前响应式主链仍由 Toolkit `js-module-emitter.ts` 按页注入，不存在 Runtime 独立加载的版本化 JS Framework Bundle。
+- 防伪门禁：`framework/source.json` 固化 `status=toolkit-inline`、`independentBundle=false`；测试直接校验 Toolkit 真实生成器中的 Proxy、Dirty、RenderIntent 与 microtask flush 标记。
+- 平台兼容：三端设置 `QUICKAPP_JS_BUILD_TESTS=OFF` 时本目录不查找 Node、不构建 C/C++、不增加产品依赖。
+- 下一步：先冻结 Framework Bundle 版本与 Toolkit 引用合同，再迁出按页内联代码；不得通过删除 C++ 宣称 Bundle 已完成。
