@@ -2454,3 +2454,27 @@ PENDING_MANUAL_SCREENSHOT — 需用桌面 Simulator 分别加载两个 RPK，�
 - 未修改 Core/JS/LVGL/Toolkit/Contract；`case001_lvgl.cpp` 无旧名硬编码（运行分支靠 `entry_route` 判断）。
 - 历史 evidence 文档仍引用旧名 `commerce-001`（时间快照，保持原样）。
 - 改动仅本地提交，未 push。
+
+## 2026-09-02 LVGL Embedded SDK
+
+状态：`SDK_ABI_READY`
+
+交付：`quickapp-runtime-lvgl/include/quickapp/lvgl/sdk/runtime.h` 提供不透明 `qak_runtime_t` 和 `create/load_rpk/attach_surface/dispatch_input/update_lifecycle/pump/destroy` C ABI；主产物为 `libquickapp_runtime.a`，可选动态构建在 macOS 产出 `.dylib`，不要求 ESP32 使用动态链接。
+
+Host 边界：`qak_runtime_config_t.adapter` 是 Platform Composition Root 的 typed C ABI 注入点；内部语义仍由既有 JS Runtime、C++ Core、唯一 Runtime Tree、Bridge、Render、Event、Router、Lifecycle 和 LVGL owner thread 承担。公共 ABI 未暴露 LVGL/C++/Core/JS 类型。
+
+构建：
+
+```text
+cmake -S . -B build-sdk -G Ninja -DQUICKAPP_LVGL_BUILD_SIMULATOR=OFF
+cmake --build build-sdk -j 4
+ctest --test-dir build-sdk --output-on-failure
+```
+
+结果：嵌入式静态库构建通过，CTest `12/12` 通过，C ABI 样例和测试通过；SDL/libuv 关闭后未进入构建。共享库显式开启构建和安装通过，macOS 产物为 `build-sdk-shared/libquickapp_runtime.dylib`。
+
+真实 RPK：`quickapp-examples/showcases/wallet-001/dist/wallet-001.rpk`，SHA-256 `c35a63ada9288655fce18a3aa35b4d105a1c0174457a2c448302692dc3024b98`。LVGL/SDL 真实运行完成 RPK 打开、资源加载、Home 首屏挂载、交互 Simulator 启动/关闭和 teardown；资源、Surface、Runtime Node、Handler、LVGL Mount 对象最终归零。
+
+公共 Contract：未修改；仅新增 LVGL SDK 私有公共头、C ABI 实现、C ABI 测试/样例和 CMake 产物配置。C ABI 的 RPK 内存源在入口校验 ZIP signature/大小/SHA-256，路径源拒绝穿越并将包级读取校验交由 Host Adapter。
+
+待验证：真实设备 Host Adapter 尚未迁入 SDK；ESP32-S3 交叉编译、设备 display/input callback、目标芯片内存预算和真实固件调用仍需后续验证。最大风险是 SDK 目前提供稳定注入边界，但尚未内置一个具体设备 Composition Root 实现。

@@ -28,3 +28,6 @@ JS Object/Array
 -> C++ typed struct
 ```
 这属于边界转换，可能发生拷贝；不是把整批内容先变成字符串。只有跨进程、持久化或网络传输，才需要真正序列化。
+
+### js-framework： 渲染事务队列
+- 本质就是js侧的一个Array

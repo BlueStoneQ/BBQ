@@ -1496,3 +1496,82 @@ teardown，不是播放成功。旧的 `example.invalid` 到 Bundle MP4 映射�
   `assets/videos/*.mp4` 和一致资源元数据的 RPK。
 
 状态：`IOS_MEDIA_ADAPTER_CONTRACT_ALIGNED_INPUT_BLOCKED`。
+
+## iOS SDK Productization (2026-09-02)
+
+结论：iOS SDK 已生成可外部链接的 `QuickAppKit.xcframework`，并完成最小 `QuickAppKitHost` 编译。XCFramework 不携带 RPK；Host 只负责本地 RPK 选择、UIKit Surface 和 Runtime 生命周期。真实 commerce 端到端验收被缺失的输入文件和不可用的 CoreSimulatorService 阻塞，未用其他案例替代或伪造结果。
+
+- SDK 产物：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/dist/QuickAppKit.xcframework`。
+- XCFramework slices：`ios-arm64-simulator`、`ios-arm64`，均为 arm64 静态库；产物内无 `.rpk`。
+- 公共 API：`createRuntime`、`loadRPK`、`attachSurface`、`dispatchInput`、`updateLifecycle`、`destroyRuntime`；Objective-C++ Gateway 负责 typed 转换、C++ RAII 所有权、线程切换和回调。
+- Host 产物：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/build-host-app/Build/Products/Debug-iphonesimulator/QuickAppKitHost.app`；`xcodebuild ... CODE_SIGNING_ALLOWED=NO build` 返回 `BUILD SUCCEEDED`。
+- 构建脚本：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/tools/build-quickappkit-xcframework.sh`。
+- 真实 commerce 输入 `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk` 当前不存在，无法计算指定 SHA-256，也未完成商品页面验收。
+- `xcrun simctl` 报 `CoreSimulatorService connection refused`，本次无法安装、启动、截图或完成真实 UIKit 交互。
+- iOS UIKit 只能在主线程；Core/JS 保持既有 owner thread；`destroy` 幂等并拒绝销毁后的输入、任务和回调。
+- `updateLifecycle` 公共入口已暴露，但当前底层 Runtime 无对应前后台实现，返回 typed `unsupported`，未伪造成功。
+- 详细证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/sdk-productization-2026-09-02.md`。
+
+状态：`IOS_SDK_XCFRAMEWORK_BUILD_READY_COMMERCE_ACCEPTANCE_BLOCKED`。
+
+## iOS Host RPK Gallery (2026-09-02)
+
+结论：`QuickAppKitHost` 已改为本地 RPK 应用列表，不再要求固定的 `commerce-001.rpk`。Host Bundle 当前收集 Toolkit evidence 和 quickapp showcases 下共 23 个 RPK；用户点击哪个就加载哪个，切换时先销毁当前 Runtime，再创建并加载目标 RPK。
+
+- Host 只管理 RPK 列表、选中状态、UIKit Surface 和 Runtime 生命周期。
+- 当前应用的页面栈、业务状态、Runtime Tree、NodeId、事件和路由仍由 SDK/Core 管理。
+- `QuickAppKit.xcframework` 仍不携带 RPK；RPK 是 Host 传入的外部输入。
+- Host 构建：`xcodebuild -project QuickAppRuntimeIOS/QuickAppRuntimeIOS.xcodeproj -scheme QuickAppRuntimeIOS -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build-host-app CODE_SIGNING_ALLOWED=NO build`，结果 `BUILD SUCCEEDED`。
+- Host 产物：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/build-host-app/Build/Products/Debug-iphonesimulator/QuickAppKitHost.app`。
+- 本次未安装、启动或截图，原因仍是 `CoreSimulatorService connection refused`；不影响列表编译和 Bundle 收集验证。
+- 详细证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/host-rpk-gallery-2026-09-02.md`。
+
+状态：`IOS_HOST_DESKTOP_GALLERY_RUNNING`。
+
+- Simulator 已恢复；已安装并启动 `dev.quickappkit.host`，进程号 `92156`。
+- 首屏截图：`/tmp/quickappkit-host-gallery-20260902.png`。
+- 最新版本已改为桌面式 RPK 图标网格；点击图标进入全屏 Runtime，点击“退出应用”销毁 Runtime 并回到桌面。
+- 最新版本已重新构建并启动，进程号 `96241`；未自动点击，应用保持运行供架构师手动验证。
+
+### Host 加载修复
+
+- 首次点击应用停在加载中的根因是 SDK Facade 遗漏既有 `bindGateway`，导致平台 Surface 结果无法回送 Core。
+- 已在 `quickapp-runtime-ios/src/quickapp_kit.mm` 补齐绑定，并重新生成 XCFramework、重建和启动 Host。
+- 修复版进程号：`98194`；当前可手动点击桌面图标进入全屏 Runtime。
+
+### Host 退出修复
+
+- 根因：Host 主线程等待 Runtime `destroy`，而 Core 清理期间 Gateway 同步回主线程清理 UIKit，形成死锁。
+- 已将 iOS Gateway 的 Core 线程清理改为异步回主线程；退出动作仍由 Host 先销毁 Runtime，再返回桌面。
+- 同时修复状态文案显示字面量 `(app.name)` 的问题。
+- 已重新生成 XCFramework、重建并启动 Host，修复版进程号：`99477`。
+- 详细证据：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-ios/evidence/host-rpk-gallery-2026-09-02.md`。
+
+## Android SDK Productization (2026-09-02)
+
+结论：Android Runtime 已拆分为 `quickapp-runtime-android` Library 和最小
+`quickapp-host` APK。Library 已生成不携带 RPK 的 Release AAR，包含
+`arm64-v8a`、`x86_64` JNI `.so`；Host 只负责本地 RPK 列表、私有目录复制、View
+容器和 Runtime 生命周期。AAR、Host 构建和 Lint 均通过。
+
+- AAR：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android/runtime/build/outputs/aar/quickapp-runtime-android-release.aar`，最终 SHA-256：`418ad469a950f85ed2491511b1beff5f615109b6b83ed8338a6e893426b5ed37`
+- Host：`/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android/app/build/outputs/apk/debug/quickapp-host-debug.apk`，最终 SHA-256：`28247e39f9ce910119f3892e51570789dfa2fa9b5afd58b9ff3734cbf8c52168`
+- 公共 Facade：`create`、`loadRpk`、`attachSurface`、`dispatchInput`、
+  `updateLifecycle`、`destroy`。
+- AAR 不包含 RPK；JNI 不暴露 Core 指针、Runtime Tree、NodeId 或 NativeHandle。
+- Host 不维护页面栈、业务状态、第二棵 Tree、第二套路由或旁路 Bridge。
+- Host Catalog 已收录 Toolkit evidence 与 quickapp-examples showcases 的 24 个真实
+  RPK，支持滚动浏览，点击哪个就由同一个 AAR Runtime 加载哪个；目录截图为
+  `/private/tmp/quickapp-host-catalog-all.png`、`/private/tmp/quickapp-host-catalog-all-scroll.png`。
+- 已用现存 `gallery-001.rpk` 完成 SDK 烟测：RPK 校验、JS App/Page 加载、Core 首屏
+  Mount 和 Present 日志均通过；运行截图为 `/private/tmp/quickapp-host-gallery-final.png`。
+- 指定真实输入
+  `/Users/qy/code/my-github/quickapp-examples/showcases/commerce-001/dist/commerce-001.rpk`
+  当前不存在；旧构建缓存未冒充本次输入，因此 commerce 完整业务验收保持
+  `BLOCKED`。
+- `updateLifecycle` 已有 typed API，但当前底层 Runtime Spine 未暴露前后台控制，
+  返回 `UNSUPPORTED`；未伪造成功。
+- 详细证据：
+  `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android/evidence/sdk-productization-2026-09-02.md`。
+
+状态：`ANDROID_AAR_HOST_BUILD_READY_COMMERCE_INPUT_BLOCKED`。

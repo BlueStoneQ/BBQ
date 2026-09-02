@@ -104,3 +104,4 @@ Observation Marker / Metric Boundary / Trace Correlation
 - [Runtime Launch Profile Contract](./contracts/runtime-launch-profile.md)
 - [Runtime Composition Contract](./contracts/runtime-composition-contract.md)
 - [Platform Surface Adapter Contract](./contracts/platform-surface-contract.md)
+- [Runtime SDK Contract](./contracts/runtime-sdk-contract.md)
