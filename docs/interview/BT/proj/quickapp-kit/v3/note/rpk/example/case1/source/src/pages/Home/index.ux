@@ -1,0 +1,67 @@
+<template>
+  <div class="page">
+    <text class="title">{{ title }}</text>
+    <text class="count">{{ count }}</text>
+    <input class="action" type="button" value="更新状态" onclick="onUpdate" />
+    <text if="{{ visible }}">条件节点</text>
+    <div for="{{ (index, item) in items }}" tid="id">
+      <text>{{ item.label }}</text>
+    </div>
+    <input class="action" type="button" value="打开详情" onclick="onDetail" />
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+
+export default {
+  private: {
+    title: 'Home',
+    count: 0,
+    visible: true,
+    items: [
+      { id: 'a', label: 'A' },
+      { id: 'b', label: 'B' },
+    ],
+  },
+
+  onUpdate() {
+    this.count += 1
+    this.visible = !this.visible
+    this.items = [this.items[1], this.items[0]]
+  },
+
+  onDetail() {
+    router.push({ uri: '/pages/Detail' })
+  },
+}
+</script>
+
+<style>
+.page {
+  width: 300px;
+  height: 560px;
+  padding: 12px 12px 12px 12px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.title,
+.count {
+  margin: 4px 4px 4px 4px;
+  font-size: 24px;
+  text-align: center;
+  color: #111111;
+}
+
+.action {
+  width: 220px;
+  height: 44px;
+  margin: 4px 4px 4px 4px;
+  border-radius: 8px;
+  background-color: #00c800;
+  color: #ffffff;
+}
+</style>

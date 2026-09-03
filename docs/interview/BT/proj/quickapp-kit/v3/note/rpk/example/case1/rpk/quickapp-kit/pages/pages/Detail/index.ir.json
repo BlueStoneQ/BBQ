@@ -1,0 +1,152 @@
+{
+    "schemaVersion": 1,
+    "templateId": "page:/pages/Detail",
+    "rootTemplateNodeId": 1,
+    "nodes": [
+        {
+            "templateNodeId": 1,
+            "host": {
+                "type": "View",
+                "props": {},
+                "style": {
+                    "width": {
+                        "value": 300,
+                        "unit": "logical-px"
+                    },
+                    "height": {
+                        "value": 560,
+                        "unit": "logical-px"
+                    },
+                    "paddingTop": {
+                        "value": 12,
+                        "unit": "logical-px"
+                    },
+                    "paddingRight": {
+                        "value": 12,
+                        "unit": "logical-px"
+                    },
+                    "paddingBottom": {
+                        "value": 12,
+                        "unit": "logical-px"
+                    },
+                    "paddingLeft": {
+                        "value": 12,
+                        "unit": "logical-px"
+                    },
+                    "flexDirection": "column",
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "backgroundColor": "#FFFFFF"
+                }
+            },
+            "children": [
+                {
+                    "kind": "node",
+                    "templateNodeId": 2
+                },
+                {
+                    "kind": "node",
+                    "templateNodeId": 3
+                },
+                {
+                    "kind": "node",
+                    "templateNodeId": 4
+                }
+            ]
+        },
+        {
+            "templateNodeId": 2,
+            "host": {
+                "type": "Text",
+                "props": {
+                    "text": "Detail"
+                },
+                "style": {
+                    "marginTop": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginRight": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginBottom": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginLeft": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "color": "#111111",
+                    "fontSize": 24,
+                    "textAlign": "center"
+                }
+            },
+            "children": []
+        },
+        {
+            "templateNodeId": 3,
+            "host": {
+                "type": "Text",
+                "props": {
+                    "text": "详情页"
+                },
+                "style": {}
+            },
+            "children": []
+        },
+        {
+            "templateNodeId": 4,
+            "host": {
+                "type": "Button",
+                "props": {
+                    "text": "返回 Home",
+                    "enabled": true
+                },
+                "style": {
+                    "width": {
+                        "value": 220,
+                        "unit": "logical-px"
+                    },
+                    "height": {
+                        "value": 44,
+                        "unit": "logical-px"
+                    },
+                    "marginTop": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginRight": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginBottom": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "marginLeft": {
+                        "value": 4,
+                        "unit": "logical-px"
+                    },
+                    "backgroundColor": "#00C800",
+                    "color": "#FFFFFF",
+                    "borderRadius": 8
+                }
+            },
+            "children": []
+        }
+    ],
+    "bindings": [],
+    "blocks": [],
+    "handlers": [
+        {
+            "templateHandlerId": 1,
+            "scope": {
+                "kind": "page"
+            },
+            "templateNodeId": 4,
+            "eventType": "click"
+        }
+    ]
+}

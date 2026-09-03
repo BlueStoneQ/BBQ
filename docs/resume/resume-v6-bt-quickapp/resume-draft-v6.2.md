@@ -4,6 +4,7 @@
 > 设计理念：菜单，不是说明书。留钩子，让面试官想问。
 > 脱敏规则：公司名用代号（XM/XC/XT/MT/DFGX），个人信息省略
 > 注：2023 年的两段短期经历（XC/XT）未写入工作经历时间线，相关技术成果已融入项目经历中
+> 不是被动问答机器，不是完全迎合JD，而是充分展示自己的价值，让对方评判
 
 > - 视角: 从双端三层((RN/H5)-(android/ios)-c++)+全链路(编译构建-运行时-CDN)角度去看待问题
 
@@ -28,7 +29,7 @@
 
 10 年前端经验，大前端架构师 + AI Agent 工程。五端实战覆盖（Web / RN App / 小程序 / 桌面端 / 跨端框架层），具备从 0 到 1 的全栈平台建设能力。AI 方向：从零实现 AI Coding Agent 框架（Mako），基于 MCP 打通研发全链路自动化。
 
-10 年大前端 / 跨端经验，专注应用平台架构与跨端 Runtime 设计。在 XM IoT 参与快应用框架建设，覆盖联盟 Android 快应用（hapjs）Runtime、嵌入式快应用（Vela）的 feature/bridge 机制与调试后端（CDP）、以及配套 IDE 工具链，是团队中少数同时贯通 JS 侧与 C++ 侧的人。具备应用模型、运行时、能力开放、插件机制、多端适配、工具链的全链路架构能力。同时独立主导设计并落地开源跨端快应用引擎 QuickApp Kit——平台无关 C++ Core，Android / iOS / 嵌入式 LVGL 三端接入同一 Core 并跑通快应用。
+10 年大前端 / 跨端经验，专注应用平台架构与跨端 Runtime 设计。在 XM IoT 参与快应用框架建设，覆盖联盟 Android 快应用（hapjs）Runtime、嵌入式快应用（Vela）的 feature/bridge 机制与调试后端（CDP）、以及配套 IDE 工具链，同时横跨三层：js层/CPP层/platform层（Android/IOS）。具备应用模型、运行时、能力开放、插件机制、多端适配、工具链的全链路架构能力。同时独立主导设计并落地开源跨端快应用引擎 QuickApp Kit——平台无关 C++ Core，Android / iOS / 嵌入式 LVGL 三端接入同一 Core 并跑通快应用。
 
 ---
 
@@ -104,8 +105,10 @@
 vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + eventloop。
 
 - 框架核心：核心能力下沉 C++ Core（Runtime Tree / 布局 / 渲染管线 / 事件 / 生命周期 / 路由），JS 侧轻运行时 + 增量事务驱动
-- feature / bridge 机制：横跨cpp和js两侧,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+- js framework
 - 调试全链路(CDP)：实现CDP协议40组+，调试方案全链路: 前端（IDE侧+调试后端（框架侧）
+- feature / bridge 机制：横跨cpp和js两侧,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+
 
 ####  Android 快应用框架（系统级跨端 Runtime）
 

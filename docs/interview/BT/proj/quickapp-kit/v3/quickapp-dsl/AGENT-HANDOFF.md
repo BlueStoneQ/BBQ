@@ -1575,3 +1575,44 @@ teardown，不是播放成功。旧的 `example.invalid` 到 Bundle MP4 映射�
   `/Users/qy/code/my-github/quickapp-kit-ai/quickapp-runtime-android/evidence/sdk-productization-2026-09-02.md`。
 
 状态：`ANDROID_AAR_HOST_BUILD_READY_COMMERCE_INPUT_BLOCKED`。
+
+## 2026-09-03 JS Framework Bundle F1-F3
+
+- JS Runtime 已提供独立纯 JS Bundle：`quickapp-runtime-js/dist/quickapp-framework-v1.js`。
+- Bundle 使用现有 Shared Module 形态并导出 `default.createReactivePageVm`；旧 Inline emitter 路径仍保留。
+- Toolkit Emitter/Artifact Builder 已支持 shared Framework：页面依赖 `@quickapp-kit/framework-v1`，RPK metadata 记录 Framework shared module，不新增 RPK 字段或 Loader。
+- Gallery-001 已使用 shared Framework 真实构建；RPK 为 `quickapp-examples/showcases/gallery-001/dist/gallery-001.rpk`，大小 `48523` bytes，SHA-256 `9ad56f1006804f4eadd41d021dd4ae20f61b0bdf4e6b8b051ab10eb4bae33884`。
+- 连续两次构建 SHA-256 一致；RPK 含 `framework/_quickapp-kit_framework-v1.js`，页面通过 `$app_require$` 调用共享导出。
+- JS Framework 测试：`3/3`；Toolkit：`91/92`，唯一失败为既有 `TK-S17` 缺少 `src/manifest.json` fixture，未由本次改动引入。
+- 尚未切换默认模式，也未进行三端 F5 验证；按 Spec 保持 Inline 默认。
+
+## 2026-09-03 F4 双模式验证
+
+- Showcase 构建入口支持 `QUICKAPP_FRAMEWORK_MODE=inline|shared`；默认仍为 shared 仅用于显式验证，不改变 Toolkit 默认策略。
+- Gallery-001 Inline RPK：SHA-256 `3f4e75176f05a38373e9a28781d5a5d217724785aad139740f2e26d785f0e10b`。
+- Gallery-001 Shared RPK：SHA-256 `9ad56f1006804f4eadd41d021dd4ae20f61b0bdf4e6b8b051ab10eb4bae33884`；包含 `framework/_quickapp-kit_framework-v1.js`。
+- 两种模式均完成 Toolkit 构建；差异仅为 Framework 代码位置和页面加载方式，RPK v1、Core ABI、Runtime Tree 语义未改变。
+- F4 尚未完成三端加载回归；F5 未放行，默认模式不切换。
+
+## 2026-09-03 F5 首轮回归
+
+- LVGL Simulator 使用 Shared Gallery-001 RPK 启动成功：`phase=rpk_opened`、三个图片资源加载成功、`phase=display_ready`、JS/Core 初始化完成、`terminate_exception=none`。
+- 本次入口为自动回归模式，未宣称完成持续交互验收；Android/iOS 尚未使用该 Shared RPK 完成加载验证。
+- 结论：Shared Module 与现有 LVGL Loader 兼容；F5 仍未完成，Toolkit 默认模式保持 Inline。
+
+## 2026-09-03 F5 Android/iOS 输入回归
+
+- Android 使用 `./gradlew :quickapp-host:assembleDebug --no-daemon --console=plain` 构建成功；`app/build/generated/host-rpk/gallery-001.rpk` SHA-256 为 `9ad56f1006804f4eadd41d021dd4ae20f61b0bdf4e6b8b051ab10eb4bae33884`，与 Shared RPK 一致，APK 已包含 `assets/gallery-001.rpk`。
+- iOS 使用 `tools/build-ios-simulator.sh` 构建成功；`build-ios-ninja/quickapp_ios_simulator.app/gallery-001.rpk` SHA-256 同为 `9ad56f1006804f4eadd41d021dd4ae20f61b0bdf4e6b8b051ab10eb4bae33884`。
+- 两端本轮已完成 Shared RPK 注入和构建级 Loader 输入验证；受当前会话未连接 Android/iOS 运行设备限制，未宣称首屏、交互、路由和 teardown 的设备级通过。
+- F5 尚未最终收口，Toolkit 默认模式继续保持 Inline；待设备级回归完成后再切换默认模式。
+
+## 2026-09-03 F5 Shared Dependency Fix
+
+- 根因：`$app_require$` 仅允许 Module Factory Evaluation 期间调用；Shared Page VM 在 factory 返回后执行 `createPageVm/onInit/Handler`，因此失去评估上下文。
+- Toolkit Shared emitter 现在在 factory 内解析并捕获静态依赖别名；未声明依赖和动态依赖仍由 Loader 拒绝。Inline 模式保持原始输出路径。
+- Core `build-m1-s2` 构建及 CTest：`30/30` 通过。
+- Toolkit：`91/92`，唯一失败仍为既有 `TK-S17` 缺少 `commerce-001/src/manifest.json` fixture。
+- Shared Gallery RPK 已重新生成：`48,895` bytes，SHA-256 `e35b477b237dd846e2a419b8ee7d02e3b9a2b9cac1348ee1e70fa50480c9b52c`。
+- LVGL 自动启动回归：RPK、资源、App 初始化和 teardown 通过；Android Host Debug 构建成功且资产哈希一致；iOS Simulator Bundle 构建成功且资产哈希一致。
+- Android/iOS 设备级 `onInit/Handler`、状态、路由和 teardown 仍需使用该新 SHA 重新运行，F5 默认切换暂不放行。

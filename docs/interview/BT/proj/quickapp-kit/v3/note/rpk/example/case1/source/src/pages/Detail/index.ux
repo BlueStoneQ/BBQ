@@ -1,0 +1,45 @@
+<template>
+  <div class="page">
+    <text class="title">Detail</text>
+    <text>详情页</text>
+    <input class="action" type="button" value="返回 Home" onclick="onBack" />
+  </div>
+</template>
+
+<script>
+import router from '@system.router'
+
+export default {
+  onBack() {
+    router.back()
+  },
+}
+</script>
+
+<style>
+.page {
+  width: 300px;
+  height: 560px;
+  padding: 12px 12px 12px 12px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.title {
+  margin: 4px 4px 4px 4px;
+  font-size: 24px;
+  text-align: center;
+  color: #111111;
+}
+
+.action {
+  width: 220px;
+  height: 44px;
+  margin: 4px 4px 4px 4px;
+  border-radius: 8px;
+  background-color: #00c800;
+  color: #ffffff;
+}
+</style>

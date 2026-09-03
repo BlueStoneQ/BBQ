@@ -1,0 +1,68 @@
+{
+    "schemaVersion": 1,
+    "packageFormat": "quickapp-kit-rpk-v1",
+    "runtimeAbi": "quickapp-kit-runtime-v1",
+    "irVersion": 1,
+    "jsModuleAbi": "quickapp-kit-app-module-v1",
+    "packageId": "com.quickappkit.lvgl.p0",
+    "toolkit": {
+        "name": "quickapp-toolkit",
+        "version": "0.1.0"
+    },
+    "buildMode": "debug",
+    "entryRoute": "/pages/Home",
+    "app": {
+        "moduleId": "@quickapp-kit/app",
+        "dependencies": [],
+        "bundle": {
+            "path": "app.js",
+            "mediaType": "application/javascript",
+            "byteLength": 323,
+            "sha256": "bc89fadb10379ec2ae7cbe897a61765ba2f4927ceb3ceda0f8493cbcf39e56da"
+        }
+    },
+    "sharedModules": [],
+    "pages": [
+        {
+            "route": "/pages/Detail",
+            "manifestRoute": "pages/Detail",
+            "component": "index",
+            "moduleId": "@quickapp-kit/page/pages/Detail",
+            "dependencies": [],
+            "templateId": "page:/pages/Detail",
+            "bundle": {
+                "path": "pages/pages/Detail/index.js",
+                "mediaType": "application/javascript",
+                "byteLength": 6794,
+                "sha256": "e100aed4f45260d129954d8a8029c809bea232f3b6bae0a72f5463c8a74d1781"
+            },
+            "pageIr": {
+                "path": "quickapp-kit/pages/pages/Detail/index.ir.json",
+                "mediaType": "application/json",
+                "byteLength": 1644,
+                "sha256": "953e8f749320d673229847b07482599242f642298b1a4182d0a115bc61b4635c"
+            }
+        },
+        {
+            "route": "/pages/Home",
+            "manifestRoute": "pages/Home",
+            "component": "index",
+            "moduleId": "@quickapp-kit/page/pages/Home",
+            "dependencies": [],
+            "templateId": "page:/pages/Home",
+            "bundle": {
+                "path": "pages/pages/Home/index.js",
+                "mediaType": "application/javascript",
+                "byteLength": 8060,
+                "sha256": "8a80b3dc5d904c30688535da942314ba5a84fe9aa88b74f1be547751ad751a92"
+            },
+            "pageIr": {
+                "path": "quickapp-kit/pages/pages/Home/index.ir.json",
+                "mediaType": "application/json",
+                "byteLength": 3268,
+                "sha256": "f58db39a386b0470802ac24e0cc9a36e1034119a407398859ccc579d745ad506"
+            }
+        }
+    ],
+    "resources": []
+}
