@@ -4,9 +4,10 @@
 
 - [1. 结论](#1-结论)
 - [2. V1 Push](#2-v1-push)
-- [3. V1 Close](#3-v1-close)
-- [4. 所有权](#4-所有权)
-- [5. 生命周期](#5-生命周期)
+- [3. Params 语义](#3-params-语义)
+- [4. V1 Close](#4-v1-close)
+- [5. 所有权](#5-所有权)
+- [6. 生命周期](#6-生命周期)
 
 ## 1. 结论
 
@@ -29,7 +30,31 @@ NavigationPushResult:
 
 `uri` 使用以 `/` 开头的规范 route；`params` 是受 [Runtime Value](./runtime-value.md) 约束的对象。路由不存在返回 `ROUTE_NOT_FOUND`。
 
-## 3. V1 Close
+## 3. Params 语义
+
+`params` 是一次 `push` 的目标页面输入快照，不是全局状态，也不是平台参数。
+
+| 规则 | 合同定义 |
+|---|---|
+| 类型 | 顶层必须是对象，键和值遵循 [Runtime Value](./runtime-value.md)；不允许函数、`undefined`、循环引用或平台对象 |
+| 缺省 | JS API 未提供 `params` 时，跨边界请求规范化为 `{}`；旧的 `router.push({ uri })` 继续有效 |
+| 所有权 | Core 在接受 `push` 时取得不可变快照，并将其绑定到新建的目标 Surface；Platform 不解析或修改它 |
+| 注入 | 目标页面 VM 创建时通过 `onInit(context).params` 读取；页面首次初始化后不因源页面状态变化而自动改变 |
+| 失败 | 参数无法编码、类型不合法或超过既有消息预算时，`push` 在进入 Platform Mount 前失败，原页面栈不变 |
+
+规范流程：
+
+```text
+router.push({ uri, params? })
+  -> JS ABI 规范化 params 缺省值为 {}
+  -> NavigationPushRequest(params)
+  -> Core 保存目标 Surface Context.params
+  -> 页面 VM onInit(context).params
+```
+
+`params` 只服务于目标页面初始化；页面之间共享数据必须通过既有 Feature 或应用状态机制完成。`back` 不返回或携带 `params`。
+
+## 4. V1 Close
 
 ```text
 NavigationClose(requestId, sourceSurfaceId)
@@ -41,7 +66,7 @@ NavigationCloseResult:
 
 `sourceSurfaceId` 必须是当前 visible 非 Root 栈顶，`revealedSurfaceId` 只能是它的直接前驱。Root 关闭由 Runtime Host 的 `destroyAppRuntime` 负责；V1 不提供任意层级 remove、页面缓存或历史跳转。
 
-## 4. 所有权
+## 5. 所有权
 
 | 部件 | 层 | 职责 |
 |---|---|---|
@@ -53,7 +78,7 @@ Platform 不自行解析联盟 route；JS 不自行创建 SurfaceId。
 
 `NavigationPush` 只来自 JS Router API；`NavigationClose` 可以来自 `system.router.back` 或 Runtime Host 的系统返回动作，但进入 Core 后使用同一请求、并发门禁、状态机和 Result。Platform Host 不得绕过 Core 直接关闭页面容器。
 
-## 5. 生命周期
+## 6. 生命周期
 
 ```text
 NavigationPush

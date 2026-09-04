@@ -72,7 +72,7 @@
 
 多平台全链路快应用框架解决方案: runtime: js runtime + 平台无关 C++ Core + 三端渲染后端（Android / iOS / 嵌入式 LVGL）+ Benchmark + 核心工具链Toolkit，三端接入同一Core且跑通 RPK。
 - org仓库地址: https://github.com/quickapp-kit, 嵌入式平台ESP32-S3-N16R8已跑通验证通过, IOS/Android均真机可运行
-- 微内核+外围扩展: 稳定微内核（bridge/渲染/事件/生命周期/Tree/事务）,外围基于contract可扩展可裁剪,  分层边界clean平整 
+- 微内核+外围扩展: 稳定微内核（bridge/渲染/事件/生命周期/Tree/事务）,外围基于contract可扩展可裁剪,  分层边界clean平整，开闭，边界无泄漏
 - 平台无关C++ Core：核心能力下沉收敛到core, 零平台泄漏，Platform Port 和 Adapter机制可接入多平台(已接入LVGL/Android/IOS作为渲染后端)
 - 唯一权威 Runtime Tree：Core 独占树与Layout(Yoga)，NodeID驱动, 无新旧双树全量diff, 局部更新复杂度与树规模无关
 - 免JSON序列化bridge: 基于external function直调, 平台侧 Android=JNI/iOS=ObjC++ 桥接/LVGL=同进程直调; 渲染管线: nodeID寻址 + 事务驱动
@@ -106,8 +106,8 @@ vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + eventloop。
 
 - 框架核心：核心能力下沉 C++ Core（Runtime Tree / 布局 / 渲染管线 / 事件 / 生命周期 / 路由），JS 侧轻运行时 + 增量事务驱动
 - js framework
-- 调试全链路(CDP)：实现CDP协议40组+，调试方案全链路: 前端（IDE侧+调试后端（框架侧）
-- feature / bridge 机制：横跨cpp和js两侧,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+- 调试全链路(CDP)：实现CDP协议40组+，调试方案全链路: 前端（IDE侧+调试后端（框架侧）， 重构：clean化 和实现解耦？用到了什么手法
+- feature / bridge 机制：横跨cpp和js两侧（团队就是只有我往多端去做）,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
 
 
 ####  Android 快应用框架（系统级跨端 Runtime）

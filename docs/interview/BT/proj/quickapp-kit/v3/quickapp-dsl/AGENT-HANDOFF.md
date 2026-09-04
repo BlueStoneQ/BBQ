@@ -1616,3 +1616,9 @@ teardown，不是播放成功。旧的 `example.invalid` 到 Bundle MP4 映射�
 - Shared Gallery RPK 已重新生成：`48,895` bytes，SHA-256 `e35b477b237dd846e2a419b8ee7d02e3b9a2b9cac1348ee1e70fa50480c9b52c`。
 - LVGL 自动启动回归：RPK、资源、App 初始化和 teardown 通过；Android Host Debug 构建成功且资产哈希一致；iOS Simulator Bundle 构建成功且资产哈希一致。
 - Android/iOS 设备级 `onInit/Handler`、状态、路由和 teardown 仍需使用该新 SHA 重新运行，F5 默认切换暂不放行。
+
+## 2026-09-04 sport-watch navigation params
+
+- Home 指标图形统一使用 Goals 页同一套本地形状资源：圆形、三角形、菱形。
+- 已确认 JS ABI 生成 `router.push({ uri, params })`，但 Examples Composition Root 当前构造 `NavigationPushRequest` 时丢弃 params。
+- 需要架构决策：Core Navigation Contract 是否增加 params，并将其保存到新 Surface Context，供 Detail `onInit(context).params` 使用。
