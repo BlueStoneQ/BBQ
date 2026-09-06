@@ -70,14 +70,47 @@
 
 ### QuickApp Kit (Nyrax) — 跨端快应用全链路引擎
 
-多平台全链路快应用框架解决方案: runtime: js runtime + 平台无关 C++ Core + 三端渲染后端（Android / iOS / 嵌入式 LVGL）+ Benchmark + 核心工具链Toolkit，三端接入同一Core且跑通 RPK。
+多平台全链路快应用框架平台解决方案: runtime: js runtime + 平台无关 C++ Core + 三端渲染后端（Android / iOS / 嵌入式 LVGL）+ Benchmark + 核心工具链Toolkit，三端接入同一Core且跑通 RPK。
 - org仓库地址: https://github.com/quickapp-kit, 嵌入式平台ESP32-S3-N16R8已跑通验证通过, IOS/Android均真机可运行
-- 微内核+外围扩展: 稳定微内核（bridge/渲染/事件/生命周期/Tree/事务）,外围基于contract可扩展可裁剪,  分层边界clean平整，开闭，边界无泄漏
-- 平台无关C++ Core：核心能力下沉收敛到core, 零平台泄漏，Platform Port 和 Adapter机制可接入多平台(已接入LVGL/Android/IOS作为渲染后端)
+- 微内核+外围扩展: 稳定微内核（bridge/渲染管线/事件/生命周期/Tree/事务）,外围基于contract可扩展可裁剪(可到feature/组件粒度), 分层边界clean平整，开闭，边界无泄漏
+- 平台无关C++ Core：核心能力下沉收敛到core, 零平台泄漏, Platform接口 和 Adapter机制可接入多平台(已接入LVGL/Android/IOS作为渲染后端)
+- 边界协议驱动：各边界（JS↔Core / Core↔平台）统一走消息协议，非直接函数调用，解耦、易扩展,可预测, 可组合
+```
+边界协议驱动：Core 各边界（Platform / JS）统一为协议驱动的 typed 消息 → EnqueueResult，clean、可预测、可组合
+```
 - 唯一权威 Runtime Tree：Core 独占树与Layout(Yoga)，NodeID驱动, 无新旧双树全量diff, 局部更新复杂度与树规模无关
 - 免JSON序列化bridge: 基于external function直调, 平台侧 Android=JNI/iOS=ObjC++ 桥接/LVGL=同进程直调; 渲染管线: nodeID寻址 + 事务驱动
-- 核心部件可替换：关键部件(quickjs/yoga)依赖抽象接口(依赖倒置)
+- 核心部件可替换：关键部件(JS引擎/布局引擎/Eventloop调度器/Agent引擎)依赖抽象接口(依赖倒置)
+```
+  - me: Core 不直接依赖 QuickJS/Yoga 等具体实现，而是定义 JsEnginePort 这类抽象接口，Core 只依赖接口、具体实现反过来实现接口——依赖方向从"Core→实现"倒转成"实现→接口←Core"。
+  - 让"稳定的核心"不依赖"易变的细节"，两者都依赖"不变的抽象"——依赖箭头指向抽象，而非指向具体
+  - 依赖注入（DI）的本质（第一性，一句话）
+  - 一个对象不自己创建它依赖的东西，而是由外部把依赖"递"进来——把"用什么"和"谁来给"分开。
+  - 目前只有JS引擎实现, 其他的时间原因,还没有调整, 但我一般设计,都会对核心部件采用这种依赖倒置的设计
+  - 依赖注入：那"到底用哪个实现"谁决定？不由 Core 决定，由外部（Provider/组合根）在启动时注入进来。
+  - 结果：换 JS 引擎 = 换一个 Provider，Core 一行不改。"
+  - 可拆卸"和"可裁剪"是两个不同层面，方案不同
+1. 可拆卸（运行期/组装期解耦）——通常用抽象接口
+"拆卸"= 模块之间不硬依赖，能装能不装。C++ 常见方案：
+
+纯虚接口（抽象基类）+ 依赖注入：调试模块实现一个 DebuggerPort 接口，框架只依赖接口。不装调试就注入一个空实现（Null Object）或干脆不注入。这是"可拆卸"的主力方案——你说的虚函数就是这个。
+Provider/工厂在组合根决定装不装：组合期（Composition Root）决定要不要把调试模块 new 出来注入进去。
+所以"可拆卸"= 抽象接口（虚函数）+ 组合期注入 —— 你的直觉对。
+
+2. 可裁剪（编译期，不进产物）——通常用编译期手段
+"裁剪"= 不需要的代码根本不编译进二进制（嵌入式省 flash/RAM）。C++ 常见方案：
+
+条件编译（#ifdef QUICKAPP_ENABLE_DEBUG）：最直接，你说的对。不开这个宏，调试代码不进产物。
+CMake 层面不链接：更干净的做法——调试做成独立 lib/target，CMake option 决定要不要 target_link。未选的模块编译单元根本不参与链接。这比 #ifdef 满地撒更 clean（符合你的风格）。
+编译期 Composition Root：把"选哪些模块"集中在一处编译期开关，而不是代码里到处 #ifdef。
+所以"协议级裁剪"= 条件编译 / CMake target 选择 / 编译期组合根 —— 条件编译是其中一种，但CMake target 级裁剪更 clean。
+```
 - 核心工具链Toolkit：DSL → Page IR → RPK 编译 / inspect / run + 内置Benchmark可观测体系
+- 编译期静态依赖 + 轻运行时：依赖编译期静态算好，运行时只匹配触发，非 Vue 式运行时收集
+```
+这套 framework 的设计——共享 runtime + 编译期生成数据 + 编译期静态依赖——其实是Svelte 式的"编译期做重活、运行时轻量"思路，比 Vue/React 的运行时方案更适合嵌入式。这是个很能体现架构判断的点：你不是照抄 Vue 的运行时响应式，而是为嵌入式选了"编译期静态依赖 + 轻运行时"的路线。面试讲这个，直接体现"为场景做架构选择"的判断力。
+```
+
 
 ### Mako  — AI Coding Agent 框架
 
@@ -93,24 +126,33 @@
 面向 xml / css / js 的 AOT 条件编译，注释指令按目标平台裁剪源码，用于包体优化与跨端复用，均已发布 npm。
 - https://github.com/bsq-labs
 
-
 ---
 
 ## 三、项目经历
 
 ### 3.1 XM·IoT 研发部·前端框架部（2024.4 ~ 至今）
 
-#### 嵌入式快应用框架（Vela · C++ 引擎层 · JS↔C++ 双端）
+#### 嵌入式快应用框架（Vela(RTOS) · JS↔C++ 双端）
 
-vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + eventloop。
+vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + (LibUV)Eventloop。
 
-- 框架核心：核心能力下沉 C++ Core（Runtime Tree / 布局 / 渲染管线 / 事件 / 生命周期 / 路由），JS 侧轻运行时 + 增量事务驱动
-- js framework
-- 调试全链路(CDP)：实现CDP协议40组+，调试方案全链路: 前端（IDE侧+调试后端（框架侧）， 重构：clean化 和实现解耦？用到了什么手法
-- feature / bridge 机制：横跨cpp和js两侧（团队就是只有我往多端去做）,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+- 框架核心下沉：核心能力（Runtime Tree/布局/渲染管线/事件/生命周期 / 路由）下沉 C++ Core，JS 侧轻运行时 + 事务驱动
+- 调试全链路: 前后端分离架构, 调试后端(框架侧)+调试前端(IDE侧插件)+协议驱动(实现调试协议CDP40+组), 模拟器 / 真机（MQTT）调试; 结构可拆卸、协议可裁剪
+```
+  - me注解: 1 调试全链路：实现 CDP 协议 40+ 组；调试后端(框架侧)+调试前端(IDE 插件)
+  - me注解: 重构：clean化 和实现解耦？用到了什么手法
+```
+- JS Framework（JS 侧运行时）：响应式（Proxy 状态劫持）+ 依赖标脏批量调度（Microtask Flush）+ 动态节点协调（if/for）+ 增量事务生成
+```
+- JS Framework（JS 侧运行时）：响应式（Proxy 状态劫持）+ Binding 批量调度 + 增量事务生成
+```
+- feature / bridge 机制(platform侧能力接入体系, 系统能力向应用层开放): 横跨cpp和js两侧,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+```
+  - me注解: 叙事: 团队就是只有我往多端js cpp去做
+  - me注解: feature/bridge系统：横跨cpp和js两侧,基于quickjs external obj/func机制,无json序列化跨边界通信,feature注册和管理 
+```
 
-
-####  Android 快应用框架（系统级跨端 Runtime）
+####  移动端快应用框架（类 RN 跨端框架· Android 原生）
 
 系统级快应用运行时，JS 驱动 Native View 渲染（非 WebView），V8 + J2V8 同步 Bridge（类 JSI）。
 
@@ -119,19 +161,19 @@ vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + eventloop。
 - 启动内存优化：DEX 布局优化，热代码前置减少 page fault（PSS MAX 41MB → 35.8MB）
 - 自动化测试：Python + pytest + uiautomator2 驱动设备自动化，覆盖启动 / 滑动 / 点击等场景
 
-####  快应用 IDE 与工具链（Toolkit · IDE · 调试 · 静态分析）
+####  快应用 IDE 与工具链（Toolkit · IDE · 调试 · 应用分析）
 
 为快应用开发者提供覆盖**开发全链路**的集成开发环境。
 
 - 基于 VS Code（Electron）二次开发，支持 macOS / Linux / Windows
-- 覆盖项目创建 → 语法高亮 → 调试预览 → 构建编译 → 打包发布
+- 覆盖项目创建 → 语法高亮 → 调试预览 → 构建编译 → 打包发布全链路
 - Toolkit（编译构建）：DSL 源码 → 编译打包 → RPK 产物
-- 基于自研**依赖分析引擎**的快应用**检测评分**工具
-- 模拟器调试 / 真机调试（CDP 协议）
+- 快应用**检测评分**框架: 基于自研**依赖分析引擎**(可扩展, 基于依赖图谱遍历器+访问器),包含静态扫描和动态监测
+- 调试插件: 模拟器调试 / 真机调试（CDP 协议）
 
 ####  负载性能分析平台（全栈 · 从 0 到 1 独立交付）
 
-对设备/芯片的负载、功耗、性能、流畅度进行可视化分析。
+对设备/芯片/OS的负载、功耗、性能、流畅度进行可视化分析。
 
 - 架构：探测上报端 → 后台分析平台 → 持久化层 → 前端可视化
 - 全链路独立交付：技术选型 · 数据库建模 · 后端 API · 前端可视化 · CI/CD · 监控告警 · 线上问题排查
@@ -216,5 +258,5 @@ vela系统快应用框架层（IoT / 穿戴），QuickJS + LVGL + eventloop。
 ### 3.6 DFGX·技术一部·前端开发组（2017.9 ~ 2019.8）
 
 - 政企 toB 领域，覆盖 PC 端（门户 / 管理平台）、移动端（H5 / HybridApp / 小程序）、大屏、直播监控
-- 技术栈：React、MobX / Redux、Ant Design、ECharts、jQuery、Bootstrap
+- 技术栈：React、MobX / Redux、Ant Design、ECharts、jQuery、Bootstrap, js-bridge开发
 - **带领 5 人团队**完成景区多个信息平台的前后端开发与交付
