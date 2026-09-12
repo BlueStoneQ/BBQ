@@ -10,3 +10,5 @@
 | 运行时节点树 | `RuntimeTree` | 当前页面的唯一 UI 运行实例 | C++ Core | `RuntimeTree`、`RuntimeTreeStore` | 维护节点状态、父子关系和实际属性 |
 | 渲染意图事务 | `RenderIntentTransaction` | 对 UI 变化的声明式操作集合 | JS Framework → C++ Runtime Service | `RenderIntentTransaction`、`submitRenderTransaction` | 描述属性更新和动态结构变化 |
 | 挂载事务 | `MountTransaction` | 面向平台的具体 UI 变更指令 | C++ Core → Platform | `MountTransaction` | Core 布局后生成，供平台后端执行 |
+
+
