@@ -1,4 +1,10 @@
 /**
+ * 【题目 7.3】得物（国际化 1 面）异步任务队列 arrange
+ * 要求：实现 arrange 函数支持链式调用 do / wait / execute，
+ *      按顺序执行同步/异步任务（如 arrange('William').do('commit').wait(5).execute()）。
+ */
+
+/**
 date: 2023-1-9 得物 国际化 1面 async task queue
 
 实现一个 arrange 函数,可以进行时间和工作调度

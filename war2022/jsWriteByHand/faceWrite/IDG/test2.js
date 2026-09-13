@@ -1,4 +1,9 @@
 /**
+ * 【题目 7.6】IDG（二）连续子数组最大和 - DFS 解法
+ * 要求：求连续子数组的最大和，本文件用 DFS 枚举每个子数组情况求解。
+ */
+
+/**
  * 2022-6-29
  *  [连续子数组最大和](https://leetcode.cn/problems/lian-xu-zi-shu-zu-de-zui-da-he-lcof/)
  * DP看这个 我已经写过的: https://leetcode.cn/problems/maximum-subarray/

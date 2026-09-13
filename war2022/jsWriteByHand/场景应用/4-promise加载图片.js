@@ -1,4 +1,9 @@
 /**
+ * 【题目 4.8】Promise 加载图片
+ * 要求：实现 loadImg(url) 返回 Promise，图片 onload 时 resolve、onerror 时 reject。
+ */
+
+/**
  * 用Promise实现图片的异步加载
  * 2022-6-16
  */

@@ -1,4 +1,10 @@
 /**
+ * 【题目 4.17】虚拟 DOM 与 Diff
+ * 要求：实现简易虚拟 DOM——用 JS 对象描述 DOM（element），对比新旧树得到差异（diff），
+ *      再将差异应用到真实 DOM（patch）。
+ */
+
+/**
  * 简单实现一个Virtual DOM
  * 2022-6-22
  * https://mp.weixin.qq.com/s/w2b9Wn7QWXhy2qf2JX3Kbw

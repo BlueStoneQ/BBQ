@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.2】手写实现 new 操作符
+ * 要求：实现 _new(Constructor, ...args)，模拟 new：以 Constructor.prototype 为原型
+ *      创建对象、绑定 this 执行构造函数，构造函数返回对象则用其返回值，否则用新对象。
+ */
+
+/**
  * 2022-2-28
  * new 作用：根据constructor生产一个对象实例
  * 

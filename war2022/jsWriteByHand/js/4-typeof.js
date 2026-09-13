@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.12】手写实现类型判断（增强版 typeof）
+ * 要求：实现通用类型检测函数，准确区分 string/number/boolean/symbol/undefined/
+ *      null/object/array/function/regexp/date/map/set 等类型。
+ */
+
+/**
  * 2022-3-1
  * 实现一个比较通用的全面的类型判断函数
  * - 不是实现一个typeof哦

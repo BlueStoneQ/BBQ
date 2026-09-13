@@ -1,4 +1,9 @@
 /**
+ * 【题目 3.6】手写实现数组 API（map 等）
+ * 要求：在 Array.prototype 上手写实现 map（及 forEach/filter/reduce/push 等）方法。
+ */
+
+/**
  * 实现数组的map方法
  * 2022-3-25
  */

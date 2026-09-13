@@ -1,4 +1,10 @@
 /**
+ * 【题目 4.2】sleep 函数
+ * 要求：实现 sleep(ms) 返回一个延时 ms 毫秒后 resolve 的 Promise，
+ *      配合 async/await 实现「每隔一秒依次打印 0 2 4 6 8 10」。
+ */
+
+/**
  * sleep函数
  * 2022-10-5
  * https://www.bilibili.com/video/BV1Xr4y1x7DR/?spm_id_from=333.337.search-card.all.click&vd_source=9365026f6347e9c46f07d250d20b5787

@@ -1,4 +1,10 @@
 /**
+ * 【题目 4.9】Promise.cancel 实现
+ * 要求：实现可取消的 Promise，调用 cancel 后使其不再 resolve/reject
+ *      （可借助 Promise.race 或包装函数实现）。
+ */
+
+/**
  * 2023-3-24
  * 蚂蚁笔试：实现一个promise.cancel
  * 参考: [利用promise.race实现](https://cloud.tencent.com/developer/article/1785993)

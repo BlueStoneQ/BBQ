@@ -1,4 +1,10 @@
 /**
+ * 【题目 2.5】手写实现惰性函数 / 懒求值（lazyCall）
+ * 要求：实现 add(1)(2)(3)() 形式的懒求值——持续传参时不断返回新函数收集参数，
+ *      直到以空参数调用 () 时才真正执行并返回结果。
+ */
+
+/**
  * 懒求值（伪柯里化）
  * 其实 也就是一种参数长度最开始没有指定的柯里化
  * 2022-6-15
@@ -9,20 +15,15 @@
  * 有的称这个为懒求值，我这里称伪柯里化 - 实现一下：同样也是高阶函数
  * 下面这个实现是我自己实现的 应该是不容易找到参照
  */
- function _lazyCall (fn, ...args) {
+ function _lazyCall (fn, ...originalArgs) {
   // defend: throw TypeError 
-
-  // ！！！注意这里的赋值: 记录所有的参数
-  const originalArgs = args || [];
-
+  
   return function (...args) {
     // case1: 有参数传入 调用高阶函数 返回值还是一个函数 
     // - 整个结构和curry基本一样 都是高阶函数，在返回的高阶函数内判断参数情况，curry是和fn.length比较, 这里是和0比较
     if (args.length !== 0) { 
-      // 利用闭包 将参数记录下来 供后面真正调用的时候使用
-      originalArgs.push(...args);
-
-      return _lazyCall.call(this, fn, ...originalArgs); // ！！！注意这里传参
+      // 将当前函数参数args拼接到originalArgs后面传递下去 供后面真正调用的时候使用
+      return _lazyCall.apply(this, [fn, ...originalArgs, ...args]); // ！！！注意这里传参
     }
     // case2: 没有参数传入 调用原函数
     return fn.call(this, ...originalArgs);

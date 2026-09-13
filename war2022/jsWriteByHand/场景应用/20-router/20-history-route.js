@@ -1,4 +1,9 @@
 /**
+ * 【题目 4.16】前端路由实现 - History 模式
+ * 要求：基于 History API（pushState / popstate）实现前端路由，并说明与 Hash 模式的区别。
+ */
+
+/**
  * 2022-6-25
  * hash实现前端路由
  * https://danielxuuuuu.github.io/2020/02/23/%E5%89%8D%E7%AB%AF%E8%B7%AF%E7%94%B1%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86

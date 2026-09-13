@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.4】手写实现 call / apply / bind
+ * 要求：在 Function.prototype 上实现 _call / _apply / _bind，正确处理 this 绑定、
+ *      参数传递；bind 返回的函数需维护原型链，作为构造函数被 new 时绑定的 this 失效。
+ */
+
+/**
  * 2022-3-1
  * !!! 不要用箭头函授
  */

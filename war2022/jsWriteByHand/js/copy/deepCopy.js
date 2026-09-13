@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.8】手写实现深拷贝（deepClone）
+ * 要求：递归拷贝对象/数组，正确处理 Object/Array/Map/Set/Date/RegExp/Function 等类型，
+ *      并用备忘录（WeakMap）解决循环引用问题。
+ */
+
+/**
  * 2022-3-3
  * 1. JSON.parse(JSON.stringify(obj)) // 属性值为函数 Symbol undefined等 该属性会消失; 试试 Reg呢？，另外 也无法处理循环引用问题 会直接报错
  * 2. lodash.cloneDeep()

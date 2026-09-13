@@ -1,3 +1,9 @@
+/**
+ * 【题目 1.11】手写实现 Promise（符合 Promise/A+ 规范）
+ * 要求：实现 MyPromise，支持三态流转、then 链式调用与值穿透，
+ *      并实现 resolve/reject/all/race/allSettled/any/catch/finally 等静态与原型方法。
+ */
+
 const STATUS = {
   PENDING: 'pending',
   FULFILLED: 'fulfilled',

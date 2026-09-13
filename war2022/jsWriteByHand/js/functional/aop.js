@@ -1,4 +1,10 @@
 /**
+ * 【题目 2.4】手写实现 AOP 面向切面编程
+ * 要求：实现 before / after / around，在不修改原函数的前提下，
+ *      为其执行前 / 后 / 前后织入额外逻辑。
+ */
+
+/**
  * Aop编程
  * 2022-4-22
  * 它的作用是在某个函数上进行切割，可以在函数执行前/中/后添加其他逻辑代码。
@@ -36,11 +42,11 @@ Function.prototype.before = function(fn) {
   // 获取被拦截的函数句柄
   const selfFn = this;
   // 返回新函数 
-  return function() {
+  return function(...args) {
     // 调用插入的逻辑，注意this是需要当前这个新函数进行传递的（这个新函数所在的环境 才是原来的函数本来调用的地方）
-    fn && fn.call(this, ...arguments);
+    fn && fn.apply(this, args);
     // 调用被拦截的函数
-    return selfFn.call(this, ...arguments);
+    return selfFn.apply(this, args);
   }
 }
 
@@ -51,11 +57,11 @@ Function.prototype.before = function(fn) {
 Function.prototype.after = function(fn) {
   const selfFn = this;
 
-  return function() {
+  return function(...args) {
     // 执行原来函数的逻辑 先把结果记录下来 一会儿返回
-    const result = selfFn.call(this, ...arguments);
+    const result = selfFn.apply(this, args);
     // 执行插入的逻辑 - 在after中 可以对result进行处理
-    fn && fn.call(this, result, ...arguments);
+    fn && fn.apply(this, [result, ...args]);
     // 返回之前记录的结果
     return result;
   }
@@ -65,16 +71,16 @@ Function.prototype.after = function(fn) {
  * 环绕通知：around
  * @param {*} fn 
  */
-Function.prototype.around = function(fn) {
+Function.prototype.around = function(beforeFn, afterFn) {
   const selfFn = this;
 
-  return function() {
+  return function(...args) {
     // before
-    fn && fn.call(this, ...arguments);
+    beforeFn && beforeFn.apply(this, args);
     // 执行原来函数的逻辑 先把结果记录下来 一会儿返回
-    const result = selfFn.call(this, ...arguments);
+    const result = selfFn.apply(this, args);
     // after
-    fn && fn.call(this, ...arguments);
+    afterFn && afterFn.apply(this, [result, ...args]);
     // 返回之前记录的结果
     return result;
   }
@@ -94,9 +100,9 @@ Function.prototype.around = function(fn) {
  * @param {Function} insertFn 插入的函数
  */
 const before = function(selfFn, insertFn) {
-  return function() {
-    insertFn && insertFn.call(this, ...arguments);
-    return selfFn.call(this, ...arguments);
+  return function(...args) {
+    insertFn && insertFn.apply(this, args);
+    return selfFn.apply(this, args);
   }
 }
 
@@ -105,10 +111,10 @@ const before = function(selfFn, insertFn) {
  * @param {Function} insertFn 插入的函数
  */
  const after = function(selfFn, insertFn) {
-  return function() {
-    const result = selfFn.call(this, ...arguments);
+  return function(...args) {
+    const result = selfFn.apply(this, args);
 
-    insertFn && insertFn.call(this, ...arguments);
+    insertFn && insertFn.apply(this, [result, ...args]);
     
     return result;
   }

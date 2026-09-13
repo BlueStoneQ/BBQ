@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.3】手写实现 instanceof
+ * 要求：实现 _instanceof(obj, Constructor)，判断 Constructor.prototype
+ *      是否在 obj 的原型链上。
+ */
+
+/**
  * 2022-2-28
  */
 

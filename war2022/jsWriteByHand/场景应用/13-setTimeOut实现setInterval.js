@@ -1,4 +1,10 @@
 /**
+ * 【题目 4.7】用 setTimeout 实现 setInterval
+ * 要求：用 setTimeout 递归调用模拟 setInterval，避免原生 setInterval
+ *      因执行栈阻塞导致的丢帧/堆积问题，并支持清除。
+ */
+
+/**
  * 2022-6-16
  * 13-setTimeOut实现setInterval
  * https://juejin.cn/post/6946136940164939813#heading-66

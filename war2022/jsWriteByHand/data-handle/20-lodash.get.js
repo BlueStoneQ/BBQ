@@ -1,4 +1,10 @@
 /**
+ * 【题目 3.5】手写实现 lodash.get
+ * 要求：实现 get(source, path, defaultValue)，按 'a[0].b.c' 形式的路径安全取值，
+ *      路径不存在时返回默认值。
+ */
+
+/**
  * 手写lodash.get()
  * 2023-3-29
  * 参考: https://juejin.cn/post/6844903966992498696

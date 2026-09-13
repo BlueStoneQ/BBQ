@@ -1,4 +1,10 @@
 /**
+ * 【题目 1.1】手写实现 Object.create
+ * 要求：模拟 Object.create(proto)，以传入对象 proto 作为新对象的原型，
+ *      返回一个原型指向 proto 的全新对象。
+ */
+
+/**
  * object.create polyfill
  * 根据prototype生成一个对象实例
  * 创建一个新对象，使用现有的对象来提供新创建的对象的__proto__

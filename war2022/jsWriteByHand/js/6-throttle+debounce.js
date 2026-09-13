@@ -1,4 +1,12 @@
 /**
+ * 【题目 1.5 / 1.6 / 1.7】手写节流 throttle、防抖 debounce，以及两者结合
+ * 要求：
+ *   1.5 throttle(fn, delay)：单位时间内最多执行一次（时间戳 / 定时器两种实现）；
+ *   1.6 debounce(fn, delay, immediate)：停止触发 delay 后才执行，可选首次立即执行；
+ *   1.7 结合版：既防抖又保证 delay 到达时必定响应一次。
+ */
+
+/**
  * throttle 和 debounce 本质上都是 高阶函数
  * 2022-2-28
  * 1. 方法1：时间间隔
