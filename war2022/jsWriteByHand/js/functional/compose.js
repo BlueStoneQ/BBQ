@@ -16,23 +16,24 @@
  * 2022-3-2
  * https://github.com/mqyqingfeng/Blog/issues/45
  * 
- * 相对而言：任务从左向右执行 就是 pipe
+ * 相对而言：任务从左向右执行 就是 pipe， startIndex 从 fnList左侧0开始即可
  */
-
 const compose = (...fnList) => {
-  // 因为我们设计的执行顺序是从右向左执行 所以这里的startIndex是末尾的index
-  const startIndex = fnList.length - 1;
-  return function(...args) {
-    let i = startIndex;
-    // 动态记录每个函数的结果
-    let result = fnList[i](...args); // 这里的args是启动函数的参数 也就是右边第一个函数的参数
+    return function(...args) {
+        if (fnList.length === 0) {
+            return args[0]
+        }
+        // 因为我们设计的执行顺序是从右向左执行 所以这里的startIndex是末尾的index
+        let i = fnList.length - 1
+        // 动态记录每个函数的结果
+        let res = fnList[i--].apply(this, args) // 这里的args是启动函数的参数 也就是右边第一个函数的参数
 
-    while(i--) {
-      result = fnList[i](result);
+        while(i >= 0) {
+            res = fnList[i--].call(this, res)
+        }
+
+        return res
     }
-
-    return result;
-  }
 }
 
 

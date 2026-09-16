@@ -20,44 +20,19 @@
  * @param {*} fn 
  * @returns 
  */
-function curry (fn) {
-  // defend fn必须是函数
-  if (typeof fn !== 'function') {
-      throw new TypeError(`curry need function to be params`);
-  }
-  // init data
-  const needArgslength = fn.length; // 该函数的形参格式利用闭包进行记录
-  const originalArgs = [].slice.call(arguments, 1); // arguments 数组化  并从中剥离出参数部分（拆去被柯里化的函数）
+const curry = (fn, ...exitArgs) => {
+    // defend fn必须是函数
+    if (typeof fn !== 'function') {
+        throw new TypeError(`curry need function to be params`);
+    }
 
-  // return new function 
-  return function() {
-      // 合并参数
-      const combineArgs = originalArgs.concat([].slice.call(arguments));
+    const needsParamsCount = fn.length
 
-      // 判断参数是否满足length个
-      if (combineArgs.length >= needArgslength) {
-        return fn.apply(this, combineArgs);
-      }
-
-      // 参数不足length个时 返回柯里化函数: 这里的this 来自于当前新函数调用时的this(包括这个函数的this可以被其他bind之类的改变) 箭头函数不用考虑该问题  其this始终指向其定义时向上捕获的this
-      return curry.call(this, fn, ...combineArgs);
-  }
-}
-
-/**
- * ES6 实现
- * 这里其实主要利用了解构参数 形参会合并之前+现在的参数
- * @param {*} fn 
- * @returns 
- */
-const curryES = (fn, ...args) => {
-  console.log('args: ', args);
-  // 这里的args 是前面所有调用的传递的参数的集合
-  if (args.length >= fn.length) {
-    return fn(...args);
-  }
-
-  return curryES.bind(null, fn, ...args);
+    return function(...args) {
+        const combineArgs = [...exitArgs, ...args]
+        if (combineArgs.length >= needsParamsCount) return fn.apply(this, combineArgs)
+        return curry(fn, ...combineArgs)
+    }
 }
 
 // test

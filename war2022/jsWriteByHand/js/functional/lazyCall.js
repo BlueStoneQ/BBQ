@@ -15,21 +15,19 @@
  * 有的称这个为懒求值，我这里称伪柯里化 - 实现一下：同样也是高阶函数
  * 下面这个实现是我自己实现的 应该是不容易找到参照
  */
- function _lazyCall (fn, ...originalArgs) {
+const lazyCall = (fn, ...originalArgs) => {
   // defend: throw TypeError 
-  
-  return function (...args) {
+  return function(...args) {
     // case1: 有参数传入 调用高阶函数 返回值还是一个函数 
     // - 整个结构和curry基本一样 都是高阶函数，在返回的高阶函数内判断参数情况，curry是和fn.length比较, 这里是和0比较
-    if (args.length !== 0) { 
+    if (args.length === 0) {
       // 将当前函数参数args拼接到originalArgs后面传递下去 供后面真正调用的时候使用
-      return _lazyCall.apply(this, [fn, ...originalArgs, ...args]); // ！！！注意这里传参
+      return fn.apply(this, originalArgs)
     }
     // case2: 没有参数传入 调用原函数
-    return fn.call(this, ...originalArgs);
+    return lazyCall.apply(this, [fn, ...originalArgs, ...args])
   }
 }
-
 
 /***
  * test _lazyCall

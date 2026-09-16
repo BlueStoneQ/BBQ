@@ -15,12 +15,12 @@
   - [1.12 typeof 实现 ⭐⭐](./js/4-typeof.js)
   - [1.13 元编程（Proxy & Reflect）⭐⭐⭐](./js/12-元编程.js)
 - 二、函数式编程
-  - [2.1 函数柯里化（curry）⭐⭐⭐](./js/functional/curry.js)
-  - [2.2 函数组合（compose）⭐⭐⭐](./js/functional/compose.js)
-  - [2.3 偏函数（partial）⭐⭐](./js/functional/partial.js)
+  - [2.1 函数柯里化（curry）✅⭐⭐⭐](./js/functional/curry.js)
+  - [2.2 函数组合（compose）✅⭐⭐⭐](./js/functional/compose.js)
+  - [2.3 偏函数（partial）✅⭐⭐](./js/functional/partial.js)
   - [2.4 AOP 面向切面编程 ✅⭐⭐](./js/functional/aop.js)
-  - [2.5 惰性函数（lazyCall）⭐⭐](./js/functional/lazyCall.js)
-  - [2.6 记忆函数（memoize）⭐⭐⭐](./js/11-memoize.js)
+  - [2.5 惰性函数（lazyCall）✅⭐⭐](./js/functional/lazyCall.js)
+  - [2.6 记忆函数（memoize）✅⭐⭐⭐](./js/11-memoize.js)
 - 三、数据处理
   - [3.1 数组扁平化（flat）⭐⭐⭐](./data-handle/5-arrayFlat.js)
   - [3.2 数组去重（unique）⭐⭐⭐](./data-handle/7-uniqueArray.js)

@@ -17,12 +17,12 @@
  * https://github.com/mqyqingfeng/Blog/issues/43
  * TODO: 占位的实现 ？
  * 
- * 其实 偏函数 是一个比较细分的柯里化，通过内置函数，可以产生一个可以随处移动的函数
+ * 其实 偏函数 是一个比较细分的柯里化，通过内置参数，可以产生一个可以随处移动的函数（上下文参数都已经通过闭包内置了， 所以return出来的函数可以在任何地方调用，因为他需要的前置参数已经内置在他可以访问的闭包中了）
  */
 
 const partial = (fn, ...args) => {
-  return function(...restArgs) {
-    fn.apply(this, [...args, ...restArgs])
-  }
+    return function(...restArgs) {
+        return fn.apply(this, [...args, ...restArgs])
+    }
 }
 
