@@ -9,6 +9,16 @@
 | Native 调用的页面入口 | 创建、销毁页面，接收事件和生命周期通知 |
 | 内部 VM、响应式、DOM、调度 | 创建状态与 JS DOM，建立依赖，批量提交变化 |
 
+## PageVM
+```js
+// ========== 1. 依赖收集：Dependency + Proxy ==========
+// ========== 2. microtask 批调度 ==========
+// ========== 3. Watcher：依赖收集 + 延迟批处理 ==========
+class PageVM {
+    constructor() {}
+    buildSubRuntimeTree() {}
+}
+```
 
 ## runtime方法
 1. 内存中的模块表
@@ -37,7 +47,6 @@ const $app_define$ = function(moduleId, deps, factory) {
         module
     )
 
-    // 
     moduleRegistryMap.set(moduleId, module)
 
 // 调用
@@ -50,7 +59,7 @@ const $app_define$ = function(moduleId, deps, factory) {
 ```js
 const $app_bootstrap$ = function(moduleId, config) {
     const module = moduleRegistry.get(moduleId)
-    const pageDefinition = module.export
+    const pageDefinition = module.export // 页面信息是在app_define的时候挂载到moudle.export上的
 
     const pageVM = new PageVM()
 

@@ -310,7 +310,7 @@ function flushWatchers() {
   pendingWatchers.clear()
   flushScheduled = false
   if (operations.length > 0) {
-    NativeBridge.send(operations)   // 一批指令一次过桥
+    NativeBridge.send(operations)   // 一批指令一次过桥,发送给core/platform侧
   }
 }
 
@@ -340,19 +340,71 @@ class Watcher {
   }
 }
 
-// ========== 用法 ==========
-const state = reactive({ title: 'hi', count: 0 })
-new Watcher(
-  state,
-  function () { return this.title },
-  (value, operations) => operations.push({ node: titleNode, value })
-)
+// 让数据和页面真正在活起来, 一个页面只有一个 PageVM 实例,也就是只有在app_bootstrap的时候创建一次
+class PageVM {
+  // 每次创建页面都分配独立状态，再把模板实例化为节点树。
+  constructor(pageDefinition) {
+    // 1. data数据响应式化(状态劫持+依赖收集)
+    this.state = reactive(pageDefinition.data())
+    // 2. 递归创建当前页面子树
+    this.root = this.buildSubRuntimeTree(pageDefinition.template)
+  }
 
-state.title = 'a'
-state.title = 'b'
-state.count = 1
-// → 只排 1 个 microtask；flush 时 title 的 watcher 求值一次(值 'b')、count 无订阅不动
-// → 合并成 1 批 operations，一次 send
+  // 将模板定义变成当前节点；动态属性通过 Watcher 跟随状态更新。
+  buildSubRuntimeTree(template) {
+    const node = {
+      type: template.type,
+      attributes: {},
+      children: []
+    }
+
+    for (const [name, expression] of Object.entries(template.attr || {})) {
+      if (typeof expression !== 'function') {
+        node.attributes[name] = expression
+        continue
+      }
+
+      // 首次求值收集依赖，把“哪些状态变化”与“更新哪个属性”连起来。
+      const watcher = new Watcher(
+        this.state,
+        expression,
+
+        // 同步 JS 节点的当前值，并记录增量，供调度器批量提交。
+        (value, operations) => {
+          node.attributes[name] = value
+          operations.push({ node, name, value })
+        }
+      )
+
+      node.attributes[name] = watcher.value
+    }
+
+    // 递归构建子树
+    node.children = (template.children || []).map(childTemplate => this.buildSubRuntimeTree(childTemplate))
+    return node
+  }
+}
+
+// ========== 用法 ==========
+const pageDefinition = {
+  // 返回新对象，让各个页面实例拥有独立状态。
+  data: () => ({ title: 'hi' }),
+
+  template: {
+    type: 'text',
+    attr: {
+      // 求值时读取 title，Watcher 因而订阅 title 的变化。
+      value() {
+        return this.title
+      }
+    }
+  }
+}
+
+const pageVM = new PageVM(pageDefinition)
+NativeBridge.mount(pageVM.root)
+
+pageVM.state.title = 'hello'
 ```
 - me：
 ```js
