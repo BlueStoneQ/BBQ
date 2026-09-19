@@ -11,6 +11,38 @@
  * - [统一以这个实现为准](data-handle/7-arrayFlatApi.js)
  */
 
+// 递归版
+Array.prototype.flat = function() {
+    const res = []
+
+    // this 就是当前数组
+    for (const item of this) {
+        if(Array.isArray(item)) {
+            // 这里递归：用item.flat来调用
+            res.push(...item.flat())
+            continue
+        }
+
+        res.push(item)
+    }
+
+    return res;
+}
+
+
+// reduce版，核心也是递归 cur.flat
+Array.prototype.flat = function() {
+  return this.reduce((pre, cur) => {
+    // 注意：push返回的是数组长度，不是数组本身，所以要提前push
+    Array.isArray(cur) ? pre.push(...cur.flat()) : pre.push(cur)
+    return pre
+  }, [])
+}
+
+/**
+ * ******************下面的方法不再看了*****************************
+ */
+
 
 /**
  * [掌握这个即可]方法1：递归法
