@@ -258,6 +258,7 @@ $app_bootstrap$('@app-component/index', { packagerVersion: '1.0.0' })
 // ========== 1. 依赖收集：Dependency + Proxy ==========
 class Dependency {
   constructor() {
+    // 这里Set本质充当的是一个去重的Watche队列（集合），也就是订阅一个state的可能是多个节点（watcher），所以需要用一个集合来管理
     this.subscribers = new Set()   // 订阅了这个字段的 watcher 集合
   }
   depend() {
@@ -272,12 +273,13 @@ class Dependency {
 Dependency.activeWatcher = null   // 当前正在收集依赖的 watcher
 
 function reactive(rawObject) {
-  const fieldDependencies = new Map()   // 字段名 → 该字段的 Dependency
+  // 这种map其实是很常见的notify型队列，比如事件总线 Map<event, listnerQueue>, 因为订阅者一般不一定就只有一个
+  const field2DependencyMap = new Map()   // 字段名 → 该字段的 Dependency
   const getDependency = (field) => {
-    if (!fieldDependencies.has(field)) {
-      fieldDependencies.set(field, new Dependency())
+    if (!field2DependencyMap.has(field)) {
+      field2DependencyMap.set(field, new Dependency())
     }
-    return fieldDependencies.get(field)
+    return field2DependencyMap.get(field)
   }
   return new Proxy(rawObject, {
     get(target, field) {
@@ -293,11 +295,12 @@ function reactive(rawObject) {
 }
 
 // ========== 2. microtask 批调度 ==========
-const pendingWatchers = new Set()   // 本轮待执行的 watcher，Set 天然去重
+const watcherQueue = new Set()   // 本轮待执行的 watcher，Set 天然去重
+// flushScheduled 用来保证同一轮同步修改只注册一个 microtask；这个标记避免每次写状态都重复安排 flush
 let flushScheduled = false
 
 function scheduleWatcher(watcher) {
-  pendingWatchers.add(watcher)
+  watcherQueue.add(watcher)
   if (!flushScheduled) {
     flushScheduled = true
     Promise.resolve().then(flushWatchers)   // 排一个 microtask
@@ -306,8 +309,8 @@ function scheduleWatcher(watcher) {
 
 function flushWatchers() {
   const operations = []
-  pendingWatchers.forEach(watcher => watcher.run(operations))
-  pendingWatchers.clear()
+  watcherQueue.forEach(watcher => watcher.run(operations))
+  watcherQueue.clear()
   flushScheduled = false
   if (operations.length > 0) {
     NativeBridge.send(operations)   // 一批指令一次过桥,发送给core/platform侧
@@ -316,6 +319,7 @@ function flushWatchers() {
 
 // ========== 3. Watcher：依赖收集 + 延迟批处理 ==========
 class Watcher {
+  // @params onValueChanged : 状态变化时，要执行的回调，一般我们在建树的时候用这个回调传递渲染指令到watcher这边
   constructor(state, evaluate, onValueChanged) {
     this.state = state
     this.evaluate = evaluate               // 怎么算这个绑定的值
@@ -344,10 +348,14 @@ class Watcher {
 class PageVM {
   // 每次创建页面都分配独立状态，再把模板实例化为节点树。
   constructor(pageDefinition) {
-    // 1. data数据响应式化(状态劫持+依赖收集)
+    this.pageDefinition = pageDefinition
+
+    // 1. data数据响应式化(状态劫持+依赖收集) + 挂载业务方法到this实例
     this.state = reactive(pageDefinition.data())
     // 2. 递归创建当前页面子树
+    this.callLifecycle('onInit')
     this.root = this.buildSubRuntimeTree(pageDefinition.template)
+    this.callLifecycle('onReady')
   }
 
   // 将模板定义变成当前节点；动态属性通过 Watcher 跟随状态更新。
@@ -357,6 +365,8 @@ class PageVM {
       attributes: {},
       children: []
     }
+
+    this.bindEvents(node, template.events) // 绑定事件
 
     for (const [name, expression] of Object.entries(template.attr || {})) {
       if (typeof expression !== 'function') {
@@ -381,23 +391,57 @@ class PageVM {
 
     // 递归构建子树
     node.children = (template.children || []).map(childTemplate => this.buildSubRuntimeTree(childTemplate))
+
     return node
+  }
+
+  // 2. 生命周期系统：触发生命周期hooks
+  callLifecycle(name) {
+    this.definition[name]?.call(this.state)
+  }
+  // 3. 建树时，绑定方法和事件
+  bindEvents(node, events = {}) {
+    node.handlers = {}
+    for (const [eventName, methodName] of Object.entries(events)) {
+      node.handlers[eventName] = event => {
+        this.definition[methodName].call(this.state, event)
+      }
+    }
+  }
+  // 4. Platform 侧触发event
+  dispatchEvent(node, event) {
+    node.handlers[event.type](event)
+  }
+
+
+  // 挂载业务方法到this上
+  bindMethods() {
+    // 让业务方法之间能通过 this 调用，并共享当前实例状态。
+    for (const [name, method] of Object.entries(this.pageDefinition)) {
+      if (name !== 'data' && typeof method === 'function') {
+        this.state[name] = method.bind(this.state)
+      }
+    }
   }
 }
 
 // ========== 用法 ==========
 const pageDefinition = {
-  // 返回新对象，让各个页面实例拥有独立状态。
   data: () => ({ title: 'hi' }),
+
+  // 建树之前设置初始状态。
+  onInit() { this.title = '点击修改' },
+
+  // JS 子树构建完成时执行。
+  onReady() {},
+
+  // 事件修改状态，后续更新继续走原来的 Watcher 和调度器。
+  onClick() { this.title = 'hello' },
 
   template: {
     type: 'text',
-    attr: {
-      // 求值时读取 title，Watcher 因而订阅 title 的变化。
-      value() {
-        return this.title
-      }
-    }
+    attr: { value() { return this.title } },
+    events: { click: 'onClick' }
   }
 }
 
@@ -405,6 +449,8 @@ const pageVM = new PageVM(pageDefinition)
 NativeBridge.mount(pageVM.root)
 
 pageVM.state.title = 'hello'
+// 模拟 Native 回传点击，节点已由桥接层定位。
+pageVM.dispatchEvent(pageVM.root, { type: 'click' })
 ```
 - me：
 ```js

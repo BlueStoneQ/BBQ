@@ -15,9 +15,12 @@
 // ========== 2. microtask 批调度 ==========
 // ========== 3. Watcher：依赖收集 + 延迟批处理 ==========
 class PageVM {
-    constructor() {}
+    constructor(pageDefinitioin) {
+    }
     buildSubRuntimeTree() {}
 }
+// usage
+
 ```
 
 ## runtime方法
