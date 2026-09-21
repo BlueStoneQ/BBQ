@@ -23,7 +23,7 @@
   - [2.6 记忆函数（memoize）✅⭐⭐⭐](./js/11-memoize.js)
 - 三、数据处理
   - [3.1 数组扁平化（flat）✅⭐⭐⭐](./data-handle/5-arrayFlat.js)
-  - [3.2 数组去重（unique）⭐⭐⭐](./data-handle/7-uniqueArray.js)
+  - [3.2 数组去重（unique）✅⭐⭐⭐](./data-handle/7-uniqueArray.js)
   - [3.3 扁平对象转树（flatObj2Tree）⭐⭐⭐](./data-handle/16-flatObj2Tree.js)
   - [3.4 树转扁平对象（treeFlat）⭐⭐⭐](./data-handle/17-treeFlat.js)
   - [3.5 lodash.get 实现 ⭐⭐](./data-handle/20-lodash.get.js)

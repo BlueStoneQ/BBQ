@@ -9,14 +9,15 @@
  */
 
 /**
+ * 
  * 方法1： ES6: Set + Array.from
  */
-const uniqueArray1 = (arr) => {
-  return Array.from(new Set(arr));
+Array.prototype.unique = function() {
+    return Array.from(new Set(this))
 }
 
 /**
- * 方法2： ES5: 使用Obj的key不重复去重
+ * 方法2： ES5: 使用Obj的key不重复去重（不必掌握了，知道这个用法就行）
  */
 const uniqueArray2 = (arr) => {
   const map = {}; // Map也可以
@@ -47,27 +48,32 @@ const uniqueArray2 = (arr) => {
  */
 
 /**
- * @param {number[]} nums
- * @return {number}
+ * 方法2:双指针
+ * [必须得掌握]算法中使用双指针去重
+ * 1. 但是需要先排序 让重复的相邻在一起
+ * 2. 参见：[26-删除有序数组中的重复项](https://github.com/BlueStoneQ/algorithm/blob/main/Array/easy/26-%E5%88%A0%E9%99%A4%E6%9C%89%E5%BA%8F%E6%95%B0%E7%BB%84%E4%B8%AD%E7%9A%84%E9%87%8D%E5%A4%8D%E9%A1%B9/26-removeDuplicates.js)
  */
-var removeDuplicates = function(nums) {
-  // 防御
-  if (!Array.isArray(nums)) return;
-  // 初始化变量
-  const numsLen = nums.length;
-  let slowIndex = 0, fastIndex = 0;
-  // 核心算法
-  while (fastIndex < numsLen) {
-    // 快指针发现不重复的元素 可以覆盖到慢指针上（因为数组有序，所以重复的元素肯定都是挨在一起的）
-    if (nums[fastIndex] !== nums[slowIndex]) {
-      slowIndex++; // slow要先向右移动一步 因为不移动 目前指向的元素 是重复的第一个元素 是要保留的
-      nums[slowIndex] = nums[fastIndex];
+Array.prototype.unique = function() {
+    if (this.length === 0 ) return this
+
+    this.sort((a, b) => a - b)
+
+    // 快指针寻找新元素，慢指针记录去重后的末尾
+    let slowIndex = 0, fastIndex = 0
+
+    while (fastIndex < this.length) {
+        if (this[slowIndex] !== this[fastIndex]) {
+            slowIndex++
+            this[slowIndex] = this[fastIndex]
+        }
+       
+        fastIndex++
     }
-    fastIndex++;
-  }
-  // 返回结果 +1：最后一位下标比长度少1
-  return slowIndex + 1;
-};
+
+    this.length = slowIndex + 1
+
+    return this
+}
 
 // test
 const arr = [1, 2, 3, 1, 2, 3, 5, 6];
