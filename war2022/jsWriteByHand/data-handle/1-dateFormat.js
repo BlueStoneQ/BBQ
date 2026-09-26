@@ -23,10 +23,10 @@ const dateFormat = (date, format = 'yyyy/MM/dd') => {
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
 
-  // algo: 其实就是在模版中用实际的数字替换相关占位符
-  return format = format.replace(/dd/, day)
-    .replace(/MM/, month)
-    .replace(/yyyy/, year);
+  // algo: 其实就是在模版中用实际的数字替换相关占位符, yyyy MM dd 都是约定的，好比说format是“今年yyyy今月MM今日dd，是属于今年yyyy”， yyyy占位符是约定的，+g是有些模版里会出现多次
+  return format.replace(/dd/g, day)
+    .replace(/MM/g, month)
+    .replace(/yyyy/g, year);
 }
 
 

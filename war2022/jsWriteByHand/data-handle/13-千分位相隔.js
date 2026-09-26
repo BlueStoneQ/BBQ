@@ -14,16 +14,20 @@
  * 1. 利用正则进行匹配位置
  * 支持支持小数 或者 整数
  * 还有一种实现： return num.toLocalString(); // 必须得有小数点
+ * 
+   // (?) 零宽断言， 用来匹配左右是/不是什么的位置的
+    //（?=pattern）当前位置后面必须跟着xxx pattern 
+    // (?!pattern) 当前位置后面必须不跟着xxx pattern 
  */
-const splitWithDot = (num) => {
-  const numStr = num.toString();
+Number.prototype.$splitBtDot = function() {
+    const numstr = this.toString()
 
-  // 有小数点, 整数部分需要按3位一分: 非首位,
-  if (/\./.test(numStr)) {
-    return numStr.replace(/(?!^)(?=(\d{3})+\.)/g, ',');
-  }
-  // 无小数点
-  return numStr.replace(/(?!^)(?=(\d{3})+$)/g, ',');
+    // 有小数点, 整数部分需要按3位一分: 非首位, 距离. 3 6 9 等 非首位的位置，都匹配，替换成,
+    if (/\./.test(numstr)) {
+        return numstr.replace(/(?!^)(?=(\d{3})+\.)/g, ',')    
+    }
+    // 无小数点
+    return numstr.replace(/(?!^)(?=(\d{3})+$)/g, ',')
 }
 
 // test

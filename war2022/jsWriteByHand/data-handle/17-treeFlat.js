@@ -13,6 +13,45 @@
  * 参考：https://juejin.cn/post/6987224048564437029
  */
 
+// 递归版
+const flatTree = (tree) => {
+    const flatArr = []
+
+    for (const node of tree) {
+        const { children = [], ...restNode } = node
+        flatArr.push(restNode)
+
+        if (children.length === 0) continue
+
+        flatArr.push(...flatTree(children))
+    }
+
+    return flatArr
+}
+
+// 迭代版：调用栈不存在爆栈的风险，其实就是类似树的BFS，不过BFS用的queue + shift，这里本质是DFS：stack + pop
+const flatTreeIter = (tree) => {
+    const flatArr = []
+    // BFS的核心数据结构：stack
+    const stack = [ ...tree ]
+
+    while(stack.length > 0) {
+        const curNode = stack.pop() // pop性能比shift好，不牵涉移动后面节点， shift 就变成BFS了
+        const { children = [], ...restNode } = curNode
+
+        flatArr.push(restNode)
+
+        for (const subNode of children) {
+            stack.push(subNode)
+        }
+    }
+
+    return flatArr
+}
+
+
+/** 下面的没有迭代，以上面的为准 **************************************************************************************** */
+
 /**
  * 方法1: 迭代法
  * @param {*} tree 

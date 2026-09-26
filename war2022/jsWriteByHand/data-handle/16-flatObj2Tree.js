@@ -13,13 +13,53 @@
  * 2. 关键字：构建中间数据结构:id2ObjMap
  */
 
+
+/**
+ * 一遍循环，就这版吧，后面的一遍循环分支太碎了
+ */
+const flatObj2Tree = (flatObj) => {
+    const tree = []
+    // 关键数据结构
+    const id2NodeMap = new Map()
+
+    for (const node of flatObj) {
+        const { id, parentId } = node
+        delete node.parentId
+
+        if (!id2NodeMap.has(id)) {
+            id2NodeMap.set(id, node)
+        } else {
+            const curNode = id2NodeMap.get(id)
+            id2NodeMap.set(id, { ...node, ...curNode })
+        }
+
+        if (parentId === null) {
+            // 注意：因为map set进去的不是原始node，而是带有children的node新节点 所以 这里要从map中查取
+            tree.push(id2NodeMap.get(id)) 
+            continue
+        }
+
+        if (!id2NodeMap.has(parentId)) {
+            id2NodeMap.set(parentId, { children: [] })
+        }
+
+        const parentNode = id2NodeMap.get(parentId)
+        // 注意：因为map set进去的不是原始node，而是带有children的node新节点 所以 这里要从map中查取
+        parentNode.children.push(id2NodeMap.get(id))
+    }
+
+    return tree
+}
+
+/** ************************************************************************************************************ */
+
 /**
  * 方法1：迭代法
  * 核心：使用map + data遍历2次
  * @param {*} data
  * @returns 
  */
-const flatObj2Tree = (data) => {
+const flatObj2Tree3 = (data) => {
   const result = [];
 
   const id2Objmap = new Map();
@@ -168,10 +208,10 @@ const flatObj2Tree2 = (items) => {
 const source = [
   { pid: null, id: 1, data: "1" },
   { pid: 1, id: 2, data: "2-1" },
-  { pid: 1, id: 3, data: "2-2" },
-  { pid: 2, id: 4, data: "3-1" },
   { pid: 3, id: 5, data: "3-2" },
+  { pid: 1, id: 3, data: "2-2" },
   { pid: 4, id: 6, data: "4-1" },
+  { pid: 2, id: 4, data: "3-1" },
 ];
 
 // console.dir(JSON.stringify(flatObj2Tree(source), 2));

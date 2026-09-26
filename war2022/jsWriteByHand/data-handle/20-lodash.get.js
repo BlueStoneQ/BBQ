@@ -4,6 +4,26 @@
  *      路径不存在时返回默认值。
  */
 
+Object.prototype.$get = function(pathStr, defaultValue = undefined) {
+    // 1. 解析pathStr
+    const pathArr = pathStr.replace(/\[(\d+)\]/g, '.$1').split('.')
+    // 2. 遍历path节点，逐层访问
+    let res = this
+
+    for (const key of pathArr) {
+        res = res && res[key]
+
+        if (!res) {
+            return defaultValue
+        }
+    }
+
+    return res
+}
+
+
+/** **************************************************************************************************************** */
+
 /**
  * 手写lodash.get()
  * 2023-3-29
