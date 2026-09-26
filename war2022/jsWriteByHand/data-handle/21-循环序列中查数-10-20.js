@@ -4,17 +4,69 @@
  *      可用二分法优化到 O(log n)。
  */
 
+// O(log n), 看这个即可
+// 主体思路：看 `mid` 和边界判断：哪一半满足有序且目标值落在其范围内，就去那一半找，否则去另一半。
+const search = (nums, target) => {
+    let left = 0, right = nums.length - 1
+
+    while(left <= right) {
+        const midIndex = left + Math.floor((right - left) / 2)
+
+        if (target === nums[midIndex]) {
+            return midIndex
+        }
+
+        if (nums[left] <=  nums[midIndex]) {
+            // mid左侧有序
+            if (target >= nums[left] && target < nums[midIndex]) {
+                // target在mid的左侧内
+                right = midIndex - 1
+            } else {
+                // 不在左侧，就在右侧
+                left = midIndex + 1
+            }
+        } else {
+            // mid右侧有序
+            if (target > nums[midIndex] && target <= nums[right] ) {
+                // target在mid的右侧内
+                left = midIndex + 1
+            } else {
+                // 不在右侧， 就在另一侧
+                right = midIndex - 1
+            }
+        }
+    }
+
+    return -1
+}
+
+
+/***
+ * 下面的问题 是算法复杂度不到位 O(n) 不是 O(log n)，不推荐，********************** **************************************************************************************************************
+ */
+
 /**
  * 20、[intermediate] 在一个循环有序的列表中查找指定的值。比如[6,7,8,1,2,3,4,5]就是一个循环有序数组。
  */
-const searchVal = (arr, val) => {
-  // defend
-  // init data
-  for (let i = 0; i < arr.length; i++) {
-    if (val === arr[i]) return i;
-  }
-  // algo
-  // return
+// 二分法查找
+Array.prototype.$binarySearch = function (val) {
+    let left = 0, right = this.length - 1
+
+    while (left <= right) {
+        const midIndex = left + Math.floor((right - left) / 2)
+
+        if (val === this[midIndex]) {
+            return midIndex
+        }
+
+        if (val > this[midIndex]) {
+            left = midIndex + 1
+        } else {
+            right = midIndex - 1
+        }
+    }
+
+    return -1
 }
 
 (() => {
@@ -48,6 +100,7 @@ const searchVal = (arr, val) => {
     // init data
     const len = arr.length;
     let bigArrStart = 0, bigArrEnd = 0, smallArrStart = 0, smallArrEnd = 0;
+    // 1. 算法的缺陷：这个找分割点的行为，本身就是O(n)
     for (let i = 1; i < arr.length; i++) {
       if (arr[i] < arr[i - 1]) {
         // 找到分割点
