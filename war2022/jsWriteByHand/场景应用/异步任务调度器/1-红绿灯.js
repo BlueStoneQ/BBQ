@@ -12,6 +12,43 @@
  */
 
 /**
+ * 不走then+run递归，避免递归爆栈，走遍历taskQueue
+ */
+class PipeLine {
+    constructor() {
+        this.taskQueue = []
+    }
+
+    addTask(task) {
+        this.taskQueue.push(task)
+    }
+
+    async run() {
+        let result
+        while (this.taskQueue.length > 0) {
+            try {
+                const curTask = this.taskQueue.shift()
+                result = await curTask(result)
+            } catch(err) {
+                // 任务会按照加入顺序串行执行；某个任务失败后，因为你捕获了异常，后续任务仍会继续。
+            }
+        }
+    }
+}
+// usage
+(async () => {
+    const pipeline = new PipeLine()
+
+    pipeline.addTask(() => fetch('/api/task1'))
+    pipeline.addTask(() => fetch('/api/task2'))
+
+    await pipeline.run()
+    console.log('全部完成')
+})()
+
+/*** ********************* ********************* ********************* ********************* ********************* */
+
+/**
  * 通用解决方案：异步中间件串行执行
  * 测试通过
  */
@@ -111,7 +148,7 @@ const method = {
   yellow: yellow
 }
 
-// callback实现
+// callback实现（递归版）
 const callBackTest = () => {
   const task = (delay, type, callback) => {
     setTimeout(() => {
