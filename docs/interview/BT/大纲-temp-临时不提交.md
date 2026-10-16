@@ -45,8 +45,8 @@
 ## 条件编译工具套件
 面向前端主流源码类型（xml, css, js），基于AOT以特殊注释作为编译指令进行条件编译，以达到对源码内容根据不同目标平台进行精确裁剪，减少打包体积，减轻运行时压力，可用于内存或性能优化，多端复用/跨端/跨平台方案的编译端方案等。
 - org: https://github.com/bsq-labs
-# 项目经历
-## MI 手机部·软件部·vela研发部·前端框架部
+# proj
+## vela:quickapp framework
 ### 1.Vela嵌入式快应用框架(js/cpp双端)
 vela系统快应用框架层(IoT/穿戴), QuickJS + LVGL + LibUV(Eventloop)
 - 框架核心下沉：核心能力(vNode Tree/diff/布局/渲染管线/事件/生命周期/路由)下沉C++ Core, JS 侧轻运行时+事务驱动

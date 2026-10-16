@@ -141,7 +141,7 @@ templateNodeId 8 → runtimeNodeId 8
 模板节点 ID 是静态的；运行时节点 ID 属于当前组件实例。
 
 ---
-
+ 171432
 ### 运行时：Proxy 查表标脏，冲刷求值
 
 ```ts

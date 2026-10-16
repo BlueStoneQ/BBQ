@@ -41,6 +41,123 @@
       // output: 2 3 1 4
  */
 
+/**
+ * 串行任务队列
+ */
+class PipeLineTaskQueue {
+    constructor(limitCount = 0) {
+        this.taskQueue = []
+    }
+
+    addTask(task) {
+        this.taskQueue.push(task)
+    }
+
+    async run() {
+        let result
+
+        while (this.taskQueue.length > 0) {
+            try {
+                const curTask = this.taskQueue.shift()
+                // 这里也可以写成promise的形式，走promise形式就得走递归
+                result = await curTask(result)
+            } catch(err) {
+                // 任务会按照加入顺序串行执行；某个任务失败后，因为你捕获了异常，后续任务仍会继续。
+                console.error('任务执行失败：', err)
+            }
+        }
+
+        return result
+    }
+
+    runInPromise(lastResult = null) {
+         if (this.taskQueue.length === 0) return 
+
+         const curTask = this.taskQueue.shift()
+
+         curTask(lastResult).then(res => {
+            return this.runInPromise(res)
+         }).catch(err => {
+            console.error('任务执行失败：', err)
+         })
+    }
+}
+
+// usage
+(async () => {
+    const pipeline = new PipeLineTaskQueue()
+
+    pipeline.addTask(async () => (await fetch('/api/task1')).json())
+    pipeline.addTask(async () => (await fetch('/api/task2')).json())
+
+
+    await pipeline.run()
+    console.log('全部完成')
+})()
+
+
+/**
+ * 限制并发任务队列
+ */
+class ParallelTaskQueue {
+    constructor(limitCount = 3) {
+        this.taskQueue = []
+        this.taskCount = 0
+        this.limitCount = limitCount
+        this.doneCount = 0
+        this.resolve = null
+        this.reject = null
+    }
+
+    addTask(task) {
+        this.taskQueue.push(task)
+        this.taskCount++
+    }
+
+    run() {
+        return new Promise((resolve, reject) => {
+            this.resolve = resolve
+            this.reject = reject
+
+            
+            for (let i = 0; i < this.limitCount; i++) {
+                this._runTask()
+            }
+        })
+    }
+
+    _runTask() {
+        if (this.taskQueue.length <= 0) ret3urn
+
+        const task = this.taskQueue.shift()
+
+        /**
+         * promise.resolve包装任务：
+         * 它让任务的三种行为都进入同一条 Promise 链：
+            - 返回 Promise：等待它完成。
+            - 返回普通值：作为成功结果继续。
+            - 同步抛出异常：转成 Promise 拒绝，进入 .catch()，随后执行 .finally()。
+         */
+        Promise.resolve().then(() => task()).catch(err => {
+            console.error('任务执行失败：', err)
+        }).finally(() => {
+            this.doneCount++
+
+        
+            if (this.doneCount >= this.taskCount) {
+            this.resolve()
+            return
+        }
+
+            this._runTask()
+        })
+    }
+}
+
+
+
+/****************older，写得比较复杂**************** */
+
 
 /**
  * promise版本
